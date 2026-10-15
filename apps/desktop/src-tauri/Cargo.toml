@@ -1,0 +1,27 @@
+[package]
+name = "crash-editor"
+version = "0.1.0"
+description = "The Crash Bandicoot XS decomp's data editor, as a desktop app (docs/editors.md, \"The desktop app\")"
+license = "GPL-3.0-only"
+edition = "2021"
+rust-version = "1.77"
+publish = false
+
+[lib]
+name = "crash_editor_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

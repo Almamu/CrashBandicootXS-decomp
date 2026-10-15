@@ -15,9 +15,10 @@ on (#1167 stage 3, #1093 part 1):
 - **named room parameters** in room.json ("Named room parameters");
 - **a preview**: the PC port started at a level's room ("Preview").
 
-The second half is the editor itself (#1167 stage 4): a web app in
+The second half is the editor itself (#1167 stages 4 and 5): a web app in
 `apps/` ("Running the editor", "The TypeScript workspace") on a small
-local server, crashdata over HTTP ("The editor's backend").
+local server, crashdata over HTTP ("The editor's backend"), and the same
+app as a desktop program, no browser needed ("The desktop app").
 
 Nothing here changes what the build makes: both ROMs and both .map files
 are the same with or without it.
@@ -364,3 +365,58 @@ helpers), `pnpm build`, the backend's Python tests (every data file of
 both games written back unchanged, a change in the tool's layout, the
 refusals, the token), and a smoke test of `tools/editor_server.py` as
 `make editor` runs it, through the typed client.
+
+## The desktop app
+
+`apps/desktop` (#1167 stage 5) is the same editor as a program of its
+own, no browser: Tauri v2, the system's webview (WebKitGTK on Linux,
+WebView2 on Windows, WKWebView on macOS) around apps/editor's build,
+bundled into the binary. It has no backend of its own: it runs the
+checkout's `tools/editor_server.py`, so the browser and the desktop app
+read, write and check the data through one implementation.
+
+- **First run**: a folder dialog asks for the checkout (a clone of this
+  repository: it has `tools/editor_server.py`), remembered in the app's
+  config directory (`config.json`: `~/.config/io.github.almamu.crashxs-editor/`
+  on Linux, `%APPDATA%\io.github.almamu.crashxs-editor\` on Windows,
+  `~/Library/Application Support/io.github.almamu.crashxs-editor/` on
+  macOS); File > "Choose the checkout…" changes it, `--checkout DIR`
+  gives it for one run.
+- **The backend**: the app runs `python3 tools/editor_server.py --port 0
+  --watch-stdin` in the checkout (`py -3`, `python` or `python3` on
+  Windows: the first that is 3.12 or later; `--python CMD`,
+  `CRASH_EDITOR_PYTHON` or config.json's `"python"` to choose), with a
+  random token (`CRASH_EDITOR_TOKEN`), reads the port it got, and gives
+  the page the URL and the token before it loads
+  (`window.__CRASH_EDITOR__`). The backend stops when the app does,
+  however it ends (`--watch-stdin`: its stdin closes).
+- **What it needs**: Python 3.12 or later and the checkout; the build's
+  toolchain (agbcc, arm-none-eabi, SDL2 for the PC port) only for
+  "Check the data"'s text check (gettext) and Preview (`make PLATFORM=pc`),
+  as for `make editor`. Linux also needs WebKitGTK 4.1 (the .deb and
+  .rpm depend on it; the AppImage carries it).
+- `crash-editor --smoke [--checkout DIR]` starts the backend, asks its
+  `/api/health` and stops, with no window (CI's test of every platform's
+  binary).
+
+Building it needs Rust (rustup's stable), Node.js and pnpm, and on
+Linux WebKitGTK 4.1, libsoup 3, GTK 3 and librsvg's development files
+(Debian/Ubuntu: `libwebkit2gtk-4.1-dev libsoup-3.0-dev libgtk-3-dev
+librsvg2-dev libssl-dev`):
+
+    pnpm install --frozen-lockfile
+    pnpm --filter @crash/desktop build      # tauri build: apps/desktop/src-tauri/target/release/
+                                            # crash-editor, and the bundles in .../bundle/
+    pnpm --filter @crash/desktop dev        # tauri dev: Vite's page, reloaded on a change
+
+The Tauri CLI is the workspace's (`@tauri-apps/cli`): no `cargo
+install`. On NixOS a binary built in the devshell finds its libraries
+only with the devshell's library path (the bundles don't have that
+problem). CI (`.github/workflows/desktop.yml`) builds it on Linux
+(Ubuntu 22.04: .deb, .rpm, AppImage), Windows (.msi, NSIS .exe) and
+macOS (.app, .dmg), runs `--smoke` on each, opens the Linux build's
+window in xvfb (its page loads and lists XS's files through its
+backend), and keeps the bundles as the run's artifacts. They are
+unsigned and nothing is released: Windows SmartScreen and macOS
+Gatekeeper warn about them (macOS: right-click > Open, or
+`xattr -d com.apple.quarantine`).

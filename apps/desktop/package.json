@@ -1,0 +1,16 @@
+{
+  "name": "@crash/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The desktop editor: apps/editor's build in a Tauri window, on the backend (tools/editor_server.py) of a checkout (docs/editors.md, \"The desktop app\")",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0"
+  }
+}
