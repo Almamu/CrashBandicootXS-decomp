@@ -1,0 +1,1171 @@
+# Crash Bandicoot 2: N-Tranced: the game's text in German (docs/text.md).
+msgid ""
+msgstr ""
+"Project-Id-Version: ntranced\n"
+"Report-Msgid-Bugs-To: https://github.com/Almamu/CrashBandicootXS-decomp/"
+"issues\n"
+"POT-Creation-Date: 2026-10-14 00:00+0000\n"
+"PO-Revision-Date: 2026-10-14 00:00+0000\n"
+"Last-Translator: the original game's translators (extracted from the ROM)\n"
+"Language-Team: German\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Text id 0 (0x00). Not named yet.
+msgctxt "ui.text.000"
+msgid "press start"
+msgstr "start drücken"
+
+#. Text id 1 (0x01). Not named yet.
+msgctxt "ui.text.001"
+msgid "new game"
+msgstr "neues spiel"
+
+#. Text id 2 (0x02). Not named yet.
+msgctxt "ui.text.002"
+msgid "load game"
+msgstr "spiel laden"
+
+#. Text id 3 (0x03). Not named yet.
+msgctxt "ui.text.003"
+msgid "link game"
+msgstr "link-spiel"
+
+#. Text id 4 (0x04). Not named yet.
+msgctxt "ui.text.004"
+msgid "credits"
+msgstr "mitwirkende"
+
+#. Text id 5 (0x05). Not named yet.
+msgctxt "ui.text.005"
+msgid "atlasphere"
+msgstr "atlaskugel"
+
+#. Text id 6 (0x06). Not named yet.
+msgctxt "ui.text.006"
+msgid "link race"
+msgstr "link-rennen"
+
+#. Text id 7 (0x07). Not named yet.
+msgctxt "ui.text.007"
+msgid "back"
+msgstr "zurück"
+
+#. Text id 8 (0x08). Not named yet.
+msgctxt "ui.text.008"
+msgid "waiting for connection..."
+msgstr "auf verbindg. warten ..."
+
+#. Text id 9 (0x09). Not named yet.
+msgctxt "ui.text.009"
+msgid ""
+"a link error occurred.\n"
+"the connection was dropped."
+msgstr ""
+"link-fehler aufgetreten.\n"
+"verbindung unterbrochen."
+
+#. Text id 10 (0x0A). Not named yet.
+msgctxt "ui.text.010"
+msgid "player 1 wins"
+msgstr "spieler 1 gewinnt"
+
+#. Text id 11 (0x0B). Not named yet.
+msgctxt "ui.text.011"
+msgid "player 2 wins"
+msgstr "spieler 2 gewinnt"
+
+#. Text id 12 (0x0C). Not named yet.
+msgctxt "ui.text.012"
+msgid "play again"
+msgstr "noch mal"
+
+#. Text id 13 (0x0D). Not named yet.
+msgctxt "ui.text.013"
+msgid "start"
+msgstr "start"
+
+#. Text id 14 (0x0E). Not named yet.
+msgctxt "ui.text.014"
+msgid "game: "
+msgstr "spiel: "
+
+#. Text id 15 (0x0F). Not named yet.
+msgctxt "ui.text.015"
+msgid "map: "
+msgstr "karte: "
+
+#. Text id 16 (0x10). Not named yet.
+msgctxt "ui.text.016"
+msgid "rounds: "
+msgstr "runden: "
+
+#. Text id 17 (0x11). Not named yet.
+msgctxt "ui.text.017"
+msgid ""
+"connection established.\n"
+"waiting for player 1..."
+msgstr ""
+"verbindung hergestellt.\n"
+"auf spieler 1 warten ..."
+
+#. Text id 18 (0x12). Not named yet.
+msgctxt "ui.text.018"
+msgid "crash"
+msgstr "crash"
+
+#. Text id 19 (0x13). Not named yet.
+msgctxt "ui.text.019"
+msgid "crunch"
+msgstr "crunch"
+
+#. Text id 20 (0x14). Not named yet.
+msgctxt "ui.text.020"
+msgid "coco"
+msgstr "coco"
+
+#. Text id 21 (0x15). Not named yet.
+msgctxt "ui.text.021"
+msgid "fake crash"
+msgstr "doppel-crash"
+
+#. Text id 22 (0x16). Not named yet.
+msgctxt "ui.text.022"
+msgid "n. trance"
+msgstr "n. trance"
+
+#. Text id 23 (0x17). Not named yet.
+msgctxt "ui.text.023"
+msgid "n. tropy"
+msgstr "n. tropy"
+
+#. Text id 24 (0x18). Not named yet.
+msgctxt "ui.text.024"
+msgid "neo cortex"
+msgstr "neo cortex"
+
+#. Text id 25 (0x19). Not named yet.
+msgctxt "ui.text.025"
+msgid "dingodile"
+msgstr "dingodil"
+
+#. Text id 26 (0x1A). Not named yet.
+msgctxt "ui.text.026"
+msgid "tiny"
+msgstr "tiny"
+
+#. Text id 27 (0x1B). Not named yet.
+msgctxt "ui.text.027"
+msgid "n. gin"
+msgstr "n. gin"
+
+#. Text id 28 (0x1C). Not named yet.
+msgctxt "ui.text.028"
+msgid "megamix"
+msgstr "megamix"
+
+#. Text id 29 (0x1D). Not named yet.
+msgctxt "ui.text.029"
+msgid "double cross"
+msgstr "ausgetrickst"
+
+#. Text id 30 (0x1E). Not named yet.
+msgctxt "ui.text.030"
+msgid "five points"
+msgstr "fünf punkte"
+
+#. Text id 31 (0x1F). Not named yet.
+msgctxt "ui.text.031"
+msgid "long trail"
+msgstr "langer weg"
+
+#. Text id 32 (0x20). Not named yet.
+msgctxt "ui.text.032"
+msgid "ring master"
+msgstr "ringmeister"
+
+#. Text id 33 (0x21). Not named yet.
+msgctxt "ui.text.033"
+msgid "domination"
+msgstr "herrschaft"
+
+#. Text id 34 (0x22). Not named yet.
+msgctxt "ui.text.034"
+msgid "king of the hill"
+msgstr "herr des hügels"
+
+#. Text id 35 (0x23). Not named yet.
+msgctxt "ui.text.035"
+msgid "bumpers"
+msgstr "abpraller"
+
+#. Text id 36 (0x24). Not named yet.
+msgctxt "ui.text.036"
+msgid ""
+"continue \n"
+"and save␤"
+msgstr ""
+"weiter \n"
+"und speichern"
+
+#. Text id 37 (0x25). Not named yet.
+msgctxt "ui.text.037"
+msgid ""
+"continue \n"
+"without save"
+msgstr ""
+"weiter \n"
+"ohne speichern"
+
+#. Text id 38 (0x26). Not named yet.
+msgctxt "ui.text.038"
+msgid "player 1"
+msgstr "spieler 1"
+
+#. Text id 39 (0x27). Not named yet.
+msgctxt "ui.text.039"
+msgid "player 2"
+msgstr "spieler 2"
+
+#. Text id 40 (0x28). Not named yet.
+msgctxt "ui.text.040"
+msgid "level"
+msgstr "level"
+
+#. Text id 41 (0x29). A level's name.
+msgctxt "ui.level.island_intro"
+msgid "island intro"
+msgstr "insel-intro"
+
+#. Text id 42 (0x2A). A level's name.
+msgctxt "ui.level.prints_of_persia"
+msgid "prints of persia"
+msgstr "persische träume"
+
+#. Text id 43 (0x2B). A level's name.
+msgctxt "ui.level.lagoony_tunes"
+msgid "lagoony tunes"
+msgstr "lagunenlied"
+
+#. Text id 44 (0x2C). A level's name.
+msgctxt "ui.level.globe_trottin"
+msgid "globe trottin'"
+msgstr "globetrotter"
+
+#. Text id 45 (0x2D). A level's name.
+msgctxt "ui.level.pharaohs_funhouse"
+msgid "pharaoh's funhouse"
+msgstr "mumien-marathon"
+
+#. Text id 46 (0x2E). A level's name.
+msgctxt "ui.level.runaway_rug"
+msgid "runaway rug"
+msgstr "turbo-teppich"
+
+#. Text id 47 (0x2F). A level's name.
+msgctxt "ui.level.tiki_torture"
+msgid "tiki torture"
+msgstr "tiki-turbulenz"
+
+#. Text id 48 (0x30). A level's name.
+msgctxt "ui.level.hoppin_coffins"
+msgid "hoppin' coffins"
+msgstr "sarghüpfen"
+
+#. Text id 49 (0x31). A level's name.
+msgctxt "ui.level.barrel_roll"
+msgid "barrel roll"
+msgstr "fassrolle"
+
+#. Text id 50 (0x32). A level's name.
+msgctxt "ui.level.flockful_of_seagulls"
+msgid "flockful of seagulls"
+msgstr "möwenschwarm"
+
+#. Text id 51 (0x33). A level's name.
+msgctxt "ui.level.magma_mania"
+msgid "magma mania"
+msgstr "magma-manie"
+
+#. Text id 52 (0x34). A level's name.
+msgctxt "ui.level.run_from_the_sun"
+msgid "run from the sun"
+msgstr "feuerfurie"
+
+#. Text id 53 (0x35). A level's name.
+msgctxt "ui.level.now_its_istanbul"
+msgid "now it's istanbul"
+msgstr "cool in istanbul"
+
+#. Text id 54 (0x36). A level's name.
+msgctxt "ui.level.mister_lava_lava"
+msgid "mister lava lava"
+msgstr "mister lava-lava"
+
+#. Text id 55 (0x37). A level's name.
+msgctxt "ui.level.water_logged"
+msgid "water logged"
+msgstr "wasserfaller"
+
+#. Text id 56 (0x38). A level's name.
+msgctxt "ui.level.slip_n_slidin_sphinx"
+msgid "slip-n-slidin' sphinx"
+msgstr "flutsch und rutsch"
+
+#. Text id 57 (0x39). A level's name.
+msgctxt "ui.level.rocks_can_roll"
+msgid "rocks can roll"
+msgstr "rollende steine"
+
+#. Text id 58 (0x3A). A level's name.
+msgctxt "ui.level.rock_the_casaba"
+msgid "rock the casaba"
+msgstr "stressomanie"
+
+#. Text id 59 (0x3B). A level's name.
+msgctxt "ui.level.eruption_disruption"
+msgid "eruption disruption"
+msgstr "feuerfontänen"
+
+#. Text id 60 (0x3C). A level's name.
+msgctxt "ui.level.spaced_out"
+msgid "spaced out"
+msgstr "ausge-raumt"
+
+#. Text id 61 (0x3D). A level's name.
+msgctxt "ui.level.king_too_uncommon"
+msgid "king too uncommon"
+msgstr "unkönig"
+
+#. Text id 62 (0x3E). A level's name.
+msgctxt "ui.level.wild_nile_ride"
+msgid "wild nile ride"
+msgstr "wilde nilfahrt"
+
+#. Text id 63 (0x3F). A level's name.
+msgctxt "ui.level.101_arabian_kites"
+msgid "101 arabian kites"
+msgstr "101 nacht-drachen"
+
+#. Text id 64 (0x40). A level's name.
+msgctxt "ui.level.fire_walker"
+msgid "fire walker"
+msgstr "feuerläufer"
+
+#. Text id 65 (0x41). A level's name.
+msgctxt "ui.level.evil_crunch"
+msgid "evil crunch"
+msgstr "fiesling-crunch"
+
+#. Text id 66 (0x42). A level's name.
+msgctxt "ui.level.evil_coco"
+msgid "evil coco"
+msgstr "fiesling-coco"
+
+#. Text id 67 (0x43). A level's name.
+msgctxt "ui.level.fake_crash"
+msgid "fake crash"
+msgstr "doppel-crash"
+
+#. Text id 68 (0x44). A level's name.
+msgctxt "ui.level.n_trance"
+msgid "n. trance"
+msgstr "n. trance"
+
+#. Text id 69 (0x45). A level's name.
+msgctxt "ui.level.n_tropy"
+msgid "n. tropy"
+msgstr "n. tropy"
+
+#. Text id 70 (0x46). Not named yet.
+msgctxt "ui.text.070"
+msgid "load-save"
+msgstr "laden-speichern"
+
+#. Text id 71 (0x47). Not named yet.
+msgctxt "ui.text.071"
+msgid "load game"
+msgstr "spiel laden"
+
+#. Text id 72 (0x48). Not named yet.
+msgctxt "ui.text.072"
+msgid "load link game"
+msgstr "link-spiel laden"
+
+#. Text id 73 (0x49). Not named yet.
+msgctxt "ui.text.073"
+msgid "delete game"
+msgstr "spiel löschen"
+
+#. Text id 74 (0x4A). Not named yet.
+msgctxt "ui.text.074"
+msgid "save game"
+msgstr "spiel speichern"
+
+#. Text id 75 (0x4B). Not named yet.
+msgctxt "ui.text.075"
+msgid "quit"
+msgstr "beenden"
+
+#. Text id 76 (0x4C). Not named yet.
+msgctxt "ui.text.076"
+msgid "exit"
+msgstr "verlassen"
+
+#. Text id 77 (0x4D). Not named yet.
+msgctxt "ui.text.077"
+msgid "error saving data"
+msgstr "fehler beim speichern"
+
+#. Text id 78 (0x4E). Not named yet.
+msgctxt "ui.text.078"
+msgid "save ok"
+msgstr "speichern ok"
+
+#. Text id 79 (0x4F). Not named yet.
+msgctxt "ui.text.079"
+msgid "cancel"
+msgstr "abbrechen"
+
+#. Text id 80 (0x50). Not named yet.
+msgctxt "ui.text.080"
+msgid "complete"
+msgstr "fertig"
+
+#. Text id 81 (0x51). Not named yet.
+msgctxt "ui.text.081"
+msgid "empty"
+msgstr "leer"
+
+#. Text id 82 (0x52). Not named yet.
+msgctxt "ui.text.082"
+msgid "delete?"
+msgstr "löschen?"
+
+#. Text id 83 (0x53). Not named yet.
+msgctxt "ui.text.083"
+msgid "overwrite?"
+msgstr "überschreiben?"
+
+#. Text id 84 (0x54). Not named yet.
+msgctxt "ui.text.084"
+msgid "continue?"
+msgstr "weiter?"
+
+#. Text id 85 (0x55). Not named yet.
+msgctxt "ui.text.085"
+msgid "yes"
+msgstr "ja"
+
+#. Text id 86 (0x56). Not named yet.
+msgctxt "ui.text.086"
+msgid "no"
+msgstr "nein"
+
+#. Text id 87 (0x57). Not named yet.
+msgctxt "ui.text.087"
+msgid "transferring data"
+msgstr "daten übertragen"
+
+#. Text id 88 (0x58). Not named yet.
+msgctxt "ui.text.088"
+msgid "error transferring data"
+msgstr "datenübertragungsfehler"
+
+#. Text id 89 (0x59). Not named yet.
+msgctxt "ui.text.089"
+msgid "unlocked neo cortex"
+msgstr "neo cortex aktiviert"
+
+#. Text id 90 (0x5A). Not named yet.
+msgctxt "ui.text.090"
+msgid "unlocked dingodile"
+msgstr "dingodil aktiviert"
+
+#. Text id 91 (0x5B). Not named yet.
+msgctxt "ui.text.091"
+msgid "unlocked tiny"
+msgstr "tiny aktiviert"
+
+#. Text id 92 (0x5C). Not named yet.
+msgctxt "ui.text.092"
+msgid "unlocked n. gin"
+msgstr "n. gin aktiviert"
+
+#. Text id 93 (0x5D). Not named yet.
+msgctxt "ui.text.093"
+msgid "unlocked megamix"
+msgstr "megamix aktiviert"
+
+#. Text id 94 (0x5E). Not named yet.
+msgctxt "ui.text.094"
+msgid "push B to quit"
+msgstr "zum abbrechen B drücken"
+
+#. Text id 95 (0x5F). Not named yet.
+msgctxt "ui.text.095"
+msgid "push start to continue"
+msgstr "weiter mit start"
+
+#. Text id 96 (0x60). Not named yet.
+msgctxt "ui.text.096"
+msgid "start:  load-save"
+msgstr "start: laden-speichern"
+
+#. Text id 97 (0x61). Not named yet.
+msgctxt "ui.text.097"
+msgid "music"
+msgstr "musik"
+
+#. Text id 98 (0x62). Not named yet.
+msgctxt "ui.text.098"
+msgid "sound"
+msgstr "sound"
+
+#. Text id 99 (0x63). Not named yet.
+msgctxt "ui.text.099"
+msgid "resume"
+msgstr "fortsetzen"
+
+#. Text id 100 (0x64). Not named yet.
+msgctxt "ui.text.100"
+msgid "warp zone"
+msgstr "zeitspr.-raum"
+
+#. Text id 101 (0x65). Not named yet.
+msgctxt "ui.text.101"
+msgid "restart trial"
+msgstr "neu versuchen"
+
+#. Text id 102 (0x66). Not named yet.
+msgctxt "ui.text.102"
+msgid "powers"
+msgstr "extras"
+
+#. Text id 103 (0x67). Not named yet.
+msgctxt "ui.text.103"
+msgid "crystals"
+msgstr "kristalle"
+
+#. Text id 104 (0x68). Not named yet.
+msgctxt "ui.text.104"
+msgid "gems"
+msgstr "edelsteine"
+
+#. Text id 105 (0x69). Not named yet.
+msgctxt "ui.text.105"
+msgid "gem shards"
+msgstr "juwelstück"
+
+#. Text id 106 (0x6A). Not named yet.
+msgctxt "ui.text.106"
+msgid "relics"
+msgstr "relikte"
+
+#. Text id 107 (0x6B). Not named yet.
+msgctxt "ui.text.107"
+msgid "time trial"
+msgstr "zeitmodus"
+
+#. Text id 108 (0x6C). Not named yet.
+msgctxt "ui.text.108"
+msgid "none"
+msgstr "keine"
+
+#. Text id 109 (0x6D). Not named yet.
+msgctxt "ui.text.109"
+msgid "super slide"
+msgstr "supergleiter"
+
+#. Text id 110 (0x6E). Not named yet.
+msgctxt "ui.text.110"
+msgid "rocket jump"
+msgstr "raketensprung"
+
+#. Text id 111 (0x6F). Not named yet.
+msgctxt "ui.text.111"
+msgid "tornado spin"
+msgstr "tornadodrehung"
+
+#. Text id 112 (0x70). Not named yet.
+msgctxt "ui.text.112"
+msgid "turbo run"
+msgstr "turbolauf"
+
+#. Text id 113 (0x71). Not named yet.
+msgctxt "ui.text.113"
+msgid ""
+"hold L and push R to break \n"
+"crates and go farther as you slide."
+msgstr ""
+"L halten und R drücken, um \n"
+"kisten zu zerbrechen \n"
+"und weiter zu gleiten."
+
+#. Text id 114 (0x72). Not named yet.
+msgctxt "ui.text.114"
+msgid ""
+"hold L and push A to \n"
+"jump even higher."
+msgstr ""
+"L halten und A drücken, \n"
+"um noch höher zu springen."
+
+#. Text id 115 (0x73). Not named yet.
+msgctxt "ui.text.115"
+msgid ""
+"push B repeatedly to spin \n"
+"longer and temporarily float."
+msgstr ""
+"B wiederholt drücken, \n"
+"um sich länger zu \n"
+"drehen und zeitweilig zu schweben."
+
+#. Text id 116 (0x74). Not named yet.
+msgctxt "ui.text.116"
+msgid "hold L for a burst of speed."
+msgstr ""
+"L für kurzzeitigen \n"
+"geschwindigkeitsschub \n"
+"gedrückt halten."
+
+#. Text id 117 (0x75). Not named yet.
+msgctxt "ui.text.117"
+msgid "main menu"
+msgstr "hauptmenü"
+
+#. Text id 118 (0x76). Not named yet.
+msgctxt "ui.text.118"
+msgid "quit to main menu?"
+msgstr "zurück zum hauptmenü?"
+
+#. Text id 119 (0x77). Not named yet.
+msgctxt "ui.text.119"
+msgid "quit game"
+msgstr "spiel beenden"
+
+#. Text id 120 (0x78). Not named yet.
+msgctxt "ui.text.120"
+msgid "player 1 pause"
+msgstr "spieler 1 - pause"
+
+#. Text id 121 (0x79). Not named yet.
+msgctxt "ui.text.121"
+msgid "player 2 pause"
+msgstr "spieler 2 - pause"
+
+#. Text id 122 (0x7A). Not named yet.
+msgctxt "ui.text.122"
+msgid "follow the wumpa fruit! collect 100 wumpa fruit to earn an extra life."
+msgstr ""
+"folg der wumpa-frucht! sammel 100 wumpa-früchte, um ein extraleben zu "
+"bekommen."
+
+#. Text id 123 (0x7B). Not named yet.
+msgctxt "ui.text.123"
+msgid "press B to spin and break crates!"
+msgstr "zum drehen und zerbrechen von kisten B drücken!"
+
+#. Text id 124 (0x7C). Not named yet.
+msgctxt "ui.text.124"
+msgid "press A to jump!"
+msgstr "zum springen A drücken!"
+
+#. Text id 125 (0x7D). Not named yet.
+msgctxt "ui.text.125"
+msgid ""
+"bouncy crates allow you to bounce on them several times before breaking."
+msgstr "auf hüpfkisten kannst du mehrmals springen, bevor sie zerbrechen."
+
+#. Text id 126 (0x7E). Not named yet.
+msgctxt "ui.text.126"
+msgid "crates can be stacked. spin or jump on them to get past."
+msgstr ""
+"kisten können gestapelt werden. mit drehen oder springen kommst du daran "
+"vorbei."
+
+#. Text id 127 (0x7F). Not named yet.
+msgctxt "ui.text.127"
+msgid ""
+"do not spin tnt crates or they will explode! jump on them to start the timer."
+msgstr ""
+"nicht vor tnt-kisten drehen, sie explodieren! timer durch draufspringen "
+"starten."
+
+#. Text id 128 (0x80). Not named yet.
+msgctxt "ui.text.128"
+msgid "break the aku aku crate to summon me. i will protect you from one hit."
+msgstr ""
+"zerbrich aku-kisten, um aku-masken zu erhalten. sie schützen vor einem "
+"treffer."
+
+#. Text id 129 (0x81). Not named yet.
+msgctxt "ui.text.129"
+msgid "press A two times to jump even higher."
+msgstr "zweimal A drücken, um noch höher zu springen."
+
+#. Text id 130 (0x82). Not named yet.
+msgctxt "ui.text.130"
+msgid "press R while jumping to body slam. this breaks steel crates."
+msgstr ""
+"mit R während des sprungs machst du einen bauchklatscher und zerbrichst "
+"kisten."
+
+#. Text id 131 (0x83). Not named yet.
+msgctxt "ui.text.131"
+msgid "the crash crate will give you an extra life."
+msgstr "aus der crash-kiste bekommst du ein extraleben."
+
+#. Text id 132 (0x84). Not named yet.
+msgctxt "ui.text.132"
+msgid "hold A while bouncing to bounce even higher"
+msgstr "beim springen A drücken, um noch höher zu springen."
+
+#. Text id 133 (0x85). Not named yet.
+msgctxt "ui.text.133"
+msgid "press R while running to slide."
+msgstr "während des rennens R drücken, um zu gleiten."
+
+#. Text id 134 (0x86). Not named yet.
+msgctxt "ui.text.134"
+msgid ""
+"tnt crates can break other crates.  just jump on one to start the timer."
+msgstr ""
+"tnt-kisten können andere kisten zerstören. draufspringen, um timer zu "
+"starten."
+
+#. Text id 135 (0x87). Not named yet.
+msgctxt "ui.text.135"
+msgid "do not touch green nitro crates or they will explode!"
+msgstr "berühr die grünen nitro-kisten nicht, sonst explodieren sie!"
+
+#. Text id 136 (0x88). Not named yet.
+msgctxt "ui.text.136"
+msgid "spin the slot crate before it becomes unbreakable!"
+msgstr "dreh dich vor der wechselkiste, bevor sie unzerstörbar wird!"
+
+#. Text id 137 (0x89). Not named yet.
+msgctxt "ui.text.137"
+msgid "the green nitro switch box destroys all nitro crates in a level."
+msgstr ""
+"die grüne nitro-schalterkiste zerstört alle nitro-kisten in einem level."
+
+#. Text id 138 (0x8A). Not named yet.
+msgctxt "ui.text.138"
+msgid "did you collect the purple crystal? did you break all of the crates?"
+msgstr "hast du den lila kristall eingesammelt? hast du alle kisten zerstört?"
+
+#. Text id 139 (0x8B). Not named yet.
+msgctxt "ui.text.139"
+msgid "deep in the heart of hyperspace..."
+msgstr "tief im herz des hyperraums ..."
+
+#. Text id 140 (0x8C). Not named yet.
+msgctxt "ui.text.140"
+msgid ""
+"uka uka: that incompetent neo cortex. he cannot do anything right! his last "
+"scheme to shrink the earth failed miserably! you have been a great asset to "
+"the cause of evil over the years n. tropy."
+msgstr ""
+"uka uka: dieser unfähige neo cortex. nichts kann er richtig machen! sein "
+"letzter versuch, die erde zu schrumpfen, ging jämmerlich daneben! du warst "
+"der sache des bösen seit vielen jahren eine große hilfe, n. tropy."
+
+#. Text id 141 (0x8D). Not named yet.
+msgctxt "ui.text.141"
+msgid "n. tropy: thank you, my lord."
+msgstr "n. tropy: danke, mein lord."
+
+#. Text id 142 (0x8E). Not named yet.
+msgctxt "ui.text.142"
+msgid ""
+"uka uka: that is why i trust you with the task of aiding me in universal "
+"domination."
+msgstr ""
+"uka uka: deswegen betraue ich dich mit der aufgabe, mir bei der herrschaft "
+"über das universum zu helfen."
+
+#. Text id 143 (0x8F). Not named yet.
+msgctxt "ui.text.143"
+msgid "n. tropy: great uka uka, i am honored! and i have the perfect scheme."
+msgstr ""
+"n. tropy: großer uka uka, ich fühle mich geehrt! und ich hab einen perfekten "
+"plan."
+
+#. Text id 144 (0x90). Not named yet.
+msgctxt "ui.text.144"
+msgid ""
+"n. tropy: allow me to harness my powers of time and space to peer into the "
+"future..."
+msgstr ""
+"n. tropy: erlaub mir, meine kräfte über raum und zeit zu verwenden, um in "
+"die zukunft zu sehen ..."
+
+#. Text id 145 (0x91). Not named yet.
+msgctxt "ui.text.145"
+msgid ""
+"n. tropy: of course! since those wretched bandicoots keep thwarting us, the "
+"solution is to get them on our side. and i know just the fellow for the job."
+msgstr ""
+"n. tropy: natürlich! da diese jämmerlichen bandicoots ständig unsere pläne "
+"durchkreuzen, müssen wir sie auf unsere seite ziehen. und ich kenne genau "
+"den richtigen für diesen job."
+
+#. Text id 146 (0x92). Not named yet.
+msgctxt "ui.text.146"
+msgid "uka uka: a new recruit?"
+msgstr "uka uka: ein neuer rekrut?"
+
+#. Text id 147 (0x93). Not named yet.
+msgctxt "ui.text.147"
+msgid "n. tropy: indeed. meet my secret weapon."
+msgstr "n. tropy: jawohl das ist meine geheimwaffe. "
+
+#. Text id 148 (0x94). Not named yet.
+msgctxt "ui.text.148"
+msgid "n. trance: i am n. trance, master of hypnotism!"
+msgstr "n. trance: ich bin n. trance, der meister der hypnose!"
+
+#. Text id 149 (0x95). Not named yet.
+msgctxt "ui.text.149"
+msgid "meanwhile... "
+msgstr "in der zwischenzeit ..."
+
+#. Text id 150 (0x96). Not named yet.
+msgctxt "ui.text.150"
+msgid "coco: crash, heeeeeelp!"
+msgstr "coco: crash, hiiiiiiiiilfe! "
+
+#. Text id 151 (0x97). Not named yet.
+msgctxt "ui.text.151"
+msgid ""
+"aku aku: crash! wake up! coco and crunch have been abducted! find me a power "
+"crystal so i can look into what's going on! hurry!"
+msgstr ""
+"aku aku: crash! wach auf! coco und crunch wurden entführt! bring mir einen "
+"energie-kristall, damit ich feststellen kann, was los ist! schnell!"
+
+#. Text id 152 (0x98). Not named yet.
+msgctxt "ui.text.152"
+msgid "aku aku: oh, no! watch out crash!"
+msgstr "aku aku: oh, nein! pass auf, crash!"
+
+#. Text id 153 (0x99). Not named yet.
+msgctxt "ui.text.153"
+msgid "aku aku: i've got you crash!"
+msgstr "aku aku: ich hab dich, crash!"
+
+#. Text id 154 (0x9A). Not named yet.
+msgctxt "ui.text.154"
+msgid "n. tropy: something is holding on to crash. we need more power!"
+msgstr "n. tropy: irgendetwas hält crash fest. wir brauchen mehr energie!"
+
+#. Text id 155 (0x9B). Not named yet.
+msgctxt "ui.text.155"
+msgid "aku aku: this vortex must be the work of n. tropy."
+msgstr "aku aku: dieser wirbel muss das werk von n. tropy sein."
+
+#. Text id 156 (0x9C). Not named yet.
+msgctxt "ui.text.156"
+msgid "n. tropy: i've finally captured that infernal bandicoot!"
+msgstr "n. tropy: endlich habe ich dieses grässliche bandicoot gefangen!"
+
+#. Text id 157 (0x9D). Not named yet.
+msgctxt "ui.text.157"
+msgid " "
+msgstr " "
+
+#. Text id 158 (0x9E). Not named yet.
+msgctxt "ui.text.158"
+msgid ""
+"n. tropy: i finally got all you obnoxious bandicoots! would you do the "
+"honors, n. trance!"
+msgstr ""
+"n. tropy: jetzt habe ich euch endlich alle, ihr widerlichen bandicoots! dir "
+"gebührt die ehre, n. trance!"
+
+#. Text id 159 (0x9F). Not named yet.
+msgctxt "ui.text.159"
+msgid "n. trance: with pleasure!"
+msgstr "n. trance: mit vergnügen!"
+
+#. Text id 160 (0xA0). Not named yet.
+msgctxt "ui.text.160"
+msgid "somewhere else in hyperspace..."
+msgstr "irgendwo anders im hyperraum ..."
+
+#. Text id 161 (0xA1). Not named yet.
+msgctxt "ui.text.161"
+msgid ""
+"aku aku: that took almost all the power i had, crash. good job getting the "
+"power crystal before you were pulled into the vortex. but, i'll need a lot "
+"more crystals if we are to put an end to n. tropy's plans."
+msgstr ""
+"aku aku: das hat fast alle energie verbraucht, die ich hatte. gut, dass du "
+"den energie-kristall bekommen hast, bevor du in den wirbel gezogen wurdest. "
+"aber ich brauche noch viele weitere kristalle, wenn ich n. tropys pläne "
+"stoppen will."
+
+#. Text id 162 (0xA2). Not named yet.
+msgctxt "ui.text.162"
+msgid ""
+"aku aku: that floating island up ahead will allow us to go to different "
+"worlds and find crystals. hopefully we can find coco and crunch and stop n. "
+"tropy!"
+msgstr ""
+"aku aku: mit hilfe der schwebenden insel dort können wir verschiedene welten "
+"erreichen und kristalle suchen. hoffentlich können wir coco und crunch "
+"finden und n. tropy stoppen!"
+
+#. Text id 163 (0xA3). Not named yet.
+msgctxt "ui.text.163"
+msgid "crunch: oohh man...brainwashed again! thanks for saving me crash."
+msgstr ""
+"crunch: ohhh mann ... schon wieder 'ne gehirnwäsche! danke für die rettung, "
+"crash!"
+
+#. Text id 164 (0xA4). Not named yet.
+msgctxt "ui.text.164"
+msgid ""
+"aku aku: good news crash. the crystals you've collected have allowed me to "
+"open up a new area of the island. we can get to new worlds from there."
+msgstr ""
+"aku aku: gute nachrichten, crash. mit den kristallen, die du gesammelt hast, "
+"konnte ich einen neuen bereich der insel öffnen. von hier aus kommen wir zu "
+"neuen welten."
+
+#. Text id 165 (0xA5). Not named yet.
+msgctxt "ui.text.165"
+msgid ""
+"coco: oh, crash, thank you. how did you break out of n. trance's hypnosis?"
+msgstr ""
+"coco: oh, crash, danke schön. wie konntest du n. trances hypnose abschütteln?"
+
+#. Text id 166 (0xA6). Not named yet.
+msgctxt "ui.text.166"
+msgid ""
+"aku aku: something strange happened when you were being pulled into the "
+"vortex, crash. coco saw someone in n. tropy's secret base that looked like "
+"you. i'll try to find out who while you go collect more crystals."
+msgstr ""
+"aku aku: etwas merkwürdiges ist passiert, als du in den wirbel gezogen "
+"wurdest, crash. coco hat jemanden in n. tropys geheimer basis gesehen, der "
+"so aussieht wie du. ich versuche herauszufinden, wer das ist, während du "
+"weitere kristalle sammelst."
+
+#. Text id 167 (0xA7). Not named yet.
+msgctxt "ui.text.167"
+msgid ""
+"n. tropy: n. trance, you blundering idiot! that was not crash! it was some "
+"sort of... fake crash!"
+msgstr ""
+"n. tropy: n. trance, du trotteliger idiot! das war nicht crash! das war eine "
+"art ... doppel-crash!"
+
+#. Text id 168 (0xA8). Not named yet.
+msgctxt "ui.text.168"
+msgid ""
+"n. trance: how was i supposed to know? he fooled you too. besides, they will "
+"never find our hideout. not in a million years!"
+msgstr ""
+"n. trance: woher sollte ich das wissen? er hat auch dich getäuscht. außerdem "
+"werden die unser versteck niemals finden. nicht in einer million jahren!"
+
+#. Text id 169 (0xA9). Not named yet.
+msgctxt "ui.text.169"
+msgid ""
+"aku aku: good job crash! with a few more crystals, i'll be able to open the "
+"vortex to n. tropy's hideout!"
+msgstr ""
+"aku aku: gut gemacht crash! mit ein paar mehr kristallen können wir das tor "
+"zu n. tropy's raum aufmachen."
+
+#. Text id 170 (0xAA). Not named yet.
+msgctxt "ui.text.170"
+msgid " "
+msgstr " "
+
+#. Text id 171 (0xAB). Not named yet.
+msgctxt "ui.text.171"
+msgid "aku aku: yes!  we've made it to n. tropy's secret base."
+msgstr "aku aku: super wir haben es bis zu n. tropy's geheimen raum geschafft."
+
+#. Text id 172 (0xAC). Not named yet.
+msgctxt "ui.text.172"
+msgid "n. tropy: n. trance, you fool! they have found us! destroy them!"
+msgstr ""
+"n. tropy: n. trance, du blödmann! sie haben uns gefunden! vernichte sie!"
+
+#. Text id 173 (0xAD). Not named yet.
+msgctxt "ui.text.173"
+msgid "n. trance: it should have taken a million years to find us... how?"
+msgstr ""
+"n. trance: es hätte eine million jahre dauern sollen, uns zu finden ... "
+"wieso?"
+
+#. Text id 174 (0xAE). Not named yet.
+msgctxt "ui.text.174"
+msgid ""
+"aku aku: time does not pass in the vortex... i had all the time i needed to "
+"find you!"
+msgstr ""
+"aku aku: die zeit vergeht im wirbel nicht ... ich hatte alle zeit, die ich "
+"brauchte, um euch zu finden!"
+
+#. Text id 175 (0xAF). Not named yet.
+msgctxt "ui.text.175"
+msgid ""
+"n. tropy: you have one last chance to stop them. do not disappoint me again!"
+msgstr ""
+"n. tropy: du hast eine letzte chance, sie zu stoppen. enttäusch mich nicht "
+"wieder!"
+
+#. Text id 176 (0xB0). Not named yet.
+msgctxt "ui.text.176"
+msgid "n. trance: destroy all bandicoots!"
+msgstr "n. trance: vernichte alle bandicoots!"
+
+#. Text id 177 (0xB1). Not named yet.
+msgctxt "ui.text.177"
+msgid "n. tropy: noooo! i can't defeat all these wretched bandicoots myself!"
+msgstr ""
+"n. tropy: neiiiiin! ich kann all diese miesen bandicoots doch nicht allein "
+"besiegen!"
+
+#. Text id 178 (0xB2). Not named yet.
+msgctxt "ui.text.178"
+msgid "n. tropy: but mark my words. i'll be baaaack!"
+msgstr "n. tropy: aber merk dir meine worte. ich komme zurüüüüüüück!"
+
+#. Text id 179 (0xB3). Not named yet.
+msgctxt "ui.text.179"
+msgid ""
+"aku aku: good job crash! you've rescued the other bandicoots from n. tropy "
+"and defeated n. trance! too bad n. tropy got away. if only we had all of the "
+"gem shards, i could re-open his space vortex and you could go after him!"
+msgstr ""
+"aku aku: gute arbeit, crash! du hast die anderen bandicoots vor n. tropy "
+"gerettet und n. trance besiegt! zu dumm, dass n. tropy entkommen ist. wenn "
+"wir alle juwelstücke hätten, könnte ich seinen weltraumwirbel wieder öffnen "
+"und du könntest ihn verfolgen!"
+
+#. Text id 180 (0xB4). Not named yet.
+msgctxt "ui.text.180"
+msgid "the end??"
+msgstr "das ende?"
+
+#. Text id 181 (0xB5). Not named yet.
+msgctxt "ui.text.181"
+msgid ""
+"aku aku: good job, crash! you've rescued the other bandicoots from n. tropy "
+"and defeated n. trance!  lucky thing you collected all of the gem shards. i "
+"can use them to re-open his space vortex and you can go after him!"
+msgstr ""
+"aku aku: gute arbeit, crash! du hast die anderen bandicoots vor n. tropy "
+"gerettet und n. trance besiegt! zum glück hast du alle juwelstücke "
+"eingesammelt. ich kann sie benutzen, um seinen weltraumwirbel zu öffnen, und "
+"du kannst ihn verfolgen!"
+
+#. Text id 182 (0xB6). Not named yet.
+msgctxt "ui.text.182"
+msgid ""
+"aku aku: congratulations everyone, for defeating n. tropy and capturing him! "
+"let's take a picture to celebrate!"
+msgstr ""
+"aku aku: glückwunsch euch allen, dass ihr n. tropy besiegt und gefangen "
+"habt! machen wir ein foto zur feier des tages!"
+
+#. Text id 183 (0xB7). Not named yet.
+msgctxt "ui.text.183"
+msgid " "
+msgstr " "
+
+#. Text id 184 (0xB8). Not named yet.
+msgctxt "ui.text.184"
+msgid ""
+"uka uka: that's it! no more underlings! next time you will face a real "
+"adversary!"
+msgstr ""
+"uka uka: das war's! keine weiteren schwächlinge! beim nächsten mal triffst "
+"du auf einen echten gegner!"
+
+#. Text id 185 (0xB9). Not named yet.
+msgctxt "ui.text.185"
+msgid "the end... for now..."
+msgstr "das ende ... für den moment jedenfalls ..."
+
+#. Text id 186 (0xBA). Not named yet.
+msgctxt "ui.text.186"
+msgid ""
+"aku aku: crash, these mayan ruins can only be traversed by using one of your "
+"favorite toys, the atlasphere. look out for nitro traps and ledges."
+msgstr ""
+"aku aku: crash, diese maya-ruinen können nur mit einem deiner "
+"lieblingsspielzeuge überquert werden, der atlaskugel. achte auf nitro-fallen "
+"und kanten."
+
+#. Text id 187 (0xBB). Not named yet.
+msgctxt "ui.text.187"
+msgid ""
+"aku aku: now it is your turn to use the atlasphere, crunch.  but be "
+"careful!  n. tropy has added some new dangers."
+msgstr ""
+"aku aku: jetzt bist du dran, die atlaskugel zu benutzen, crunch. aber "
+"vorsicht! n. tropy hat ein paar neue gefahren hinzugefügt."
+
+#. Text id 188 (0xBC). Not named yet.
+msgctxt "ui.text.188"
+msgid ""
+"aku aku: crash, in this water world you will need to use your wakeboard to "
+"collect the power crystal. the waters are guarded by a vicious shark so be "
+"careful!"
+msgstr ""
+"aku aku: crash, auf dieser wasserwelt kannst du dein wakeboard benutzen, um "
+"den energie-kristall einzusammeln. diese gewässer werden von einem fiesen "
+"hai bewacht, sei also vorsichtig!"
+
+#. Text id 189 (0xBD). Not named yet.
+msgctxt "ui.text.189"
+msgid ""
+"aku aku: the next power crystal is located in space, coco. you must use your "
+"space suit and rocket tug to retrieve it.  n. tropy has sent a huge fireball "
+"that will destroy the crystal if you do not move fast enough, but i have "
+"created turbo gates to help you stay ahead of the danger."
+msgstr ""
+"aku aku: der nächste energie-kristall befindet sich im weltraum, coco. du "
+"musst deinen raumanzug und die schubrakete benutzen, um ihn zu holen. n. "
+"tropy hat einen riesigen feuerball losgeschickt, der den kristall zerstört, "
+"wenn du nicht schnell genug bist. aber ich habe turbo-tore erzeugt, um dir "
+"zu helfen, außer gefahr zu bleiben."
+
+#. Text id 190 (0xBE). Not named yet.
+msgctxt "ui.text.190"
+msgid " "
+msgstr " "
+
+#. Text id 191 (0xBF). Not named yet.
+msgctxt "ui.text.191"
+msgid "Resume"
+msgstr "Fortsetzen"
+
+#. Text id 192 (0xC0). Not named yet.
+msgctxt "ui.text.192"
+msgid "Exit"
+msgstr "Verlassen"
+
+#. Text id 193 (0xC1). Not named yet.
+msgctxt "ui.text.193"
+msgid "Paused"
+msgstr "Pause"
+
+#. Text id 194 (0xC2). Not named yet.
+msgctxt "ui.text.194"
+msgid "roll your atlasphere to the exit."
+msgstr "roll deine atlaskugel zum ausgang."
+
+#. Text id 195 (0xC3). Not named yet.
+msgctxt "ui.text.195"
+msgid "use <#> to brake and <$> to speed up!"
+msgstr "zum bremsen <#> und zum beschleunigen <$> benutzen!"

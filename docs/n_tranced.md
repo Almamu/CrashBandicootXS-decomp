@@ -435,6 +435,32 @@ u16 w, u16 h}` where XS's are `{s16, s16, u8 w, u8 h}` and two bytes of
 padding: in all 2,903 of them the height is at +6, and +5 (XS's `h`) and
 `w`'s high byte are 0. `hitbox_quad.h` has both, under `GAME_N2`.
 
+## Text (#1114)
+
+N-Tranced's UI text is built as XS's is (docs/text.md), from gettext
+files: [`games/n2/text/ntranced.pot`](../games/n2/text/ntranced.pot) (the
+keys and the English) and `games/n2/text/<lang>.po` (French, German,
+Spanish, Italian, Dutch), with `tools/text.py --game n2`, by
+[`games/n2/text.mk`](../games/n2/text.mk):
+
+```
+python3 tools/text.py --game n2 check
+python3 tools/text.py --game n2 extract --check
+```
+
+| What | Where (ROM) | Source |
+|---|---|---|
+| The UI text: per language its strings, then its 196 pointers (`gUiText<Lang>`) | `0x081D1C8C`-`0x081DEA40` | `games/n2/src/game/ui/data/ui_text.cpp` |
+
+Its 196 texts (XS has 70) are keyed `ui.level.<level>` for the 29 level
+names (each level's `name_text`, `levels.json`'s `"level_names"`) and
+`ui.text.<id>` for the others, until they have names. A text's final
+newline is written `␤` (U+2424) in these files: the ROM's French,
+German and Spanish texts 36 and 37 end in a newline their English doesn't,
+or the other way round, which `msgfmt` rejects. N-Tranced's font isn't
+known yet, so the font checks are XS's only. Its cutscenes' and dialogues'
+text is still to do.
+
 ## Progress
 
 N-Tranced has its own project on [decompilati.onl](https://decompilati.onl).
