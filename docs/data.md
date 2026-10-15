@@ -231,11 +231,12 @@ in ROM order.
   itself built from an editable source (the GAX2 audio, a sprite sheet)
   must not hard-code an offset into it, since editing the source moves
   things. Have the build export the offsets instead:
-  `gSongTable`, the 19-entry song table
-  (`song_table.cpp`), is `gGaxMusicData + GAX_SONG_<NAME>`,
+  `gSongTable`, the song table (`song_table.cpp`, 19 entries in the
+  ROM), is `gGaxMusicData + GAX_SONG_<NAME>`,
   with the offsets from the `gax_songs.h` that `tools/gax_audio.py`
   writes next to the blob (`-iquote build/crashbandicootxs/sound` for
-  that object), and the RLE sprite tables use `rle_sprites.py`'s frame
+  that object); the table itself is generated too (`song_table.inc`,
+  `gax_audio.py --table`, one entry per song of the manifest), and the RLE sprite tables use `rle_sprites.py`'s frame
   headers the same way. Offsets into still-raw blobs are fine: the raw
   bytes can't move.
 
@@ -256,7 +257,7 @@ The first batch (all pointer tables, all byte-exact):
 | File | ROM | Contents |
 |---|---|---|
 | `boss_pictures.cpp` | `0x08167AD4` | the two boss pictures (palette + frames, see "Boss pictures"), the d-pad direction table, the sine table |
-| `song_table.cpp` | `0x0816AA20` | the 19-song table, offsets into the built GAX2 music block (`gax_songs.h`) |
+| `song_table.cpp` | `0x0816AA20` | the 19-song table, offsets into the built GAX2 music block (`gax_songs.h`); generated since #1091 (`song_table.inc`) |
 | `link_crc_table.cpp` | `0x0816AF10` | the link-cable CRC-16 table, 2 pairing names |
 | `menu_tables.cpp` | `0x0816B138` | menu text, palette halves, label ids, icon positions and frames |
 | `pause_menu_bg.cpp` | `0x0816B284` | 1 `struct bg_package` |

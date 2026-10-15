@@ -422,6 +422,12 @@ Everything is generated from editable sources, never read from
   (`src/engine/audio/data/song_table.cpp`) is written as `gGaxMusicData +
   GAX_SONG_<NAME>` from the generated `gax_songs.h`, and the default layout
   is built with the block. So a song can change size.
+- The song table is generated as well: `tools/gax_audio.py --table
+  song_table.inc` writes `gSongTable[SONG_COUNT]`, one entry per song of
+  the manifest's `song_table` in song id order, and `song_table.cpp`
+  #includes it. It reads only the manifest, like `--constants`, so the
+  ids and the table come from the same list and no song id is left
+  without its entry.
 - Nothing in the blocks is an absolute address either (#967,
   [shifting.md](./shifting.md)): each block is written as a `.bin` with
   its pointers left 0 and a `.s`, which `data/data.s` includes, with the
