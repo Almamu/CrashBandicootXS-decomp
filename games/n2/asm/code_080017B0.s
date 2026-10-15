@@ -8534,7 +8534,7 @@ sub_08005954: @ 0x08005954
 	adds r0, r7, #0
 	adds r0, #0xe8
 	strb r3, [r0]
-	ldr r1, _08005A14 @ =gUnknown_081CDF90
+	ldr r1, _08005A14 @ =gPauseMenuBg
 	adds r0, r7, #0
 	bl LoadGraphicsPackage
 	ldr r0, _08005A18 @ =0x02000E74
@@ -8557,7 +8557,7 @@ sub_08005954: @ 0x08005954
 	b _08005A60
 	.align 2, 0
 _08005A10: .4byte 0x04000050
-_08005A14: .4byte gUnknown_081CDF90
+_08005A14: .4byte gPauseMenuBg
 _08005A18: .4byte 0x02000E74
 _08005A1C: .4byte 0x02000E70
 _08005A20: .4byte gUnknown_081CDFCC

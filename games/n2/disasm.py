@@ -231,13 +231,17 @@ def main():
 
     # the data: the original's bytes, cut around the data objects (built
     # from sources, objects.txt's entries after the code)
+    # A pointer into an object must be to a name the object defines
+    # (data_names.txt's, XS's name of a symbol in it; the link checks it's
+    # there): a gUnknown_ one, which no source defines, stops here, before
+    # the old data files go.
+    for addr, size, src in data_objs:
+        inside = [n for a, n in data.items() if addr < a < addr + size and n.startswith('gUnknown_')]
+        if inside:
+            sys.exit('%s: the code points inside it (%s): name them in data_names.txt, as the object does'
+                     % (src, ', '.join(inside[:4])))
     for f in (HERE / 'data').glob('*.s'):
         f.unlink()
-    for addr, size, src in data_objs:
-        inside = [n for a, n in data.items() if addr < a < addr + size]
-        if inside:
-            sys.exit('%s: the code points inside it (%s): the object has to define those symbols'
-                     % (src, ', '.join(inside[:4])))
     data_script, pos = [], CODE_END
     for start, end, src in [(a, a + n, s) for a, n, s in data_objs] + [(rom_end, rom_end, None)]:
         if start > pos:

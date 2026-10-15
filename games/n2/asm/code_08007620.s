@@ -1537,7 +1537,7 @@ _080082F8:
 	ldrb r4, [r0]
 	movs r0, #0xf
 	ands r4, r0
-	ldr r0, _08008334 @ =gUnknown_081CDFEC
+	ldr r0, _08008334 @ =gObjPieceWidths
 	adds r0, r4, r0
 	ldrb r7, [r0]
 	ldr r0, _08008338 @ =gObjPieceHeights
@@ -1560,7 +1560,7 @@ _080082F8:
 	b _0800834E
 	.align 2, 0
 _08008330: .4byte 0xDFFFFFFF
-_08008334: .4byte gUnknown_081CDFEC
+_08008334: .4byte gObjPieceWidths
 _08008338: .4byte gObjPieceHeights
 _0800833C:
 	mov r0, sb
@@ -1894,7 +1894,7 @@ _080085C8:
 	mov r3, r8
 	ands r3, r0
 	mov r8, r3
-	ldr r0, _08008654 @ =gUnknown_081CDFEC
+	ldr r0, _08008654 @ =gObjPieceWidths
 	add r0, r8
 	ldrb r0, [r0]
 	mov sb, r0
@@ -1947,7 +1947,7 @@ _08008644: .4byte 0xFFFFF3FF
 _08008648: .4byte 0xFFFFEFFF
 _0800864C: .4byte 0xFFFFDFFF
 _08008650: .4byte 0xFFFF0FFF
-_08008654: .4byte gUnknown_081CDFEC
+_08008654: .4byte gObjPieceWidths
 _08008658: .4byte gObjPieceHeights
 _0800865C:
 	ldr r1, [sp, #0xc]
@@ -2039,7 +2039,7 @@ _080086E8:
 	ldrb r1, [r0]
 	movs r0, #0xf
 	ands r1, r0
-	ldr r7, _08008774 @ =gUnknown_081CDFEC
+	ldr r7, _08008774 @ =gObjPieceWidths
 	adds r0, r1, r7
 	ldrb r2, [r0]
 	ldr r0, _08008778 @ =gObjPieceHeights
@@ -2058,7 +2058,7 @@ _080086E8:
 	ldr r0, [sp, #0x38]
 	cmp r0, #0
 	bne _0800877C
-	ldr r0, _08008774 @ =gUnknown_081CDFEC
+	ldr r0, _08008774 @ =gObjPieceWidths
 	add r0, r8
 	ldrb r0, [r0]
 	lsrs r0, r0, #1
@@ -2099,7 +2099,7 @@ _080086E8:
 	str r1, [sp, #0x2c]
 	b _080087B8
 	.align 2, 0
-_08008774: .4byte gUnknown_081CDFEC
+_08008774: .4byte gObjPieceWidths
 _08008778: .4byte gObjPieceHeights
 _0800877C:
 	ldr r2, [sp, #0x30]
@@ -3605,12 +3605,12 @@ _0800932E:
 	b _08009336
 	.global _08009334
 _08009334:
-	ldr r0, _0800933C @ =gUnknown_081CE00C
+	ldr r0, _0800933C @ =gEmptySpritePoint
 _08009336:
 	pop {r1}
 	bx r1
 	.align 2, 0
-_0800933C: .4byte gUnknown_081CE00C
+_0800933C: .4byte gEmptySpritePoint
 
 	thumb_func_start GetSpriteFrameThirdBox
 GetSpriteFrameThirdBox: @ 0x08009340
@@ -8558,7 +8558,7 @@ _0800BBB6:
 	b _0800BBBE
 	.global _0800BBBC
 _0800BBBC:
-	ldr r3, _0800BBDC @ =gUnknown_081CE00C
+	ldr r3, _0800BBDC @ =gEmptySpritePoint
 _0800BBBE:
 	ldr r0, [r6]
 	asrs r5, r0, #8
@@ -8575,7 +8575,7 @@ _0800BBBE:
 	subs r5, r5, r0
 	b _0800BBE6
 	.align 2, 0
-_0800BBDC: .4byte gUnknown_081CE00C
+_0800BBDC: .4byte gEmptySpritePoint
 _0800BBE0:
 	movs r2, #0
 	ldrsh r0, [r3, r2]
@@ -10054,7 +10054,7 @@ _0800C764:
 	bl sub_080273EC
 	bl sub_08019CD4
 	adds r5, r0, #0
-	ldr r1, _0800C834 @ =gUnknown_081CE454
+	ldr r1, _0800C834 @ =gInputCtrlMotionSet
 	bl SetCtrlAnimSet
 	ldr r0, _0800C838 @ =gSpriteBankSet
 	ldr r0, [r0]
@@ -10141,7 +10141,7 @@ _0800C7C6:
 	b _0800C8B6
 	.align 2, 0
 _0800C830: .4byte gPlayer
-_0800C834: .4byte gUnknown_081CE454
+_0800C834: .4byte gInputCtrlMotionSet
 _0800C838: .4byte gSpriteBankSet
 _0800C83C: .4byte gEntitySpawner
 _0800C840:
@@ -25924,7 +25924,7 @@ _080144AA:
 	b _080144B2
 	.global _080144B0
 _080144B0:
-	ldr r5, _080144C8 @ =gUnknown_081CE00C
+	ldr r5, _080144C8 @ =gEmptySpritePoint
 _080144B2:
 	ldr r1, [r6, #0x10]
 	adds r2, r1, #0
@@ -25937,7 +25937,7 @@ _080144B2:
 	str r0, [r6, #0x38]
 	b _08014BA0
 	.align 2, 0
-_080144C8: .4byte gUnknown_081CE00C
+_080144C8: .4byte gEmptySpritePoint
 _080144CC:
 	movs r0, #2
 	movs r4, #0
@@ -26041,7 +26041,7 @@ _0801458E:
 	b _08014596
 	.global _08014594
 _08014594:
-	ldr r0, _080145A0 @ =gUnknown_081CE00C
+	ldr r0, _080145A0 @ =gEmptySpritePoint
 _08014596:
 	movs r2, #2
 	ldrsh r1, [r0, r2]
@@ -26049,7 +26049,7 @@ _08014596:
 	ldrsh r0, [r5, r3]
 	b _080146CE
 	.align 2, 0
-_080145A0: .4byte gUnknown_081CE00C
+_080145A0: .4byte gEmptySpritePoint
 	.global _080145A4
 _080145A4:
 	ldr r0, [r6, #8]
@@ -26136,7 +26136,7 @@ _0801463E:
 	b _08014646
 	.global _08014644
 _08014644:
-	ldr r7, _08014694 @ =gUnknown_081CE00C
+	ldr r7, _08014694 @ =gEmptySpritePoint
 _08014646:
 	ldr r0, [r6, #0x10]
 	movs r5, #1
@@ -26176,7 +26176,7 @@ _08014646:
 	ldr r0, [r0]
 	mov pc, r0
 	.align 2, 0
-_08014694: .4byte gUnknown_081CE00C
+_08014694: .4byte gEmptySpritePoint
 _08014698: .4byte _0801469C
 	.global _0801469C
 _0801469C: @ jump table
@@ -26199,7 +26199,7 @@ _080146BE:
 	b _080146C6
 	.global _080146C4
 _080146C4:
-	ldr r0, _080146DC @ =gUnknown_081CE00C
+	ldr r0, _080146DC @ =gEmptySpritePoint
 _080146C6:
 	movs r2, #2
 	ldrsh r1, [r0, r2]
@@ -26214,7 +26214,7 @@ _080146CE:
 	str r0, [r2, #4]
 	b _08014BA0
 	.align 2, 0
-_080146DC: .4byte gUnknown_081CE00C
+_080146DC: .4byte gEmptySpritePoint
 	.global _080146E0
 _080146E0:
 	ldr r2, [r6, #8]
@@ -32339,7 +32339,7 @@ _08017700:
 	b _08017706
 	.global _08017704
 _08017704:
-	ldr r2, _08017724 @ =gUnknown_081CE00C
+	ldr r2, _08017724 @ =gEmptySpritePoint
 _08017706:
 	ldr r0, [r4, #0x10]
 	ldr r1, [r0]
@@ -32356,7 +32356,7 @@ _08017706:
 	subs r3, r3, r0
 	b _0801772E
 	.align 2, 0
-_08017724: .4byte gUnknown_081CE00C
+_08017724: .4byte gEmptySpritePoint
 _08017728:
 	movs r1, #0
 	ldrsh r0, [r2, r1]
@@ -32549,7 +32549,7 @@ _080178A8:
 	b _080178AE
 	.global _080178AC
 _080178AC:
-	ldr r2, _080178CC @ =gUnknown_081CE00C
+	ldr r2, _080178CC @ =gEmptySpritePoint
 _080178AE:
 	ldr r1, [r4, #0x10]
 	ldr r0, [r1]
@@ -32566,7 +32566,7 @@ _080178AE:
 	adds r3, r3, r0
 	b _080178D6
 	.align 2, 0
-_080178CC: .4byte gUnknown_081CE00C
+_080178CC: .4byte gEmptySpritePoint
 _080178D0:
 	movs r5, #0
 	ldrsh r0, [r2, r5]
@@ -32985,7 +32985,7 @@ _08017C14:
 	b _08017C1A
 	.global _08017C18
 _08017C18:
-	ldr r2, _08017C38 @ =gUnknown_081CE00C
+	ldr r2, _08017C38 @ =gEmptySpritePoint
 _08017C1A:
 	ldr r1, [r4, #0x10]
 	ldr r0, [r1]
@@ -33002,7 +33002,7 @@ _08017C1A:
 	adds r3, r3, r0
 	b _08017C42
 	.align 2, 0
-_08017C38: .4byte gUnknown_081CE00C
+_08017C38: .4byte gEmptySpritePoint
 _08017C3C:
 	movs r5, #0
 	ldrsh r0, [r2, r5]
@@ -33294,7 +33294,7 @@ _08017E7C:
 	b _08017E82
 	.global _08017E80
 _08017E80:
-	ldr r2, _08017EA0 @ =gUnknown_081CE00C
+	ldr r2, _08017EA0 @ =gEmptySpritePoint
 _08017E82:
 	ldr r1, [r4, #0x10]
 	ldr r0, [r1]
@@ -33311,7 +33311,7 @@ _08017E82:
 	adds r3, r3, r0
 	b _08017EAA
 	.align 2, 0
-_08017EA0: .4byte gUnknown_081CE00C
+_08017EA0: .4byte gEmptySpritePoint
 _08017EA4:
 	movs r5, #0
 	ldrsh r0, [r2, r5]
@@ -35632,7 +35632,7 @@ _0801908E:
 	b _08019096
 	.global _08019094
 _08019094:
-	ldr r6, _080190FC @ =gUnknown_081CE00C
+	ldr r6, _080190FC @ =gEmptySpritePoint
 _08019096:
 	ldr r0, [r5, #0x10]
 	adds r3, r0, #0
@@ -35683,7 +35683,7 @@ _080190A8:
 	ldr r0, [r0]
 	mov pc, r0
 	.align 2, 0
-_080190FC: .4byte gUnknown_081CE00C
+_080190FC: .4byte gEmptySpritePoint
 _08019100: .4byte _08019104
 	.global _08019104
 _08019104: @ jump table
@@ -35706,7 +35706,7 @@ _08019126:
 	b _0801912E
 	.global _0801912C
 _0801912C:
-	ldr r1, _08019180 @ =gUnknown_081CE00C
+	ldr r1, _08019180 @ =gEmptySpritePoint
 _0801912E:
 	movs r2, #2
 	ldrsh r4, [r1, r2]
@@ -35749,7 +35749,7 @@ _0801912E:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08019180: .4byte gUnknown_081CE00C
+_08019180: .4byte gEmptySpritePoint
 
 	thumb_func_start sub_08019184
 sub_08019184: @ 0x08019184
@@ -58528,7 +58528,7 @@ _08024CA0:
 	lsls r0, r1, #3
 	adds r0, r0, r1
 	lsls r0, r0, #2
-	ldr r1, _08024CB8 @ =gUnknown_081D0E14
+	ldr r1, _08024CB8 @ =gTerrainHeights0
 	adds r0, r0, r1
 _08024CAA:
 	add sp, #8
@@ -58538,7 +58538,7 @@ _08024CAA:
 	pop {r1}
 	bx r1
 	.align 2, 0
-_08024CB8: .4byte gUnknown_081D0E14
+_08024CB8: .4byte gTerrainHeights0
 
 	thumb_func_start GetSolidTerrainHeights
 GetSolidTerrainHeights: @ 0x08024CBC
@@ -58645,10 +58645,10 @@ _08024D74:
 	lsls r0, r2, #3
 	adds r0, r0, r2
 	lsls r0, r0, #2
-	ldr r1, _08024D80 @ =gUnknown_081D0E14
+	ldr r1, _08024D80 @ =gTerrainHeights0
 	b _08024DD0
 	.align 2, 0
-_08024D80: .4byte gUnknown_081D0E14
+_08024D80: .4byte gTerrainHeights0
 _08024D84:
 	ldr r0, [sp]
 	ands r0, r7
@@ -58658,10 +58658,10 @@ _08024D84:
 	lsls r0, r2, #3
 	adds r0, r0, r2
 	lsls r0, r0, #2
-	ldr r1, _08024D98 @ =gUnknown_081D0E1C
+	ldr r1, _08024D98 @ =gTerrainHeights1
 	b _08024DD0
 	.align 2, 0
-_08024D98: .4byte gUnknown_081D0E1C
+_08024D98: .4byte gTerrainHeights1
 _08024D9C:
 	ldr r0, [sp]
 	movs r1, #8
@@ -58674,10 +58674,10 @@ _08024DAA:
 	lsls r0, r2, #3
 	adds r0, r0, r2
 	lsls r0, r0, #2
-	ldr r1, _08024DB4 @ =gUnknown_081D0E24
+	ldr r1, _08024DB4 @ =gTerrainHeights2
 	b _08024DD0
 	.align 2, 0
-_08024DB4: .4byte gUnknown_081D0E24
+_08024DB4: .4byte gTerrainHeights2
 _08024DB8:
 	ldr r0, [sp]
 	movs r1, #2
@@ -58692,7 +58692,7 @@ _08024DC8:
 	lsls r0, r2, #3
 	adds r0, r0, r2
 	lsls r0, r0, #2
-	ldr r1, _08024DE4 @ =gUnknown_081D0E2C
+	ldr r1, _08024DE4 @ =gTerrainHeights3
 _08024DD0:
 	adds r0, r0, r1
 _08024DD2:
@@ -58708,7 +58708,7 @@ _08024DD6:
 	pop {r1}
 	bx r1
 	.align 2, 0
-_08024DE4: .4byte gUnknown_081D0E2C
+_08024DE4: .4byte gTerrainHeights3
 
 	thumb_func_start sub_08024DE8
 sub_08024DE8: @ 0x08024DE8
@@ -58813,7 +58813,7 @@ _08024E94:
 	movs r0, #0
 	b _08024F16
 _08024EA2:
-	ldr r1, _08024EB0 @ =gUnknown_081D0E10
+	ldr r1, _08024EB0 @ =gTerrainTypes
 	lsls r0, r2, #3
 	adds r0, r0, r2
 	lsls r0, r0, #2
@@ -58821,7 +58821,7 @@ _08024EA2:
 	ldrb r0, [r0]
 	b _08024F16
 	.align 2, 0
-_08024EB0: .4byte gUnknown_081D0E10
+_08024EB0: .4byte gTerrainTypes
 _08024EB4:
 	ldr r0, [sp]
 	ands r0, r7
@@ -58832,7 +58832,7 @@ _08024EB4:
 	mov r8, r1
 	b _08024F18
 _08024EC4:
-	ldr r1, _08024ED4 @ =gUnknown_081D0E10
+	ldr r1, _08024ED4 @ =gTerrainTypes
 	lsls r0, r2, #3
 	adds r0, r0, r2
 	lsls r0, r0, #2
@@ -58840,7 +58840,7 @@ _08024EC4:
 	ldrb r0, [r0, #1]
 	b _08024F16
 	.align 2, 0
-_08024ED4: .4byte gUnknown_081D0E10
+_08024ED4: .4byte gTerrainTypes
 _08024ED8:
 	ldr r0, [sp]
 	movs r1, #8
@@ -58851,7 +58851,7 @@ _08024ED8:
 	mov r8, r4
 	b _08024F18
 _08024EE8:
-	ldr r1, _08024EF8 @ =gUnknown_081D0E10
+	ldr r1, _08024EF8 @ =gTerrainTypes
 	lsls r0, r2, #3
 	adds r0, r0, r2
 	lsls r0, r0, #2
@@ -58859,7 +58859,7 @@ _08024EE8:
 	ldrb r0, [r0, #2]
 	b _08024F16
 	.align 2, 0
-_08024EF8: .4byte gUnknown_081D0E10
+_08024EF8: .4byte gTerrainTypes
 _08024EFC:
 	ldr r0, [sp]
 	movs r1, #2
@@ -58869,7 +58869,7 @@ _08024EFC:
 	movs r0, #0
 	b _08024F16
 _08024F0A:
-	ldr r1, _08024F2C @ =gUnknown_081D0E10
+	ldr r1, _08024F2C @ =gTerrainTypes
 	lsls r0, r2, #3
 	adds r0, r0, r2
 	lsls r0, r0, #2
@@ -58890,7 +58890,7 @@ _08024F1E:
 	pop {r1}
 	bx r1
 	.align 2, 0
-_08024F2C: .4byte gUnknown_081D0E10
+_08024F2C: .4byte gTerrainTypes
 
 	thumb_func_start DecodeCollisionChunk
 DecodeCollisionChunk: @ 0x08024F30
@@ -71974,13 +71974,13 @@ InitContinuePrompt: @ 0x0802BC74
 	bl InitBgSetup
 	str r0, [r4, #8]
 	ldr r0, [r4]
-	ldr r1, _0802BD98 @ =gUnknown_081DF5D4
+	ldr r1, _0802BD98 @ =gContinuePromptUkaUkaBg
 	bl LoadGraphicsPackage
 	ldr r0, [r4, #4]
-	ldr r1, _0802BD9C @ =gUnknown_081DF5AC
+	ldr r1, _0802BD9C @ =gContinuePromptSmokeBg
 	bl LoadGraphicsPackage
 	ldr r0, [r4, #8]
-	ldr r1, _0802BDA0 @ =gUnknown_081DF5C0
+	ldr r1, _0802BDA0 @ =gContinuePromptGlowBg
 	bl LoadGraphicsPackage
 	movs r1, #0xa0
 	lsls r1, r1, #0x13
@@ -72073,9 +72073,9 @@ InitContinuePrompt: @ 0x0802BC74
 	pop {r1}
 	bx r1
 	.align 2, 0
-_0802BD98: .4byte gUnknown_081DF5D4
-_0802BD9C: .4byte gUnknown_081DF5AC
-_0802BDA0: .4byte gUnknown_081DF5C0
+_0802BD98: .4byte gContinuePromptUkaUkaBg
+_0802BD9C: .4byte gContinuePromptSmokeBg
+_0802BDA0: .4byte gContinuePromptGlowBg
 _0802BDA4: .4byte 0x04000008
 _0802BDA8: .4byte 0x04000010
 _0802BDAC: .4byte 0x0400000A
@@ -111918,7 +111918,7 @@ _080402EA:
 	b _080402F2
 	.global _080402F0
 _080402F0:
-	ldr r3, _08040314 @ =gUnknown_081CE00C
+	ldr r3, _08040314 @ =gEmptySpritePoint
 _080402F2:
 	ldr r1, [r6]
 	ldr r0, [r1]
@@ -111937,7 +111937,7 @@ _080402F2:
 	subs r4, r4, r0
 	b _0804031E
 	.align 2, 0
-_08040314: .4byte gUnknown_081CE00C
+_08040314: .4byte gEmptySpritePoint
 _08040318:
 	movs r2, #0
 	ldrsh r0, [r3, r2]
@@ -112141,7 +112141,7 @@ _0804049C:
 	b _080404A2
 	.global _080404A0
 _080404A0:
-	ldr r2, _080404C4 @ =gUnknown_081CE00C
+	ldr r2, _080404C4 @ =gEmptySpritePoint
 _080404A2:
 	ldr r1, [r5]
 	ldr r0, [r1]
@@ -112160,7 +112160,7 @@ _080404A2:
 	subs r3, r3, r0
 	b _080404CE
 	.align 2, 0
-_080404C4: .4byte gUnknown_081CE00C
+_080404C4: .4byte gEmptySpritePoint
 _080404C8:
 	movs r1, #0
 	ldrsh r0, [r2, r1]
@@ -112292,7 +112292,7 @@ _080405CC:
 	b _080405D2
 	.global _080405D0
 _080405D0:
-	ldr r2, _080405F4 @ =gUnknown_081CE00C
+	ldr r2, _080405F4 @ =gEmptySpritePoint
 _080405D2:
 	ldr r1, [r5]
 	ldr r0, [r1]
@@ -112311,7 +112311,7 @@ _080405D2:
 	subs r3, r3, r0
 	b _080405FE
 	.align 2, 0
-_080405F4: .4byte gUnknown_081CE00C
+_080405F4: .4byte gEmptySpritePoint
 _080405F8:
 	movs r1, #0
 	ldrsh r0, [r2, r1]
@@ -112430,7 +112430,7 @@ _080406D6:
 	b _080406DE
 	.global _080406DC
 _080406DC:
-	ldr r3, _08040700 @ =gUnknown_081CE00C
+	ldr r3, _08040700 @ =gEmptySpritePoint
 _080406DE:
 	ldr r1, [r6]
 	ldr r0, [r1]
@@ -112449,7 +112449,7 @@ _080406DE:
 	subs r7, r7, r0
 	b _0804070A
 	.align 2, 0
-_08040700: .4byte gUnknown_081CE00C
+_08040700: .4byte gEmptySpritePoint
 _08040704:
 	movs r2, #0
 	ldrsh r0, [r3, r2]
@@ -160749,12 +160749,12 @@ _0805B018:
 	cmp r0, #0x40
 	bne _0805B02C
 	ldr r1, _0805B024 @ =gEepromConfig
-	ldr r0, _0805B028 @ =gUnknown_087F8448
+	ldr r0, _0805B028 @ =gEepromConfig8k
 	str r0, [r1]
 	b _0805B034
 	.align 2, 0
 _0805B024: .4byte gEepromConfig
-_0805B028: .4byte gUnknown_087F8448
+_0805B028: .4byte gEepromConfig8k
 _0805B02C:
 	ldr r1, _0805B038 @ =gEepromConfig
 	ldr r0, _0805B03C @ =gEepromConfig512
@@ -161146,7 +161146,7 @@ _0805B30A:
 	adds r2, #0x43
 	mov r0, sp
 	bl DMA3Transfer
-	ldr r0, _0805B368 @ =gUnknown_087F8454
+	ldr r0, _0805B368 @ =gEepromMaxTime
 	bl StartEepromTimer
 	movs r4, #0
 	movs r1, #0xd0
@@ -161177,7 +161177,7 @@ _0805B35C:
 	bx r1
 	.align 2, 0
 _0805B364: .4byte gEepromConfig
-_0805B368: .4byte gUnknown_087F8454
+_0805B368: .4byte gEepromMaxTime
 _0805B36C: .4byte gEepromTimeoutFlag
 _0805B370: .4byte 0x0000C001
 

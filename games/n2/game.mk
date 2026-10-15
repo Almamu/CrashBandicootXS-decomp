@@ -45,13 +45,15 @@ CPPFLAGS += -iquote $(GENERATED_INCLUDE_DIR)
 # games/n2/src/<path> builds the same object as src/<path> would
 SHARED_SRCS := $(patsubst $(N2_SRC)/%,$(C_SUBDIR)/%,$(shell sed -e 's/\#.*//' $(N2_DIR)/objects.txt | awk 'NF { print $$3 }'))
 CXX_OBJS    := $(patsubst $(C_SUBDIR)/%.cpp,$(C_BUILDDIR)/%.o,$(filter %.cpp,$(SHARED_SRCS)))
-C_OBJS      := $(patsubst $(C_SUBDIR)/%.c,$(C_BUILDDIR)/%.o,$(filter %.c,$(SHARED_SRCS)))
+C_OBJS      := $(patsubst $(C_SUBDIR)/%.c,$(C_BUILDDIR)/%.o,$(filter $(C_SUBDIR)/%.c,$(SHARED_SRCS)))
+# lib/'s (compile.mk's lib rules, as for XS)
+LIB_C_OBJS  := $(patsubst $(LIB_SUBDIR)/%.c,$(LIB_BUILDDIR)/%.o,$(filter $(LIB_SUBDIR)/%.c,$(SHARED_SRCS)))
 LIBGCC2_OBJS   :=
 LIB1FUNCS_OBJS :=
 
 N2_ASM_OBJS := $(patsubst %.s,$(OBJ_DIR)/%.o,$(wildcard $(N2_DIR)/asm/*.s $(N2_DIR)/data/*.s))
-OBJS        := $(N2_ASM_OBJS) $(CXX_OBJS) $(C_OBJS)
-DEPS        := $(CXX_OBJS:.o=.d) $(C_OBJS:.o=.d)
+OBJS        := $(N2_ASM_OBJS) $(CXX_OBJS) $(C_OBJS) $(LIB_C_OBJS)
+DEPS        := $(CXX_OBJS:.o=.d) $(C_OBJS:.o=.d) $(LIB_C_OBJS:.o=.d)
 
 .PHONY: all compare clean tidy
 
