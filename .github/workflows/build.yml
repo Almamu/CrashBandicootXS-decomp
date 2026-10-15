@@ -124,6 +124,27 @@ jobs:
     - name: Generate progress report
       run: ./objdiff-cli report generate -o report.json
 
+    # On main, send the report to decompilati.onl (tools/progress_api.py,
+    # docs/progress_report.md). The API key is the repository secret
+    # DECOMPILATION_PROGRESS_TOKEN; without it the step does nothing. The
+    # commit message goes through env, never into the script itself.
+    - name: Report progress to decompilati.onl
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      env:
+        TOKEN: ${{ secrets.DECOMPILATION_PROGRESS_TOKEN }}
+        COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+      run: |
+        if [ -z "$TOKEN" ]; then
+          echo "No DECOMPILATION_PROGRESS_TOKEN secret, not reporting"
+          exit 0
+        fi
+        python3 tools/progress_api.py --commit "$GITHUB_SHA" \
+          --message "$(printf '%s\n' "$COMMIT_MESSAGE" | head -n 1)" > progress.json
+        curl --fail-with-body -sS -X POST https://decompilati.onl/api/v1/progress \
+          -H "Authorization: Bearer $TOKEN" \
+          -H "Content-Type: application/json" \
+          --data @progress.json
+
     # The README's progress badges (tools/badges.py): matching and
     # non-matching from the report above, clean functions and workarounds
     # left from tools/match_idioms.py --functions on the same build's

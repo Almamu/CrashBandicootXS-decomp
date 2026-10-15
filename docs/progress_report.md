@@ -13,8 +13,10 @@ read by `report generate`) is generated fresh by `make report` every time
 (see "One unit per matched file" below) and gitignored - never hand-edit or
 commit it.
 
+On every push to `main`, CI also sends the progress to
+[decompilati.onl](https://decompilati.onl) (see "decompilati.onl" below).
 The report used to be uploaded for [decomp.dev](https://decomp.dev), which
-has since closed; nothing reads `report.json` outside this repository now.
+has since closed.
 
 ## Why this needed more than just running objdiff-cli
 
@@ -567,3 +569,36 @@ badges it would publish. On a push to `main`, once every job passed,
 the `badges` job (the only one with `contents: write`) replaces the
 single commit of the `badges` branch with them, and the README links to
 the files on that branch.
+
+## decompilati.onl
+
+[decompilati.onl](https://decompilati.onl) takes progress as a JSON
+document POSTed to its webhook ([API docs](https://decompilati.onl/docs)):
+code and data totals in bytes, plus a tree of areas for the project's map.
+`tools/progress_api.py` builds that document from `report.json` and
+`objdiff.json`:
+
+- `code.matching` is objdiff's `matched_code`. `code.non_matching` is the
+  code that has C but doesn't match: the bytes of the units with a base
+  object, less what matches, the same split as the *non-matching* badge.
+  `data.done` is objdiff's `matched_data`.
+- The areas follow the source tree: **Engine** and **Game** with one area
+  per namespace (`src/engine/<ns>/`, `src/game/<ns>/`), **Libraries** with
+  one per `lib/` library, **Sound data** and **Assembly** (`asm/itoa_arm`).
+  A code unit goes where the object `tools/report_units.py` builds its base
+  from lives; a data unit where its name says its source is. The script
+  stops if a unit has no area or the areas don't add up to the report's
+  totals.
+- The map sizes a tile by its code, so a data-only area (the sound data)
+  gets a `weight`: its share of the data, at the code's scale.
+
+The "Report progress to decompilati.onl" step in
+`.github/workflows/build.yml` runs it on pushes to `main` only, with the
+commit hash and the first line of its message, and POSTs the result with
+the repository secret `DECOMPILATION_PROGRESS_TOKEN` as the bearer token.
+Without the secret the step does nothing. To see what would be sent:
+
+```
+make NON_MATCHING=1 report && objdiff-cli report generate -o report.json
+tools/progress_api.py > progress.json
+```
