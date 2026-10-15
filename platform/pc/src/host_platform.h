@@ -17,6 +17,9 @@ struct HostOptions {
     const char *dumpDir;   /* --dump DIR: the checkpoints' memory, raw */
     const char *screenDir; /* --screens DIR: the checkpoints' pictures, PNG */
     const char *save;      /* --save FILE: the EEPROM's image */
+    const char *wav;       /* --wav FILE: the audio output (audio.c) */
+    const char *gaxTrace;  /* --gax-trace FILE: replay GAX2 calls (gax_trace.c) */
+    const char *gaxLog;    /* --gax-log FILE: log the game's GAX2 calls (gax_trace.c) */
     u32 scale;             /* --scale N: the window's size (default 3) */
     u32 screenshotAt;      /* --screenshot-at N: F12 at game frame N */
     s32 level;             /* --level N: the level select picks level N (-1: no) */
@@ -83,6 +86,22 @@ void HostFrontendInit(void);
 void HostFrontendVBlank(void);
 /* The keys held now (active high). */
 u16 HostFrontendKeys(void);
+
+/* The audio output (audio.c): at each VBlank, the block GAX2 mixed in
+ * that frame (or silence) to the window's audio device, --wav's file and
+ * the audio hash; at the end, `audio BLOCKS HASH`. */
+void HostAudioVBlank(void);
+void HostAudioEnd(void);
+/* The block mixed last, if one was since the last call (gax_trace.c). */
+int HostAudioTakeBlock(const s8 **buf, u32 *n, u32 *rate);
+/* --gax-trace FILE: GAX2 replays the GBA's calls and compares its blocks
+ * with the GBA's (gax_trace.c). Doesn't return. */
+void HostGaxTrace(const char *path);
+/* --gax-log's file, closed at the end. */
+void HostGaxLogEnd(void);
+/* The window's audio device (sdl.c): `n` signed 8-bit mono samples at
+ * `rate` Hz. */
+void HostFrontendAudio(const s8 *buf, u32 n, u32 rate);
 
 /* The EEPROM's image in --save FILE (eeprom.c): written back at a VBlank
  * after the game changed it, and at the end. */

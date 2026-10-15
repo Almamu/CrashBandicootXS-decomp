@@ -18,6 +18,17 @@
  *   frames behind, the deadline starts again from now. Tab held runs
  *   without waiting.
  *
+ * The sound (audio.c's blocks, a frame's samples at the song's mix rate)
+ * goes to SDL's default audio device, at the rate it likes (48 kHz asked
+ * for), queued (SDL_QueueAudio) about three frames ahead. The blocks come
+ * at the frame rate of the pacing above, the device takes them at its own
+ * clock, and the two drift apart; so the conversion to the device's rate
+ * (linear interpolation) runs up to 0.5% faster or slower to keep the
+ * queue at its length, as emulators do (an eighth of a semitone at most,
+ * which nobody hears). When the queue runs dry anyway (a slow host), a
+ * frame of silence starts it again; while it is far too long (Tab), blocks
+ * are dropped. Without an audio device the game runs silent.
+ *
  * Keyboard: arrows the D-pad, X = A, Z = B, A = L, S = R, Enter = Start,
  * Backspace or right Shift = Select. A gamepad (SDL's game controller
  * layout, the Xbox one): the D-pad or the left stick, the right face
@@ -52,6 +63,13 @@ u16 HostFrontendKeys(void)
     return 0;
 }
 
+void HostFrontendAudio(const s8 *buf, u32 n, u32 rate)
+{
+    (void)buf;
+    (void)n;
+    (void)rate;
+}
+
 #else
 
 #include <SDL.h>
@@ -69,6 +87,15 @@ static Uint64 sFrameTicks; /* a frame in performance-counter ticks, << 8 */
 static Uint64 sFraction;
 static u16 sKeys;
 static u32 sShots;
+
+/* The audio device, and the conversion to its rate: the position of the
+ * next output sample in the current block (input samples), and the last
+ * input sample of the block before (position -1). */
+static SDL_AudioDeviceID sAudio;
+static SDL_AudioSpec sAudioSpec;
+static u32 sAudioFrameSamples; /* a frame's time at the device's rate */
+static double sAudioPhase;
+static s32 sAudioLast;
 
 static const struct {
     SDL_Scancode key;
@@ -115,6 +142,89 @@ static void Fail(const char *what)
     exit(2);
 }
 
+/* The default audio device: 16-bit samples (SDL converts them if the
+ * device wants others), at the rate and in the channels it likes. No
+ * device (or no audio driver) is not an error: the game runs silent. */
+static void OpenAudio(void)
+{
+    SDL_AudioSpec want;
+
+    if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
+        fprintf(stderr, "no audio: %s\n", SDL_GetError());
+        return;
+    }
+    memset(&want, 0, sizeof(want));
+    want.freq = 48000;
+    want.format = AUDIO_S16SYS;
+    want.channels = 2;
+    want.samples = 512;
+    sAudio =
+        SDL_OpenAudioDevice(NULL, 0, &want, &sAudioSpec,
+                            SDL_AUDIO_ALLOW_FREQUENCY_CHANGE | SDL_AUDIO_ALLOW_CHANNELS_CHANGE);
+    if (sAudio == 0) {
+        fprintf(stderr, "no audio: %s\n", SDL_GetError());
+        return;
+    }
+    sAudioFrameSamples = (u32)((u64)sAudioSpec.freq * CYCLES_A_FRAME / GBA_CLOCK);
+    SDL_PauseAudioDevice(sAudio, 0);
+}
+
+void HostFrontendAudio(const s8 *buf, u32 n, u32 rate)
+{
+    static s16 out[16384];
+    u32 frame = sAudioSpec.channels * sizeof(s16);
+    u32 queued;
+    u32 target;
+    double step;
+    double adjust;
+    u32 m = 0;
+
+    if (sAudio == 0 || n == 0) {
+        return;
+    }
+    queued = SDL_GetQueuedAudioSize(sAudio) / frame;
+    target = 3 * sAudioFrameSamples;
+    if (queued > 4 * target) {
+        /* far ahead (Tab): this block is dropped */
+        sAudioPhase = 0;
+        sAudioLast = buf[n - 1];
+        return;
+    }
+    if (queued == 0) {
+        /* run dry, or just started: a frame of silence, the queue's lead */
+        memset(out, 0, sAudioFrameSamples * frame);
+        SDL_QueueAudio(sAudio, out, sAudioFrameSamples * frame);
+        queued = sAudioFrameSamples;
+    }
+    /* above the target: a step a little longer (fewer samples out) */
+    adjust = ((double)queued - target) / target * 0.005;
+    if (adjust > 0.005) {
+        adjust = 0.005;
+    } else if (adjust < -0.005) {
+        adjust = -0.005;
+    }
+    step = (double)rate / sAudioSpec.freq * (1.0 + adjust);
+    while (sAudioPhase < n && (m + 1) * sAudioSpec.channels <= sizeof(out) / sizeof(out[0])) {
+        u32 i = (u32)sAudioPhase;
+        double f = sAudioPhase - i;
+        s32 a = i == 0 ? sAudioLast : buf[i - 1];
+        s32 v = (s32)((a + (buf[i] - a) * f) * 256);
+        u32 c;
+
+        for (c = 0; c < sAudioSpec.channels; c++) {
+            out[m * sAudioSpec.channels + c] = (s16)v;
+        }
+        m++;
+        sAudioPhase += step;
+    }
+    sAudioPhase -= n;
+    if (sAudioPhase < 0) {
+        sAudioPhase = 0;
+    }
+    sAudioLast = buf[n - 1];
+    SDL_QueueAudio(sAudio, out, m * frame);
+}
+
 void HostFrontendInit(void)
 {
     u32 scale = gHostOptions.scale;
@@ -140,6 +250,7 @@ void HostFrontendInit(void)
     if (sTexture == NULL) {
         Fail("SDL_CreateTexture");
     }
+    OpenAudio();
     /* Pads plugged in now are opened by their SDL_CONTROLLERDEVICEADDED. */
     sFrameTicks = (SDL_GetPerformanceFrequency() << 8) * CYCLES_A_FRAME / GBA_CLOCK;
     sDeadline = SDL_GetPerformanceCounter();

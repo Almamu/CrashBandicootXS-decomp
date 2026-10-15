@@ -103,6 +103,7 @@ static void NextScanline(void)
         /* The picture is finished: shown (the window), and the time a
          * frame takes waited for, before the game's VBlank handler. */
         HostPpuFrame();
+        HostAudioVBlank();
         HostSaveFlush();
         if (!gHostOptions.headless) {
             HostFrontendVBlank();
