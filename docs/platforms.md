@@ -196,12 +196,13 @@ object compiles and links on a 64-bit host, in CI.
 
 ## `platform/pc/`
 
-The game for a 64-bit host (Linux, a stock g++/gcc). Phases 1 to 6 of
+The game for a 64-bit host (Linux, a stock g++/gcc). Phases 1 to 7 of
 #1093: it compiles, links and runs the game's own frame loop on the
 host's main thread; a software PPU draws the picture a scanline at a
 time; an SDL2 window shows it at the GBA's frame rate and reads the
 keyboard and gamepads; the EEPROM can live in a file; GAX2 plays the
-music and the sound effects, mixed as the GBA mixes them. Headless, with
+music and the sound effects, mixed as the GBA mixes them; the link cable
+is stubbed, a GBA with no cable attached (the owner's decision). Headless, with
 scripted input, it hashes palette RAM, VRAM, OAM and the picture at
 checkpoints, which tools/boottest.py compares with mGBA running the ROM
 on the same input, and it can write the sound to a WAV file.
@@ -254,6 +255,7 @@ platform/pc/src/
     sha1.c, png.c                  the checkpoints' hash, the pictures' PNG files
     eeprom.c                       AgbEeprom's API (a RAM buffer, --save's file), in
                                    place of lib/agb_eeprom
+    sio.c                          SIOCNT as a GBA's with no cable attached (the link)
     audio.c                        the sound: GAX2's blocks at each VBlank to the
                                    window's audio device, --wav's file, the hash
     gax_dsp.c                      GAX2's ARM routines (lib/gax/asm) in C
@@ -276,8 +278,9 @@ platform/pc/libc_names.txt         the game's functions named as the C library's
 platform/pc/tests/boot.keys        the headless boot's input (CI)
 platform/pc/tests/boot_mgba.json   mGBA's log of it (boottest.py), what CI compares
 platform/pc/tests/intro.keys       the boot to New Game and the whole intro cutscene
+platform/pc/tests/link.keys        the save menu's "load link game", with no cable, aborted
 platform/pc/tests/*_mgba_screens.json
-                                   the hashes of mGBA's pictures for both (boottest.py
+                                   the hashes of mGBA's pictures for the three (boottest.py
                                    `screens`), what CI compares the PPU's with
 platform/pc/tests/screens/         some of mGBA's pictures of the boot, as PNGs
 platform/pc/tests/boot_gax.trace   mGBA's trace of GAX2 in the boot (boottest.py
@@ -352,7 +355,9 @@ copied into REG_IF: the game acknowledges IRQs by writing 1s to it (the
 link's `REG_IF |= INTR_FLAG_SERIAL`), which plain memory can't do.
 HBlank, the timers, the serial port and the DMAs raise nothing: the game
 enables no HBlank IRQ, the EEPROM in a RAM buffer needs no Timer2 timeout
-(SetEepromTimerIntr installs a no-op), and the link never connects. A
+(SetEepromTimerIntr installs a no-op), and no cable is attached (sio.c,
+below), so no link transfer ever raises Serial, and the game, a child
+console, arms no Timer3. A
 VBlankIntrWait with the VBlank IRQ off stops the run with an error (the
 GBA would hang).
 
@@ -419,6 +424,7 @@ same key file, each frame's picture compared (`--every 1`):
 | boot.keys, `--level` 3, 5, 10 `--room 1` (the polar stages) | 960 each | 959 each |
 | boot.keys, `--level` 6, 14 (Rocket Racket, Blimp Bonanza: jetpack) | 960 each | 927 each |
 | boot.keys, `--level` 21 (N. Gin: jetpack) | 960 | 943 |
+| link.keys (the save menu's "load link game" with no cable, aborted) | 1000 | 1000 |
 
 The pictures that differ are of the CPU's time, not the PPU's: the host's
 game takes no time, the GBA's does. Frame 512 is the first after the
@@ -570,6 +576,42 @@ chip's bits in the order the GBA sends them, the layout of mGBA's .sav:
 an 8-byte block is EEPROMWrite's `data[0..3]` bytes reversed. The game
 uses the 4 Kbit chip, so the file is 512 bytes; a longer file is read as
 far as the chip goes.
+
+**The link cable** (sio.c). By the owner's decision (#1093) the link
+is stubbed: the host is a GBA with no cable attached, and the game's
+own code runs as it does on one. The link's one use is the save menu's
+"load link game" (SaveMenu::MainInput's cursor 1, from the level
+select's Start or the title's load), which exchanges save records with
+a second console (SaveMenu::LinkExchange, src/game/ui/save_menu_draw.cpp);
+nothing probes the link at boot or anywhere else. The save menu's
+constructor makes the session (`new LinkSession`, whose Reset stops the
+port: RCNT 0, SIOCNT in UART mode, Timer3 stopped). With the option
+picked, the exchange loops a frame at a time: LinkSession::Update
+(src/engine/link/link_session.cpp) puts the port in multi-player mode
+and waits for SIOCNT's SD terminal (bit 3, every console ready), and
+SaveTransfer::Poll waits for the session to connect, while the screen
+says "transferring data" and that B aborts. On a GBA with no cable both
+terminals are pulled high: SIOCNT reads SI high (bit 2, a child) and SD
+high, multi-player id 0 and no error, and a child's start bit is read
+only (mGBA with no link reads the same, but keeps a written start bit,
+which the game doesn't read). REG_SIOCNT is a platform call on the host
+(gba/io_reg.h, HostSioCnt) that sets those read-only bits in multi-player
+mode before the game reads or writes the register; the other serial
+registers are plain memory (SIOMULTI0-3 are only read by the serial IRQ).
+So the session starts as a child, installs its serial IRQ handler, gets
+no transfer (no parent clocks one, and the platform raises no Serial
+IRQ), steps its counter down to -15 in 15 frames, resets (Stop and
+ResetState) and starts over, until B: LinkExchange returns 3, and the
+menu goes back to its main page with "load link game" under the cursor,
+as on a GBA with nothing plugged in. It never hangs and never shows
+the "connection failed" message (that needs a session that connected).
+platform/pc/tests/link.keys plays it (Start from the level select, "load
+link game" at frame 620, B at 800 and 860, back to the level select), and
+CI compares every frame's picture with mGBA's with no link
+(tests/link_mgba_screens.json): all 1000 the same. Before sio.c the
+host's SIOCNT was plain memory, SD read low ("bad connection"), and
+the session never started (Update stopped and re-primed the port every
+frame); the pictures were the same, the code it ran was not.
 
 **DMA.** Every DMA the game starts is immediate (`DmaCopy*`, `DmaFill*`,
 DMA3, through DmaSet): none is timed to VBlank, HBlank or a FIFO (only
@@ -730,8 +772,9 @@ only the 9 torn frames above differ. CI plays boot.keys to frame 6000 and
 compares it with mGBA's logs (tests/boot_mgba.json, every 60 frames,
 and tests/boot_mgba_screens.json, every frame).
 
-**Not done yet** (the later phases): the link. The gamepad mapping is
-built but untested with a real pad (the tests had none).
+**Not done yet:** the gamepad mapping is built but untested with a real
+pad (the tests had none). The link is stubbed by decision ("The link
+cable" above), not left to do.
 `vsprintf` stays as it is (4-byte argument slots, see above; renamed
 GameVsprintf, and never called).
 Other ABI differences that a later phase may meet: the `asm("CName")`
