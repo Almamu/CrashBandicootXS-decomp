@@ -155,6 +155,19 @@ The code must compile for a 64-bit host with the GBA build unchanged
   (`uintptr_t *`, a union with it) by the record's mode. The airship's
   and the hovercraft's `mapFrames` are `uintptr_t[]`. The generated
   animation tables (tools/levels.py) need no casts.
+- **A CpuSet of pointers counts words.** CpuSet's count is in 32-bit
+  units, one a pointer on the GBA: the part list's and the crate list's
+  compaction (PartList::Update, Remove, RemoveAt; CrateList::RemoveAt,
+  Detach) copy `(count - i) * (sizeof(*items) / sizeof(u32))` words, the
+  same `count - i` on the GBA. With `count - i` alone the host moved half
+  the entries: a wumpa that flew off (MarkGone) left the touchable list
+  with one wumpa twice and another dropped, from frame 961 of boot.keys.
+- **A union of a pointer and an `s32` is zeroed through the pointer.**
+  Crate's per-kind word (0x48) is an iron switch crate's `group` pointer
+  and other kinds' `s32`s; Crate::Reset zeroes `group`, the widest, not
+  `solidKind`, which on the host left `group`'s top half as the heap
+  block held, so ActivateIronSwitch's `group != 0` test returned at once
+  and the outline crates never turned solid.
 - **Layout asserts are the platform's.** A `sizeof`/`offsetof` assert on
   a struct or class that holds a pointer (or a vtable) is a
   `LAYOUT_ASSERT` (gba/defines.h): `COMPILE_TIME_ASSERT` on the GBA, and
@@ -192,7 +205,7 @@ on the same input. Nothing is heard yet (audio is phase 6).
 ```
 make PLATFORM=pc        # build/pc/crashbandicootxs_pc; XS only
 build/pc/crashbandicootxs_pc --save crash.sav          # in a window (with SDL2)
-build/pc/crashbandicootxs_pc --headless --keys platform/pc/tests/boot.keys --frames 960
+build/pc/crashbandicootxs_pc --headless --keys platform/pc/tests/boot.keys --frames 6000
 ```
 
 It needs no ARM toolchain, agbcc or baserom, only what the data
@@ -377,7 +390,8 @@ same key file, each frame's picture compared (`--every 1`):
 
 | run | frames | the same as mGBA's |
 |---|---|---|
-| boot.keys (logos, title, menus, Jungle Jam) | 960 | 960 |
+| boot.keys (logos, title, menus, Jungle Jam) | 6000 | 6000 |
+| boot.keys' play pattern on to frame 20000 (Jungle Jam, then a sewer level) | 20000 | 19991 |
 | intro.keys (the whole intro cutscene, into Jungle Jam) | 2400 | 2400 |
 | boot.keys, `--level` 0, 1, 9, 11 (Jungle Jam, Shipwrecked, Ruined, Ace of Space) | 960 each | 960 each |
 | boot.keys, `--level` 20, 22, 23, 24 (Dingodile, Tiny, Neo Cortex, Mega-Mix) | 960 each | 960 each |
@@ -392,6 +406,12 @@ decompression and copies take none), so the last picture before it is
 drawn at another point of the load. In levels 6, 14 and 21 the fade-in
 after it steps BLDY from the VBlank IRQ (BrightnessFade::Step), and
 mGBA's extra VBlanks put it a step ahead, until it ends (frame 547).
+The 9 frames of the 20000-frame run (6513, 6531, 6600, 6693, 8369, 8387,
+8456, 8549, 8552, one at a time, the same steps in two passes over the
+same part of the level) differ only in their top 2 to 49 lines, at the
+background's scrolling edge, and the next frame is the same again: a
+tear, the GBA's game still writing VRAM while the top lines are drawn,
+where the host's game takes no time.
 Every other frame is pixel for pixel mGBA's. A save made with the same
 keys is mGBA's .sav byte for byte but for one padding byte of the slot
 record (stack garbage) and so the checksum.
@@ -553,24 +573,24 @@ and maps unchanged):
 **How far it matches mGBA.** With platform/pc/tests/boot.keys (Start and
 A mashed through the boot cutscene, the company logos, the language
 select, the title, the intro and the level select, then Jungle Jam from
-frame 511, played with run, jump and spin), every frame's picture hash is
-mGBA 0.10.5's up to frame 960. The first difference is at frame 961: one
-of five wumpa fruit flying off from a bouncy wumpa crate is 5 pixels to
-the side, and the OBJ tiles after it differ. gRandSeed is the same in
-both every frame up to there, it doesn't depend on the host's
-optimisation level (-O1 and -O2 agree) or on what a NULL_READ reads
-(zeros or the BIOS's open-bus 0xE3A02004); not found yet. CI runs the
-boot to frame 960 and compares it with mGBA's log
-(tests/boot_mgba.json).
+frame 511, played with run, jump and spin to frame 6000), every frame's
+picture hash is mGBA 0.10.5's. Until the CpuSet and the crate fixes
+("64-bit hosts" above) the first difference was at frame 961, one of five
+wumpa fruit from a bouncy wumpa crate drawn 5 pixels off (the part list's
+compaction), and with the same play kept up, the outline crates of an
+iron switch never solidified (frame 17215). Played on to frame 20000,
+only the 9 torn frames above differ. CI plays boot.keys to frame 6000 and
+compares it with mGBA's logs (tests/boot_mgba.json, every 60 frames,
+and tests/boot_mgba_screens.json, every frame).
 
 **Not done yet** (the later phases): audio (GAX2's API is silent;
 gGaxMusicData's pointers are the GBA's, which nothing on the host reads),
-the link. The frame 961 difference above is still open. The gamepad
-mapping is built but untested with a real pad (the tests had none).
+the link. The gamepad mapping is built but untested with a real pad (the tests had none).
 `vsprintf` stays as it is (4-byte argument slots, see above; renamed
 GameVsprintf, and never called).
 Other ABI differences that a later phase may meet: the `asm("CName")`
 views with another return type (`RandRange_s32`, `GetPaletteSlot_s32`)
 read a register the host doesn't promise to extend, and the game's
 objects are bigger on the host, so its heaps are laid out differently
-and a stale block's contents differ.
+and a stale block's contents differ (as Crate's `group` showed: a field
+the GBA zeroes whole, the host only in part).

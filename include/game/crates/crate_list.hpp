@@ -161,8 +161,9 @@ public:
 
     /* Remove's body, which Update inlines: finds `sprite` in the slots,
      * takes its nodes out of the grid (Unlink), moves the slots after it
-     * down one place (CpuSet) and clears the last. The search is a plain
-     * `while` reading `capacity` in its test. With a local `n = capacity`
+     * down one place (CpuSet, which counts 32-bit words: one a pointer
+     * on the GBA, two on a 64-bit host) and clears the last. The search
+     * is a plain `while` reading `capacity` in its test. With a local `n = capacity`
      * and early returns instead, Update's copy had `n` and its register
      * copy swapped and needed an asm barrier (#662 round 3). */
     void Detach(Crate *sprite)
@@ -173,7 +174,9 @@ public:
             i++;
         if (i < capacity) {
             Unlink(slots[i]);
-            CpuSet(&slots[i + 1], &slots[i], ((count - i) & CPU_SET_COUNT_MASK) | CPU_SET_32BIT);
+            CpuSet(&slots[i + 1], &slots[i],
+                   (((count - i) * (sizeof(*slots) / sizeof(u32))) & CPU_SET_COUNT_MASK) |
+                       CPU_SET_32BIT);
             slots[count - 1] = 0;
             count--;
         }

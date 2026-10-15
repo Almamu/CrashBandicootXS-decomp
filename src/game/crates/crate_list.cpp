@@ -35,7 +35,8 @@ void CrateList::RemoveAt(s32 index)
     if (index < capacity) {
         Unlink(slots[index]);
         CpuSet(&slots[index + 1], &slots[index],
-               ((count - index) & CPU_SET_COUNT_MASK) | CPU_SET_32BIT);
+               (((count - index) * (sizeof(*slots) / sizeof(u32))) & CPU_SET_COUNT_MASK) |
+                   CPU_SET_32BIT);
         slots[count - 1] = 0;
         count--;
     }

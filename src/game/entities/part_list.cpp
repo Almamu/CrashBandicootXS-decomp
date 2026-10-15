@@ -24,7 +24,9 @@ void PartList::Draw()
 }
 
 /* Removes `part` from `items`: the entries after it move down one place
- * (CpuSet), and the last slot is cleared. */
+ * (CpuSet), and the last slot is cleared. CpuSet counts 32-bit words:
+ * one per pointer on the GBA, sizeof(*items) / sizeof(u32) of them on a
+ * 64-bit host (docs/platforms.md). */
 void PartList::Remove(Sprite *part)
 {
     s32 i = 0;
@@ -36,7 +38,9 @@ void PartList::Remove(Sprite *part)
         if (++i >= n)
             return;
     if (i < capacity) {
-        CpuSet(&items[i + 1], &items[i], ((count - i) & CPU_SET_COUNT_MASK) | CPU_SET_32BIT);
+        CpuSet(&items[i + 1], &items[i],
+               (((count - i) * (sizeof(*items) / sizeof(u32))) & CPU_SET_COUNT_MASK) |
+                   CPU_SET_32BIT);
         count--;
         items[count] = 0;
     }
@@ -47,7 +51,8 @@ void PartList::RemoveAt(s32 index)
 {
     if (index < capacity) {
         CpuSet(&items[index + 1], &items[index],
-               ((count - index) & CPU_SET_COUNT_MASK) | CPU_SET_32BIT);
+               (((count - index) * (sizeof(*items) / sizeof(u32))) & CPU_SET_COUNT_MASK) |
+                   CPU_SET_32BIT);
         count--;
         items[count] = 0;
     }

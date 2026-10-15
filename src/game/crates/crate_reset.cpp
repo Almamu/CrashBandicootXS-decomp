@@ -55,7 +55,11 @@ void Crate::Reset()
     state &= CRATE_STATE_BUSY;
     fallDistance = 0;
     fallSpeed = 0;
-    solidKind = 0;
+    /* The per-kind word, zeroed through its widest member: on a 64-bit
+     * host `group` is 8 bytes, and through `solidKind` its top half
+     * would keep whatever the heap block held, so an iron switch crate's
+     * `group != 0` test failed (#1093). */
+    group = 0;
     timer = 0;
     paramA = 0;
     paramB = 0;
