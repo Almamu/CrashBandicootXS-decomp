@@ -61,7 +61,9 @@ everything under it not claimed by a longer entry) or its `paths`, its
                   uncompressed u16[256] palette
     tiles         a tile sheet, LZ77: `bpp`, `width` (tiles per row), and
                   `obj_sheet` (tools/obj_sheet.py's layout) for a sheet of
-                  whole OBJs; `palette` is an LZ77 palette ({symbol, rom,
+                  whole OBJs; with `packed` false it's the raw tiles,
+                  `bytes` long (N-Tranced's fonts, which its Font uploads a
+                  glyph at a time); `palette` is an LZ77 palette ({symbol, rom,
                   colors}) or, for a sheet whose palette OAM picks at run
                   time, {"obj_palette": paletteId}: the gObjPalettes entry
                   the PNG is drawn with
@@ -490,7 +492,7 @@ def extract_bitmap(rom, e, out, by_symbol):
 
 
 def extract_tiles(rom, e, out, by_symbol):
-    data = rom.lz77(addr(e["rom"]))
+    data = rom.bytes(addr(e["rom"]), e["bytes"]) if e.get("packed") is False else rom.lz77(addr(e["rom"]))
     rgb = jasc_rgb(palette_of(rom, e, by_symbol))
     if "obj_sheet" in e:
         to_obj_sheet(tiles_image(data, e["bpp"], 1, rgb), e["obj_sheet"], out / e["path"])

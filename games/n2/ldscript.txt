@@ -118,7 +118,8 @@ SECTIONS
 		build/ntranced/src/engine/gfx/data/sprite_banks_47_48.o(.rodata);
 		build/ntranced/games/n2/data/data_08492ACB.o(.rodata);
 		build/ntranced/lib/libgcc/data/clz_tab.o(.rodata);
-		build/ntranced/games/n2/data/data_085293D0.o(.rodata);
+		build/ntranced/src/engine/text/data/font_tiles.o(.rodata);
+		build/ntranced/games/n2/data/data_0852CD90.o(.rodata);
 		build/ntranced/src/game/ui/data/menu_graphics.o(.rodata);
 		build/ntranced/src/game/level/data/level_bg_tiles_0.o(.rodata);
 		build/ntranced/games/n2/data/data_0853E37B.o(.rodata);

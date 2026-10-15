@@ -448,6 +448,7 @@ N-Tranced's or the shared XS one, with N-Tranced's ROM.
 |---|---|---|
 | The sprite tile pool (49 banks) and the 93 OBJ palettes | `0x082B3914`-`0x084768B4` | `games/n2/src/engine/gfx/data/sprite_tiles.cpp` |
 | The sprite banks' tables (animations, frames, piece arrays) | `0x084768B4`-`0x08492ACB` | `games/n2/src/engine/gfx/data/sprite_banks_*.cpp` |
+| The two fonts' glyph tiles, raw (`fonts/small.png`, `fonts/large.png`: OBJ sheets as XS's fonts, `"packed": false`) | `0x085293D0`-`0x0852CD90` | `games/n2/src/engine/text/data/font_tiles.cpp` |
 | The pause screen (N-Tranced's own) and the continue prompt's three BG packages (XS's) | `0x0852D868`-`0x085346AC` | `games/n2/src/game/ui/data/menu_graphics.cpp` |
 | The framed sprite sheet of the water levels' categories (262 frames) | `0x080BF458` | `games/n2/src/game/vehicles/ocean/data/ocean_sprite_sheet.cpp` |
 | The framed sprite sheet of the space levels' categories (213 frames) | `0x08106C58` | `games/n2/src/game/vehicles/space/data/space_sprite_sheet.cpp` |
@@ -533,8 +534,8 @@ The font checks are XS's, against N-Tranced's two fonts
 the glyphs' palette, aren't characters. Texts 191-195 aren't checked:
 they are the atlasphere's (its pause menu's "Resume", "Exit", "Paused"
 and its hints, with `<#>` and `<$>`), in capitals neither font has, so
-another font draws them, not known yet. The fonts' tiles
-(`gSmallFontTiles`, `gLargeFontTiles`) are still the ROM's.
+another font draws them, not known yet. The fonts' tiles are
+`games/n2/graphics/fonts/` ("Graphics").
 
 Apart from the UI text, the ROM has no text for cutscenes or dialogues:
 the only other English is a list of character names (Crash, Crunch,

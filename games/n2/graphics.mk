@@ -33,3 +33,18 @@ $(foreach o,$(filter %/sprite_banks_00_06.o %/sprite_banks_07_25.o %/sprite_bank
 # the actor categories' framed sprite sheets (graphics_rules.mk's rules)
 $(C_BUILDDIR)/game/vehicles/ocean/data/ocean_sprite_sheet.o: $(GRAPHICS_BUILDDIR)/vehicles/ocean/sprite_sheet.bin.lz.inc
 $(C_BUILDDIR)/game/vehicles/space/data/space_sprite_sheet.o: $(GRAPHICS_BUILDDIR)/vehicles/space/sprite_sheet.bin.lz.inc
+
+# The two fonts' glyph tiles (graphics/fonts/, the manifest's raw `tiles`):
+# OBJ sheets as XS's fonts (games/xs/graphics.mk), but not LZ77-packed
+N2_OBJ_SHEET_fonts/small := --obj 8x16*77 --obj 16x8*2 --obj 8x16*2 --columns 16 --cell 16x16
+N2_OBJ_SHEET_fonts/large := --obj 16x16*75 --columns 16
+define N2_OBJ_SHEET_TILES_RULE
+$(GRAPHICS_BUILDDIR)/$(1).img.bin: $(GRAPHICS_DIR)/$(1).png $(PY_OBJ_SHEET) | $(GRIT)
+	@mkdir -p $$(dir $$@)
+	python3 tools/obj_sheet.py to-tiles $$< $(GRAPHICS_BUILDDIR)/$(1)_objs.png $(N2_OBJ_SHEET_$(1))
+	$(GRIT) $(GRAPHICS_BUILDDIR)/$(1)_objs.png -gt -gB4 -p! -ftb -fh! -o $(GRAPHICS_BUILDDIR)/$(1)
+$(GRAPHICS_BUILDDIR)/$(1).img.bin.inc: $(GRAPHICS_BUILDDIR)/$(1).img.bin $(PY_BIN2C)
+	python3 tools/bin2c.py $$< $$@
+endef
+$(foreach s,fonts/small fonts/large,$(eval $(call N2_OBJ_SHEET_TILES_RULE,$(s))))
+$(C_BUILDDIR)/engine/text/data/font_tiles.o: $(GRAPHICS_BUILDDIR)/fonts/small.img.bin.inc $(GRAPHICS_BUILDDIR)/fonts/large.img.bin.inc
