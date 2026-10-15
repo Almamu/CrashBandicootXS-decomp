@@ -6,8 +6,9 @@
 # - ui_text: the UI text of the six languages;
 # - cutscene_text_english: the cutscenes' English text (the template only);
 # - cutscene_text_translations: the other five languages' cutscene text;
-# - credits_text: the credits (gCreditsText), from text/credits.pot (the
-#   text, no translations: every language shows it) and data/credits.json
+# - credits_text: the credits (gCreditsText), from the template's credits.*
+#   entries (the English: every language shows it, so each .po's copies
+#   must be the English, which text-check checks) and data/credits.json
 #   (the order, the fonts and the logos).
 # The generator stops on a missing translation and on a character the
 # game's font lacks (src/game/ui/data/hud_font_tables.cpp's character sets), and
@@ -19,7 +20,6 @@ TEXT_POS := $(TEXT_LANGS:%=$(TEXT_DIR)/%.po)
 TEXT_BUILDDIR := $(OBJ_DIR)/text
 TEXT_MOS := $(TEXT_LANGS:%=$(TEXT_BUILDDIR)/%.mo)
 TEXT_TABLES := ui_text cutscene_text_english cutscene_text_translations credits_text
-TEXT_CREDITS := $(TEXT_DIR)/credits.pot data/credits.json
 TEXT_DEPS := $(TEXT_POT) tools/text.py src/game/ui/data/hud_font_tables.cpp
 
 MSGFMT := msgfmt
@@ -35,7 +35,7 @@ $(TEXT_BUILDDIR)/cutscene_text_english.inc: $(TEXT_DEPS)
 	python3 tools/text.py cpp cutscene_text_english $@
 $(TEXT_BUILDDIR)/cutscene_text_translations.inc: $(TEXT_DEPS) $(TEXT_MOS)
 	python3 tools/text.py cpp cutscene_text_translations $@ --mo $(TEXT_BUILDDIR)
-$(TEXT_BUILDDIR)/credits_text.inc: $(TEXT_CREDITS) tools/text.py src/game/ui/data/hud_font_tables.cpp
+$(TEXT_BUILDDIR)/credits_text.inc: $(TEXT_DEPS) data/credits.json
 	python3 tools/text.py cpp credits_text $@
 
 $(foreach t,$(TEXT_TABLES),$(eval $(call data_obj,$(t)): $(TEXT_BUILDDIR)/$(t).inc))
@@ -45,7 +45,8 @@ $(foreach t,$(TEXT_TABLES),$(eval $(call data_obj,$(t)): CPPFLAGS += -iquote $(T
 # on each .po, failing on an untranslated or fuzzy entry; msgcmp against
 # the template both ways, failing on a missing or extra key; and the
 # generator's checks (the font, the encoding, the level names' ids, the
-# credits' keys and fonts), and
+# credits' keys and fonts, and each .po's credits.* entries being the
+# English, unchanged and not fuzzy), and
 # the cutscenes' (every page in the template, cutscenes.mk).
 .PHONY: text-check text-update
 text-check:

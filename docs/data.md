@@ -1078,7 +1078,8 @@ stream `UpdateCreditsText` draws line by line as floating glyphs. It is text
 with three opcodes: 1, n (popup glyph picture n, the logos of
 `credits_title_logos.cpp`), 2 and 3 (the small and the large HUD font).
 A zero byte ends it, and the code starts over there. It is generated from
-`text/credits.pot` (the text) and `data/credits.json` (the order, the
+`text/crashxs.pot`'s `credits.*` entries (the English text, which every
+language shows) and `data/credits.json` (the order, the
 font switches and the logos), see [text.md, "The
 credits"](./text.md#the-credits).
 
