@@ -64,7 +64,7 @@ extern s32 itoa(s32 value, u8 *buffer, s32 base);
 extern u8 *FormatPaddedNumber(u8 *dest, u8 *fmt, s32 *valuePtr, u8 padChar, s32 *charsConsumedPtr);
 
 /* src/engine/util/printf.cpp */
-extern void vsprintf(u8 *dest, u8 *fmt, u32 *args);
+extern void vsprintf(u8 *dest, u8 *fmt, uintptr_t *args);
 extern void sprintf(u8 *dest, u8 *fmt, ...);
 
 /* src/engine/util/rand.cpp */
