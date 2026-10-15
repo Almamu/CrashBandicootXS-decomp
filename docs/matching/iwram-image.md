@@ -4,7 +4,7 @@ ROM `0x087E55E4`-`0x087E5FCC` (0x9E8 bytes) is the image crt0 copies to
 IWRAM `0x03000000` at boot. It was one `.incbin` in `data/data.s`
 (`gStaticData_087E55E4`, together with the 0xFF fill after it). It is now
 built from source and linked to run at `0x03000000`: see
-[decomp_dev.md](../decomp_dev.md), "The IWRAM image", for the linker
+[progress_report.md](../progress_report.md), "The IWRAM image", for the linker
 script and the report. Contents:
 
 | IWRAM | Name | Source | Status |

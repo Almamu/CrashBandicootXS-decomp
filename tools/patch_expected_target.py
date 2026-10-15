@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Applies expected/corrections.txt to an assembled target object in place.
 
-See expected/corrections.txt and docs/decomp_dev.md for why this exists:
+See expected/corrections.txt and docs/progress_report.md for why this exists:
 expected/code_3.s (and expected/legacy.s) are frozen, never-edited
 historical disassembly, so any function boundary or name they never
 anticipated (because later matching work discovered/renamed it) has to
@@ -15,7 +15,7 @@ falls outside its range) are silently skipped rather than erroring, so
 the same file doesn't need per-slice filtering maintained by hand.
 
 After the corrections, every function symbol also gets an explicit ELF
-size (see set_function_sizes() below and docs/decomp_dev.md) - the frozen
+size (see set_function_sizes() below and docs/progress_report.md) - the frozen
 sources have no `.size` directives, and objdiff's own size inference
 can't tell a function's trailing alignment padding from the zero upper
 half of its last literal-pool word. `--base-object` runs only that size

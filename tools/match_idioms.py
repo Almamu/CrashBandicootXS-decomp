@@ -769,7 +769,7 @@ def function_spans(text):
 def report_objects():
     """The objects tools/report_units.py turns into report units, as
     paths relative to build/crashbandicootxs/ without `.o`: the code
-    decomp.dev counts (crt0 and the hand-written assembly have no
+    the progress report counts (crt0 and the hand-written assembly have no
     unit)."""
     sys.path.insert(0, os.path.join(ROOT, "tools"))
     import report_units

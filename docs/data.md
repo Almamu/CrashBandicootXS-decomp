@@ -4,7 +4,7 @@ Every compiled function in the ROM is matched. The data after the code
 (`0x0803B8B0` to the end of the ROM) is still mostly `.incbin
 "baserom.gba", ...` in `data/data.s`. This document is the convention for
 turning it into real source, starting with pointer tables. For how data
-progress is measured, see [decomp_dev.md](./decomp_dev.md), "Data
+progress is measured, see [progress_report.md](./progress_report.md), "Data
 progress".
 
 ## The convention: `const` arrays in `src/*/data/`

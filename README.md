@@ -1,8 +1,8 @@
 [![Build and compare](https://github.com/Almamu/CrashBandicootXS-decomp/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/Almamu/CrashBandicootXS-decomp/actions/workflows/build.yml)
-[![Matching decompilation](https://github.com/Almamu/CrashBandicootXS-decomp/blob/badges/matching.svg?raw=true)](docs/decomp_dev.md#progress-badges)
-[![Non-matching decompilation](https://github.com/Almamu/CrashBandicootXS-decomp/blob/badges/nonmatching.svg?raw=true)](docs/decomp_dev.md#progress-badges)
-[![Functions with no matching workarounds](https://github.com/Almamu/CrashBandicootXS-decomp/blob/badges/clean.svg?raw=true)](docs/decomp_dev.md#progress-badges)
-[![Functions with matching workarounds left](https://github.com/Almamu/CrashBandicootXS-decomp/blob/badges/workarounds.svg?raw=true)](docs/decomp_dev.md#progress-badges)
+[![Matching decompilation](https://github.com/Almamu/CrashBandicootXS-decomp/blob/badges/matching.svg?raw=true)](docs/progress_report.md#progress-badges)
+[![Non-matching decompilation](https://github.com/Almamu/CrashBandicootXS-decomp/blob/badges/nonmatching.svg?raw=true)](docs/progress_report.md#progress-badges)
+[![Functions with no matching workarounds](https://github.com/Almamu/CrashBandicootXS-decomp/blob/badges/clean.svg?raw=true)](docs/progress_report.md#progress-badges)
+[![Functions with matching workarounds left](https://github.com/Almamu/CrashBandicootXS-decomp/blob/badges/workarounds.svg?raw=true)](docs/progress_report.md#progress-badges)
 
 Matching decompilation of Crash Bandicoot XS (Crash Bandicoot: The Huge Adventure).
 
@@ -90,8 +90,8 @@ rm -rf build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && m
 rm -rf build objdiff.json && make NON_MATCHING=1 report && objdiff-cli report generate -o report.json
 ```
 
-The second line builds the [decomp.dev](https://decomp.dev) progress
-report (see [docs/decomp_dev.md](./docs/decomp_dev.md)). It must show
+The second line builds the objdiff progress
+report (see [docs/progress_report.md](./docs/progress_report.md)). It must show
 2062/2062 functions and 100% data.
 
 ## Data and assets
@@ -184,7 +184,7 @@ reason, that's a completely reasonable position - just know it going in.
 - [docs/shifting.md](./docs/shifting.md) - the ROM's contents can move and grow: `make shiftcheck` and the mGBA boot test (`tools/boottest.py`)
 - [docs/matching_techniques.md](./docs/matching_techniques.md) - the matching techniques (compilers and flags, source shapes, register pins and holds, the `include/match.h` asm idioms)
 - [docs/matching/](./docs/matching/) - the current matching references (the IWRAM image, per-file flags), plus [archive/](./docs/matching/archive/) and [docs/matching.md](./docs/matching.md), the frozen per-pass matching logs
-- [docs/decomp_dev.md](./docs/decomp_dev.md) - how this project's [decomp.dev](https://decomp.dev) progress report is generated in CI
+- [docs/progress_report.md](./docs/progress_report.md) - the objdiff progress report (`report.json`) and the progress badges, generated in CI
 - [docs/rom_map.md](./docs/rom_map.md) - the historical whole-ROM map used to plan the matching work
 - The [Kirby & The Amazing Mirror](https://github.com/jiangzhengwenjz/katam/) decompilation uses a very similar codebase, as it was written by the same dev team (Dimps)
 - `ldscript.txt` tells the linker the order in which files are linked, which places every object at its ROM address

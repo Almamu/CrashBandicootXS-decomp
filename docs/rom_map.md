@@ -1,7 +1,7 @@
 # ROM code map
 
 A rough, whole-ROM answer to "what lives where" - coarser and less certain
-than [`docs/decomp_dev.md`](./decomp_dev.md)'s per-file matched categories
+than [`docs/progress_report.md`](./progress_report.md)'s per-file matched categories
 (`graphics`/`util`/`system`), which only cover code that's already been
 matched to C (a small fraction of the ROM - see the totals below). This
 document instead looks at the still-fully-raw majority and guesses at its
@@ -35,7 +35,7 @@ counts are upper bounds, not precise figures.
 238.2 KB of code between the ROM header and the start of `.rodata`
 (`0x08000000`-`0x0803B8B0`). Only **5.2 KB (2.2%)** is matched to C so
 far (`src/*.c`, tracked precisely as objdiff units per
-[`docs/decomp_dev.md`](./decomp_dev.md)); the rest is still raw
+[`docs/progress_report.md`](./progress_report.md)); the rest is still raw
 `asm/code_3_*.s`, this document's subject.
 
 ## Category breakdown
@@ -43,8 +43,8 @@ far (`src/*.c`, tracked precisely as objdiff units per
 Folding every finding from the sections below into one whole-ROM split.
 The highest-confidence categories below (`game_loop`/`actor`/
 `graphics_loading`/`audio`/`hud`/`overlay_ui`) are now also reflected in
-`objdiff.json`'s real decomp.dev progress categories - see
-`tools/report_units.py`'s `UNITS` list and `docs/decomp_dev.md`'s
+`objdiff.json`'s real progress categories - see
+`tools/report_units.py`'s `UNITS` list and `docs/progress_report.md`'s
 "Categorizing the still-raw majority of the ROM" for exactly which
 address ranges made the cut, and which two categories here (`menu_ui`,
 `fx`) didn't get their own `objdiff.json` category because they're
@@ -442,7 +442,7 @@ one sample read.
 
 | Address range | Size | Category | Confidence | Evidence |
 |---|---|---|---|---|
-| `0x08000000`-`0x08006C00` | ~26 KB | `system`/`util`/`graphics` | **matched** | `src/*.c`, see decomp_dev.md |
+| `0x08000000`-`0x08006C00` | ~26 KB | `system`/`util`/`graphics` | **matched** | `src/*.c`, see progress_report.md |
 | `0x080014A4`-`0x08006700` | 20.6 KB | audio (SFX) | medium | anchored on `PlaySfx`; see "The SFX system" below |
 | `0x08006700`-`0x08006C00` | ~1.3 KB | `graphics` | **matched** | `power_dialog_draw.c`/`graphics.c` (since #767 `game_progress.cpp`, the `gfx/` manager files, `objects/entity.cpp`) |
 | `0x0801E578`-`0x08029ED0`ish | ~27 KB | graphics loading + HUD + actor init | high | `LoadGraphicsPackage`, `InitSmallFont/B`, `FontMeasureText`, `FontUploadTiles`, `DestroyFont`, `InitObjTileFreeList`, `LoadSpriteFrameTiles`, `SetupSpriteFrameOam`, `DecompressCategorySpriteSheet`, `SetupActorVramPool`, `InitActorCategory` all fall in this stretch, tightly packed |
