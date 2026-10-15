@@ -26,6 +26,14 @@ and the code pointers' targets; it follows the calls from there. Then:
   games/n2/symbols.txt names, is written as the name (`.4byte
   gLevelTable`), and so is the `ldr`'s `@ =` comment; the linker gives it
   the same value, and a label moves with its data.
+- So is a pool word that points into the code: at a function, its name
+  (a Thumb function's symbol already has bit 0 set; for the address
+  without it, a plain `_<address>` label is added at the function); at
+  any other label, that label (`+ 1` for a Thumb address), made global,
+  since the code is split across files. gbadisasm.cfg's `data_label`s give the ones that
+  had no label one (the ROM header's game code, GAX's ARM routines,
+  which are copied to RAM). A pool word into the code with no label to
+  use stops the script.
 """
 import re, subprocess, sys
 from pathlib import Path
@@ -88,6 +96,7 @@ DATA_NAME = re.compile(r'^(0x[0-9A-Fa-f]+)\s+(\w+)')
 WORD = re.compile(r'(\.4byte |@ =)0x([0-9A-F]{8})\b')
 ADDS = re.compile(r'^\tadds (r([0-7])), \1, #(0x[0-9a-fA-F]+|\d+)$')
 LABEL = re.compile(r'^(\w+): @ 0x([0-9A-Fa-f]{8})$')
+LOCAL = re.compile(r'^(_([0-9A-F]{8})):')
 
 
 def objects():
@@ -122,16 +131,58 @@ def main():
             if CODE_END <= v < rom_end and v not in data:
                 data[v] = 'gUnknown_%08X' % v
     names.update(data)
+
+    # the code's own labels, for the pool words that point into the code
+    funcs, local = {}, {}
+    for i, line in enumerate(out):
+        m = LABEL.match(line)
+        if m and i and 'thumb_func_start' in out[i - 1]:
+            funcs[int(m.group(2), 16)] = m.group(1)
+        m = LOCAL.match(line)
+        if m:
+            local[int(m.group(2), 16)] = m.group(1)
+    exported, aliases = set(), set()
+
+    def code_ref(v):
+        t = v & ~1
+        if t in funcs and v & 1:
+            return funcs[t]
+        if t in funcs:
+            aliases.add(t)
+            return '_%08X' % t
+        if t in local:
+            exported.add(local[t])
+            return local[t] + (' + 1' if v & 1 else '')
+        sys.exit('a pool word points into the code at 0x%08X, where there is no label '
+                 '(add a data_label or thumb_label to gbadisasm.cfg)' % v)
+
+    def word(m):
+        v = int(m.group(2), 16)
+        if v in names:
+            return m.group(1) + names[v]
+        if CODE_START <= v < CODE_END:
+            return m.group(1) + code_ref(v)
+        return m.group(0)
+
     lines = []
     for line in out:
-        line = WORD.sub(lambda m: m.group(1) + names[int(m.group(2), 16)]
-                        if int(m.group(2), 16) in names else m.group(0), line)
+        line = WORD.sub(word, line)
         m = ADDS.match(line)
         if m:
             n, k = int(m.group(2)), int(m.group(3), 0)
             line = '\t.2byte 0x%04X @ adds %s, %s, #%d (GAS would pick the 0x3000 encoding)' % (
                 0x1C00 | k << 6 | n << 3 | n, m.group(1), m.group(1), k)
         lines.append(line)
+
+    # gbadisasm writes the words at its own labels as the labels: those are
+    # used across files too
+    for l in lines:
+        exported.update(re.findall(r'\.4byte (_[0-9A-F]{8})\b', l))
+    lines = [('\t.global %s\n' % LOCAL.match(l).group(1) + l)
+             if LOCAL.match(l) and LOCAL.match(l).group(1) in exported else l for l in lines]
+    # a plain label after the function's: its address without the Thumb bit
+    lines = [(l + '\n\t.global _%08X\n_%08X:' % ((int(LABEL.match(l).group(2), 16),) * 2))
+             if LABEL.match(l) and int(LABEL.match(l).group(2), 16) in aliases else l for l in lines]
 
     # where each function starts: the line of its `*_func_start`
     starts = {}

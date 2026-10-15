@@ -4339,6 +4339,7 @@ _080037F0:
 	mov pc, r0
 	.align 2, 0
 _0800384C: .4byte _08003850
+	.global _08003850
 _08003850: @ jump table
 	.4byte _08003884 @ case 0
 	.4byte _0800388E @ case 1
@@ -4353,15 +4354,18 @@ _08003850: @ jump table
 	.4byte _080038CA @ case 10
 	.4byte _080038DE @ case 11
 	.4byte _080038E6 @ case 12
+	.global _08003884
 _08003884:
 	adds r0, r5, #0
 	adds r1, r6, #0
 	bl SaveMenuMainInput
 	b _080038E6
+	.global _0800388E
 _0800388E:
 	adds r0, r5, #0
 	adds r0, #0xc8
 	b _08003898
+	.global _08003894
 _08003894:
 	adds r0, r5, #0
 	adds r0, #0xcc
@@ -4371,39 +4375,47 @@ _08003898:
 	adds r1, r6, #0
 	bl SaveMenuLoadInput
 	b _080038E6
+	.global _080038A4
 _080038A4:
 	adds r0, r5, #0
 	bl SaveMenuLinkInput
 	b _080038E6
+	.global _080038AC
 _080038AC:
 	adds r0, r5, #0
 	adds r1, r6, #0
 	bl SaveMenuMessageInput
 	b _080038E6
+	.global _080038B6
 _080038B6:
 	adds r0, r5, #0
 	adds r1, r6, #0
 	bl sub_08003F98
 	b _080038E6
+	.global _080038C0
 _080038C0:
 	adds r0, r5, #0
 	adds r1, r6, #0
 	bl SaveMenuDeleteInput
 	b _080038E6
+	.global _080038CA
 _080038CA:
 	adds r0, r5, #0
 	adds r1, r6, #0
 	bl sub_08003EC0
 	b _080038E6
+	.global _080038D4
 _080038D4:
 	adds r0, r5, #0
 	adds r1, r6, #0
 	bl SaveMenuConfirmDeleteInput
 	b _080038E6
+	.global _080038DE
 _080038DE:
 	adds r0, r5, #0
 	adds r1, r6, #0
 	bl sub_08004204
+	.global _080038E6
 _080038E6:
 	ldr r0, [r5, #4]
 	adds r0, #1
@@ -4462,6 +4474,7 @@ _0800391C:
 	.align 2, 0
 _08003950: .4byte 0x02000E6C
 _08003954: .4byte _08003958
+	.global _08003958
 _08003958: @ jump table
 	.4byte _08003970 @ case 0
 	.4byte _08003980 @ case 1
@@ -4469,6 +4482,7 @@ _08003958: @ jump table
 	.4byte _080039B0 @ case 3
 	.4byte _080039CC @ case 4
 	.4byte _080039C6 @ case 5
+	.global _08003970
 _08003970:
 	movs r0, #1
 	str r0, [r4, #0xc]
@@ -4477,6 +4491,7 @@ _08003970:
 	b _080039B6
 	.align 2, 0
 _0800397C: .4byte 0x02000050
+	.global _08003980
 _08003980:
 	movs r0, #3
 	str r0, [r4, #0xc]
@@ -4491,6 +4506,7 @@ _08003980:
 	adds r0, r4, #0
 	bl BeginLinkSaveTransfer
 	b _08003A28
+	.global _080039A0
 _080039A0:
 	movs r0, #6
 	str r0, [r4, #0xc]
@@ -4499,6 +4515,7 @@ _080039A0:
 	b _080039B6
 	.align 2, 0
 _080039AC: .4byte 0x02000050
+	.global _080039B0
 _080039B0:
 	movs r0, #7
 	str r0, [r4, #0xc]
@@ -4511,10 +4528,12 @@ _080039B6:
 	adds r0, r4, #0
 	bl RefreshSaveSlotSummaries
 	b _08003A28
+	.global _080039C6
 _080039C6:
 	movs r0, #1
 	strb r0, [r4, #8]
 	b _08003A28
+	.global _080039CC
 _080039CC:
 	movs r0, #0xb
 	str r0, [r4, #0xc]
@@ -4593,19 +4612,23 @@ SaveMenuMoveCursor: @ 0x08003A34
 	.align 2, 0
 _08003A60: .4byte 0x02000E6C
 _08003A64: .4byte _08003A68
+	.global _08003A68
 _08003A68: @ jump table
 	.4byte _08003A7C @ case 0
 	.4byte _08003A80 @ case 1
 	.4byte _08003A7C @ case 2
 	.4byte _08003A80 @ case 3
 	.4byte _08003A86 @ case 4
+	.global _08003A7C
 _08003A7C:
 	movs r0, #4
 	b _08003AFC
+	.global _08003A80
 _08003A80:
 	ldr r0, [r4, #0x10]
 	subs r0, #1
 	b _08003AFC
+	.global _08003A86
 _08003A86:
 	movs r0, #1
 	b _08003AFC
@@ -4631,19 +4654,23 @@ _08003A8A:
 	.align 2, 0
 _08003AB0: .4byte 0x02000E6C
 _08003AB4: .4byte _08003AB8
+	.global _08003AB8
 _08003AB8: @ jump table
 	.4byte _08003ACC @ case 0
 	.4byte _08003AD2 @ case 1
 	.4byte _08003ACC @ case 2
 	.4byte _08003AD2 @ case 3
 	.4byte _08003AD6 @ case 4
+	.global _08003ACC
 _08003ACC:
 	ldr r0, [r4, #0x10]
 	adds r0, #1
 	b _08003AFC
+	.global _08003AD2
 _08003AD2:
 	movs r0, #4
 	b _08003AFC
+	.global _08003AD6
 _08003AD6:
 	movs r0, #0
 	b _08003AFC
@@ -8125,6 +8152,7 @@ sub_0800567C: @ 0x0800567C
 _080056AC: .4byte 0x02000E9C
 _080056B0: .4byte gObjVramCursor
 _080056B4: .4byte _080056B8
+	.global _080056B8
 _080056B8: @ jump table
 	.4byte _080056EC @ case 0
 	.4byte _080056F4 @ case 1
@@ -8139,45 +8167,56 @@ _080056B8: @ jump table
 	.4byte _08005724 @ case 10
 	.4byte _08005734 @ case 11
 	.4byte _0800573A @ case 12
+	.global _080056EC
 _080056EC:
 	adds r0, r5, #0
 	bl sub_080042B8
 	b _0800573A
+	.global _080056F4
 _080056F4:
 	adds r0, r5, #0
 	bl DrawSaveMenuLoad
 	b _0800573A
+	.global _080056FC
 _080056FC:
 	adds r0, r5, #0
 	bl sub_0800561C
 	b _0800573A
+	.global _08005704
 _08005704:
 	adds r0, r5, #0
 	bl DrawSaveMenuMessage
 	b _0800573A
+	.global _0800570C
 _0800570C:
 	adds r0, r5, #0
 	bl sub_0800448C
 	b _0800573A
+	.global _08005714
 _08005714:
 	adds r0, r5, #0
 	bl sub_080055D0
 	b _0800573A
+	.global _0800571C
 _0800571C:
 	adds r0, r5, #0
 	bl sub_08005578
 	b _0800573A
+	.global _08005724
 _08005724:
 	adds r0, r5, #0
 	bl sub_080055A8
 	b _0800573A
+	.global _0800572C
 _0800572C:
 	adds r0, r5, #0
 	bl sub_08005550
 	b _0800573A
+	.global _08005734
 _08005734:
 	adds r0, r5, #0
 	bl sub_08005544
+	.global _0800573A
 _0800573A:
 	ldr r0, _08005748 @ =0x02000E9C
 	ldr r0, [r0]
@@ -9081,6 +9120,7 @@ sub_08005E68: @ 0x08005E68
 	mov pc, r0
 	.align 2, 0
 _08005E7C: .4byte _08005E80
+	.global _08005E80
 _08005E80: @ jump table
 	.4byte _08005E98 @ case 0
 	.4byte _08005EA4 @ case 1
@@ -9088,12 +9128,14 @@ _08005E80: @ jump table
 	.4byte _08005ECC @ case 3
 	.4byte _08005EE0 @ case 4
 	.4byte _08005EF4 @ case 5
+	.global _08005E98
 _08005E98:
 	adds r0, r5, #0
 	adds r0, #0x90
 	ldr r0, [r0]
 	bl AdvanceSpriteAnim
 	b _08005EFE
+	.global _08005EA4
 _08005EA4:
 	adds r6, r5, #0
 	adds r6, #0x94
@@ -9105,6 +9147,7 @@ _08005EAA:
 	cmp r4, #0
 	bge _08005EAA
 	b _08005EFE
+	.global _08005EB8
 _08005EB8:
 	adds r6, r5, #0
 	adds r6, #0xa4
@@ -9116,6 +9159,7 @@ _08005EBE:
 	cmp r4, #0
 	bge _08005EBE
 	b _08005EFE
+	.global _08005ECC
 _08005ECC:
 	adds r6, r5, #0
 	adds r6, #0xb4
@@ -9127,6 +9171,7 @@ _08005ED2:
 	cmp r4, #0
 	bge _08005ED2
 	b _08005EFE
+	.global _08005EE0
 _08005EE0:
 	adds r6, r5, #0
 	adds r6, #0xc0
@@ -9138,6 +9183,7 @@ _08005EE6:
 	cmp r4, #0
 	bge _08005EE6
 	b _08005EFE
+	.global _08005EF4
 _08005EF4:
 	adds r0, r5, #0
 	adds r0, #0xcc
@@ -9304,6 +9350,7 @@ _08006044: .4byte 0x02000E9C
 _08006048: .4byte gObjVramCursor
 _0800604C: .4byte gLargeFont
 _08006050: .4byte _08006054
+	.global _08006054
 _08006054: @ jump table
 	.4byte _0800606C @ case 0
 	.4byte _08006074 @ case 1
@@ -9311,26 +9358,32 @@ _08006054: @ jump table
 	.4byte _08006084 @ case 3
 	.4byte _0800608C @ case 4
 	.4byte _08006094 @ case 5
+	.global _0800606C
 _0800606C:
 	adds r0, r5, #0
 	bl DrawPauseCrystalsPage
 	b _0800609A
+	.global _08006074
 _08006074:
 	adds r0, r5, #0
 	bl sub_080063BC
 	b _0800609A
+	.global _0800607C
 _0800607C:
 	adds r0, r5, #0
 	bl sub_080064AC
 	b _0800609A
+	.global _08006084
 _08006084:
 	adds r0, r5, #0
 	bl sub_08006590
 	b _0800609A
+	.global _0800608C
 _0800608C:
 	adds r0, r5, #0
 	bl sub_08006670
 	b _0800609A
+	.global _08006094
 _08006094:
 	adds r0, r5, #0
 	bl sub_08006754
