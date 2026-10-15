@@ -296,7 +296,8 @@ rooms`), not from the folders on disk.
 
 ## Sources and build
 
-`data/levels/`:
+`data/levels/` (XS's; `tools/levels.py --levels-dir DIR` works on another
+game's, such as N-Tranced's `games/n2/data/levels/`, docs/n_tranced.md):
 
 - `levels.json`: the rooms (their folders, `"rooms"`, in room-table
   order: `gRoomNN` is the NNth), and per region its C file name and its

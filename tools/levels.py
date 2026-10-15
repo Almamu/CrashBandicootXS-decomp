@@ -33,6 +33,16 @@ the entity groups, the parameter offsets and the per-type counts are all
 derived from those again.
 
     tools/levels.py extract [baserom.gba]     write data/levels/ from the ROM
+    tools/levels.py --levels-dir DIR extract-rooms ROM TABLE
+                                              another game's rooms only (N-Tranced:
+                                              DIR games/n2/data/levels, TABLE its
+                                              gLevelTable 0x081D0430): each room's
+                                              folder (level<NN>/<slot>), a levels.json
+                                              of the rooms, regions and assets, and
+                                              tileset_order.json, checked like extract
+                                              (docs/n_tranced.md)
+    --levels-dir DIR                          (any command) the level data is DIR,
+                                              not data/levels
     tools/levels.py rooms [--packed] [--new]  levels.json's rooms (with --packed,
                                               those with an LZ77-packed asset;
                                               with --new, those in no ROM region)
@@ -188,6 +198,21 @@ LEVELS_DIR = Path("data/levels")
 ENTITY_TYPES_JSON = LEVELS_DIR / "entity_types.json"
 CRATE_KINDS_JSON = LEVELS_DIR / "crate_kinds.json"
 LEVELS_JSON = LEVELS_DIR / "levels.json"
+
+
+def use_levels_dir(path):
+    """Work on another game's level data (`--levels-dir`): N-Tranced's is
+    games/n2/data/levels/ (docs/n_tranced.md). Its collision_legend.json,
+    if it has one, is the collision images' legend."""
+    global LEVELS_DIR, ENTITY_TYPES_JSON, CRATE_KINDS_JSON, LEVELS_JSON, TILESET_ORDER_JSON, SPAWNS_DIR
+    LEVELS_DIR = Path(path)
+    ENTITY_TYPES_JSON = LEVELS_DIR / "entity_types.json"
+    CRATE_KINDS_JSON = LEVELS_DIR / "crate_kinds.json"
+    LEVELS_JSON = LEVELS_DIR / "levels.json"
+    TILESET_ORDER_JSON = LEVELS_DIR / "tileset_order.json"
+    SPAWNS_DIR = LEVELS_DIR / "spawns"
+    if (LEVELS_DIR / "collision_legend.json").exists():
+        collision_bmp.LEGEND_JSON = LEVELS_DIR / "collision_legend.json"
 
 
 # ---------------------------------------------------------------------------
@@ -432,7 +457,10 @@ def room_palette(room_dir, room):
 
 
 def entity_type_names():
-    """type -> name (None for the unnamed types), from entity_types.json."""
+    """type -> name (None for the unnamed types), from entity_types.json
+    (none yet for a game without one: the types stay numbers)."""
+    if not ENTITY_TYPES_JSON.exists():
+        return []
     types = read_json(ENTITY_TYPES_JSON)["types"]
     assert [t["type"] for t in types] == list(range(len(types))), ENTITY_TYPES_JSON
     return [t["name"] for t in types]
@@ -3480,12 +3508,17 @@ def room_folders(rom, levels):
     return out
 
 
-def room_record(rom, a, symbol):
-    """room.json's "record": the room's struct level_room at `a`."""
+def room_record(rom, a, symbol, strict=True):
+    """room.json's "record": the room's struct level_room at `a`. XS's are
+    all kind 0-2 with unk_0C 0 (`strict`); N-Tranced's extra rooms set
+    unk_0C, kept as "unk_0C" when it isn't 0."""
     kind, unk_0c = rom.w(a + 8), rom.w(a + 12)
-    assert kind < 3 and unk_0c == 0, hex(a)
-    return {"symbol": symbol, "kind": ROOM_KINDS[kind],
-            "blend": {"effect": rom.h(a + 0x10), "eva": rom.b(a + 0x12), "evb": rom.b(a + 0x13)}}
+    assert kind < 3 and (unk_0c == 0 or not strict), hex(a)
+    record = {"symbol": symbol, "kind": ROOM_KINDS[kind],
+              "blend": {"effect": rom.h(a + 0x10), "eva": rom.b(a + 0x12), "evb": rom.b(a + 0x13)}}
+    if unk_0c:
+        record["unk_0C"] = unk_0c
+    return record
 
 
 # The level fields levels.py extract keeps from the hand-written levels.json
@@ -3575,17 +3608,14 @@ def write_levels_json(levels):
     LEVELS_JSON.write_text(block(levels, 0, top) + "\n")
 
 
-def extract(rom_path):
-    rom = Rom(rom_path)
-    records = room_records(rom)
-    rooms = find_rooms(rom)
-    assert len(rooms) == 41, len(rooms)
-    # the level names aren't extracted: the hand-written ones name the
-    # folders (LEVEL_KEYS_KEPT)
-    kept = read_json(LEVELS_JSON)
-    level_list = kept["levels"]
-    folders = room_folders(rom, level_list)
-    assert sorted(folders) == sorted(records), "rooms in no level's room list"
+def extract_rooms(rom, rooms, records, folders, raw_sizes=None, strict=True):
+    """The rooms (`rooms`: their (palette, level_desc), `records` their struct
+    level_room, `folders` each record's folder) to LEVELS_DIR: each one's
+    room.json, layer pictures and collision image (see extract). Returns
+    (the folders in room order, (address, folder) of each room's pieces,
+    (asset address, folder), the ROM's tile sets, each layer's cells, each
+    tile set's blocks per room). `raw_sizes`: the raw assets' sizes (XS's:
+    RAW_ASSETS); `strict`: XS's checks on the room records."""
     LEVELS_DIR.mkdir(parents=True, exist_ok=True)
     pieces = []  # (addr, room name) for the ROM order of each region
     assets = []  # (asset addr, room name) for the ROM order of the assets
@@ -3609,12 +3639,12 @@ def extract(rom_path):
             # size from the LZ77 header; the stream length doesn't matter here
             asset = lz77_decompress(rom.bytes(asset_addr, 0x20000))
         else:
-            asset = rom.bytes(asset_addr, RAW_ASSETS[asset_addr])
+            asset = rom.bytes(asset_addr, (raw_sizes or RAW_ASSETS)[asset_addr])
         ent_list = L[7]
         palette = [rom.h(pal + 2 * i) for i in range(256)]
         room = {
             "asset": {"symbol": pre + "Asset", "packed": bool(packed)},
-            "record": room_record(rom, records[idx], "gLevelRoom%02d" % idx),
+            "record": room_record(rom, records[idx], "gLevelRoom%02d" % idx, strict),
             "layers": {},
             "entities": [],
             "params": [],
@@ -3721,8 +3751,10 @@ def extract(rom_path):
         # parameter records
         params, offs_addr = rom.w(ent_list + 12), rom.w(ent_list + 8)
         size = offs_addr - params
-        # the offsets run up to the first chunk grid
-        grids_start = min(rom.w(p) for p in slots if p)
+        # the offsets run up to the room's next object: the first chunk grid
+        # in XS, the type counts in N-Tranced
+        grids_start = min(a for a in [rom.w(p) for p in slots if p] + [ent_list, rom.w(ent_list + 16), desc, pal]
+                          + ([L[8]] if L[8] else []) if a > offs_addr)
         offs = [rom.h(offs_addr + 2 * i) for i in range((grids_start - offs_addr) // 2)]
         assert offs[0] == 0 and offs == sorted(set(offs)) and offs[-1] < size, name
         for i, o in enumerate(offs):
@@ -3736,6 +3768,102 @@ def extract(rom_path):
             room["symbols"]["links"] = pre + "Links"
         write_room_json(room_dir / "room.json", room)
         pieces.append((params, folder))
+    return names, pieces, assets, rom_tiles, decoded, set_blocks
+
+
+def check_tilesets(levels, names, rom_tiles, set_blocks, decoded, symbols):
+    """The tile sets aren't extracted: the build makes them from the layer
+    pictures. What their order needs beyond levels.json goes into
+    tileset_order.json; then the generator must give back the ROM's tiles
+    and every layer's cells (extract_rooms' results)."""
+    by_symbol = {lt.symbol: lt for lt in rom_tiles.values()}
+    sets = {}
+    for symbol in symbols:
+        users = set_blocks[symbol]
+        sets[symbol] = ([f[0] for f in by_symbol[symbol].flipped], {r: users[r] for r in names if r in users})
+    write_tileset_order(tileset_order_lists(sets, levels))
+    order = load_tileset_order()
+    users = tileset_users(levels)
+    for symbol, lt in by_symbol.items():
+        tiles, _, maps = generate_tileset(symbol, levels, users, order)
+        assert tiles == [f[0] for f in lt.flipped], "%s: the generated tile set isn't the ROM's" % symbol
+        for key, cells in maps.items():
+            assert cells == decoded[key], "%s %s: the generated cells aren't the ROM's" % key
+
+
+def raw_asset_size(rom, desc):
+    """A raw (assetPacked = 0) level asset's size: up to the end of its
+    last layer section's last chunk stream (XS has them as RAW_ASSETS)."""
+    asset = rom.w(desc + 0x14) - ROM_BASE
+    end = 0
+    for slot in range(5):
+        p = rom.w(desc + 4 * slot)
+        if not p:
+            continue
+        off, grid = rom.w(p + 4), rom.w(p)
+        n = max(rom.h(grid + 2 * k) for k in range(rom.h(p + 0x16) * rom.h(p + 0x18))) + 1
+        table = struct.unpack_from("<%dH" % n, rom.data, asset + off)
+        for k in range(n):
+            _, e = decode_chunk(rom.data, asset + off + 4 * table[k])
+            end = max(end, e - asset)
+    return end
+
+
+ROOM_SLOTS = {"extra1": "bonus", "extra2": "gem_path"}
+
+
+def extract_rooms_from_table(rom_path, table):
+    """extract-rooms: another game's rooms, from its level table at `table`
+    (struct level_info, LEVEL_INFO_SIZE each; it ends at the first entry
+    that isn't a level), into LEVELS_DIR (`--levels-dir`). The folders are
+    level<NN>/<slot>, NN the level's index and the slot as in data/levels:
+    main (or part1, part2, ... for several played rooms), bonus (extra1),
+    gem_path (extra2). The rooms are numbered (gRoomNN) in the order of
+    their struct level_room in the ROM. Writes each room (extract_rooms),
+    a levels.json with the rooms, the ROM order of their data and their
+    assets, and tileset_order.json, and checks that the tile sets the build
+    makes from the pictures are the ROM's (check_tilesets)."""
+    rom = Rom(rom_path)
+    isrom = lambda p: ROM_BASE <= p < ROM_BASE + len(rom.data)  # noqa: E731
+    folders = {}
+    for i in range(1 << 10):
+        rl = rom.w(table + i * LEVEL_INFO_SIZE + 0x20)
+        if not isrom(rl) or not 1 <= rom.w(rl) <= 8 or not isrom(rom.w(rl + 4)):
+            break
+        n = rom.w(rl)
+        played = [("main" if n == 1 else "part%d" % (k + 1), rom.w(rom.w(rl + 4) + 4 * k)) for k in range(n)]
+        for slot, r in played + [(ROOM_SLOTS[x], rom.w(rl + o)) for x, o in (("extra1", 8), ("extra2", 12))]:
+            if isrom(r) and rom.w(r + 4) and r not in folders:
+                folders[r] = "level%02d/%s" % (i, slot)
+    records = sorted(folders)
+    rooms = [(rom.w(r), rom.w(r + 4)) for r in records]
+    raw = {rom.w(d + 0x14): raw_asset_size(rom, d) for _, d in rooms if not rom.b(d + 0x18)}
+    names, pieces, assets, rom_tiles, decoded, set_blocks = extract_rooms(rom, rooms, records, folders, raw,
+                                                                          strict=False)
+    order = []
+    for _, n in sorted(pieces):
+        if n not in order:
+            order.append(n)
+    levels = {"rooms": names, "regions": [{"name": "level_rooms", "rooms": order}],
+              "assets": {"name": "level_assets", "rooms": [n for _, n in sorted(assets)]}}
+    LEVELS_JSON.write_text(json.dumps(levels, indent=2) + "\n")
+    check_tilesets(levels, names, rom_tiles, set_blocks, decoded, list(set_blocks))
+    print("%d rooms, %d tile sets: the ROM's" % (len(names), len(set_blocks)), file=sys.stderr)
+
+
+def extract(rom_path):
+    rom = Rom(rom_path)
+    records = room_records(rom)
+    rooms = find_rooms(rom)
+    assert len(rooms) == 41, len(rooms)
+    # the level names aren't extracted: the hand-written ones name the
+    # folders (LEVEL_KEYS_KEPT)
+    kept = read_json(LEVELS_JSON)
+    level_list = kept["levels"]
+    folders = room_folders(rom, level_list)
+    assert sorted(folders) == sorted(records), "rooms in no level's room list"
+    LEVELS_DIR.mkdir(parents=True, exist_ok=True)
+    names, pieces, assets, rom_tiles, decoded, set_blocks = extract_rooms(rom, rooms, records, folders)
     # regions, rooms in ROM order
     regions = []
     for rname, lo, hi in REGIONS:
@@ -3774,19 +3902,7 @@ def extract(rom_path):
     # pictures. What their order needs beyond levels.json goes into
     # tileset_order.json; then the generator must give back the ROM's tiles
     # and every layer's cells.
-    by_symbol = {lt.symbol: lt for lt in rom_tiles.values()}
-    sets = {}
-    for symbol in TILESET_SYMBOLS.values():
-        users = set_blocks[symbol]
-        sets[symbol] = ([f[0] for f in by_symbol[symbol].flipped], {r: users[r] for r in names if r in users})
-    write_tileset_order(tileset_order_lists(sets, levels))
-    order = load_tileset_order()
-    users = tileset_users(levels)
-    for symbol, lt in by_symbol.items():
-        tiles, _, maps = generate_tileset(symbol, levels, users, order)
-        assert tiles == [f[0] for f in lt.flipped], "%s: the generated tile set isn't the ROM's" % symbol
-        for key, cells in maps.items():
-            assert cells == decoded[key], "%s %s: the generated cells aren't the ROM's" % key
+    check_tilesets(levels, names, rom_tiles, set_blocks, decoded, TILESET_SYMBOLS.values())
     return names
 
 
@@ -4222,6 +4338,10 @@ def main():
     if not args or args[0] in ("-h", "--help"):
         print(__doc__)
         return
+    if "--levels-dir" in args:
+        i = args.index("--levels-dir")
+        use_levels_dir(args[i + 1])
+        del args[i:i + 2]
     cmd = args[0]
     build_dir = None
     if "--build" in args:
@@ -4230,6 +4350,8 @@ def main():
         del args[i:i + 2]
     if cmd == "extract":
         extract(args[1] if len(args) > 1 else "baserom.gba")
+    elif cmd == "extract-rooms":
+        extract_rooms_from_table(args[1], int(args[2], 16))
     elif cmd == "rooms":
         # levels.json's rooms (their folders); with --packed the ones whose
         # asset is LZ77-packed, with --new the ones in no ROM region

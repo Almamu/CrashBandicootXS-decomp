@@ -1,0 +1,20 @@
+{
+  "asset": {"symbol": "gRoom31Asset", "packed": true},
+  "record": {"symbol": "gLevelRoom31", "kind": "ON_FOOT", "blend": {"effect": 0, "eva": 0, "evb": 0}},
+  "symbols": {"desc": "gRoom31Desc", "palette": "gRoom31Palette", "entities": "gRoom31EntityList", "groups": "gRoom31EntityGroups", "param_offsets": "gRoom31ParamOffsets", "params": "gRoom31Params", "type_counts": "gRoom31TypeCounts", "layers": "gRoom31Layers", "items": "gRoom31Entities"},
+  "layers": {
+    "bg1": {"map": "bg1.png", "size_chunks": [4, 6], "size_tiles": [52, 48], "tileset": "gStaticData_0853B250", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom31Bg1Grid"},
+    "bg3": {"map": "bg3.png", "size_chunks": [3, 6], "size_tiles": [48, 48], "tileset": "gStaticData_0853B250", "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom31Bg3Grid"},
+    "bg0": {"map": "bg0.png", "size_chunks": [3, 6], "size_tiles": [48, 48], "tileset": "gStaticData_0826FE48", "scale": [256, 256], "cnt": 1, "unk_1E": 2, "grid_symbol": "gRoom31Bg0Grid"},
+    "collision": {"map": "collision.png", "size_chunks": [3, 6], "size_tiles": [48, 48], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom31CollisionGrid"}
+  },
+  "params": [
+    [0],
+    [0]
+  ],
+  "links": null,
+  "entities": [
+    {"type": 98, "x": 305, "y": 277, "param": 1},
+    {"type": 0, "x": 211, "y": 295, "param": 1}
+  ]
+}

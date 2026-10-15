@@ -1,0 +1,61 @@
+{
+  "asset": {"symbol": "gRoom07Asset", "packed": true},
+  "record": {"symbol": "gLevelRoom07", "kind": "ON_FOOT", "blend": {"effect": 0, "eva": 0, "evb": 0}, "unk_0C": 1},
+  "symbols": {"desc": "gRoom07Desc", "palette": "gRoom07Palette", "entities": "gRoom07EntityList", "groups": "gRoom07EntityGroups", "param_offsets": "gRoom07ParamOffsets", "params": "gRoom07Params", "type_counts": "gRoom07TypeCounts", "layers": "gRoom07Layers", "items": "gRoom07Entities", "links": "gRoom07Links"},
+  "layers": {
+    "bg1": {"map": "bg1.png", "size_chunks": [10, 4], "size_tiles": [152, 32], "tileset": "gStaticData_0853B250", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom07Bg1Grid"},
+    "bg3": {"map": "bg3.png", "size_chunks": [14, 4], "size_tiles": [224, 32], "tileset": "gStaticData_0853B250", "scale": [256, 256], "cnt": 1, "unk_1E": 2, "grid_symbol": "gRoom07Bg3Grid"},
+    "bg0": {"map": "bg0.png", "size_chunks": [14, 4], "size_tiles": [224, 32], "tileset": "gStaticData_0826FE48", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom07Bg0Grid"},
+    "collision": {"map": "collision.png", "size_chunks": [14, 4], "size_tiles": [224, 32], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom07CollisionGrid"}
+  },
+  "params": [
+    [0],
+    [0],
+    [0, 1, 0, 0, 0, 0, 0],
+    [0, 27],
+    [0, 327707]
+  ],
+  "links": [
+    [10, 9],
+    [11, 10],
+    [12, 11],
+    [14, 13],
+    [15, 14],
+    [16, 15]
+  ],
+  "entities": [
+    {"type": 39, "x": 1694, "y": 129, "param": 2},
+    {"type": 25, "x": 1428, "y": 66, "param": 3},
+    {"type": 17, "x": 1424, "y": 178, "param": 3},
+    {"type": 23, "x": 1384, "y": 178, "param": 3},
+    {"type": 27, "x": 1340, "y": 174, "param": 3},
+    {"type": 24, "x": 1320, "y": 98, "param": 4},
+    {"type": 27, "x": 1320, "y": 174, "param": 3},
+    {"type": 27, "x": 1300, "y": 174, "param": 3},
+    {"type": 23, "x": 1256, "y": 178, "param": 3},
+    {"type": 13, "x": 1120, "y": 102, "param": 3},
+    {"type": 24, "x": 1120, "y": 122, "param": 4},
+    {"type": 13, "x": 1120, "y": 142, "param": 3},
+    {"type": 24, "x": 1120, "y": 162, "param": 4},
+    {"type": 17, "x": 1100, "y": 102, "param": 3},
+    {"type": 13, "x": 1100, "y": 122, "param": 3},
+    {"type": 24, "x": 1100, "y": 142, "param": 4},
+    {"type": 13, "x": 1100, "y": 162, "param": 3},
+    {"type": 13, "x": 1056, "y": 178, "param": 3},
+    {"type": 20, "x": 1012, "y": 74, "param": 3},
+    {"type": 22, "x": 992, "y": 54, "param": 3},
+    {"type": 20, "x": 992, "y": 74, "param": 3},
+    {"type": 20, "x": 992, "y": 94, "param": 3},
+    {"type": 13, "x": 816, "y": 118, "param": 3},
+    {"type": 24, "x": 776, "y": 118, "param": 4},
+    {"type": 13, "x": 740, "y": 118, "param": 3},
+    {"type": 13, "x": 616, "y": 106, "param": 3},
+    {"type": 23, "x": 552, "y": 178, "param": 3},
+    {"type": 24, "x": 484, "y": 102, "param": 4},
+    {"type": 23, "x": 412, "y": 134, "param": 3},
+    {"type": 13, "x": 376, "y": 50, "param": 3},
+    {"type": 23, "x": 312, "y": 114, "param": 3},
+    {"type": 24, "x": 264, "y": 50, "param": 4},
+    {"type": 0, "x": 95, "y": 99, "param": 1}
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "asset": {"symbol": "gRoom33Asset", "packed": true},
+  "record": {"symbol": "gLevelRoom33", "kind": "ON_FOOT", "blend": {"effect": 0, "eva": 0, "evb": 0}},
+  "symbols": {"desc": "gRoom33Desc", "palette": "gRoom33Palette", "entities": "gRoom33EntityList", "groups": "gRoom33EntityGroups", "param_offsets": "gRoom33ParamOffsets", "params": "gRoom33Params", "type_counts": "gRoom33TypeCounts", "layers": "gRoom33Layers", "items": "gRoom33Entities"},
+  "layers": {
+    "bg1": {"map": "bg1.png", "size_chunks": [4, 4], "size_tiles": [64, 32], "tileset": "gStaticData_08538320", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom33Bg1Grid"},
+    "bg2": {"map": "bg2.png", "size_chunks": [4, 4], "size_tiles": [64, 32], "tileset": "gStaticData_08538320", "scale": [204, 230], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom33Bg2Grid"},
+    "bg0": {"map": "bg0.png", "size_chunks": [4, 4], "size_tiles": [64, 32], "tileset": "gStaticData_081E5394", "scale": [256, 256], "cnt": 1, "unk_1E": 2, "grid_symbol": "gRoom33Bg0Grid"},
+    "collision": {"map": "collision.png", "size_chunks": [4, 4], "size_tiles": [64, 32], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom33CollisionGrid"}
+  },
+  "params": [
+    [0],
+    [0],
+    [0, 1, 0, 0, 0, 0, 1],
+    [0, 1, 0, 0, 0, 0, 1],
+    [0, 1, 0, 0, 0, 0, 1],
+    [0, 1, 0, 0, 0, 0, 1],
+    [0, 0],
+    [0, 65536],
+    [0, 1, 0, 0, 0, 0, 2],
+    [0, 1, 0, 0, 0, 0, 3],
+    [0, 1, 0, 0, 0, 0, 3],
+    [0, 1, 0, 0, 0, 0, 3],
+    [0, 1, 0, 0, 0, 0, 3],
+    [0, 1, 0, 0, 0, 0, 2],
+    [0, 1, 0, 0, 0, 0, 2]
+  ],
+  "links": null,
+  "entities": [
+    {"type": 83, "x": 409, "y": 115, "param": 6},
+    {"type": 104, "x": 328, "y": 155, "param": 3},
+    {"type": 104, "x": 328, "y": 155, "param": 12},
+    {"type": 104, "x": 308, "y": 155, "param": 14},
+    {"type": 104, "x": 264, "y": 155, "param": 11},
+    {"type": 104, "x": 260, "y": 155, "param": 8},
+    {"type": 104, "x": 252, "y": 155, "param": 2},
+    {"type": 104, "x": 212, "y": 155, "param": 4},
+    {"type": 104, "x": 200, "y": 155, "param": 10},
+    {"type": 104, "x": 184, "y": 155, "param": 13},
+    {"type": 103, "x": 216, "y": 112, "param": 1},
+    {"type": 104, "x": 140, "y": 155, "param": 5},
+    {"type": 104, "x": 140, "y": 155, "param": 9},
+    {"type": 83, "x": 71, "y": 119, "param": 7},
+    {"type": 0, "x": 67, "y": 139, "param": 1}
+  ]
+}
