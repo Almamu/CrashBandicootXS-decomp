@@ -1,0 +1,16 @@
+OUTPUT_ARCH(arm)
+SECTIONS
+{
+	. = 0x08000000;
+	ROM :
+	ALIGN(4)
+	{
+		build/ntranced/games/n2/asm/rom.o(.text);
+		build/ntranced/games/n2/data/rom_data.o(.rodata);
+	} = 0
+
+	/DISCARD/ :
+	{
+		*(*);
+	}
+}

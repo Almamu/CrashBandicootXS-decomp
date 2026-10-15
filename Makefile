@@ -44,6 +44,22 @@ else
 	ASFLAGS += --defsym NON_MATCHING=0
 endif
 
+#### Game ####
+# GAME picks the ROM (#1108): xs, Crash Bandicoot XS (the default, the rest
+# of this Makefile), or n2, Crash Bandicoot 2: N-Tranced (games/n2/game.mk,
+# docs/n_tranced.md). Each game builds into its own build/<rom>/ and
+# defines GAME_XS or GAME_N2 for the C/C++ and the assembly.
+GAME ?= xs
+
+ifeq ($(GAME),n2)
+include games/n2/game.mk
+else ifneq ($(GAME),xs)
+$(error GAME must be xs or n2, not "$(GAME)")
+else
+
+CPPFLAGS += -D GAME_XS=1
+ASFLAGS += --defsym GAME_XS=1
+
 #### Files ####
 OBJ_DIR:= build/crashbandicootxs
 ROM      := crashbandicootxs.gba
@@ -657,3 +673,5 @@ $(GRIT):
 	$(MAKE) -C tools/grit
 
 -include $(DEPS)
+
+endif # GAME == xs
