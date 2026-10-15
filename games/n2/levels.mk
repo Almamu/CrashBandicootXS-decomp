@@ -95,11 +95,16 @@ $(C_BUILDDIR)/game/level/data/level_bg_tiles_1.o: $(foreach t,gStaticData_0853FD
 # - LEVEL_COUNT: gLevelTable (0x081D0430) has 29 levels (24, then the 5
 #   bosses), its 0x24-byte records up to their room lists (0x081D0844),
 #   whose 29 records of 16 end at gThemeMusicCues.
+# - UI_TEXT_COUNT: each of the 6 languages' UI string tables (gUiTextTables,
+#   in the IWRAM image at 0x087FBE94, +0x31D0: 0x081D3984, ...) has 196
+#   entries, each table followed by the next language's strings.
+# - PROGRESS_EXTRA_FLAG_BYTES: 0, as XS's: the progress flags a mod adds
+#   past the ROM's (levels.json's "extra_progress_flags").
 # - THEME_COUNT: the levels' themes are 0-11, and gThemeMusicCues
 #   (0x081D0A14) has 12 entries where XS's has 11 and a padding byte.
 # - ENTITY_COUNT: the length of gEntitySpawnFuncs, levels.json's
 #   "entity_types".
-N2_CONSTANTS_levels     := LEVEL_COUNT 29
+N2_CONSTANTS_levels     := LEVEL_COUNT 29 UI_TEXT_COUNT 196 PROGRESS_EXTRA_FLAG_BYTES 0
 N2_CONSTANTS_themes     := THEME_COUNT 12
 N2_CONSTANTS_entities   := ENTITY_COUNT $(shell python3 -c "import json; print(json.load(open('$(N2_LEVELS_DIR)/levels.json'))['entity_types'])")
 N2_CONSTANTS_categories :=

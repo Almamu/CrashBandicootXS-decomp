@@ -61,6 +61,11 @@ endif
 # defines GAME_XS or GAME_N2 for the C/C++ and the assembly.
 GAME ?= xs
 
+# libgcc's functions, an object each (see "Files"); N-Tranced's build
+# links the ones its objects.txt names
+LIBGCC2_FUNCS := _divdi3 _udivdi3 _muldi3
+LIB1FUNCS := _udivsi3 _divsi3 _dvmd_tls _modsi3 _umodsi3 _call_via_rX
+
 ifeq ($(GAME),n2)
 ifneq ($(PLATFORM),gba)
 $(error PLATFORM=$(PLATFORM) builds Crash Bandicoot XS only (#1093))
@@ -141,9 +146,8 @@ LIB_C_OBJS := $(patsubst $(LIB_SUBDIR)/%.c,$(LIB_BUILDDIR)/%.o,$(LIB_C_SRCS))
 
 # As in gcc's own libgcc build, libgcc2.c is compiled once per function
 # with -DL_<name> and lib1funcs.s assembled once per routine with
-# L_<name> defined, one object per function.
-LIBGCC2_FUNCS := _divdi3 _udivdi3 _muldi3
-LIB1FUNCS := _udivsi3 _divsi3 _dvmd_tls _modsi3 _umodsi3 _call_via_rX
+# L_<name> defined, one object per function (LIBGCC2_FUNCS, LIB1FUNCS,
+# above the game switch).
 LIBGCC2_OBJS := $(patsubst %,$(LIB_BUILDDIR)/libgcc/%.o,$(LIBGCC2_FUNCS))
 LIBGCC2_ASMS := $(LIBGCC2_OBJS:.o=.s)
 LIB1FUNCS_OBJS := $(patsubst %,$(LIB_BUILDDIR)/libgcc/%.o,$(LIB1FUNCS))

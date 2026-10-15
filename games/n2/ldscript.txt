@@ -9,14 +9,48 @@ SECTIONS
 	ALIGN(4)
 	{
 		build/ntranced/games/n2/asm/code_08000000.o(.text);
+		build/ntranced/src/engine/gfx/bitmap_screen.o(.text);
+		build/ntranced/games/n2/asm/code_080009E8.o(.text);
 		build/ntranced/src/engine/util/line.o(.text);
 		build/ntranced/games/n2/asm/code_08000F50.o(.text);
 		build/ntranced/src/engine/util/time_format.o(.text);
 		build/ntranced/games/n2/asm/code_08001120.o(.text);
+		build/ntranced/src/engine/gfx/asset.o(.text);
+		build/ntranced/games/n2/asm/code_08001230.o(.text);
+		build/ntranced/src/engine/gfx/fade_to_black.o(.text);
+		build/ntranced/games/n2/asm/code_08001568.o(.text);
+		build/ntranced/src/engine/util/aabb.o(.text);
 		build/ntranced/src/engine/sys/iwram_alloc.o(.text);
 		build/ntranced/games/n2/asm/code_080017B0.o(.text);
+		build/ntranced/src/engine/link/link_sio.o(.text);
+		build/ntranced/games/n2/asm/code_08002A58.o(.text);
 		build/ntranced/src/engine/sys/vram_dma_queue.o(.text);
 		build/ntranced/games/n2/asm/code_08007620.o(.text);
+		build/ntranced/src/game/level/tile_cache_cell.o(.text);
+		build/ntranced/games/n2/asm/code_08025170.o(.text);
+		build/ntranced/src/game/level/terrain_probe.o(.text);
+		build/ntranced/games/n2/asm/code_080267F8.o(.text);
+		build/ntranced/src/game/level/terrain_probe_axes.o(.text);
+		build/ntranced/games/n2/asm/code_08026D10.o(.text);
+		build/ntranced/lib/libgcc/_divdi3.o(.text);
+		build/ntranced/lib/libgcc/_udivdi3.o(.text);
+		build/ntranced/lib/libgcc/_udivsi3.o(.text);
+		build/ntranced/lib/libgcc/_muldi3.o(.text);
+		build/ntranced/games/n2/asm/code_08044960.o(.text);
+		build/ntranced/lib/gax/src/gax_text_render.o(.text);
+		build/ntranced/games/n2/asm/code_08046230.o(.text);
+		build/ntranced/lib/gax/src/gax_zero_fill.o(.text);
+		build/ntranced/games/n2/asm/code_080463FC.o(.text);
+		build/ntranced/lib/libgcc/_divsi3.o(.text);
+		build/ntranced/games/n2/asm/code_08047A38.o(.text);
+		build/ntranced/lib/libgcc/_modsi3.o(.text);
+		build/ntranced/lib/libgcc/_umodsi3.o(.text);
+		build/ntranced/games/n2/asm/code_08047BCC.o(.text);
+		build/ntranced/lib/agb_eeprom/src/eeprom_timer.o(.text);
+		build/ntranced/lib/agb_eeprom/src/eeprom_timer_stop.o(.text);
+		build/ntranced/lib/agb_eeprom/src/eeprom_read_write.o(.text);
+		build/ntranced/lib/agb_eeprom/src/eeprom_verify.o(.text);
+		build/ntranced/games/n2/asm/code_0805B40C.o(.text);
 		build/ntranced/games/n2/data/data_0805BEA8.o(.rodata);
 		build/ntranced/src/engine/gfx/data/obj_piece_sizes.o(.rodata);
 		build/ntranced/games/n2/data/data_081CE010.o(.rodata);
@@ -52,9 +86,12 @@ SECTIONS
 
 	INCLUDE "games/n2/symbols.txt"
 
+	/* What isn't placed above, as XS's script: the comments and attributes,
+	 * and the code objects' .rodata the original's linker dropped (the agb_eeprom
+	 * objects' tables, which eeprom_data.c has). A section something uses
+	 * can't go: the link fails. */
 	/DISCARD/ :
 	{
-		*(.comment);
-		*(.ARM.attributes);
+		*(*);
 	}
 }

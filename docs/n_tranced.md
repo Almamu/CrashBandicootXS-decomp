@@ -168,10 +168,18 @@ match it, and the original's bytes:
    comparison's "exact" (`tools/nt_compare`) is a good start but not
    proof: N-Tranced's build sometimes used the other compiler for a file
    (`vram_dma_queue.o`).
-2. Add it to `objects.txt` (address, size of its `.text`, source).
+   `tools/nt_compare`'s `match.json` gives the candidates: the XS objects
+   whose functions are all "exact", in the same order and as contiguous
+   in N-Tranced.
+2. Add it to `objects.txt` (address, size of its `.text`, source; for
+   libgcc's functions the object, `lib/libgcc/_divdi3.o`). A code object's
+   `.rodata` that the script doesn't place is discarded, as XS's script
+   does (the agb_eeprom objects' tables).
 3. Give every function the disassembly still calls in it the name the
    source defines, in `gbadisasm.cfg` (`disasm.py` lists them), and add
-   the RAM/data symbols it uses to `symbols.txt`.
+   the RAM/data symbols it uses to `symbols.txt`. A function the
+   disassembly hasn't found (one only a pointer reaches) needs its
+   `thumb_func` line before the split can cut after the object.
 4. `python3 games/n2/disasm.py path/to/gbadisasm`, then
    `make GAME=n2 compare`. If it doesn't match, try the other compiler
    (`NEW_COMPILER_OBJS`) before changing the source.
@@ -179,13 +187,14 @@ match it, and the original's bytes:
 A source that includes a generated header (`constants/levels.h`, ...)
 gets N-Tranced's placeholder for it (`games/n2/levels.mk`): only the
 counts the shared headers' declarations need (`LEVEL_COUNT` 29,
-`THEME_COUNT` 12, `ENTITY_COUNT` 110), N-Tranced's own, until #1113
+`UI_TEXT_COUNT` 196, `THEME_COUNT` 12, `ENTITY_COUNT` 110), N-Tranced's
+own, until #1113
 generates the headers from its data. A source that needs another of
 their constants doesn't build for N-Tranced yet.
 
 `gbadisasm.cfg` seeds the disassembly with crt0, the N-Tranced address of
 each XS function the XS/N-Tranced comparison found in it (#1107) and the
-targets of the ROM's code pointers. 760 of its 2,703 functions have their
+targets of the ROM's code pointers. 785 of its 2,705 functions have their
 XS name; the rest are `sub_<address>`. `symbols.txt` names 76 of its RAM
 variables and `data_names.txt` 37 data symbols after XS's, and the
 disassembly's literal-pool words use the names, or the data's
