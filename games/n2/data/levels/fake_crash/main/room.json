@@ -3,8 +3,8 @@
   "record": {"symbol": "gLevelRoom30", "kind": "ON_FOOT", "blend": {"effect": 0, "eva": 0, "evb": 0}},
   "symbols": {"desc": "gRoom30Desc", "palette": "gRoom30Palette", "entities": "gRoom30EntityList", "groups": "gRoom30EntityGroups", "param_offsets": "gRoom30ParamOffsets", "params": "gRoom30Params", "type_counts": "gRoom30TypeCounts", "layers": "gRoom30Layers", "items": "gRoom30Entities"},
   "layers": {
-    "bg1": {"map": "bg1.png", "size_chunks": [2, 12], "size_tiles": [30, 96], "tileset": "gStaticData_0853B250", "scale": [0, 171], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom30Bg1Grid"},
-    "bg0": {"map": "bg0.png", "size_chunks": [2, 17], "size_tiles": [32, 133], "tileset": "gStaticData_0826FE48", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom30Bg0Grid"},
+    "bg1": {"map": "bg1.png", "size_chunks": [2, 12], "size_tiles": [30, 96], "tileset": "gEgyptBgTiles", "scale": [0, 171], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom30Bg1Grid"},
+    "bg0": {"map": "bg0.png", "size_chunks": [2, 17], "size_tiles": [32, 133], "tileset": "gEgyptBg0Tiles", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom30Bg0Grid"},
     "collision": {"map": "collision.png", "size_chunks": [2, 17], "size_tiles": [32, 133], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom30CollisionGrid"}
   },
   "params": [

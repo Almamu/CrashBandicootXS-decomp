@@ -3,10 +3,10 @@
   "record": {"symbol": "gLevelRoom16", "kind": "ON_FOOT", "blend": {"effect": 0, "eva": 0, "evb": 0}},
   "symbols": {"desc": "gRoom16Desc", "palette": "gRoom16Palette", "entities": "gRoom16EntityList", "groups": "gRoom16EntityGroups", "param_offsets": "gRoom16ParamOffsets", "params": "gRoom16Params", "type_counts": "gRoom16TypeCounts", "layers": "gRoom16Layers", "items": "gRoom16Entities", "links": "gRoom16Links"},
   "layers": {
-    "bg1": {"map": "bg1.png", "size_chunks": [20, 4], "size_tiles": [320, 32], "tileset": "gStaticData_085346AC", "scale": [69, 84], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom16Bg1Grid"},
-    "bg2": {"map": "bg2.png", "size_chunks": [23, 4], "size_tiles": [358, 32], "tileset": "gStaticData_085346AC", "scale": [84, 168], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom16Bg2Grid"},
-    "bg3": {"map": "bg3.png", "size_chunks": [64, 8], "size_tiles": [1024, 64], "tileset": "gStaticData_085346AC", "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom16Bg3Grid"},
-    "bg0": {"map": "bg0.png", "size_chunks": [64, 8], "size_tiles": [1024, 64], "tileset": "gStaticData_081E5394", "scale": [256, 256], "cnt": 1, "unk_1E": 2, "grid_symbol": "gRoom16Bg0Grid"},
+    "bg1": {"map": "bg1.png", "size_chunks": [20, 4], "size_tiles": [320, 32], "tileset": "gArabiaBgTiles", "scale": [69, 84], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom16Bg1Grid"},
+    "bg2": {"map": "bg2.png", "size_chunks": [23, 4], "size_tiles": [358, 32], "tileset": "gArabiaBgTiles", "scale": [84, 168], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom16Bg2Grid"},
+    "bg3": {"map": "bg3.png", "size_chunks": [64, 8], "size_tiles": [1024, 64], "tileset": "gArabiaBgTiles", "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom16Bg3Grid"},
+    "bg0": {"map": "bg0.png", "size_chunks": [64, 8], "size_tiles": [1024, 64], "tileset": "gArabiaBg0Tiles", "scale": [256, 256], "cnt": 1, "unk_1E": 2, "grid_symbol": "gRoom16Bg0Grid"},
     "collision": {"map": "collision.png", "size_chunks": [64, 8], "size_tiles": [1024, 64], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom16CollisionGrid"}
   },
   "params": [

@@ -77,13 +77,13 @@ $(N2_LEVEL_DATA_OBJS): CPPFLAGS += -iquote $(N2_LEVELS_BUILDDIR)
 $(foreach r,$(N2_LEVEL_REGIONS),$(eval $(C_BUILDDIR)/game/level/data/$(r).o: \
 	$(N2_LEVELS_BUILDDIR)/$(r).inc $(GENERATED_INCLUDE_DIR)/rooms.hpp))
 n2_bg0_tiles = $(N2_LEVELS_BUILDDIR)/tilesets/$(1).bin.inc $(N2_LEVELS_BUILDDIR)/tilesets/$(1).h
-$(C_BUILDDIR)/game/level/data/level_bg0_tiles_0.o: $(call n2_bg0_tiles,gStaticData_081E5394)
-$(C_BUILDDIR)/game/level/data/level_bg0_tiles_1.o: $(call n2_bg0_tiles,gStaticData_08220840)
-$(C_BUILDDIR)/game/level/data/level_bg0_tiles_2.o: $(call n2_bg0_tiles,gStaticData_0826FE48)
-$(C_BUILDDIR)/game/level/data/level_bg_tiles_0.o: $(foreach t,gStaticData_085346AC gStaticData_08538320 \
-	gStaticData_0853B250,$(N2_LEVELS_BUILDDIR)/tilesets/$(t).bin.lz.inc)
-$(C_BUILDDIR)/game/level/data/level_bg_tiles_1.o: $(foreach t,gStaticData_0853FD10 \
-	gStaticData_0854309C,$(N2_LEVELS_BUILDDIR)/tilesets/$(t).bin.lz.inc)
+$(C_BUILDDIR)/game/level/data/level_bg0_tiles_0.o: $(call n2_bg0_tiles,gArabiaBg0Tiles)
+$(C_BUILDDIR)/game/level/data/level_bg0_tiles_1.o: $(call n2_bg0_tiles,gVolcanoBg0Tiles)
+$(C_BUILDDIR)/game/level/data/level_bg0_tiles_2.o: $(call n2_bg0_tiles,gEgyptBg0Tiles)
+$(C_BUILDDIR)/game/level/data/level_bg_tiles_0.o: $(foreach t,gArabiaBgTiles gArabiaSkyBgTiles \
+	gEgyptBgTiles,$(N2_LEVELS_BUILDDIR)/tilesets/$(t).bin.lz.inc)
+$(C_BUILDDIR)/game/level/data/level_bg_tiles_1.o: $(foreach t,gVolcanoBgTiles \
+	gIslandBgTiles,$(N2_LEVELS_BUILDDIR)/tilesets/$(t).bin.lz.inc)
 
 # The constants XS generates from its levels.json, entity_types.json and
 # crate_kinds.json (constants/levels.h, themes.h, entities.h, categories.h,

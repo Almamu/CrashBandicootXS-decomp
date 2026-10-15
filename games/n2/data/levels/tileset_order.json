@@ -1,9 +1,9 @@
 {
-  "gStaticData_085346AC": ["prints_of_persia/main", "rock_the_casaba/main"],
-  "gStaticData_081E5394": ["prints_of_persia/main", "runaway_rug/main", "now_its_istanbul/main", "rock_the_casaba/main"],
-  "gStaticData_08538320": ["runaway_rug/main"],
-  "gStaticData_0853B250": ["pharaohs_funhouse/main", "hoppin_coffins/main", "slip_n_slidin_sphinx/main", "king_too_uncommon/main"],
-  "gStaticData_0826FE48": ["pharaohs_funhouse/main", "hoppin_coffins/main", "slip_n_slidin_sphinx/main", "king_too_uncommon/main", "wild_nile_ride/main"],
-  "gStaticData_0853FD10": ["tiki_torture/main", "magma_mania/main", "mister_lava_lava/main", "eruption_disruption/main"],
-  "gStaticData_08220840": ["tiki_torture/main", "magma_mania/main", "mister_lava_lava/main", "eruption_disruption/main", "fire_walker/main"]
+  "gArabiaBgTiles": ["prints_of_persia/main", "rock_the_casaba/main"],
+  "gArabiaBg0Tiles": ["prints_of_persia/main", "runaway_rug/main", "now_its_istanbul/main", "rock_the_casaba/main"],
+  "gArabiaSkyBgTiles": ["runaway_rug/main"],
+  "gEgyptBgTiles": ["pharaohs_funhouse/main", "hoppin_coffins/main", "slip_n_slidin_sphinx/main", "king_too_uncommon/main"],
+  "gEgyptBg0Tiles": ["pharaohs_funhouse/main", "hoppin_coffins/main", "slip_n_slidin_sphinx/main", "king_too_uncommon/main", "wild_nile_ride/main"],
+  "gVolcanoBgTiles": ["tiki_torture/main", "magma_mania/main", "mister_lava_lava/main", "eruption_disruption/main"],
+  "gVolcanoBg0Tiles": ["tiki_torture/main", "magma_mania/main", "mister_lava_lava/main", "eruption_disruption/main", "fire_walker/main"]
 }
