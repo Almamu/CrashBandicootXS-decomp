@@ -578,6 +578,9 @@ code and data totals in bytes, plus a tree of areas for the project's map.
 `tools/progress_api.py` builds that document from `report.json` and
 `objdiff.json`:
 
+- `version` is `europe`, the ROM this repository builds (`--version`).
+  decompilati.onl keeps each version's progress and history apart, with a
+  tab per version on the project page.
 - `code.matching` is objdiff's `matched_code`. `code.non_matching` is the
   code that has C but doesn't match: the bytes of the units with a base
   object, less what matches, the same split as the *non-matching* badge.
@@ -593,8 +596,8 @@ code and data totals in bytes, plus a tree of areas for the project's map.
   gets a `weight`: its share of the data, at the code's scale.
 
 The "Report progress to decompilati.onl" step in
-`.github/workflows/build.yml` runs it on pushes to `main` only, with the
-commit hash and the first line of its message, and POSTs the result with
+`.github/workflows/build.yml` runs it on pushes to `main` only, with
+`--version europe`, the commit hash and the first line of its message, and POSTs the result with
 the repository secret `DECOMPILATION_PROGRESS_TOKEN` as the bearer token.
 Without the secret the step does nothing. To see what would be sent:
 

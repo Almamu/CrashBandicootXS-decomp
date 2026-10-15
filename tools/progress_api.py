@@ -19,9 +19,13 @@ builds its base from; a data unit by the source its name was made from.
                      same split as tools/badges.py)
   data.done          objdiff's matched_data
 
+The report is for one version of the game (--version, `europe` for
+the ROM this repository builds); decompilati.onl keeps each version's
+progress and history apart.
+
 Usage:
   tools/progress_api.py [--report report.json] [--objdiff objdiff.json]
-                        [--commit SHA] [--message TEXT]
+                        [--version NAME] [--commit SHA] [--message TEXT]
 """
 
 import argparse
@@ -95,6 +99,8 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--report", default=os.path.join(ROOT, "report.json"))
     ap.add_argument("--objdiff", default=os.path.join(ROOT, "objdiff.json"))
+    ap.add_argument("--version", default="europe",
+                    help="the game version the report is for (default: europe)")
     ap.add_argument("--commit", help="commit hash shown as the last change")
     ap.add_argument("--message", help="commit message shown as the last change")
     args = ap.parse_args()
@@ -169,7 +175,8 @@ def main():
             raise SystemExit(f"progress_api.py: the areas' {'code' if i == 0 else 'data'} "
                              f"({have}) doesn't add up to the report's ({want})")
 
-    doc = {"unit": "bytes", **measures(code, data), "layout": "treemap", "areas": areas}
+    doc = {"version": args.version, "unit": "bytes", **measures(code, data),
+           "layout": "treemap", "areas": areas}
     if args.commit:
         doc["commit"] = args.commit
     if args.message:

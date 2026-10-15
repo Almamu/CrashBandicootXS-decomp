@@ -138,7 +138,7 @@ jobs:
           echo "No DECOMPILATION_PROGRESS_TOKEN secret, not reporting"
           exit 0
         fi
-        python3 tools/progress_api.py --commit "$GITHUB_SHA" \
+        python3 tools/progress_api.py --version europe --commit "$GITHUB_SHA" \
           --message "$(printf '%s\n' "$COMMIT_MESSAGE" | head -n 1)" > progress.json
         curl --fail-with-body -sS -X POST https://decompilati.onl/api/v1/progress \
           -H "Authorization: Bearer $TOKEN" \
