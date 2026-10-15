@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Extracts a contiguous, address-bounded text slice out of one of the
 frozen expected/*.s sources (never edits the source itself - see
-docs/decomp_dev.md and tools/report_units.py, which drives this to build
-one objdiff unit per matched src/*.c file so decomp.dev can show
+docs/progress_report.md and tools/report_units.py, which drives this to build
+one objdiff unit per matched src/*.c file so the report shows
 per-category progress).
 
 Slicing works at the text level (find the label line for the start

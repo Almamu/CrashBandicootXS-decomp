@@ -14,7 +14,7 @@ see .github/workflows/build.yml):
   workarounds.svg   the functions that still have at least one (#662)
 
 The first two read the progress report (`make NON_MATCHING=1 report`,
-then `objdiff-cli report generate -o report.json`, docs/decomp_dev.md)
+then `objdiff-cli report generate -o report.json`, docs/progress_report.md)
 and the objdiff.json `make report` wrote; the last two need the same
 build's objects. With NON_MATCHING=1 a parked function's C builds but
 doesn't match, so it counts as non-matching only, as it should.

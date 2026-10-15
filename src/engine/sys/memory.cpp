@@ -145,7 +145,7 @@ static inline struct mem_block *mem_last_block(struct mem_heap *heap)
  * caller anywhere in the ROM. For each heap selected in `flags` (IWRAM,
  * then EWRAM) it walks to the last block and discards the result. Until
  * #662 round 2 it was a file-scope asm transcription (and before that a
- * `.byte` blob, see docs/decomp_dev.md); the plain C above matches. */
+ * `.byte` blob, see docs/progress_report.md); the plain C above matches. */
 extern "C" void mem_walk_heaps(s32 flags)
 {
     if (MEM_HEAP_IWRAM & flags) {

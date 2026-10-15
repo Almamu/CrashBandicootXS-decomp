@@ -1,9 +1,9 @@
 # expected/
 
 Frozen, never-edited copies of the original hand-disassembled ROM code, kept
-purely so [decomp.dev](https://decomp.dev)'s progress report has a
+purely so the objdiff progress report has a
 byte-exact "target" (ground truth) object to diff the current, in-progress
-source tree's "base" object against - see [`docs/decomp_dev.md`](../docs/decomp_dev.md)
+source tree's "base" object against - see [`docs/progress_report.md`](../docs/progress_report.md)
 for the full explanation and how the two sides are built. Three files:
 two from different historical eras of this project, covering the ROM's
 Thumb code, and one for the ARM code of the IWRAM image:
@@ -33,7 +33,7 @@ Thumb code, and one for the ARM code of the IWRAM image:
   `objdump`, branch targets and literal pools as labels, pool words as
   the symbols they point at, function names as in `src/iwram/`), checked
   to reassemble to the same 0x7CC bytes, and frozen. Its labels carry
-  IWRAM addresses. See docs/decomp_dev.md's "The IWRAM image".
+  IWRAM addresses. See docs/progress_report.md's "The IWRAM image".
 
 `legacy.s` first started at `AgbMain` (`0x08000170`): the three functions
 before it, now `bios_util.cpp`'s, were still in `asm/crt0.s` when the
@@ -54,7 +54,7 @@ anything as matched, and the report would stop proving the code is
 byte-exact. If one turns out to be wrong or incomplete somehow, regenerate
 it from the same commit (or, for `iwram.s`, the same ROM bytes) rather
 than hand-patching it; use `expected/corrections.txt` for the small,
-known, expected discrepancies instead (see `docs/decomp_dev.md`).
+known, expected discrepancies instead (see `docs/progress_report.md`).
 `corrections.txt` is the one file here that changes: every rename of a
 symbol the targets mention adds or updates its `rename` line (see
 [`docs/naming.md`](../docs/naming.md), "What renaming touches").

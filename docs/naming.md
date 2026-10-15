@@ -114,13 +114,13 @@ honest placeholder, since other code and docs will start depending on it.
 4. If the function is covered by `expected/code_3.s` or `expected/legacy.s`
    (i.e. it was matched from one of those historical eras), add or update
    its `rename` line in `expected/corrections.txt` to the new name - see
-   [`docs/decomp_dev.md`](./decomp_dev.md). A function renamed *after*
+   [`docs/progress_report.md`](./progress_report.md). A function renamed *after*
    already having a real name (not straight from `sub_XXXXXXXX`) needs its
    correction's target name updated too, not a second entry.
 5. Rebuild: `make compare` must still pass (a rename shouldn't change any
    bytes, but a missed call site breaks the link) and
    `make NON_MATCHING=1 report` should still produce a sane result (see
-   `docs/decomp_dev.md` - this is how a missed corrections.txt update
+   `docs/progress_report.md` - this is how a missed corrections.txt update
    would surface, as the function silently vanishing from the report).
 
 # Constants

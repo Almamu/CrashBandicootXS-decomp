@@ -48,7 +48,7 @@ using Game::Ui::SaveMenu;
  * to 0x03000000 at boot. The image is IntrMain (asm/intr_main.s), the ARM
  * code (src/engine/util/string_arm.cpp, src/engine/gfx/sprite_arm.cpp) and this file's
  * .data, linked to run at 0x03000000 and stored after the vtables in ROM
- * (the `iwram` section in ldscript.txt, docs/decomp_dev.md). Everything
+ * (the `iwram` section in ldscript.txt, docs/progress_report.md). Everything
  * after 0x030009E8 is uninitialised (sym_iwram.txt).
  *
  * The globals are in address order, each defined with an initialiser

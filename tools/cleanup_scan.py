@@ -4,7 +4,7 @@ pointer-arithmetic field access and raw hardware addresses, the sites
 docs/workflow.md step 7 turns into named struct fields and REG_* macros.
 
 tools/report_units.py uses scan_cleanup_candidates() to set each
-objdiff unit's metadata.complete (docs/decomp_dev.md, "Matched" vs
+objdiff unit's metadata.complete (docs/progress_report.md, "Matched" vs
 "complete").
 
 Usage: python3 tools/cleanup_scan.py [FILE]   # Markdown report of every

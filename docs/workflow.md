@@ -193,5 +193,5 @@ incomplete pass and should be finished before moving on.
    one before it was matched),
    or turned out to be a separate function the original disassembly
    never gave its own label, add a line to `expected/corrections.txt` -
-   see [docs/decomp_dev.md](./decomp_dev.md) for why, and check with
+   see [docs/progress_report.md](./progress_report.md) for why, and check with
    `make NON_MATCHING=1 report` (see the same doc) that it's picked up.

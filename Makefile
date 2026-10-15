@@ -237,9 +237,9 @@ SCREEN_CHECK_DATA_OBJS := $(patsubst $(C_SUBDIR)/%.cpp,$(C_BUILDDIR)/%.o,$(shell
 
 screen-check-objs: $(filter-out $(DATA_OBJS),$(C_OBJS) $(CXX_OBJS)) $(SCREEN_CHECK_DATA_OBJS)
 
-#### decomp.dev progress report ####
-# See docs/decomp_dev.md. `report` builds one objdiff unit per source
-# file (rather than one merged blob) so decomp.dev can show
+#### Progress report (objdiff) ####
+# See docs/progress_report.md. `report` builds one objdiff unit per source
+# file (rather than one merged blob) so the report shows
 # per-category (Graphics/Util/System) progress, not just an overall
 # total - tools/report_units.py has the full explanation of why it has
 # to be this fine-grained, the per-file address table, and how it slices

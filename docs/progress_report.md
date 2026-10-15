@@ -1,14 +1,20 @@
-# decomp.dev integration
+# Progress report
 
-This project reports its matching progress to [decomp.dev](https://decomp.dev),
-which reads a JSON report (in [objdiff](https://github.com/encounter/objdiff)'s
-`Report` schema) uploaded as a GitHub Actions artifact on every push to `main`
-(and on PRs, for its PR-comment feature) - see `.github/workflows/build.yml`'s
-"Build progress report objects"/"Install objdiff-cli"/"Generate progress
-report"/"Upload progress report artifact" steps. `objdiff.json` (objdiff-cli's
-own config, read by `report generate`) is generated fresh by `make report`
-every time (see "One unit per matched file" below) and gitignored - never
-hand-edit or commit it.
+`make NON_MATCHING=1 report` and `objdiff-cli report generate -o report.json`
+build this project's progress report: a JSON file in
+[objdiff](https://github.com/encounter/objdiff)'s `Report` schema, with
+matched and complete measures per unit, per category and for code and data.
+CI builds it on every run (`.github/workflows/build.yml`'s "Build progress
+report objects"/"Install objdiff-cli"/"Generate progress report" steps), and
+the README's progress badges are drawn from it (see "Progress badges"
+below). Locally, it is the check that every function still matches:
+2062/2062 functions and 100% data. `objdiff.json` (objdiff-cli's own config,
+read by `report generate`) is generated fresh by `make report` every time
+(see "One unit per matched file" below) and gitignored - never hand-edit or
+commit it.
+
+The report used to be uploaded for [decomp.dev](https://decomp.dev), which
+has since closed; nothing reads `report.json` outside this repository now.
 
 ## Why this needed more than just running objdiff-cli
 
@@ -53,8 +59,8 @@ matched `src/*.c` or `lib/*/src/*.c` file**, each tagged with a category
 (`graphics`/`util`/`system`/..., and one per library: `gax`, `agb_eeprom`,
 `libgcc` - see [libraries.md](./libraries.md)), plus one untagged unit per
 still-fully-raw stretch of ROM - not
-a single unit covering the whole game. This is what makes decomp.dev's
-per-system progress bars possible: each unit's `metadata.progress_categories`
+a single unit covering the whole game. This is what makes the report's
+per-system progress possible: each unit's `metadata.progress_categories`
 tags it, and objdiff-cli's report aggregates matched/total *per category*
 across whichever units carry that tag, then again as one overall total.
 
@@ -162,7 +168,7 @@ whole-ROM reconnaissance pass (originally "reconnaissance, not ground
 truth") has, over many rounds of direct function reads, reached high
 confidence on where most of these regions actually start and end -
 confirmed landmark addresses, individually-read functions, or a
-dominant connected component - enough to be worth a decomp.dev progress
+dominant connected component - enough to be worth a progress
 bucket even at 0% matched, the same way an unmatched `src/*.c` file
 would show 0% under its own category rather than not appearing at all.
 
@@ -192,7 +198,7 @@ into the dominant category rather than left out or guessed at:
 `tools/report_units.py`'s own comments note each of these inline, next
 to the exact `UNITS` entry it applies to - check there before treating
 any of `game_loop`/`actor`/`graphics_loading`/`audio`/`hud`/`overlay_ui`'s
-decomp.dev percentage as more precise than "the dominant category in
+report percentage as more precise than "the dominant category in
 this address range." Genuinely untouched regions (nothing in
 `rom_map.md`, or too small to matter - like the ~200 B gap right after
 `irq.c`) stay uncategorized, same as before this pass.
@@ -392,10 +398,9 @@ Asset extraction also shows up in the report now, as its own data measure;
 see "Data progress" below. The per-asset details are still tracked in
 [`docs/graphics.md`](./graphics.md) and [`docs/audio.md`](./audio.md).
 
-## Data progress (decomp.dev's separate data bar)
+## Data progress (the report's separate data measures)
 
-decomp.dev draws a second progress bar next to the code one from objdiff's
-data measures (`total_data`/`matched_data`/`matched_data_percent`). Those
+The report carries data measures alongside the code ones (`total_data`/`matched_data`/`matched_data_percent`). Those
 count bytes in data sections (`.rodata`) instead of code bytes, so they
 never change any code measure.
 
@@ -508,7 +513,7 @@ offset casts and literal hardware addresses, with the
 fields, `REG_*`/`OAM`/`PLTT`/`DMA_*` macros) coming later, sometimes much
 later, as its own follow-up. Tracking only "matched" would make that
 cleanup (the `Cleanup: raw pointer arithmetic in ...` GitHub issues of
-the matching campaign) invisible to decomp.dev - a file could be 100%
+the matching campaign) invisible in the report - a file could be 100%
 byte-matched and still be full of the exact opaque casts this project is
 trying to get rid of.
 
@@ -529,8 +534,7 @@ a `complete` key at all - it isn't applicable until something's matched.
 `objdiff-cli report generate` aggregates this automatically into the
 report's top-level `measures.complete_units`/`measures.complete_code`/
 `measures.complete_code_percent`, alongside the existing
-`matched_units`/`matched_code_percent` - decomp.dev reads both without
-any further CI changes. Re-running `make NON_MATCHING=1 report` after any
+`matched_units`/`matched_code_percent`. Re-running `make NON_MATCHING=1 report` after any
 matching *or* cleanup work keeps this in sync automatically; there's
 nothing to hand-maintain here the way the `UNITS` address table is.
 
@@ -563,19 +567,3 @@ badges it would publish. On a push to `main`, once every job passed,
 the `badges` job (the only one with `contents: write`) replaces the
 single commit of the `badges` branch with them, and the README links to
 the files on that branch.
-
-## Registering the project on decomp.dev
-
-This part can't be scripted - it needs an interactive GitHub login:
-
-1. Go to [decomp.dev/manage/new](https://decomp.dev/manage/new), sign in
-   with GitHub, and pick this repository (you need admin access to it,
-   which the repo owner has).
-2. Fill in the game name, an optional short name, and platform
-   **Game Boy Advance**.
-3. Optionally install the decomp.dev GitHub App on the repo, so it's
-   notified the moment a workflow run finishes instead of polling every
-   5 minutes, and can post PR comments showing progress deltas.
-
-Everything else - generating and uploading `report.json` in the shape
-decomp.dev expects - is already handled by the CI workflow described above.

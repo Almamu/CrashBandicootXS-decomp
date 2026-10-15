@@ -2,8 +2,8 @@
 """Builds one objdiff unit per matched src/*.c and lib/*/src/*.c file
 (lib/: the third-party and SDK libraries, docs/libraries.md) (instead of one giant
 merged unit) and writes objdiff.json with each tagged by category, so
-decomp.dev can show per-category progress (Graphics/Util/System - see
-docs/decomp_dev.md for why category units have to be this fine-grained:
+the report shows per-category progress (Graphics/Util/System - see
+docs/progress_report.md for why category units have to be this fine-grained:
 merging non-adjacent functions into one target reintroduces the same
 "hidden function" boundary bug fixed for mem_collect, since ld -r-merged
 objects lose the original per-file section boundaries objdiff's size
@@ -19,7 +19,7 @@ docs/rom_map.md's whole-ROM reconnaissance pass split most of the ROM's
 remaining raw stretches into game_loop/actor/graphics_loading/audio/hud/
 overlay_ui by address, high-confidence enough (individually-read
 functions, confirmed landmarks, or a dominant connected component) to be
-worth a decomp.dev progress category even at 0% matched - these units
+worth a progress category even at 0% matched - these units
 get `metadata.progress_categories` but no `base_path`, so they count
 toward that category's total (all unmatched) without affecting per-file
 match percentages. Two categories rom_map.md found - `menu_ui` and `fx` -
@@ -72,13 +72,13 @@ LD = ["arm-none-eabi-ld", "-r"]
 # decompile. (itoa_arm, asm/itoa_arm.s, is assembly too, but it was
 # compiled code - most likely armcc's - so it keeps its own unit and
 # counts as a function; see IWRAM_UNITS.) No unit is emitted
-# for it, which leaves it out of decomp.dev's progress totals entirely.
+# for it, which leaves it out of the report's progress totals entirely.
 # It counts neither as matched nor as unmatched. crt0.s (0x08000000 up to
 # the first entry below, 0x08000140) is excluded the same way, by never
 # having a unit. The ROM bytes are still byte-verified by `make compare`.
 HANDWRITTEN = "handwritten"
 UNITS = [
-    (0x08000140, "src/engine/sys/bios_util.o", "system"),  # DivMod/MemCopy32/UpdateCtrl (Ctrl::Update), right after crt0's boot stub; this range had no unit until #662's audit, so its 3 functions weren't counted - see docs/decomp_dev.md
+    (0x08000140, "src/engine/sys/bios_util.o", "system"),  # DivMod/MemCopy32/UpdateCtrl (Ctrl::Update), right after crt0's boot stub; this range had no unit until #662's audit, so its 3 functions weren't counted - see docs/progress_report.md
     (0x08000170, "src/engine/sys/main.o", "system"),
     (0x080001CC, "src/engine/sys/memory.o", "system"),
     (0x08000544, "src/engine/sys/irq.o", "system"),
@@ -649,7 +649,7 @@ UNITS = [
 # at 0x03000000 and stored in ROM at IWRAM_LMA. Same layout as UNITS, but
 # the addresses are IWRAM (run) addresses and the targets are sliced from
 # expected/iwram.s, the frozen ARM disassembly of the image - see
-# docs/decomp_dev.md's "The IWRAM image". Its initialised data
+# docs/progress_report.md's "The IWRAM image". Its initialised data
 # (src/engine/sys/iwram_data.cpp) is a data unit, see IWRAM_DATA below.
 IWRAM_CODE = ROOT / "expected" / "iwram.s"
 IWRAM_UNITS = [
@@ -752,7 +752,7 @@ def build_target(name, start, end, source=None):
     return out_o
 
 
-#### Data units (decomp.dev's separate "data" progress bar) ####
+#### Data units (the report's separate data measures) ####
 #
 # Everything from DATA_START to the end of the ROM is linked from the
 # "/* Data */" block of ldscript.txt, in ROM order: the sections of
@@ -766,7 +766,7 @@ def build_target(name, start, end, source=None):
 # "unmatched" while it's still `.incbin "baserom.gba"`. Both give identical
 # bytes, so an honest data measure can't come from diffing bytes alone:
 # baserom-copied blobs get a target symbol but no base symbol, exactly like
-# the still-raw code ranges above. See docs/decomp_dev.md's "Data progress".
+# the still-raw code ranges above. See docs/progress_report.md's "Data progress".
 
 DATA_S = ROOT / "data" / "data.s"
 LDSCRIPT = ROOT / "ldscript.txt"
@@ -1131,7 +1131,7 @@ def main():
     # hardware address (see tools/cleanup_scan.py) are matched
     # but not yet cleaned up per docs/workflow.md step 7. A matched unit
     # not in this set gets metadata.complete=True; one that is gets
-    # False - objdiff/decomp.dev track this as a status independent of
+    # False - objdiff tracks this as a status independent of
     # match percentage, so a byte-exact-but-uncleaned file still shows
     # 100% matched while correctly not counting as "complete".
     needs_cleanup = {entry["file"] for entry in scan_cleanup_candidates() if entry["blocking"]}

@@ -31,7 +31,7 @@ checks it, and `tools/boottest.py` plays shifted ROMs in mGBA.
   without moving those variables. EWRAM is laid out the same way
   (`sym_ewram.txt`). That is RAM, not ROM: it doesn't limit the ROM's
   data.
-- **`make report`** (docs/decomp_dev.md) still describes the original
+- **`make report`** (docs/progress_report.md) still describes the original
   layout: `tools/report_units.py`'s `DATA_END` and `IWRAM_LMA` are the
   ROM's addresses, and it fails on a shifted tree. Only `make compare`
   and the report need the original layout; a plain `make` builds

@@ -7,7 +7,7 @@ of which the last 106,548 are `0xFF` cartridge fill, so 6,397,745 bytes
 count toward the data total). For each one it records what reads it,
 what the bytes are, and how hard it would be to build from repo sources.
 The data total and the matched share are the ones
-[`docs/decomp_dev.md`](./decomp_dev.md) "Data progress" defines:
+[`docs/progress_report.md`](./progress_report.md) "Data progress" defines:
 8,038,172 bytes, of which 1,640,427 (20.41%) are built today.
 
 The same information is in machine-readable form in
@@ -460,7 +460,7 @@ built with agbcp_arm_patched) and the initialised IWRAM globals
 (`src/engine/sys/iwram_data.cpp`, 540 bytes from `0x030007CC`). The code counts
 toward code progress, the globals toward data. The `0xFF` fill from
 `0x087E5FCC` is the linker's `rom_fill` section, excluded from data as
-before. See docs/decomp_dev.md's "The IWRAM image" and
+before. See docs/progress_report.md's "The IWRAM image" and
 docs/matching/iwram-image.md.
 
 ## Small and mid-size blobs

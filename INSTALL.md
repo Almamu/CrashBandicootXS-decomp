@@ -47,4 +47,4 @@ Once those packages are installed you'll need to provide agbcc, which is the com
 
 `tools/gbagfx` and `tools/grit`, the graphics converters, are built by the Makefile on first use.
 
-For the progress report (`make NON_MATCHING=1 report`, see [docs/decomp_dev.md](docs/decomp_dev.md)), you also need [objdiff-cli](https://github.com/encounter/objdiff/releases).
+For the progress report (`make NON_MATCHING=1 report`, see [docs/progress_report.md](docs/progress_report.md)), you also need [objdiff-cli](https://github.com/encounter/objdiff/releases).

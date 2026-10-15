@@ -182,7 +182,7 @@ No library object uses old_agbcc, agbcp_arm_patched or
   thing in the game's IWRAM image. pokeemerald keeps its crt0 in the game
   tree too.
 
-## decomp.dev
+## Progress report
 
 `tools/report_units.py` gives each library its own progress category:
 `gax` ("GAX2 sound engine (lib)"), `agb_eeprom` ("AgbEeprom SDK (lib)")

@@ -105,9 +105,10 @@ jobs:
     - name: Check that the ROM can shift
       run: make shiftcheck
 
-    # Progress report for decomp.dev (see docs/decomp_dev.md). Code needs no
-    # baserom.gba, since expected/code_3.s (checked into the repo) is the
-    # ground truth it diffs against. The data units take their target bytes
+    # The objdiff progress report (see docs/progress_report.md), which the
+    # badges below are drawn from. Code needs no baserom.gba, since
+    # expected/code_3.s (checked into the repo) is the ground truth it
+    # diffs against. The data units take their target bytes
     # from baserom.gba when it's there, and fall back to sizes only when not.
     - name: Build progress report objects
       run: |
@@ -122,12 +123,6 @@ jobs:
 
     - name: Generate progress report
       run: ./objdiff-cli report generate -o report.json
-
-    - name: Upload progress report artifact
-      uses: actions/upload-artifact@v7
-      with:
-        name: europe_report
-        path: report.json
 
     # The README's progress badges (tools/badges.py): matching and
     # non-matching from the report above, clean functions and workarounds
