@@ -103,6 +103,9 @@ A port is a `platform/<name>/` with:
    `MEM_FREE_LOST` cover two of the original's bugs that the GBA's
    hardware makes harmless (a read through NULL, a free of ROM data);
    a port where those fault defines them (see `platform/pc/`).
+   `STRUCT_RETURN_VIEW` names the function a struct-returning view of a
+   method's C name calls, for an ABI that returns small structs in
+   registers.
 2. **Startup and interrupts** in place of crt0 and IntrMain: run
    `AgbMain` (src/engine/sys/main.cpp), and drive the game's interrupt
    handlers from `gIntrTable` (Irq::Setup fills it, irq.cpp) once a
@@ -177,20 +180,34 @@ object compiles and links on a 64-bit host, in CI.
 
 ## `platform/pc/`
 
-The game for a 64-bit host (Linux, a stock g++/gcc). Phases 1 and 2 of
-#1093: it compiles, links and boots headless. It runs the game's own
-frame loop on the host's main thread, with scripted input, and hashes
-palette RAM, VRAM and OAM at checkpoints, which tools/boottest.py compares
-with mGBA running the ROM on the same input. Nothing is shown or heard
-yet (the PPU and audio are phases 3 and 6).
+The game for a 64-bit host (Linux, a stock g++/gcc). Phases 1 to 5 of
+#1093: it compiles, links and runs the game's own frame loop on the
+host's main thread; a software PPU draws the picture a scanline at a
+time; an SDL2 window shows it at the GBA's frame rate and reads the
+keyboard and gamepads; the EEPROM can live in a file. Headless, with
+scripted input, it hashes palette RAM, VRAM, OAM and the picture at
+checkpoints, which tools/boottest.py compares with mGBA running the ROM
+on the same input. Nothing is heard yet (audio is phase 6).
 
 ```
 make PLATFORM=pc        # build/pc/crashbandicootxs_pc; XS only
-build/pc/crashbandicootxs_pc --keys platform/pc/tests/boot.keys --frames 960
+build/pc/crashbandicootxs_pc --save crash.sav          # in a window (with SDL2)
+build/pc/crashbandicootxs_pc --headless --keys platform/pc/tests/boot.keys --frames 960
 ```
 
 It needs no ARM toolchain, agbcc or baserom, only what the data
-generators need (CI: `.github/workflows/host.yml`).
+generators need, and SDL2 (found by `pkg-config sdl2`) for the window.
+Without SDL2, or with `make PLATFORM=pc HOST_SDL=0`, the executable runs
+headless only (CI: `.github/workflows/host.yml` builds both).
+
+**Controls.** Keyboard: the arrows are the D-pad, X is A, Z is B, A and
+S are L and R, Enter is Start, Backspace (or right Shift) is Select. A
+gamepad (SDL's game controller layout): the D-pad or the left stick, the
+right face button (B on an Xbox pad) is A and the bottom one (A) is B,
+as the GBA's are placed; the shoulders and triggers are L and R, Start
+and Back are Start and Select. F12 writes a screenshot
+(crashbandicootxs-N.png, at the window's size), Tab held runs without
+waiting, Escape or closing the window quits.
 
 ```
 platform/pc/platform.mk            the build: the Makefile includes it instead of
@@ -201,7 +218,8 @@ platform/pc/include/gba/*.h        the GBA's headers, included by relative path,
                                    REG_BASE, EWRAM_START, IWRAM_START, PLTT, VRAM, OAM
                                    on host arrays, DmaSet a call, REG_KEYINPUT a call,
                                    LAYOUT_ASSERT empty, IWRAM_DATA/EWRAM_DATA empty,
-                                   NULL_READ and MEM_FREE_LOST (below)
+                                   NULL_READ, MEM_FREE_LOST, STRUCT_RETURN_VIEW
+                                   (below)
 platform/pc/include/agb_syscall.h  the GBA's prototypes
 platform/pc/src/
     memory.S                       the host memory (gba/host.h), in the GBA's order
@@ -209,45 +227,81 @@ platform/pc/src/
     bios.c                         the BIOS calls in C but VBlankIntrWait (irq.c)
     irq.c                          the frame loop: VBlankIntrWait, the scanlines,
                                    VCOUNT/DISPSTAT, IF, and IntrMain's dispatch
-    input.c                        REG_KEYINPUT from the key file, the frame count,
-                                   the checkpoints
+    ppu.c                          the PPU: each visible line drawn from the
+                                   registers, VRAM, palette RAM and OAM
+    sdl.c                          the window, the keyboard and gamepads, the frame
+                                   pacing (only with SDL2; else says there's none)
+    input.c                        REG_KEYINPUT from the key file and the window, the
+                                   frame count, the checkpoints
     main.c                         the command line, then AgbMain
-    sha1.c                         the checkpoints' hash
+    sha1.c, png.c                  the checkpoints' hash, the pictures' PNG files
     gax.c, eeprom.c                GAX2's API (silent stubs) and AgbEeprom's (a RAM
-                                   buffer), in place of lib/gax and lib/agb_eeprom
+                                   buffer, --save's file), in place of lib/gax and
+                                   lib/agb_eeprom
+    level_pick.c                   --level and --room (boottest's level scripts)
+    sprite_boxes.c                 GetSpriteAttackBox and GetSpriteBodyBox's C names
+                                   (STRUCT_RETURN_VIEW, below)
     libgcc.c                       __divsi3 & co., which the game calls by name
     sound_data.S                   gSfxTable and gGaxMusicData, data/data.s's
                                    blocks the game reads, as the built bytes
 platform/pc/units/                 units built in place of src/'s
     engine/sys/bios_util.cpp       DivMod in C (the GBA's is an inline `svc #6`)
-platform/pc/libc_names.txt         the game's functions named as the C library's
+platform/pc/libc_names.txt         the game's functions named as the C library's,
+                                   and its operator new and delete
 platform/pc/tests/boot.keys        the headless boot's input (CI)
 platform/pc/tests/boot_mgba.json   mGBA's log of it (boottest.py), what CI compares
+platform/pc/tests/intro.keys       the boot to New Game and the whole intro cutscene
+platform/pc/tests/*_mgba_screens.json
+                                   the hashes of mGBA's pictures for both (boottest.py
+                                   `screens`), what CI compares the PPU's with
+platform/pc/tests/screens/         some of mGBA's pictures of the boot, as PNGs
 platform/pc/tools/host_link.py     the link's symbol assignments (below)
 platform/pc/tools/layout_check.py  checks the placed globals fit (below)
+platform/pc/tools/mgba_screens.c   the ROM in libmgba with a key file: mGBA's pictures
+                                   (boottest.py `screens` builds and runs it)
 ```
 
-**Running it.** `crashbandicootxs_pc [--frames N] [--vblanks N] [--keys
-FILE] [--checkpoint-every N] [--dump DIR] [--quiet]`. A game frame is a
-read of REG_KEYINPUT (KeyInput::Update reads it once a frame; the
+**Running it.** `crashbandicootxs_pc [--headless] [--scale N] [--save
+FILE] [--frames N] [--vblanks N] [--keys FILE] [--level N [--room R]]
+[--checkpoint-every N] [--dump DIR] [--screens DIR] [--screenshot-at N]
+[--ppu-stats] [--quiet]`. In a window unless `--headless` (or built
+without SDL2): `--scale N` sizes it (3 times the GBA's by default),
+`--screenshot-at N` takes F12's screenshot of the picture frame N reads
+its keys under. `--save FILE` keeps the EEPROM there. `--level N` makes
+the first level select pick level N (gLevelTable's index) and `--room R`
+start it in its room R, as boottest's level scripts do on mGBA.
+
+A game frame is a read of REG_KEYINPUT (KeyInput::Update reads it once a frame; the
 platform's io_reg.h makes the read a call of HostReadKeys), as it is in
 tools/boottest.py, which sets the keys at a breakpoint right after that
 read: frame 1 is the first read. `--frames N` stops at frame N+1
 (`end done at frame N+1`, boottest's "done"). The key file holds a line
 `FRAME KEYS` for each change: KEYS (`-`, a number, or names joined by
 `+`: A B SELECT START RIGHT LEFT UP DOWN R L) are held from FRAME on.
+In a window the keys held there are added to the key file's.
 Every `--checkpoint-every` frames (60) it prints `checkpoint FRAME HASH
-PICTURE`: HASH is boottest's (the SHA-1 of palette RAM, VRAM and OAM),
-PICTURE the same with the OAM bits the display ignores cleared (a hidden
-entry's attributes, a regular entry's matrix bits), because the game
-leaves those as whatever its stack held (DrawSpritePieces' `struct
-oam_attrs`), which differs between the GBA and a host. `--dump DIR`
-writes each checkpoint's bytes to DIR/FRAME.bin.
+PICTURE SCREEN`: HASH is boottest's (the SHA-1 of palette RAM, VRAM and
+OAM), PICTURE the same with the OAM bits the display ignores cleared (a
+hidden entry's attributes, a regular entry's matrix bits), because the
+game leaves those as whatever its stack held (DrawSpritePieces' `struct
+oam_attrs`), which differs between the GBA and a host, and SCREEN the
+SHA-1 of the RGB bytes of the picture the PPU finished last, the one
+shown while the game reads that frame's keys. `--dump DIR` writes each
+checkpoint's bytes to DIR/FRAME.bin, `--screens DIR` its picture to
+DIR/FRAME.png. `--ppu-stats` counts, at the end, the lines that used
+each PPU feature (the survey below).
 
-`tools/boottest.py host EXE --keys FILE --frames N` runs it and writes
-boottest's log; `boottest.py run ROM ELF --keys FILE --frames N` plays
-the same key file on mGBA, and `compare` of the two compares the
+`tools/boottest.py host EXE --keys FILE --frames N` runs it headless and
+writes boottest's log; `boottest.py run ROM ELF --keys FILE --frames N`
+plays the same key file on mGBA, and `compare` of the two compares the
 checkpoints' picture hashes. Both take `--every N` and `--dump DIR`.
+`boottest.py screens ROM --keys FILE --frames N` plays it on libmgba
+(platform/pc/tools/mgba_screens.c, built against the mGBA on the PATH or
+`--mgba PREFIX`) and logs the hashes of mGBA's own pictures, which
+`compare` checks a host log's SCREENs against; `--screens DIR` writes
+both sides' PNGs and `diff-screens REF DIR` compares them pixel by pixel.
+`host` and `screens` take `--level N --room R` (`screens` with `--elf`
+for the addresses), `screens` takes `--save FILE`.
 
 **The frame loop** (irq.c). The game runs on the main thread and takes
 no time: the display's time passes only in VBlankIntrWait, the one place
@@ -267,6 +321,98 @@ enables no HBlank IRQ, the EEPROM in a RAM buffer needs no Timer2 timeout
 (SetEepromTimerIntr installs a no-op), and the link never connects. A
 VBlankIntrWait with the VBlank IRQ off stops the run with an error (the
 GBA would hang).
+
+**The PPU** (ppu.c). irq.c's loop draws each visible line (0-159) once
+its VCount IRQ has run, as the GBA draws a line after the IRQ at its
+start, and at line 160 makes the frame the finished picture
+(gHostScreen, 8-bit XRGB), before the VBlank IRQ. So a register the game
+writes in the middle of a frame (an IRQ handler) changes the lines after
+it; the game's own code otherwise all runs at line 160, so it sees a
+whole frame at a time, as it does on the GBA, which latches the affine
+reference points at VBlank. It draws:
+
+- modes 0 to 5: text BGs (4 and 8 bpp, flips, the four screen sizes,
+  scrolling), affine BGs (BG2PA-PD, BG2X/Y and BG3's, wrap-around or
+  transparent outside: the reference point is loaded at the frame's
+  start, stepped by PB/PD each line and reloaded when the game rewrites
+  it), the bitmap modes 3, 4 and 5 with their frame select; BG tiles
+  above VRAM 0x10000 are transparent;
+- OBJs: regular and affine, double size, 1D and 2D mapping, 4 and 8 bpp,
+  flips, priorities, semi-transparent and OBJ-window OBJs, the per-line
+  sprite budget (1210 cycles, 954 with H-blank interval free), tiles
+  below 512 hidden in the bitmap modes;
+- windows 0 and 1, the OBJ window and the outside, mosaic (BGs and OBJs),
+  BLDCNT's alpha blending, brightening and darkening, forced blank
+  (white), the backdrop.
+
+Its colours are 8-bit RGB, each 5-bit channel widened as `c << 3 | c >>
+2`, with the colour effects on the 8-bit channels (`I1*EVA/16 +
+I2*EVB/16` capped at 255, `I + (255-I)*EVY/16`, `I - I*EVY/16`), as mGBA
+computes them, so that the two compare exactly (the GBA computes on the
+5-bit channels, which rounds some blended pixels apart). mGBA also rounds a
+darkened green and blue channel's step up and red's down (its packed
+arithmetic drops only red's fraction), and ppu.c does the same: without
+it, 14 frames of a fade in the boot test differ by that one step. Where
+the hardware is subtle it does what mGBA 0.10 does: a semi-transparent
+OBJ with no second target under it takes BLDCNT's brightness effect, and
+a transparent pixel of a higher-priority OBJ passes its priority on to
+the OBJ pixel under it. It was written from GBATEK's description of the
+hardware; no emulator's code is in it. Not modelled: the GBA's
+three-line delay when a BG is switched on mid-frame (the game switches
+them in VBlank), and VRAM/OAM access timing.
+
+What the game uses (`--ppu-stats` over the intro test and the level runs
+below, 4 million lines): modes 0, 1 and 4 (not 2, 3, 5); text BGs 4
+and 8 bpp, 256x256 and 512x256; affine BG2 in mode 1 and the mode 4
+bitmap, transparent outside (no wrap-around); OBJs 1D-mapped, 4 bpp,
+regular, affine and double-size, semi-transparent ones; alpha blending,
+brightening, darkening. Not used in any of these runs: windows (the OBJ
+window included), mosaic, 2D mapping, 8-bpp OBJs, the 256x512 and
+512x512 text sizes, forced blank. The source agrees: no
+WININ/WINOUT/WINxH/MOSAIC writes, and every DISPCNT mode it sets is 0, 1
+or 4.
+
+**The picture against mGBA.** `boottest.py screens` and `host` with the
+same key file, each frame's picture compared (`--every 1`):
+
+| run | frames | the same as mGBA's |
+|---|---|---|
+| boot.keys (logos, title, menus, Jungle Jam) | 960 | 960 |
+| intro.keys (the whole intro cutscene, into Jungle Jam) | 2400 | 2400 |
+| boot.keys, `--level` 0, 1, 9, 11 (Jungle Jam, Shipwrecked, Ruined, Ace of Space) | 960 each | 960 each |
+| boot.keys, `--level` 20, 22, 23, 24 (Dingodile, Tiny, Neo Cortex, Mega-Mix) | 960 each | 960 each |
+| boot.keys, `--level` 3, 5, 10 `--room 1` (the polar stages) | 960 each | 959 each |
+| boot.keys, `--level` 6, 14 (Rocket Racket, Blimp Bonanza: jetpack) | 960 each | 927 each |
+| boot.keys, `--level` 21 (N. Gin: jetpack) | 960 | 943 |
+
+The pictures that differ are of the CPU's time, not the PPU's: the host's
+game takes no time, the GBA's does. Frame 512 is the first after the
+level's load, which spans 98 VBlanks on mGBA and 77 on the host (the
+decompression and copies take none), so the last picture before it is
+drawn at another point of the load. In levels 6, 14 and 21 the fade-in
+after it steps BLDY from the VBlank IRQ (BrightnessFade::Step), and
+mGBA's extra VBlanks put it a step ahead, until it ends (frame 547).
+Every other frame is pixel for pixel mGBA's. A save made with the same
+keys is mGBA's .sav byte for byte but for one padding byte of the slot
+record (stack garbage) and so the checksum.
+
+**The window** (sdl.c). At each VBlank (line 160) it shows the finished
+picture, scaled (`SDL_RenderSetLogicalSize`, nearest neighbour, the GBA's
+3:2 kept when resized), reads the events and the keys and pads, and waits
+until the frame's time is up: 280896 cycles of 16.78 MHz, 59.7275 frames
+a second, against a running deadline, so a short wait evens out; more than
+four frames behind (a long load, a debugger) it starts again from now. No
+vsync: the pace is the GBA's, not the monitor's. Measured with SDL's
+dummy video driver: 1200 VBlanks in 20.3 s from start to end, loads
+included.
+
+**The save** (eeprom.c). `--save FILE` reads FILE at the game's first
+EEPROMConfigure (if it exists) and writes it back whole at the VBlank
+after the game writes the EEPROM, and at the end. The buffer holds the
+chip's bits in the order the GBA sends them, the layout of mGBA's .sav:
+an 8-byte block is EEPROMWrite's `data[0..3]` bytes reversed. The game
+uses the 4 Kbit chip, so the file is 512 bytes; a longer file is read as
+far as the chip goes.
 
 **DMA.** Every DMA the game starts is immediate (`DmaCopy*`, `DmaFill*`,
 DMA3, through DmaSet): none is timed to VBlank, HBlank or a FIFO (only
@@ -316,9 +462,13 @@ would stand in for the C library's for its other users (libstdc++, the
 platform's own code). platform.mk renames them in the game's objects
 after compiling each (`objcopy --redefine-syms=libc_names.txt`, so
 `GameStrcpy`), and host_link.py `--libs` fails the link if a game object
-defines any other name the host's libc, libm or libstdc++ exports, but
-the global operator new and delete, which C++ lets a program replace
-(operator_new.cpp, the game's heap).
+defines any other name the host's libc, libm or libstdc++ exports. The
+game's global operator new and delete (operator_new.cpp, the game's heap)
+are renamed too (GameOperatorNew & co.): C++ lets a program replace
+them, but then every C++ library in the process allocates from the
+game's heap, which crashed when SDL's audio loaded libjack before
+AgbMain. host_link.py `--renames` binds OperatorNew & co.
+(cxx_symbols.txt) to the renamed definitions.
 
 **Host flags.** GNU C++98 with no RTTI or exceptions, as on the GBA, and
 `-funsigned-char` (ARM's `char`), `-fno-strict-aliasing -fwrapv` (gcc
@@ -333,8 +483,8 @@ line. clang has no such option: with `HOST_CC=clang HOST_CXX=clang++`
 everything compiles, but those three are missing at the link. No
 `-Werror`: the build's warnings are the GBA's.
 
-**Two seams for the original's own bugs** (gba/defines.h, both nothing
-on the GBA):
+**Seams** (gba/defines.h, each nothing on the GBA). Two for the
+original's own bugs:
 
 - `NULL_READ(p)`: the ROM reads through a pointer while it can still be
   NULL. The level's first SetCheckpointAtPlayer (bonus_round.cpp) reads
@@ -348,6 +498,19 @@ on the GBA):
   for every room asset that isn't unpacked), so nothing happens; on the
   host the ROM data is read-only memory. The pc platform skips a free of
   an address outside its heaps.
+
+And one for an ABI difference:
+
+- `STRUCT_RETURN_VIEW(name)`: Sprite::GetAttackBox and GetBodyBox return
+  a struct aabb. The bosses call them by their C names as functions that
+  fill a box through a pointer (objects.h, `GetSpriteAttackBox(&box,
+  sprite)`), and dingodile.cpp also as one that returns it
+  (GetSpriteAttackBox_s, which the ROM's frame needs). On the ARM those
+  are the same call (g++ 2.9 returns the struct through a pointer in
+  r0); on x86-64 the method takes `this` first and returns the 16-byte
+  box in two registers. The pc platform defines the C names as the
+  pointer form (sprite_boxes.c, calling the methods) and gives the
+  struct-return view its own function, HostStructReturn_<name>.
 
 **Shared code changed for it** (each byte-identical on the GBA, both ROMs
 and maps unchanged):
@@ -377,6 +540,15 @@ and maps unchanged):
     (tools/gfx_manifest.py), so that the host's 16-byte alignment of a
     large array leaves no gap between them;
   - NULL_READ in SetCheckpointAtPlayer, MEM_FREE_LOST in mem_free.
+- Phases 3-5 (each a crash on the host):
+  - the save menu's icons (save_menu_draw.cpp) set the palette nibble in
+    the byte after `Sprite::mirror`, not at +0x29, which on the host is
+    inside the bank pointer;
+  - Sprite::CheckPlayerContact reads the player's flags through
+    NULL_READ: the save menu's icons are Sprites too, and outside a level
+    gPlayer is NULL;
+  - STRUCT_RETURN_VIEW in dingodile.cpp (the bosses crashed in
+    GetSpriteAttackBox).
 
 **How far it matches mGBA.** With platform/pc/tests/boot.keys (Start and
 A mashed through the boot cutscene, the company logos, the language
@@ -391,11 +563,12 @@ optimisation level (-O1 and -O2 agree) or on what a NULL_READ reads
 boot to frame 960 and compares it with mGBA's log
 (tests/boot_mgba.json).
 
-**Not done yet** (the later phases): the PPU and a window, live input
-and frame timing, saving to a file (the EEPROM is a RAM buffer), audio
-(GAX2's API is silent; gGaxMusicData's pointers are the GBA's, which
-nothing on the host reads), the link. `vsprintf` stays as it is (4-byte
-argument slots, see above; renamed GameVsprintf, and never called).
+**Not done yet** (the later phases): audio (GAX2's API is silent;
+gGaxMusicData's pointers are the GBA's, which nothing on the host reads),
+the link. The frame 961 difference above is still open. The gamepad
+mapping is built but untested with a real pad (the tests had none).
+`vsprintf` stays as it is (4-byte argument slots, see above; renamed
+GameVsprintf, and never called).
 Other ABI differences that a later phase may meet: the `asm("CName")`
 views with another return type (`RandRange_s32`, `GetPaletteSlot_s32`)
 read a register the host doesn't promise to extend, and the game's

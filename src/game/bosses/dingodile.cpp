@@ -81,7 +81,8 @@ static inline void HitPlayer(MovingSprite *by)
 /* GetSpriteAttackBox (objects.h) as a struct return: assigned to a box
  * that already holds the body box, it fills a temporary and copies it
  * (the ROM's frame and its ldmia/stmia copy). */
-extern "C" struct aabb GetSpriteAttackBox_s(void *part) asm("GetSpriteAttackBox");
+extern "C" struct aabb
+GetSpriteAttackBox_s(void *part) asm(STRUCT_RETURN_VIEW("GetSpriteAttackBox"));
 
 s32 DingodileCtrl::GetHits()
 {

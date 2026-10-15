@@ -31,6 +31,13 @@
 #define MEM_FREE_LOST(p) \
     ((uintptr_t)(p) < (uintptr_t)gHostEwram || (uintptr_t)(p) >= (uintptr_t)gHostIwram + HOST_IWRAM_SIZE)
 
+/* A struct-return view of a method's C name (gba/defines.h): on x86-64
+ * a 16-byte struct comes back in two registers, so `name` itself is the
+ * pointer form (platform/pc/src/sprite_boxes.c) and the view calls
+ * HostStructReturn_<name>, which returns the struct. */
+#undef STRUCT_RETURN_VIEW
+#define STRUCT_RETURN_VIEW(name) "HostStructReturn_" name
+
 #undef EWRAM_START
 #undef IWRAM_START
 #undef EWRAM_SIZE

@@ -5,8 +5,12 @@ docs/shifting.md) can be compared run against run.
 
     tools/boottest.py run ROM.gba ROM.elf [--script NAME ... | --keys FILE --frames N]
                       [--dump DIR] [--out LOG.json]
-    tools/boottest.py host EXE --keys FILE --frames N [--dump DIR] [--out LOG.json]
+    tools/boottest.py host EXE --keys FILE --frames N [--level N [--room R]] [--dump DIR] [--screens DIR]
+                      [--out LOG.json]
+    tools/boottest.py screens ROM.gba --keys FILE --frames N [--elf ROM.elf --level N [--room R]]
+                      [--screens DIR] [--save FILE] [--out LOG.json]
     tools/boottest.py compare A.json B.json
+    tools/boottest.py diff-screens REFERENCE_DIR DIR
 
 mGBA's SDL frontend (`mgba`) runs with SDL's dummy video and audio
 drivers and its GDB stub, which this drives with the GDB remote protocol.
@@ -40,6 +44,21 @@ picture hashes: the game leaves some OAM bits it doesn't use as whatever
 was on the stack, which differs between the two. --dump writes
 each checkpoint's bytes (palette RAM, VRAM, OAM) to DIR/FRAME.bin, to find
 where two runs differ.
+
+The host's checkpoints also have the hash of its PPU's picture (a 5th
+field: the SHA-1 of the RGB bytes of the picture finished last,
+platform/pc/src/ppu.c), and --screens DIR writes that picture as
+DIR/FRAME.png. `screens` gets mGBA's pictures for a key file the same way:
+it builds platform/pc/tools/mgba_screens.c against libmgba (the mGBA
+whose `mgba` is on the PATH, or --mgba PREFIX; mods.yml's 0.10.5 has it)
+and plays the key file there, frame N being the N-th read of REG_KEYINPUT
+as in `run`. Its log has only the screen hashes; `compare` checks those
+of a `host` log against them, and `diff-screens` compares the PNGs of two
+directories pixel by pixel (those in the first). --level and --room pick
+the level (and its first room) at the first level select, as the level
+scripts do: on the host with its own --level and --room, on libmgba with
+breakpoints at the addresses ROM.elf gives. --save keeps mGBA's EEPROM in
+a file, the image the host's --save writes.
 """
 import argparse
 import hashlib
@@ -429,13 +448,18 @@ def run_script(rom_path, syms, rom, script, timeout, extra_hooks=None, dump=None
     return log
 
 
-def run_host(exe, keys, frames, timeout, dump=None, every=CHECKPOINT_EVERY):
-    """Plays a key file on the pc platform's host executable and returns
-    its log: the checkpoints (with no mixer flag, None) and how it ended;
-    no events (None) and no save."""
-    cmd = [exe, "--keys", keys, "--frames", str(frames), "--checkpoint-every", str(every)]
+def run_host(exe, keys, frames, timeout, dump=None, every=CHECKPOINT_EVERY, screens=None, level=None,
+             room=None):
+    """Plays a key file on the pc platform's host executable (headless)
+    and returns its log: the checkpoints (with no mixer flag, None, and
+    the screen's hash) and how it ended; no events (None) and no save."""
+    cmd = [exe, "--headless", "--keys", keys, "--frames", str(frames), "--checkpoint-every", str(every)]
+    if level is not None:
+        cmd += ["--level", str(level)] + (["--room", str(room)] if room is not None else [])
     if dump:
         cmd += ["--dump", dump]
+    if screens:
+        cmd += ["--screens", screens]
     start = time.time()
     log = {"events": None, "checkpoints": [], "save": None, "end": None}
     try:
@@ -446,7 +470,7 @@ def run_host(exe, keys, frames, timeout, dump=None, every=CHECKPOINT_EVERY):
     for line in out.splitlines():
         f = line.split()
         if f[:1] == ["checkpoint"]:
-            log["checkpoints"].append([int(f[1]), f[2], None, f[3]])
+            log["checkpoints"].append([int(f[1]), f[2], None, f[3]] + f[4:5])
         elif f[:1] == ["end"]:
             log["end"] = " ".join(f[1:5])  # "done at frame N", as run's
     if code is None:
@@ -457,10 +481,77 @@ def run_host(exe, keys, frames, timeout, dump=None, every=CHECKPOINT_EVERY):
     return log
 
 
+def mgba_prefix(given):
+    """The install prefix of the mGBA with libmgba's headers and library."""
+    mgba = shutil.which("mgba")
+    prefix = given or (os.path.dirname(os.path.dirname(os.path.realpath(mgba))) if mgba else None)
+    if not prefix or not os.path.exists(os.path.join(prefix, "include", "mgba", "core", "core.h")):
+        raise SystemExit(f"no libmgba headers under {prefix!r}: give --mgba PREFIX (an mGBA install)")
+    return prefix
+
+
+def run_screens(rom, keys, frames, timeout, prefix, every=CHECKPOINT_EVERY, screens=None, elf=None,
+                level=None, room=None, save=None):
+    """Plays a key file on libmgba with platform/pc/tools/mgba_screens.c
+    and returns a log of its pictures' hashes (no other fields)."""
+    extra = ["--save", save] if save else []
+    if level is not None:
+        if not elf:
+            raise SystemExit("--level needs --elf (the ROM's ELF, for the addresses)")
+        syms, romdata = read_elf(elf)
+        extra += ["--level", hex(call_return(romdata, syms["RunLevelSelect"], syms["LevelSelectLoop"])), str(level)]
+        if room is not None:
+            extra += ["--room", hex(syms["SelectRoom"]), str(room)]
+    here = os.path.dirname(os.path.abspath(__file__))
+    pc = os.path.join(here, "..", "platform", "pc")
+    lib = next((os.path.join(prefix, d) for d in ("lib", "lib64")
+                if os.path.exists(os.path.join(prefix, d, "libmgba.so"))), os.path.join(prefix, "lib"))
+    work = tempfile.mkdtemp(prefix="boottest-")
+    start = time.time()
+    log = {"events": None, "checkpoints": [], "save": None, "end": None}
+    try:
+        exe = os.path.join(work, "mgba_screens")
+        subprocess.run([os.environ.get("CC", "cc"), "-O2", "-o", exe,
+                        os.path.join(pc, "tools", "mgba_screens.c"), os.path.join(pc, "src", "sha1.c"),
+                        os.path.join(pc, "src", "png.c"), "-I", os.path.join(prefix, "include"),
+                        "-I", os.path.join(pc, "include"), "-I", os.path.join(pc, "src"),
+                        "-I", os.path.join(here, "..", "include"), "-L", lib, "-lmgba",
+                        f"-Wl,-rpath,{lib}"], check=True)
+        with open(os.path.join(work, "keys.txt"), "w") as f:
+            for frame, k in read_keys(keys):
+                f.write(f"{frame} {k}\n")
+        try:
+            p = subprocess.run([exe, rom, os.path.join(work, "keys.txt"), str(frames), str(every),
+                                screens or ""] + extra, capture_output=True, text=True, timeout=timeout)
+            out, code = p.stdout, p.returncode
+        except subprocess.TimeoutExpired as e:
+            out, code = e.stdout.decode() if e.stdout else "", None
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    for line in out.splitlines():
+        f = line.split()
+        if f[:1] == ["screen"]:
+            log["checkpoints"].append([int(f[1]), None, None, None, f[2]])
+        elif f[:1] == ["end"]:
+            log["end"] = " ".join(f[1:5])
+    if code is None:
+        log["end"] = "timeout"
+    elif code != 0 or log["end"] is None:
+        log["end"] = f"exit status {code}: {log['end']}"
+    log["seconds"] = round(time.time() - start, 1)
+    return log
+
+
+def checkpoint_fields(c, fields):
+    """A checkpoint's frame and the fields `fields` (None where missing)."""
+    return [c[0]] + [c[i] if len(c) > i else None for i in fields]
+
+
 def compare(a, b):
     """The differences between two logs, as lines. A host log (no events,
-    no mixer flags, no save) is compared by its checkpoints' frames and
-    picture hashes and how it ended."""
+    no mixer flags, no save) is compared by its checkpoints' frames, the
+    picture and screen hashes both logs have (a `screens` log has only
+    the screens) and how it ended."""
     out = []
     for name in sorted(set(a) | set(b)):
         if name not in a or name not in b:
@@ -468,8 +559,12 @@ def compare(a, b):
             continue
         x, y = a[name], b[name]
         if x["events"] is None or y["events"] is None:
-            x = dict(x, checkpoints=[[c[0], c[3]] for c in x["checkpoints"]], save=None)
-            y = dict(y, checkpoints=[[c[0], c[3]] for c in y["checkpoints"]], save=None)
+            # the fields both have: the picture hash (3), the screen's (4)
+            fields = [i for i in (3, 4)
+                      if any(len(c) > i and c[i] is not None for c in x["checkpoints"])
+                      and any(len(c) > i and c[i] is not None for c in y["checkpoints"])]
+            x = dict(x, checkpoints=[checkpoint_fields(c, fields) for c in x["checkpoints"]], save=None)
+            y = dict(y, checkpoints=[checkpoint_fields(c, fields) for c in y["checkpoints"]], save=None)
         elif x["events"] != y["events"]:
             diff = next(((p, q) for p, q in zip(x["events"], y["events"]) if p != q), None)
             out.append(f"{name}: events differ: " + (f"{diff[0]} vs {diff[1]}" if diff else
@@ -481,6 +576,48 @@ def compare(a, b):
             if x[k] != y[k]:
                 out.append(f"{name}: {k}: {x[k]!r} vs {y[k]!r}")
     return out
+
+
+def diff_screens(ref, other):
+    """The PNGs of `ref` against the same names in `other`, pixel by
+    pixel: the differences as lines (how many pixels, where), and how many
+    pictures were compared."""
+    from PIL import Image, ImageChops
+    out = []
+    names = sorted(n for n in os.listdir(ref) if n.endswith(".png"))
+    for n in names:
+        p = os.path.join(other, n)
+        if not os.path.exists(p):
+            out.append(f"{n}: missing")
+            continue
+        x = Image.open(os.path.join(ref, n)).convert("RGB")
+        y = Image.open(p).convert("RGB")
+        if x.size != y.size:
+            out.append(f"{n}: {x.size} vs {y.size}")
+            continue
+        d = ImageChops.difference(x, y).convert("L").point(lambda v: 255 if v else 0)
+        box = d.getbbox()
+        if box:
+            out.append(f"{n}: {d.histogram()[255]} pixels differ, in {box}")
+    return out, len(names)
+
+
+def write_log(logs, path):
+    """The logs as JSON, a checkpoint to a line."""
+    lines = ["{"]
+    for i, (name, log) in enumerate(logs.items()):
+        lines.append(f" {json.dumps(name)}: {{")
+        for k, v in log.items():
+            if k != "checkpoints":
+                lines.append(f"  {json.dumps(k)}: {json.dumps(v)},")
+        rows = [json.dumps(c, separators=(",", ":")) for c in log["checkpoints"]]
+        lines.append('  "checkpoints": [')
+        lines += [f"   {r}," for r in rows[:-1]] + [f"   {r}" for r in rows[-1:]]
+        lines.append("  ]")
+        lines.append(" }" + ("," if i + 1 < len(logs) else ""))
+    lines.append("}")
+    with open(path, "w") as f:
+        f.write("\n".join(lines) + "\n")
 
 
 def main():
@@ -502,12 +639,38 @@ def main():
     h.add_argument("--keys", required=True)
     h.add_argument("--frames", type=int, required=True)
     h.add_argument("--dump")
+    h.add_argument("--screens", help="write each checkpoint's picture to this directory")
+    h.add_argument("--level", type=int, help="the level the first level select picks")
+    h.add_argument("--room", type=int, help="with --level: the room it starts in")
     h.add_argument("--every", type=int, default=CHECKPOINT_EVERY)
     h.add_argument("--out")
     h.add_argument("--timeout", type=float, default=600)
+    sc = sub.add_parser("screens", help="play a key file on libmgba, logging (and writing) its pictures")
+    sc.add_argument("rom")
+    sc.add_argument("--keys", required=True)
+    sc.add_argument("--frames", type=int, required=True)
+    sc.add_argument("--screens", help="write each checkpoint's picture to this directory")
+    sc.add_argument("--elf", help="the ROM's ELF (for --level's and --room's addresses)")
+    sc.add_argument("--level", type=int, help="the level the first level select picks")
+    sc.add_argument("--room", type=int, help="with --level: the room it starts in")
+    sc.add_argument("--save", help="keep mGBA's EEPROM in this file")
+    sc.add_argument("--every", type=int, default=CHECKPOINT_EVERY)
+    sc.add_argument("--mgba", help="mGBA's install prefix (default: the `mgba` on the PATH)")
+    sc.add_argument("--out")
+    sc.add_argument("--timeout", type=float, default=600)
     c = sub.add_parser("compare", help="compare two logs")
     c.add_argument("logs", nargs=2)
+    d = sub.add_parser("diff-screens", help="compare the PNGs of a reference directory with another's")
+    d.add_argument("dirs", nargs=2)
     args = ap.parse_args()
+
+    if args.cmd == "diff-screens":
+        diffs, n = diff_screens(*args.dirs)
+        for line in diffs:
+            print(line)
+        print(f"boottest: {args.dirs[1]}: " + (f"{len(diffs)} of {n} pictures differ" if diffs
+                                                 else f"the same pictures ({n})"))
+        return 1 if diffs else 0
 
     if args.cmd == "compare":
         a, b = (json.load(open(p)) for p in args.logs)
@@ -520,14 +683,20 @@ def main():
 
     if (args.keys is None) != (args.frames is None):
         ap.error("--keys and --frames go together")
-    if args.dump:
+    if getattr(args, "dump", None):
         os.makedirs(args.dump, exist_ok=True)
-    if args.cmd == "host":
-        log = run_host(args.exe, args.keys, args.frames, args.timeout, args.dump, args.every)
+    if args.cmd in ("host", "screens"):
+        if args.screens:
+            os.makedirs(args.screens, exist_ok=True)
+        if args.cmd == "host":
+            log = run_host(args.exe, args.keys, args.frames, args.timeout, args.dump, args.every,
+                           args.screens, args.level, args.room)
+        else:
+            log = run_screens(args.rom, args.keys, args.frames, args.timeout, mgba_prefix(args.mgba),
+                              args.every, args.screens, args.elf, args.level, args.room, args.save)
         print(f"keys: {log['end']} ({log['seconds']} s); {len(log['checkpoints'])} checkpoints")
         if args.out:
-            with open(args.out, "w") as f:
-                json.dump({"keys": log}, f, indent=1)
+            write_log({"keys": log}, args.out)
         return 0 if log["end"].startswith("done") else 1
 
     syms, rom = read_elf(args.elf)

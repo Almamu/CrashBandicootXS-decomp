@@ -15,16 +15,17 @@ jobs:
 
     # The host build needs no ARM toolchain, agbcc or baserom: the stock
     # compiler, and what the data generators need (libpng and zlib for
-    # gbagfx and grit, PIL, gettext).
+    # gbagfx and grit, PIL, gettext); SDL2 for the window (the tests run
+    # headless, which needs no SDL).
     - name: Install dependencies
-      run: sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 update && sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 install -y --no-install-recommends build-essential libpng-dev zlib1g-dev python3-pil gettext
+      run: sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 update && sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 install -y --no-install-recommends build-essential libpng-dev zlib1g-dev python3-pil gettext pkg-config libsdl2-dev
 
     # The game compiled and linked into a 64-bit host executable on the pc
-    # platform (#1093, docs/platforms.md).
+    # platform (#1093, docs/platforms.md), with its SDL2 window.
     - name: Build for the host
       run: |
         g++ --version
-        make -j"$(nproc)" PLATFORM=pc
+        make -j"$(nproc)" PLATFORM=pc HOST_SDL=1
 
     # Phase 2: the executable boots headless and plays
     # platform/pc/tests/boot.keys (the logos, the menus, the intro and
@@ -34,8 +35,44 @@ jobs:
     - name: Boot headless
       run: |
         python3 tools/boottest.py host build/pc/crashbandicootxs_pc --keys platform/pc/tests/boot.keys \
-          --frames 960 --timeout 300 --out host_boot.json
+          --frames 960 --timeout 300 --screens host_screens --out host_boot.json
         python3 tools/boottest.py compare platform/pc/tests/boot_mgba.json host_boot.json
+
+    # Phase 3: the PPU's picture (platform/pc/src/ppu.c) is mGBA's, pixel
+    # for pixel: every frame of the boot, every 4th of the intro cutscene
+    # (tests/*_mgba_screens.json: the hashes of mGBA 0.10.5's pictures,
+    # tools/boottest.py `screens` on the ROM with the same key files), and
+    # the reference pictures in tests/screens/ (mGBA's too).
+    - name: Check the picture
+      run: |
+        python3 tools/boottest.py host build/pc/crashbandicootxs_pc --keys platform/pc/tests/boot.keys \
+          --frames 960 --every 1 --timeout 300 --out host_boot_screens.json
+        python3 tools/boottest.py compare platform/pc/tests/boot_mgba_screens.json host_boot_screens.json
+        python3 tools/boottest.py host build/pc/crashbandicootxs_pc --keys platform/pc/tests/intro.keys \
+          --frames 2400 --every 4 --timeout 300 --out host_intro_screens.json
+        python3 tools/boottest.py compare platform/pc/tests/intro_mgba_screens.json host_intro_screens.json
+        python3 tools/boottest.py diff-screens platform/pc/tests/screens host_screens
+
+    # Phase 4: the window, with SDL's dummy video driver: paced to the
+    # GBA's 59.73 frames a second, 300 game frames (about 400 VBlanks) take
+    # some 7 s.
+    - name: Run in a window
+      run: |
+        time SDL_VIDEODRIVER=dummy timeout 60 build/pc/crashbandicootxs_pc --keys platform/pc/tests/boot.keys \
+          --frames 300 --quiet
+
+    # Without SDL the executable is headless only.
+    - name: Build without SDL
+      run: |
+        make -j"$(nproc)" PLATFORM=pc HOST_SDL=0
+        build/pc/crashbandicootxs_pc --keys platform/pc/tests/boot.keys --frames 60 --quiet
+
+    - name: Upload the pictures
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: host_screens
+        path: host_screens
 
     # The linker-placed globals fit in the room the host's placement gives
     # them (twice their GBA slot).
