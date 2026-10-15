@@ -108,11 +108,14 @@ struct sat right after it as a raw label.
 
 ### Instruments (`GAX_Instrument`)
 
-52 shared instruments, referenced by index from every song. Each has:
-byte fields, up to 4 `sample_indices` (0 = unused slot), vibrato
-delay/depth/speed, an optional envelope, a 12-byte "unknown" block, and a
-sequence of `rows` (the instrument's own internal note/effect mini-sequence,
-distinct from a channel's pattern rows).
+52 shared instruments, referenced by index from every song (a new song
+can add more, see "New instruments"). Each has: byte fields, up to 4
+`sample_indices` (0 = unused slot), vibrato delay/depth/speed, a volume
+envelope (every instrument has one: `GaxChannelSetNote` and
+`GaxChannelTick` read it with no NULL check), a 12-byte "unknown" block
+(in an envelope's format, one flat point, in every instrument; the engine
+never reads it), and a sequence of `rows` (the instrument's own internal
+note/effect mini-sequence, distinct from a channel's pattern rows).
 
 - `Instrument.rows[0].dont_use_note_pitch`: when true, the *pattern* note
   that triggers this instrument is irrelevant — the instrument always plays
@@ -125,7 +128,7 @@ distinct from a channel's pattern rows).
 ### Samples
 
 29 shared raw signed 8-bit PCM samples (`sound/samples/*.wav`, indices
-01-29), referenced only via instruments — deduplicated by content when
+01-29; a new instrument's come after them), referenced only via instruments — deduplicated by content when
 linking (unlike instrument rows).
 
 ### Sample pitch / playback rate
@@ -402,12 +405,36 @@ can be added at the end of `sound/sfx_table.json`'s `entries`:
 up. `PlaySfx` call sites are code, so a new sound effect is for data
 that names one (a cutscene slide's); the ROM's IDs stay as they are.
 
+A sound effect can also have its own sample: instead of `slot_id`, the
+entry names a new instrument, `"instrument": "beep"`, which is
+`sound/instruments/beep.json` and its WAV (see "New instruments" below,
+e.g. `{"sample": "sfx_samples/beep.wav"}`). `tools/gax_audio.py --sfx`
+appends it to the sound-effect set after the ROM's 87 instruments (88 for
+the first; a sample already in the set is not stored again), and
+`tools/sfx_table.py` writes that number as the entry's `slot_id`. Several
+entries can name the same instrument; it is added once. A sound-effect
+instrument has a fixed pitch, as the ROM's do: its `rate` (by default the
+WAV's) is the rate it plays at, 523-523,382 Hz (gGaxPeriodTable's ends).
+The voices of a song with `half_rate_fx` (the level songs) mix it at half
+the mix rate, as they do the ROM's sound effects. An entry with both
+`slot_id` and `instrument`, or neither, a `slot_id` that isn't one of the
+set's 1-87, or an instrument with no JSON stops the build with a message.
+
 Tested in scratch with plain `make`: a 100th entry `TEST_BEEP` (instrument
 40) and the first slide of the intro cutscene playing it instead of the
 space-station ambience. `SFX_TEST_BEEP` is 0x63, `SFX_NONE` 0x64,
 `SFX_COUNT` 100 and the table 1200 bytes. In mGBA the intro cutscene's
 first slide calls `PlaySfx(0x63)` and `GAX_fx_ex` with instrument 40, and
 the audio context's `activeSfx.id` is 0x64, the new "none".
+
+Tested in scratch with plain `make` (#1118): `TEST_BEEP` naming
+`sound/instruments/beep.json`, a synthesized 8-bit sample at 8000 Hz (a
+decaying 1 kHz square, 2400 samples), played by the legal notice's slide
+over a new silent song. The build adds sound-effect instrument 88 and
+sample 88 (2400 bytes) and writes `{88, 0, 256}` as entry 0x63. In mGBA
+the boot calls `PlaySfx(0x63)` and `GAX_fx_ex` with instrument 0x58
+(88), and the captured output matches the sample played at 8000 Hz at
+half rate (correlation 0.9999; 0.877 against a full-rate render).
 
 ## Build pipeline
 
@@ -422,6 +449,9 @@ Everything is generated from editable sources, never read from
   editable in any XM tracker; and a new song's optional settings,
   `sound/songs/<key>.json` (see "Adding a song").
 - `sound/samples/*.wav` — one sample per instrument sample slot.
+- `sound/instruments/*.json` — new instruments, each with a WAV under
+  `sound/`, for new songs and new sound effects (see "New
+  instruments"). The ROM has none.
 - `sound/music.json` — `screen_music`, the song each screen plays (see
   "Which song plays where").
 - `sound/gax_sfx_manifest.json` — the sound-effect set: its 88 instruments
@@ -481,18 +511,33 @@ byte. A song that isn't in `songs` has no ROM history, and
 
 1. **Write the XM**, `sound/songs/<key>.xm`. The key is the song's name
    (`SONG_<KEY>`), so lower case and `_`.
-   - Its instruments are the shared pool's, by name: an XM instrument
-     named `Instrument N` plays the pool's instrument N (0-51, the
-     manifest's `instruments`), as in the ROM's songs. The XM's own
-     samples and envelopes aren't read; the ROM songs' XMs carry each
-     pool instrument with its sample, so copy them from one of those to
-     hear the song in a tracker. New instruments and samples are out of
-     scope.
-   - Every pattern the order list plays has the same number of rows (a
-     GAX2 song has one pattern length), and the module's speed is 6, the
-     speed GAX2 starts at (set another with an `Fxx` effect on the first
-     row). The BPM isn't used: GAX2 steps one tick per frame, about 150
-     BPM.
+   - Its instruments, by name:
+     - `Instrument N` plays the pool's instrument N (1-51, the
+       manifest's `instruments`), as in the ROM's songs. Its XM samples
+       and envelopes aren't read; the ROM songs' XMs carry each pool
+       instrument with its sample, so copy them from one of those to hear
+       the song in a tracker.
+     - A name with a `sound/instruments/<name>.json` plays that new
+       instrument (see "New instruments"), which other songs and sound
+       effects can share.
+     - Any other name (an empty one too) is a new instrument made from
+       the XM instrument itself: its sample, loop, volume, relative note,
+       finetune, volume envelope and auto-vibrato (see "New
+       instruments").
+   - The patterns the order list plays may have different numbers of
+     rows. A GAX2 song has one pattern length (`GaxSongData.patternRows`),
+     so the song's is the longest, and the tool puts a pattern break
+     (`D00`) on the last row of each shorter one, in a channel with no
+     effect on that row. GAX2's pattern break always goes to the next
+     pattern's first row: `Dxx`'s row is ignored (`breakRow` is stored,
+     never read).
+   - The module's speed can be anything from 1 to 31. GAX2 starts every
+     song at speed 6 (`GaxInfoResetPosition`), so for another speed the
+     tool puts an `Fxx` with it on the first row (unless the first row
+     sets one). If the song loops back to position 0 and sets speeds of
+     its own, that `Fxx` would reset the speed at each loop, which the
+     XM doesn't, so the tool stops then. The BPM isn't used: GAX2 steps
+     one tick per frame, about 150 BPM.
    - The order list is the song's order, and the restart position is
      where it loops back to.
    - A row has at most one effect: the effect column's portamentos
@@ -530,20 +575,28 @@ What the tool derives (`new_song`):
   the order list, each channel's pattern there its column of the XM
   pattern the position plays, with no transpose;
 - the loop point from the restart position, the row count from the
-  patterns, `num_items` (3 handlers and one per channel);
+  longest pattern (with the pattern breaks and the speed above),
+  `num_items` (3 handlers and one per channel);
+- a note with no instrument number plays the channel's last instrument
+  again, written out (GAX2's instrument 0 would only change the pitch of
+  the note already playing);
 - pattern sharing: identical packed patterns are stored once (a pattern
   the order plays again, or the same notes on two channels), in the order
   they first appear;
 - the title string, padded with zeros to a word the way the ROM's are
   (`n gin`'s ends on one and has no terminator).
 
-It stops with a message on an XM it can't take: an instrument that isn't
-`Instrument N` of the pool, patterns of different lengths, another speed,
+It stops with a message on an XM it can't take: an `Instrument N` that
+isn't one of the pool's, a new instrument GAX2 can't play (see "New
+instruments"), a note before the channel has an instrument, a speed of 0
+or over 31, a pattern break or speed with no free effect slot on its row,
 a restart position past the order list, or over 64 KiB of patterns (a
-channel's order entry is a 16-bit offset). `--constants` and `--table`
-stop when `song_table` names a song that is neither the ROM's nor a
-`sound/songs/<key>.xm`, or leaves one of the ROM's out. An XM that no
-`song_table` entry names isn't built.
+channel's order entry is a 16-bit offset); and on settings GAX2 can't
+play: a `sample_rate` that isn't one of its 12 mix rates, or a song that
+needs more work RAM than the game gives GAX2 (see "GAX2's limits").
+`--constants` and `--table` stop when `song_table` names a song that is
+neither the ROM's nor a `sound/songs/<key>.xm`, or leaves one of the
+ROM's out. An XM that no `song_table` entry names isn't built.
 
 Tested in scratch with plain `make`: a 2-channel test tune written for the
 test (16-row patterns, a melody on pool instrument 7 and a drum on 2,
@@ -557,6 +610,160 @@ captured output (the 8-bit buffer each `GAX_play` mixed, at 15769 Hz) is
 not silent, and the two order positions that play XM pattern 1 (1 and 3)
 give the same samples (correlation 1.000), while positions 1 and 2 don't
 (0.348).
+
+## New instruments
+
+A new song can play instruments the ROM's pool doesn't have, and a new
+sound effect can have its own sample. `tools/gax_audio.py` appends each
+new instrument to its pool after the ROM's (the music pool's 52, the
+sound-effect set's 88), and its sample after the ROM's samples. The
+ROM's instruments keep their recorded data, so with the ROM's songs the
+music block is byte for byte the ROM's. Both are deduplicated by content:
+an instrument or sample the pool already has (one of the ROM's, or one an
+earlier song added) isn't added again, so two songs using the same sample
+share one pool entry. The build prints what it added (`the music pool: 3
+new instruments (from 52), 2 new samples, 1856 bytes of sample data`),
+and a note when the new samples grow the ROM by over 1 MiB. The new
+instruments are numbered in the songs' order (`song_order`, then
+`song_table`), each song's in the order its patterns first play them.
+
+A new instrument is one GAX2 instrument, the way the ROM's one-sample
+instruments are: one wave row (the sample, its loop and its tune), a
+one-step sequence that starts it at the note and sets the sample's
+volume, a volume envelope, the vibrato, and the second, flat envelope
+every ROM instrument has (`unknown12`; the engine never reads it).
+
+### From the XM
+
+An XM instrument that isn't `Instrument N` and has no
+`sound/instruments/<name>.json` is converted from the XM:
+
+| XM | GAX2 |
+|---|---|
+| the sample (8-bit, or 16-bit rounded to 8) | a pool sample |
+| the loop: none, forward, ping-pong; start and length | the wave row's loop (`sweepMin`/`sweepMax`, `pingPong`) |
+| relative note and finetune | the wave row's `tune`, in 1/32 semitones of gGaxPeriodTable: with neither, the sample plays at 8363 Hz on C-4, within 2 cents |
+| the sample's volume (0-64) | the sequence's set-volume step (`12`, volume * 4); a pattern's volume (`Cxx`, the volume column) scales it, as GAX2 multiplies the two, rather than replacing it |
+| the volume envelope (points, sustain point, loop) | the instrument's envelope: the points (volume * 4), each with its Q8 slope from the one before |
+| no volume envelope | a flat one with no sustain point: the note-off cuts the note, as in XM |
+| the auto-vibrato (sine, depth, rate) | the vibrato: the depth as it is (both swing the pitch by depth/64 semitones), the speed rate / 4 (GAX2's sine has 64 steps, XM's 256) |
+
+Without a sustain point the note-off doesn't cut the note either, as in
+XM: the envelope's sustain point is then its last point, where it stops
+anyway (`GaxEnvelopeTick`; `GaxChannelSetNote` only cuts a note whose
+envelope has no sustain point). GAX2 runs an envelope loop only until
+the note-off, where XM keeps looping through the fadeout. A sample's
+panning is ignored: GAX2 mixes mono.
+
+The tool stops, with the reason, on what GAX2 can't play:
+
+- an instrument with no sample;
+- a stereo sample (GAX2 mixes mono), or a ModPlug ADPCM-compressed one;
+- a key map that plays more than one sample on the notes the song plays
+  (a GAX2 instrument has one sample for every note: split it into one
+  instrument per sample);
+- a loop outside the sample, or a sample over 1,048,575 samples
+  (`GaxChannelMix` keeps positions in Q11 in an s32);
+- a panning envelope (nothing pans in mono);
+- a volume fadeout: GAX2 has none (set it to 0 and shape the release with
+  envelope points after the sustain point);
+- an envelope whose first point isn't at tick 0 or whose ticks don't
+  increase;
+- an auto-vibrato that isn't a sine, or has a sweep (GAX2's vibrato starts
+  at full depth);
+- a note whose pitch is past gGaxPeriodTable's ends (see "GAX2's
+  limits").
+
+### From a WAV
+
+`sound/instruments/<name>.json` is an instrument from a WAV anywhere
+under `sound/` (by convention `sound/samples/` for songs,
+`sound/sfx_samples/` for sound effects). An XM instrument with that name
+plays it (the XM instrument's own sample and settings aren't read), and
+a sound effect names it with `"instrument": "<name>"` (see "Adding a
+sound effect"). However many songs and sound effects name it, each pool
+gets it once.
+
+```json
+{
+  "comment": "a synthesized lead",
+  "sample": "samples/lead.wav",
+  "loop": "forward", "loop_start": 800, "loop_end": 1600,
+  "volume": 64,
+  "envelope": {"points": [[0, 64], [10, 40], [30, 0]], "sustain": 1},
+  "vibrato": {"delay": 0, "depth": 8, "speed": 4}
+}
+```
+
+| field | default | what |
+|---|---|---|
+| `sample` | (needed) | the WAV, a path under `sound/`: mono PCM, 8-bit, or 16, 24 or 32-bit rounded to 8 |
+| `rate` | the WAV's | the rate the sample plays at on C-4 (a song's instrument), or always (a sound effect's, fixed pitch) |
+| `loop` | `none` | `none`, `forward` or `pingpong` |
+| `loop_start`, `loop_end` | 0, the sample's length | the loop, in samples, the end exclusive |
+| `volume` | 64 | the sample's volume, 0-64, as XM's |
+| `envelope` | none: full volume, cut at the note-off | the volume envelope, as XM's: `points`, `[tick, volume 0-64]` pairs (the first at tick 0, at most 255), and optional `sustain`, `loop_start`, `loop_end` (point indices) |
+| `vibrato` | none | GAX2's own: `delay` (ticks, 0-255), `depth` (0-255, depth/64 semitones), `speed` (0-63, of 64 steps a cycle) |
+| `comment` | | not read |
+
+The tool stops on an unknown field, a missing or bad value, a WAV that
+isn't mono PCM, and on the limits above.
+
+### GAX2's limits
+
+- **Instruments and samples:** a pattern row names its instrument by a
+  byte (`GaxChannelDecodeRow`), as `GAX_fx_ex`'s queue does a sound
+  effect's (`pendingInstrument`), and an instrument names its sample by a
+  byte (`waveIdx`); 0 is the empty placeholder. So a pool has at most 255
+  instruments (the music's 52 leave 203 new ones, the sound effects' 88
+  leave 167) and 255 samples.
+- **Pitch:** a note plays at gGaxPeriodTable's entry `(note - 2) * 32 +
+  tune` (3828 entries of 1/32 semitone: 523 Hz to 523 kHz). Past the
+  ends `GaxChannelMix` clamps the index to the last entry, a negative one
+  too, so a note past either end stops the build. A sound effect's rate
+  must be in that range.
+- **Mixing:** GAX2 mixes mono into an 8-bit output, at one of 12 rates
+  (gGaxMixRates: 5735, 10513, 11469, 13380, 15769, 18158, 21025, 26760,
+  31537, 36316, 40138, 42049 Hz; `GAX2_init` rounds a song's rate up to
+  one), so `sample_rate` must be one of them. Samples are 8-bit signed;
+  the resampler takes the nearest sample (no interpolation), at any rate
+  of the table, above the mix rate too (it then skips samples).
+- **Work RAM:** `StartSong` gives GAX2 `gaxWork`, 0x2000 bytes, with 3
+  sound-effect voices. A new song must fit it by `GAX2_estimate`'s count
+  (`work_size`): the handlers (about 0x58 bytes a channel), two buffers
+  of a frame's samples (264 at 15769 Hz), the echo line of the longest
+  echo tap, and the resampler. The ROM's songs need 0x93c-0x10f6 (a level
+  song's 5 channels at 15769 Hz 0xa50); 16 channels at 42049 Hz with a
+  100 ms echo need 0x3640.
+- **ROM:** the GBA maps 32 MiB of ROM and the game's is 8, so the build
+  stops on a music block over 24 MiB.
+
+Tested in scratch with plain `make`: a new song `test_inst` (2 channels,
+speed 5, patterns of 32, 16 and 24 rows, order `0 1 2`, restart 1) on
+`lead`, a `sound/instruments/lead.json` instrument (a synthesized 16-bit
+WAV at 16000 Hz, 1600 samples, 0.1 s: an 800-sample decaying attack,
+then 10 periods of a 200 Hz tone, looped), on the pool's `Instrument 2`
+(a drum), and on `xmsine`, an XM-own instrument (an 8-bit sine, 4
+periods of 64 samples, a ping-pong loop over all of it); and a second new
+song, `test_inst2`, on `lead` again and on `lead2`, an XM-own instrument
+with lead's sample as 16-bit at volume 32. The build adds 3 instruments
+(52-54) and 2 samples: `lead2` has `lead`'s sample. Played by a test
+theme on jungle jam, in mGBA:
+
+- the order positions take 157, 80 and 120 frames: 32, 16 and 24 rows at
+  speed 5, so the `F05` and the `D00` work;
+- position 0 holds C-4 on `lead` for 2.6 s. Against GAX2's resampler run
+  over lead's sample (nearest sample, the 16000 Hz step, the loop), the
+  captured output correlates 0.993 over the whole note (0.945 over the
+  unlooped attack), and 0.998, with an RMS of 41, at 0.5, 1.0, 1.5 and 2.0
+  s, long past the sample's 0.1 s: the loop keeps it sounding. Against a
+  sine instead it correlates -0.06;
+- position 2's C-5 on `xmsine` correlates 0.994 with its ping-pong
+  render (16708 Hz, XM's 16726 within 2 cents), RMS 43 after 1 s.
+
+The error messages were checked on broken inputs, one for each case
+above (43 in all: XM instruments, JSON instruments and WAVs, song
+settings, the 256th instrument, sound-effect entries).
 
 ## Which song plays where
 
