@@ -1,0 +1,75 @@
+# The editors (#1167, docs/editors.md): the TypeScript workspace (apps/,
+# pnpm-workspace.yaml) and the backend (tools/editor_server.py). Nothing
+# here builds the ROM; build.yml does.
+name: Editors
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  apps:
+    runs-on: ubuntu-24.04
+    name: Editors (web app and backend)
+    steps:
+    - uses: actions/checkout@v5
+
+    # PIL for crashdata's graphics checks (data-check), gettext for the text's
+    - name: Install dependencies
+      run: sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 update && sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 install -y --no-install-recommends python3-pil gettext
+
+    # pnpm's version is package.json's "packageManager"
+    - uses: pnpm/action-setup@v4
+
+    - uses: actions/setup-node@v5
+      with:
+        node-version: 24
+        cache: pnpm
+
+    - name: Install the workspace
+      run: pnpm install --frozen-lockfile
+
+    # apps/schema-types/src/generated/ is what packages/crashdata/schemas/
+    # gives (build.yml's "Check the data schemas" checks those against the
+    # model): `make schemas`, then `pnpm gen`.
+    - name: Check the generated types
+      run: pnpm gen:check
+
+    - name: Typecheck
+      run: pnpm typecheck
+
+    - name: Lint
+      run: pnpm lint
+
+    - name: Unit tests
+      run: pnpm test
+
+    - name: Build the web editor
+      run: pnpm build
+
+    # crashdata's layout-keeping writer on every data file, and the backend
+    # on this tree (each test that changes a file puts it back)
+    - name: Backend tests
+      run: |
+        python3 -m unittest discover -v -s packages/crashdata/tests
+        python3 -m unittest discover -v -s packages/buildtools/tests
+
+    # `make editor` as a user runs it: the built editor and the API through
+    # the typed client (health, schemas, files, a file saved unchanged and
+    # not written, a refused save, data-check's report)
+    - name: Backend smoke test
+      run: |
+        python3 tools/editor_server.py --port 8765 > editor_server.log 2>&1 &
+        for i in $(seq 1 50); do curl -fsS http://127.0.0.1:8765/api/health && break; sleep 0.2; done
+        curl -fsS http://127.0.0.1:8765/ | grep -q '<div id="app">'
+        CRASH_EDITOR_URL=http://127.0.0.1:8765 pnpm --filter @crash/schema-types exec vitest run test/server.test.ts
+        git diff --exit-code
+        kill %1
+
+    - name: The backend's log
+      if: always()
+      run: cat editor_server.log || true

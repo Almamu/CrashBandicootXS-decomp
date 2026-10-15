@@ -31,10 +31,12 @@ ROOT = Path(game.ROOT).resolve()
 LANGUAGES = ("fr", "de", "es", "it", "nl")
 
 # What the copy leaves out: the git data, the build outputs, the ROM,
-# CI's compiler checkouts (the built compilers are in tools/agbcc) and the
-# Python workspace's environment (`uv sync`).
+# CI's compiler checkouts (the built compilers are in tools/agbcc), the
+# Python workspace's environment (`uv sync`), and the editors' packages and
+# desktop build (apps/, docs/editors.md).
 SKIP_TOP = {".git", "build", "agbcc", "agbcc-cp", ".claude", ".vscode", "objdiff-cli", "report.json", ".venv"}
-SKIP_ANY = ["*.gba", "*.sav", "*.elf", "*.map", "*.o", "__pycache__"]
+SKIP_ANY = ["*.gba", "*.sav", "*.elf", "*.map", "*.o", "__pycache__", "node_modules"]
+SKIP_PATHS = {Path("apps/desktop/src-tauri/target")}
 
 
 def copy_tree(dest):
@@ -44,8 +46,11 @@ def copy_tree(dest):
 
     def ignore(d, names):
         out = set(ignore_any(d, names))
-        if Path(d).resolve() == ROOT:
+        here = Path(d).resolve()
+        if here == ROOT:
             out |= SKIP_TOP & set(names)
+        if here.is_relative_to(ROOT):
+            out |= {n for n in names if (here / n).relative_to(ROOT) in SKIP_PATHS}
         return out
     shutil.copytree(ROOT, dest, ignore=ignore, symlinks=True)
 

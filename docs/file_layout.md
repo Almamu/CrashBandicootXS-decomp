@@ -36,6 +36,10 @@ games/n2/                           Crash Bandicoot 2: N-Tranced (n_tranced.md)
 packages/crashdata/                 Python: the games' data (levels, graphics,
                                     cutscenes, music, text, mods), below
 packages/buildtools/                Python: the commands (tools/<name>.py)
+apps/schema-types/                  TypeScript: the data files' types, generated
+                                    from packages/crashdata/schemas/, and the
+                                    editor backend's client (editors.md)
+apps/editor/                        the web editor (Svelte, Vite; editors.md)
 tools/                              the vendored C tools (agbcc, gbagfx,
                                     grit, permuter), nt_compare/, and the
                                     shims tools/<name>.py of the commands
@@ -45,8 +49,10 @@ The rest stays at the root: the Makefile (the toolchain, the flags, the
 game switch and XS's build), `compile.mk` and `graphics_rules.mk` (the
 rules both games share), `cxx_symbols.txt` (the C names of
 `engine/src/`'s C++ symbols, which both games' objects are renamed with),
-`pyproject.toml` and `uv.lock` (the Python workspace), `mods/` and
-`docs/`.
+`pyproject.toml` and `uv.lock` (the Python workspace), `package.json`,
+`pnpm-workspace.yaml`, `pnpm-lock.yaml`, `tsconfig.base.json` and
+`eslint.config.js` (the editors' TypeScript workspace, apps/*), `mods/`
+and `docs/`.
 
 ## The monorepo move (#1167)
 

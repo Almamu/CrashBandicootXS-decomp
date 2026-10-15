@@ -1,10 +1,10 @@
-# Editors: the data's machine-facing contract
+# Editors: the data's contract, the editor and its backend
 
 The level, cutscene and music editors (#1167 stages 4-6: a TypeScript
 web app and a Tauri desktop shell) edit the same files a modder edits by
 hand (games/<game>/data/, graphics/, sound/, text/; [modding.md](./modding.md))
-and run the same tools. This page is what they can rely on (#1167 stage 3,
-#1093 part 1):
+and run the same tools. The first half of this page is what they can rely
+on (#1167 stage 3, #1093 part 1):
 
 - **JSON Schemas** of every data file, generated from crashdata's model
   ("Schemas");
@@ -14,6 +14,10 @@ and run the same tools. This page is what they can rely on (#1167 stage 3,
   ("Checking the data");
 - **named room parameters** in room.json ("Named room parameters");
 - **a preview**: the PC port started at a level's room ("Preview").
+
+The second half is the editor itself (#1167 stage 4): a web app in
+`apps/` ("Running the editor", "The TypeScript workspace") on a small
+local server, crashdata over HTTP ("The editor's backend").
 
 Nothing here changes what the build makes: both ROMs and both .map files
 are the same with or without it.
@@ -218,3 +222,145 @@ mGBA comparisons use.
 For a mod, `make preview MOD=...` applies it to `MOD_TREE`
 (`build/mods/<name>`) and runs the tool there, building the mod's own PC
 port; an editor working on a mod's tree runs `tools/preview.py` in it.
+
+## Running the editor
+
+    make editor-build    # once, and after a change to apps/: pnpm install, then the web editor's build
+    make editor          # the backend on http://127.0.0.1:8765/, serving the editor: open it in a browser
+
+`make editor` needs only Python 3.12 (the tools' own); `make editor-build`
+needs Node.js 22 or later and pnpm (package.json's `packageManager`
+gives the version; the project's devshell has both). `EDITOR_ARGS` go to
+the server (`--port N`, `--open` to open the browser, `--verbose`).
+Working on the editor itself:
+
+    make editor                              # the backend, in one terminal
+    pnpm dev                                 # Vite on http://127.0.0.1:5173/, /api proxied to the backend
+    pnpm typecheck && pnpm lint && pnpm test # what CI runs (apps.yml), with pnpm gen:check
+    make editor-test                         # all of it, and the backend's Python tests
+
+What the editor (stage 4's shell) does:
+
+- **Projects**: XS, N-Tranced, or a mod. A mod is a script
+  ([modding.md](./modding.md), "Writing a mod"), so the editor edits the
+  tree it makes, `build/mods/<name>` (as `make mod`): "Apply the mod"
+  runs `tools/apply_mod.py` (again: the tree is made anew, and edits made
+  there are lost). The tree's own `mods/*/mod.py` are listed; another
+  folder can be added by its path.
+- **Files**: every file `packages/crashdata/schemas/index.json`
+  describes, grouped by schema.
+- **A form for any data file**, made from its schema: objects and their
+  keys (an optional key added where the schema has it, or removed),
+  arrays (added, moved, removed; long ones a hundred items a page), one
+  of several forms (`anyOf`/`oneOf`: room.json's parameter records), enums
+  as lists, numbers with their ranges. A key the model reads that the
+  schema doesn't describe yet is a JSON field. The value is checked
+  against the schema as it changes (Ajv, draft 2020-12), the problems
+  marked where they are; a JSON view edits the whole file as text.
+  Ctrl+S saves.
+- **Diagnostics**: "Check the data" runs `make data-check`'s checks on the
+  project (with the text's, if "text" is ticked: gettext's msgfmt and
+  msgcmp), and a refused save shows why; a problem in a data file opens
+  it at its JSON pointer.
+- **Preview**: `tools/preview.py` in the project's tree ("Preview" above):
+  a level from levels.json and one of its rooms, headless (a picture
+  after N frames) or in the PC port's window.
+
+The real level, cutscene and music editors are stage 6.
+
+## The editor's backend
+
+`tools/editor_server.py` (`buildtools.editor_server`, with
+`crashdata.editing`) is the editors' one implementation of reading,
+writing and checking the data: the browser editor and the desktop app
+both talk to it. It is Python's standard library over crashdata (no new
+dependency), listens on **127.0.0.1 only**, and serves:
+
+| request | what |
+|---|---|
+| `GET /api/health` | `{ok, version, tree, python, editor}` |
+| `GET /api/projects` | `{projects: [{id, kind, game, gameTitle, title, root, ready, mod?}]}`: `xs`, `n2`, `mod:<name>` |
+| `POST /api/projects` `{mod: DIR}` | adds a mod folder |
+| `POST /api/projects/ID/apply` | applies a mod to its tree (`tools/apply_mod.py`, as `make mod`) |
+| `GET /api/schemas`, `/api/schemas/NAME` | `index.json`, a schema |
+| `GET /api/projects/ID/files` | `{files: [{path, schema}]}`, the project's data files |
+| `GET /api/projects/ID/file?path=P` | `{path, schema, data}` |
+| `PUT /api/projects/ID/file?path=P` `{data}` | saves one file (below) |
+| `POST /api/projects/ID/save` `{files: [{path, data}]}` | saves several, all or none |
+| `GET /api/projects/ID/raw?path=P` | any file of `games/<game>/` as it is (a picture) |
+| `GET /api/projects/ID/check[?text=0]` | `tools/data_check.py --json`'s report ("Errors") |
+| `POST /api/projects/ID/preview` `{level, room, headless, frames, noBuild}` | `tools/preview.py --json`'s report and `image`, or `{started, pid}` for the window |
+
+A path is from the project's tree's root (`games/xs/data/levels/levels.json`),
+and must be in the project's `games/<game>/`, with no `..`; a file the
+schemas don't describe can't be read as data or written. A refusal is
+`{ok: false, error, diagnostics?}` with a 4xx status.
+
+**Saving.** A save is the file's new value. The backend writes it as
+`crashdata.editing.render` gives it, checks it, and only then keeps it:
+
+1. **The text.** Where the file is in a tool's own layout, the tool's
+   writer writes it (`crashdata.levels.room_json_text` for a room.json,
+   `levels_json_text` for levels.json, a framed sheet's sheet.json as
+   json.dumps), so it is what the tool would have written. Every other
+   file keeps its own layout (`crashdata.common.jsonfmt.dumps_like`): a
+   value the file already had is the file's own text, byte for byte; a
+   changed object or array keeps its brackets and the whitespace between
+   its items, only its changed items are written again, and a new item is
+   written like its siblings (another spawn of the list on one line,
+   another slide). **A value saved unchanged gives the same bytes, and
+   isn't written at all**; a change shows in git as the lines it changed.
+2. **The schema.** The text is validated by `crashdata.schemas.load` (the
+   loaders' own reading): an error is the answer, 422, with its diagnostics.
+3. **The model.** The file replaces the old one and the model's checks run
+   (`tools/data_check.py --no-text --json` in the project's tree, as
+   `make data-check`): an error that wasn't there before the save puts
+   every file of the save back as it was, and is the answer. Errors the
+   data already had don't stop a save; they come back with it, and so do
+   the warnings.
+
+**Who can call it.** Besides listening on 127.0.0.1, the server answers
+only requests whose `Host` is its own (`127.0.0.1:PORT` or
+`localhost:PORT`: another site can't reach it under its own name), from
+its own origin, and a request that changes something needs the header
+`X-Crash-Editor: 1` (a page of another site can't send one without asking
+first, which the server never allows). With `--token T` (or
+`CRASH_EDITOR_TOKEN`), as the desktop app runs it, every `/api` request
+also needs `Authorization: Bearer T` (or, for a GET, `?token=T`), and the
+desktop app's pages may call it (CORS for `tauri://localhost` and
+`http(s)://tauri.localhost`).
+
+## The TypeScript workspace
+
+A pnpm workspace at the root (`package.json`, `pnpm-workspace.yaml`,
+`pnpm-lock.yaml`, `tsconfig.base.json`, `eslint.config.js`):
+
+| package | what |
+|---|---|
+| `apps/schema-types` (`@crash/schema-types`) | the data files' types, generated from the schemas (`src/generated/`: `Room`, `Levels`, ..., `SchemaFiles` from a schema's name to its type, `FILE_MATCH`, index.json's globs), the backend's typed client (`EditorClient`: `read<"room.schema.json">(...)` gives a `Room`), `schemaFor(path)` (index.json's globs, as `crashdata.schemas.schema_for` matches them), JSON pointers |
+| `apps/editor` (`@crash/editor`) | the web editor: Svelte 5, Vite, Ajv |
+
+**The types are generated and committed**, like the schemas they come
+from: `pnpm gen` (`apps/schema-types/scripts/generate.mjs`,
+json-schema-to-typescript) writes `src/generated/`, and `pnpm gen:check`
+(CI) fails when it is out of date. A change to crashdata's model is
+`make schemas`, then `pnpm gen`. A schema's other types are under its
+namespace (`RoomDefs.ParamFlags`).
+
+**Why Svelte.** The editors are forms and canvases over large JSON
+documents: Svelte 5 compiles to small code with no virtual DOM, its
+`$state` proxies let a deep form bind straight into the document
+(`bind:value={room.entities[3].x}`), and a recursive schema-driven
+component stays one file. React would bring a larger runtime and
+immutable-update plumbing for the same form; Solid was the other
+candidate (as small, as fast), but Svelte's two-way binding and
+single-file components fit form-heavy editors best, and svelte-check
+typechecks the templates.
+
+CI (`.github/workflows/apps.yml`) runs `pnpm gen:check`, `pnpm typecheck`
+(tsc, svelte-check), `pnpm lint` (ESLint), `pnpm test` (vitest: the
+generation, the client, the globs and pointers, the editor's schema
+helpers), `pnpm build`, the backend's Python tests (every data file of
+both games written back unchanged, a change in the tool's layout, the
+refusals, the token), and a smoke test of `tools/editor_server.py` as
+`make editor` runs it, through the typed client.

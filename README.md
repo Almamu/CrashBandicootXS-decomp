@@ -163,6 +163,17 @@ pinned to the original layout.
 
 The full list is in [docs/modding.md, "What a mod can't do yet"](./docs/modding.md#what-a-mod-cant-do-yet).
 
+### The editor
+
+`make editor-build && make editor` serves a web editor of the data on
+http://127.0.0.1:8765/ (Node.js and pnpm to build it, Python to run it):
+XS, N-Tranced or a mod's tree, a form for any data file made from its
+JSON Schema, `make data-check`'s problems with a click to their place,
+and a preview of a room in the PC port. A save keeps the file's own
+layout and is refused when the schema or the model's checks reject it.
+See [docs/editors.md](./docs/editors.md), "Running the editor"; the
+level, cutscene and music editors come next (#1167).
+
 ## How the code is organised
 
 `engine/src/` follows the code's namespaces: `Engine` in `engine/src/engine/` (`sys/`,
@@ -232,7 +243,7 @@ know it going in.
 **Modding and the game's data**
 
 - [docs/modding.md](./docs/modding.md): **the modders' entry point**, the sample mod and what a mod can and can't change
-- [docs/editors.md](./docs/editors.md): the contract editors build on: the data files' JSON Schemas, `--json` errors and `make data-check`
+- [docs/editors.md](./docs/editors.md): the contract editors build on (the data files' JSON Schemas, `--json` errors, `make data-check`, preview), and the editor: `make editor-build`, `make editor`
 - [docs/levels.md](./docs/levels.md): rooms, layers, entities, themes, level-select pages, actor categories, boss levels and the save
 - [docs/graphics.md](./docs/graphics.md): the graphics, the manifest, sprite banks and the sprite/actor system
 - [docs/text.md](./docs/text.md): the game's text as gettext files, the keys, the checks and the translators' workflow

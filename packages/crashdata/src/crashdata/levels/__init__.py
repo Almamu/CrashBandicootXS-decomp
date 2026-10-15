@@ -3813,8 +3813,13 @@ def level_table_from_rom(rom, level_list, folders):
 
 
 def write_levels_json(levels):
-    """levels.json: two-space indentation, a level's or a list's values on
-    one line each, and the long room lists one room per line."""
+    """Writes levels.json (levels_json_text)."""
+    LEVELS_JSON.write_text(levels_json_text(levels))
+
+
+def levels_json_text(levels):
+    """levels.json's text: two-space indentation, a level's or a list's
+    values on one line each, and the long room lists one room per line."""
     def dump(v):
         return json.dumps(v, ensure_ascii=False)
 
@@ -3841,7 +3846,7 @@ def write_levels_json(levels):
                                                          if k2 == "lists" else dump(y)))
         return dump(v)
 
-    LEVELS_JSON.write_text(block(levels, 0, top) + "\n")
+    return block(levels, 0, top) + "\n"
 
 
 def extract_rooms(rom, rooms, records, folders, raw_sizes=None, strict=True):
@@ -4318,7 +4323,12 @@ def chunk_order(w, h):
 
 
 def write_room_json(path, room):
-    """room.json with one entity/record/link per line."""
+    """Writes a room.json (room_json_text)."""
+    Path(path).write_text(room_json_text(room))
+
+
+def room_json_text(room):
+    """A room.json's text: one entity/record/link per line."""
     def dump(v):
         return json.dumps(v, separators=(", ", ": "))
 
@@ -4341,7 +4351,7 @@ def write_room_json(path, room):
         else:
             lines.append('  "%s": %s%s' % (k, dump(v), comma))
     lines.append("}")
-    Path(path).write_text("\n".join(lines) + "\n")
+    return "\n".join(lines) + "\n"
 
 
 # ---------------------------------------------------------------------------

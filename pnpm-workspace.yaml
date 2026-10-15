@@ -1,0 +1,6 @@
+# The editors' TypeScript workspace (#1167, docs/editors.md): apps/*.
+# Nothing in the ROM's build needs it.
+packages:
+  - apps/*
+allowBuilds:
+  esbuild: true

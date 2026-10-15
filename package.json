@@ -1,0 +1,29 @@
+{
+  "name": "crashbandicootxs-editors",
+  "private": true,
+  "description": "The editors' workspace (#1167, docs/editors.md): apps/schema-types, apps/editor, apps/desktop",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "packageManager": "pnpm@12.9.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "gen": "pnpm --filter @crash/schema-types gen",
+    "gen:check": "pnpm --filter @crash/schema-types gen:check",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "build": "pnpm --filter @crash/editor build",
+    "dev": "pnpm --filter @crash/editor dev"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "eslint-plugin-svelte": "^3.0.0",
+    "globals": "^16.0.0",
+    "svelte": "^5.0.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.0.0"
+  }
+}

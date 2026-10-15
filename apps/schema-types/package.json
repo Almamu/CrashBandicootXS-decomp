@@ -1,0 +1,26 @@
+{
+  "name": "@crash/schema-types",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The data files' TypeScript types, generated from packages/crashdata/schemas/, and a typed client of the editors' backend (tools/editor_server.py)",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts",
+    "./generated": "./src/generated/index.ts"
+  },
+  "scripts": {
+    "gen": "node scripts/generate.mjs",
+    "gen:check": "node scripts/generate.mjs --check",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "json-schema-to-typescript": "^15.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  }
+}

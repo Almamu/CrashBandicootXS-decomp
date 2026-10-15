@@ -51,6 +51,8 @@ For the progress report (`make NON_MATCHING=1 report`, see [docs/progress_report
 
 The Python tools need only `python3` with Pillow (`python3-pil` above): the Makefile runs `python3 tools/<name>.py`, which runs the code in `packages/` from the tree, so there is nothing to install. With [uv](https://docs.astral.sh/uv/), `uv sync` also installs the workspace (`packages/crashdata`, `packages/buildtools`) into `.venv/`, with each command as a console script (`crash-levels`, `crash-gfx-manifest`, ...); see [docs/file_layout.md](docs/file_layout.md), "The Python packages".
 
+The editors (`apps/`, optional: nothing in the ROM's build needs them) need Node.js 22 or later and pnpm to build (`make editor-build`), and Python to run (`make editor`); see [docs/editors.md](docs/editors.md), "Running the editor".
+
 # Updating an existing checkout
 
 A `build/` directory from before #1169 (which moved `src/` and `include/` to `engine/`, and XS's data to `games/xs/`) stops the build: its `.d` dependency files still name the old `src/...` paths. Remove it with `rm -rf build` and build again.
