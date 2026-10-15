@@ -113,8 +113,8 @@ targets of the ROM's code pointers. 760 of its 2,703 functions have their
 XS name; the rest are `sub_<address>`. `symbols.txt` names 76 of its RAM
 variables and `data_names.txt` 19 data tables after XS's, and the
 disassembly's literal-pool words use the names, or the data's
-`gUnknown_<address>` labels (`.4byte gLevelTable`): only 29 raw ROM
-addresses are left in the code, all pointing into the code itself.
+`gUnknown_<address>` labels (`.4byte gLevelTable`), or the code's own
+labels: no word in the code holds a raw ROM address.
 
 The names come from the comparison (`tools/nt_compare/run.py`, #1107), and
 only confident ones (docs/naming.md): `name_cfg.py` names a function when
@@ -132,10 +132,12 @@ python3 games/n2/disasm.py path/to/gbadisasm/gbadisasm
 make GAME=n2 compare
 ```
 
-The ROM can't shift yet (unlike XS's, docs/shifting.md): those 29
-addresses are still raw (gbadisasm gives most of them no label), and the
-pointers inside the incbin'd data can't move at all. Labels for them, and
-the data's pointer tables as source, are the next steps of #1110.
+The ROM can't shift yet (unlike XS's, docs/shifting.md), although the
+code can: the data is the original's bytes, and the pointers in it
+(about 44,000 aligned words in it look like ROM addresses, 40,459 into
+the data and 3,445 into the code) stay where they are when what they
+point at moves. It shifts once its data is source, as XS's is: the
+level, text and graphics data (#1113, #1114, #1115) and the tables.
 
 ## Progress
 

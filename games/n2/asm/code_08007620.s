@@ -2521,6 +2521,7 @@ GetSpriteAttackBox: @ 0x08008A80
 	mov pc, r0
 	.align 2, 0
 _08008AA4: .4byte _08008AA8
+	.global _08008AA8
 _08008AA8: @ jump table
 	.4byte _08008AC4 @ case 0
 	.4byte _08008AD0 @ case 1
@@ -2529,14 +2530,17 @@ _08008AA8: @ jump table
 	.4byte _08008AC4 @ case 4
 	.4byte _08008ACA @ case 5
 	.4byte _08008AD0 @ case 6
+	.global _08008AC4
 _08008AC4:
 	adds r5, r2, #0
 	adds r5, #0x14
 	b _08008AD2
+	.global _08008ACA
 _08008ACA:
 	adds r5, r2, #0
 	adds r5, #0xc
 	b _08008AD2
+	.global _08008AD0
 _08008AD0:
 	ldr r5, _08008B44 @ =gEmptySpriteBox
 _08008AD2:
@@ -2621,6 +2625,7 @@ sub_08008B48: @ 0x08008B48
 	mov pc, r0
 	.align 2, 0
 _08008B6C: .4byte _08008B70
+	.global _08008B70
 _08008B70: @ jump table
 	.4byte _08008B8C @ case 0
 	.4byte _08008B92 @ case 1
@@ -2629,10 +2634,12 @@ _08008B70: @ jump table
 	.4byte _08008B8C @ case 4
 	.4byte _08008B92 @ case 5
 	.4byte _08008B92 @ case 6
+	.global _08008B8C
 _08008B8C:
 	adds r5, r2, #0
 	adds r5, #0x1c
 	b _08008B94
+	.global _08008B92
 _08008B92:
 	ldr r5, _08008C08 @ =gEmptySpriteBox
 _08008B94:
@@ -2717,6 +2724,7 @@ GetSpriteBodyBox: @ 0x08008C0C
 	mov pc, r0
 	.align 2, 0
 _08008C30: .4byte _08008C34
+	.global _08008C34
 _08008C34: @ jump table
 	.4byte _08008C50 @ case 0
 	.4byte _08008C56 @ case 1
@@ -2725,10 +2733,12 @@ _08008C34: @ jump table
 	.4byte _08008C50 @ case 4
 	.4byte _08008C56 @ case 5
 	.4byte _08008C50 @ case 6
+	.global _08008C50
 _08008C50:
 	adds r5, r2, #0
 	adds r5, #0xc
 	b _08008C58
+	.global _08008C56
 _08008C56:
 	ldr r5, _08008CCC @ =gEmptySpriteBox
 _08008C58:
@@ -3171,6 +3181,7 @@ OffsetToHitboxEdge: @ 0x08008FF0
 	mov pc, r0
 	.align 2, 0
 _08009004: .4byte _08009008
+	.global _08009008
 _08009008: @ jump table
 	.4byte _08009044 @ case 0
 	.4byte _08009038 @ case 1
@@ -3184,6 +3195,7 @@ _08009008: @ jump table
 	.4byte _08009066 @ case 9
 	.4byte _08009066 @ case 10
 	.4byte _08009056 @ case 11
+	.global _08009038
 _08009038:
 	ldrh r1, [r2, #4]
 	lsls r1, r1, #7
@@ -3191,6 +3203,7 @@ _08009038:
 	subs r0, r0, r1
 	str r0, [r3]
 	b _08009066
+	.global _08009044
 _08009044:
 	ldrh r1, [r2, #4]
 	lsls r1, r1, #7
@@ -3198,10 +3211,12 @@ _08009044:
 	adds r0, r0, r1
 	str r0, [r3]
 	b _08009066
+	.global _08009050
 _08009050:
 	movs r0, #2
 	ldrsh r1, [r2, r0]
 	b _0800905E
+	.global _08009056
 _08009056:
 	movs r0, #2
 	ldrsh r1, [r2, r0]
@@ -3212,6 +3227,7 @@ _0800905E:
 	ldr r0, [r3, #4]
 	adds r0, r0, r1
 	str r0, [r3, #4]
+	.global _08009066
 _08009066:
 	pop {r0}
 	bx r0
@@ -3231,6 +3247,7 @@ OffsetToHitboxEdgeStart: @ 0x0800906C
 	mov pc, r0
 	.align 2, 0
 _08009080: .4byte _08009084
+	.global _08009084
 _08009084: @ jump table
 	.4byte _080090BE @ case 0
 	.4byte _080090B4 @ case 1
@@ -3244,12 +3261,14 @@ _08009084: @ jump table
 	.4byte _080090F6 @ case 9
 	.4byte _080090F6 @ case 10
 	.4byte _080090DC @ case 11
+	.global _080090B4
 _080090B4:
 	ldrh r1, [r2, #4]
 	lsls r1, r1, #7
 	ldr r0, [r3]
 	subs r0, r0, r1
 	b _080090C6
+	.global _080090BE
 _080090BE:
 	ldrh r1, [r2, #4]
 	lsls r1, r1, #7
@@ -3264,10 +3283,12 @@ _080090C6:
 	adds r0, r0, r1
 	str r0, [r3, #4]
 	b _080090F6
+	.global _080090D6
 _080090D6:
 	movs r0, #2
 	ldrsh r1, [r2, r0]
 	b _080090E4
+	.global _080090DC
 _080090DC:
 	movs r0, #2
 	ldrsh r1, [r2, r0]
@@ -3283,6 +3304,7 @@ _080090E4:
 	ldr r0, [r3]
 	subs r0, r0, r1
 	str r0, [r3]
+	.global _080090F6
 _080090F6:
 	pop {r0}
 	bx r0
@@ -3562,6 +3584,7 @@ GetSpriteFrameAnchor: @ 0x080092EC
 	mov pc, r0
 	.align 2, 0
 _08009308: .4byte _0800930C
+	.global _0800930C
 _0800930C: @ jump table
 	.4byte _08009328 @ case 0
 	.4byte _08009334 @ case 1
@@ -3570,14 +3593,17 @@ _0800930C: @ jump table
 	.4byte _08009334 @ case 4
 	.4byte _08009334 @ case 5
 	.4byte _0800932E @ case 6
+	.global _08009328
 _08009328:
 	adds r0, r2, #0
 	adds r0, #0x24
 	b _08009336
+	.global _0800932E
 _0800932E:
 	adds r0, r2, #0
 	adds r0, #0x14
 	b _08009336
+	.global _08009334
 _08009334:
 	ldr r0, _0800933C @ =gUnknown_081CE00C
 _08009336:
@@ -3603,6 +3629,7 @@ GetSpriteFrameThirdBox: @ 0x08009340
 	mov pc, r0
 	.align 2, 0
 _0800935C: .4byte _08009360
+	.global _08009360
 _08009360: @ jump table
 	.4byte _0800937C @ case 0
 	.4byte _08009382 @ case 1
@@ -3611,10 +3638,12 @@ _08009360: @ jump table
 	.4byte _0800937C @ case 4
 	.4byte _08009382 @ case 5
 	.4byte _08009382 @ case 6
+	.global _0800937C
 _0800937C:
 	adds r0, r2, #0
 	adds r0, #0x1c
 	b _08009384
+	.global _08009382
 _08009382:
 	ldr r0, _08009388 @ =gEmptySpriteBox
 _08009384:
@@ -3640,6 +3669,7 @@ GetSpriteFrameAttackBox: @ 0x0800938C
 	mov pc, r0
 	.align 2, 0
 _080093A8: .4byte _080093AC
+	.global _080093AC
 _080093AC: @ jump table
 	.4byte _080093C8 @ case 0
 	.4byte _080093D4 @ case 1
@@ -3648,14 +3678,17 @@ _080093AC: @ jump table
 	.4byte _080093C8 @ case 4
 	.4byte _080093CE @ case 5
 	.4byte _080093D4 @ case 6
+	.global _080093C8
 _080093C8:
 	adds r0, r2, #0
 	adds r0, #0x14
 	b _080093D6
+	.global _080093CE
 _080093CE:
 	adds r0, r2, #0
 	adds r0, #0xc
 	b _080093D6
+	.global _080093D4
 _080093D4:
 	ldr r0, _080093DC @ =gEmptySpriteBox
 _080093D6:
@@ -3681,6 +3714,7 @@ GetSpriteFrameBodyBox: @ 0x080093E0
 	mov pc, r0
 	.align 2, 0
 _080093FC: .4byte _08009400
+	.global _08009400
 _08009400: @ jump table
 	.4byte _0800941C @ case 0
 	.4byte _08009422 @ case 1
@@ -3689,10 +3723,12 @@ _08009400: @ jump table
 	.4byte _0800941C @ case 4
 	.4byte _08009422 @ case 5
 	.4byte _0800941C @ case 6
+	.global _0800941C
 _0800941C:
 	adds r0, r2, #0
 	adds r0, #0xc
 	b _08009424
+	.global _08009422
 _08009422:
 	ldr r0, _08009428 @ =gEmptySpriteBox
 _08009424:
@@ -8278,6 +8314,7 @@ _0800B9BA:
 	mov pc, r0
 	.align 2, 0
 _0800B9D0: .4byte _0800B9D4
+	.global _0800B9D4
 _0800B9D4: @ jump table
 	.4byte _0800B9FC @ case 0
 	.4byte _0800BAA0 @ case 1
@@ -8289,6 +8326,7 @@ _0800B9D4: @ jump table
 	.4byte _0800BAA0 @ case 7
 	.4byte _0800BAA0 @ case 8
 	.4byte _0800BA8E @ case 9
+	.global _0800B9FC
 _0800B9FC:
 	ldrb r0, [r6, #0x18]
 	movs r1, #0x40
@@ -8339,6 +8377,7 @@ _0800BA5E:
 	movs r3, #0
 	bl sub_08047978
 	b _0800BAA0
+	.global _0800BA66
 _0800BA66:
 	adds r1, r6, #0
 	adds r1, #0xde
@@ -8351,6 +8390,7 @@ _0800BA66:
 	adds r0, #0xdc
 	strb r1, [r0]
 	b _0800BAA0
+	.global _0800BA7C
 _0800BA7C:
 	adds r1, r6, #0
 	adds r1, #0xdf
@@ -8361,6 +8401,7 @@ _0800BA7C:
 	movs r0, #1
 	adds r1, #2
 	b _0800BA9E
+	.global _0800BA8E
 _0800BA8E:
 	adds r1, r6, #0
 	adds r1, #0xde
@@ -8372,6 +8413,7 @@ _0800BA8E:
 	adds r1, #3
 _0800BA9E:
 	strb r0, [r1]
+	.global _0800BAA0
 _0800BAA0:
 	ldr r0, _0800BAAC @ =gLevelLayers
 	ldr r0, [r0]
@@ -8495,6 +8537,7 @@ _0800BB74:
 	mov pc, r0
 	.align 2, 0
 _0800BB90: .4byte _0800BB94
+	.global _0800BB94
 _0800BB94: @ jump table
 	.4byte _0800BBB0 @ case 0
 	.4byte _0800BBBC @ case 1
@@ -8503,14 +8546,17 @@ _0800BB94: @ jump table
 	.4byte _0800BBBC @ case 4
 	.4byte _0800BBBC @ case 5
 	.4byte _0800BBB6 @ case 6
+	.global _0800BBB0
 _0800BBB0:
 	adds r3, r2, #0
 	adds r3, #0x24
 	b _0800BBBE
+	.global _0800BBB6
 _0800BBB6:
 	adds r3, r2, #0
 	adds r3, #0x14
 	b _0800BBBE
+	.global _0800BBBC
 _0800BBBC:
 	ldr r3, _0800BBDC @ =gUnknown_081CE00C
 _0800BBBE:
@@ -9230,6 +9276,7 @@ _0800C12E:
 	mov pc, r0
 	.align 2, 0
 _0800C138: .4byte _0800C13C
+	.global _0800C13C
 _0800C13C: @ jump table
 	.4byte _0800C508 @ case 0
 	.4byte _0800C3F8 @ case 1
@@ -9278,6 +9325,7 @@ _0800C13C: @ jump table
 	.4byte _0800C398 @ case 44
 	.4byte _0800C398 @ case 45
 	.4byte _0800C398 @ case 46
+	.global _0800C1F8
 _0800C1F8:
 	ldr r0, _0800C218 @ =0x02000E70
 	ldr r0, [r0]
@@ -9296,9 +9344,11 @@ _0800C1F8:
 	.align 2, 0
 _0800C218: .4byte 0x02000E70
 _0800C21C: .4byte 0x02000E6C
+	.global _0800C220
 _0800C220:
 	bl ClearCollectedSpawns
 	b _0800C256
+	.global _0800C226
 _0800C226:
 	ldr r0, _0800C260 @ =0x02000E70
 	ldr r1, [r0]
@@ -9331,6 +9381,7 @@ _0800C256:
 	.align 2, 0
 _0800C260: .4byte 0x02000E70
 _0800C264: .4byte gHud
+	.global _0800C268
 _0800C268:
 	ldr r0, _0800C274 @ =0x02000E70
 	ldr r0, [r0]
@@ -9338,6 +9389,7 @@ _0800C268:
 	b _0800C4CA
 	.align 2, 0
 _0800C274: .4byte 0x02000E70
+	.global _0800C278
 _0800C278:
 	ldr r4, _0800C2A0 @ =0x02000E70
 	ldr r0, [r4]
@@ -9361,6 +9413,7 @@ _0800C28A:
 	.align 2, 0
 _0800C2A0: .4byte 0x02000E70
 _0800C2A4: .4byte 0x02000E6C
+	.global _0800C2A8
 _0800C2A8:
 	ldr r0, _0800C2C4 @ =0x02000E6C
 	ldr r0, [r0]
@@ -9377,6 +9430,7 @@ _0800C2A8:
 	.align 2, 0
 _0800C2C4: .4byte 0x02000E6C
 _0800C2C8: .4byte 0x02000E70
+	.global _0800C2CC
 _0800C2CC:
 	ldr r0, _0800C2DC @ =0x02000E6C
 	ldr r0, [r0]
@@ -9387,6 +9441,7 @@ _0800C2CC:
 	b _0800C508
 	.align 2, 0
 _0800C2DC: .4byte 0x02000E6C
+	.global _0800C2E0
 _0800C2E0:
 	ldr r0, _0800C310 @ =0x02000E6C
 	ldr r0, [r0]
@@ -9414,6 +9469,7 @@ _0800C2E0:
 	.align 2, 0
 _0800C310: .4byte 0x02000E6C
 _0800C314: .4byte 0x02000E70
+	.global _0800C318
 _0800C318:
 	ldr r0, _0800C348 @ =0x02000E6C
 	ldr r0, [r0]
@@ -9440,6 +9496,7 @@ _0800C318:
 	.align 2, 0
 _0800C348: .4byte 0x02000E6C
 _0800C34C: .4byte 0x02000E70
+	.global _0800C350
 _0800C350:
 	ldr r0, _0800C38C @ =0x02000E6C
 	ldr r0, [r0]
@@ -9475,9 +9532,11 @@ _0800C386:
 _0800C38C: .4byte 0x02000E6C
 _0800C390: .4byte 0x02000E70
 _0800C394: .4byte 0xFFFFFE3F
+	.global _0800C398
 _0800C398:
 	bl ClearCollectedSpawns
 	b _0800C508
+	.global _0800C39E
 _0800C39E:
 	ldr r0, _0800C3F0 @ =0x02000E70
 	ldr r1, [r0]
@@ -9526,6 +9585,7 @@ _0800C3DE:
 	.align 2, 0
 _0800C3F0: .4byte 0x02000E70
 _0800C3F4: .4byte gRoomFrameCount
+	.global _0800C3F8
 _0800C3F8:
 	ldrb r0, [r6, #0x18]
 	lsrs r0, r0, #6
@@ -9619,6 +9679,7 @@ _0800C4B4:
 	adds r0, r2, #0
 	bl AddDeath
 	b _0800C4CA
+	.global _0800C4BC
 _0800C4BC:
 	movs r0, #0
 	adds r1, r6, #0
@@ -9627,6 +9688,7 @@ _0800C4BC:
 	str r0, [r6, #0x74]
 	str r0, [r6, #0x78]
 	str r0, [r6, #0x7c]
+	.global _0800C4CA
 _0800C4CA:
 	ldr r0, [r6, #0x64]
 	ldr r2, [r0, #0xc]
@@ -9641,6 +9703,7 @@ _0800C4CA:
 	mov r3, r8
 	bl sub_08047978
 	b _0800C508
+	.global _0800C4E6
 _0800C4E6:
 	movs r0, #0
 	str r0, [r6, #0x74]
@@ -9658,6 +9721,7 @@ _0800C4E6:
 	adds r2, r5, #0
 	mov r3, r8
 	bl sub_08047978
+	.global _0800C508
 _0800C508:
 	add sp, #0xc
 	pop {r3, r4, r5}
@@ -11045,6 +11109,7 @@ _0800D0FA:
 	.align 2, 0
 _0800D104: .4byte 0x02000E70
 _0800D108: .4byte _0800D10C
+	.global _0800D10C
 _0800D10C: @ jump table
 	.4byte _0800D228 @ case 0
 	.4byte _0800D268 @ case 1
@@ -11071,6 +11136,7 @@ _0800D10C: @ jump table
 	.4byte _0800D170 @ case 22
 	.4byte _0800D228 @ case 23
 	.4byte _0800D228 @ case 24
+	.global _0800D170
 _0800D170:
 	movs r0, #0x10
 	bl sub_080273EC
@@ -11157,6 +11223,7 @@ _0800D218: .4byte 0xFFFFF000
 _0800D21C: .4byte 0xFFFFE800
 _0800D220: .4byte 0xFFFFFE00
 _0800D224: .4byte 0x02000E6C
+	.global _0800D228
 _0800D228:
 	ldr r0, [r5]
 	ldr r3, [r0]
@@ -11188,6 +11255,7 @@ _0800D228:
 	strb r1, [r0]
 	ldr r0, [r5]
 	bl sub_08007F24
+	.global _0800D268
 _0800D268:
 	add sp, #0xc
 	pop {r4, r5}
@@ -15069,6 +15137,7 @@ _0800F0A2:
 _0800F0C0: .4byte gUnknown_081CFB2C
 _0800F0C4: .4byte gPlayer
 _0800F0C8: .4byte _0800F0CC
+	.global _0800F0CC
 _0800F0CC: @ jump table
 	.4byte _0800F0E8 @ case 0
 	.4byte _0800F0EE @ case 1
@@ -15077,10 +15146,12 @@ _0800F0CC: @ jump table
 	.4byte _0800F0E8 @ case 4
 	.4byte _0800F0EE @ case 5
 	.4byte _0800F0EE @ case 6
+	.global _0800F0E8
 _0800F0E8:
 	adds r3, r2, #0
 	adds r3, #0x1c
 	b _0800F0F0
+	.global _0800F0EE
 _0800F0EE:
 	ldr r3, _0800F18C @ =gEmptySpriteBox
 _0800F0F0:
@@ -15284,6 +15355,7 @@ _0800F260:
 	.align 2, 0
 _0800F26C: .4byte gPlayer
 _0800F270: .4byte _0800F274
+	.global _0800F274
 _0800F274: @ jump table
 	.4byte _0800F28C @ case 0
 	.4byte _0800F28C @ case 1
@@ -15291,6 +15363,7 @@ _0800F274: @ jump table
 	.4byte _0800F2C0 @ case 3
 	.4byte _0800F4A8 @ case 4
 	.4byte _0800F4C6 @ case 5
+	.global _0800F28C
 _0800F28C:
 	mov r2, sl
 	ldrb r3, [r2]
@@ -15307,6 +15380,7 @@ _0800F2A2:
 	mov r0, r8
 	bl ActivateIronSwitchCrate
 	b _0800F4DA
+	.global _0800F2AA
 _0800F2AA:
 	mov r2, r8
 	adds r2, #0x6d
@@ -15319,6 +15393,7 @@ _0800F2AA:
 	adds r0, #0xa0
 	strb r1, [r0]
 	b _0800F4DA
+	.global _0800F2C0
 _0800F2C0:
 	mov r0, r8
 	movs r1, #0
@@ -15566,6 +15641,7 @@ _0800F498:
 	bl _0800FDDE
 	.align 2, 0
 _0800F4A4: .4byte gPlayer
+	.global _0800F4A8
 _0800F4A8:
 	mov r0, r8
 	adds r0, #0x6d
@@ -15580,6 +15656,7 @@ _0800F4BA:
 	movs r1, #1
 	bl sub_08010D20
 	bl _0800FDDE
+	.global _0800F4C6
 _0800F4C6:
 	mov r0, r8
 	bl sub_080103DC
@@ -16429,6 +16506,7 @@ _0800FAFC:
 _0800FB08: .4byte gPlayer
 _0800FB0C: .4byte gUnknown_081CFF44
 _0800FB10: .4byte _0800FB14
+	.global _0800FB14
 _0800FB14: @ jump table
 	.4byte _0800FDAA @ case 0
 	.4byte _0800FC58 @ case 1
@@ -16439,6 +16517,7 @@ _0800FB14: @ jump table
 	.4byte _0800FDAA @ case 6
 	.4byte _0800FDAA @ case 7
 	.4byte _0800FBC0 @ case 8
+	.global _0800FB38
 _0800FB38:
 	mov r0, sb
 	bl sub_08012808
@@ -16508,6 +16587,7 @@ _0800FBAA:
 	.align 2, 0
 _0800FBB8: .4byte gCrateHitResponse
 _0800FBBC: .4byte gPlayer
+	.global _0800FBC0
 _0800FBC0:
 	mov r0, sb
 	bl sub_080127C0
@@ -16584,6 +16664,7 @@ _0800FC4A:
 	b _0800FDAA
 	.align 2, 0
 _0800FC54: .4byte 0xFFFFFF00
+	.global _0800FC58
 _0800FC58:
 	ldr r0, [sp, #0x78]
 	str r0, [sp, #0x84]
@@ -16759,6 +16840,7 @@ _0800FD92:
 	adds r0, #0xe4
 	movs r1, #1
 	strb r1, [r0, #4]
+	.global _0800FDAA
 _0800FDAA:
 	ldr r0, _0800FDF4 @ =gPlayer
 	ldr r0, [r0]
@@ -17039,6 +17121,7 @@ _0800FFBA:
 _0800FFC4: .4byte gCrateHitResponse
 _0800FFC8: .4byte gPlayer
 _0800FFCC: .4byte _0800FFD0
+	.global _0800FFD0
 _0800FFD0: @ jump table
 	.4byte _0800FFE8 @ case 0
 	.4byte _0800FFE8 @ case 1
@@ -17046,6 +17129,7 @@ _0800FFD0: @ jump table
 	.4byte _080100CC @ case 3
 	.4byte _08010170 @ case 4
 	.4byte _08010188 @ case 5
+	.global _0800FFE8
 _0800FFE8:
 	ldr r2, _08010080 @ =gPlayer
 	ldr r0, [r2]
@@ -17138,6 +17222,7 @@ _0801008A:
 	adds r0, r6, #0
 	bl ActivateIronSwitchCrate
 	b _08010198
+	.global _08010092
 _08010092:
 	adds r0, r6, #0
 	adds r0, #0x6e
@@ -17168,6 +17253,7 @@ _080100B0:
 	b _08010198
 	.align 2, 0
 _080100C8: .4byte gPlayer
+	.global _080100CC
 _080100CC:
 	mov r0, sb
 	subs r0, #5
@@ -17253,6 +17339,7 @@ _08010154:
 	b _080101DC
 	.align 2, 0
 _0801016C: .4byte gPlayer
+	.global _08010170
 _08010170:
 	adds r0, r6, #0
 	adds r0, #0x6d
@@ -17265,6 +17352,7 @@ _08010170:
 	movs r1, #1
 	bl sub_08010D20
 	b _080101DC
+	.global _08010188
 _08010188:
 	adds r0, r6, #0
 	bl sub_080103DC
@@ -18039,6 +18127,7 @@ _0801078C: .4byte gUnknown_081CFAC4
 _08010790: .4byte 0x02000E70
 _08010794: .4byte 0x02000E64
 _08010798: .4byte _0801079C
+	.global _0801079C
 _0801079C: @ jump table
 	.4byte _080108F4 @ case 0
 	.4byte _08010924 @ case 1
@@ -18067,6 +18156,7 @@ _0801079C: @ jump table
 	.4byte _08010924 @ case 24
 	.4byte _080108B4 @ case 25
 	.4byte _08010924 @ case 26
+	.global _08010808
 _08010808:
 	cmp r6, #0
 	beq _0801080E
@@ -18075,6 +18165,7 @@ _0801080E:
 	adds r0, r5, #0
 	bl sub_08012700
 	b _08010924
+	.global _08010816
 _08010816:
 	cmp r6, #0
 	beq _0801081C
@@ -18084,14 +18175,17 @@ _0801081C:
 	mov r1, r8
 	bl OpenLifeCrate
 	b _08010924
+	.global _08010826
 _08010826:
 	adds r0, r5, #0
 	bl ActivateIronSwitchCrate
 	b _08010924
+	.global _0801082E
 _0801082E:
 	adds r0, r5, #0
 	bl ActivateNitroSwitchCrate
 	b _08010924
+	.global _08010836
 _08010836:
 	cmp r6, #0
 	bne _08010924
@@ -18099,11 +18193,13 @@ _08010836:
 	mov r1, r8
 	bl OpenMysteryCrate
 	b _08010924
+	.global _08010844
 _08010844:
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_08010D20
 	b _08010924
+	.global _0801084E
 _0801084E:
 	cmp r6, #0
 	bne _08010924
@@ -18111,6 +18207,7 @@ _0801084E:
 	mov r1, r8
 	bl OpenSlotCrate
 	b _08010924
+	.global _0801085C
 _0801085C:
 	ldr r0, _08010868 @ =0x02000E70
 	ldr r0, [r0]
@@ -18119,6 +18216,7 @@ _0801085C:
 	b _08010924
 	.align 2, 0
 _08010868: .4byte 0x02000E70
+	.global _0801086C
 _0801086C:
 	ldr r0, _08010878 @ =0x02000E70
 	ldr r0, [r0]
@@ -18127,6 +18225,7 @@ _0801086C:
 	b _08010924
 	.align 2, 0
 _08010878: .4byte 0x02000E70
+	.global _0801087C
 _0801087C:
 	ldr r0, _08010888 @ =0x02000E70
 	ldr r0, [r0]
@@ -18135,6 +18234,7 @@ _0801087C:
 	b _08010924
 	.align 2, 0
 _08010888: .4byte 0x02000E70
+	.global _0801088C
 _0801088C:
 	ldr r0, _0801089C @ =gPlayer
 	ldr r0, [r0]
@@ -18144,6 +18244,7 @@ _0801088C:
 	b _080108DC
 	.align 2, 0
 _0801089C: .4byte gPlayer
+	.global _080108A0
 _080108A0:
 	ldr r0, _080108B0 @ =gPlayer
 	ldr r0, [r0]
@@ -18153,6 +18254,7 @@ _080108A0:
 	b _080108DC
 	.align 2, 0
 _080108B0: .4byte gPlayer
+	.global _080108B4
 _080108B4:
 	movs r1, #0x2a
 	adds r0, r5, #0
@@ -18170,6 +18272,7 @@ _080108B4:
 	movs r1, #0x96
 	lsls r1, r1, #1
 	bl sub_0802290C
+	.global _080108DC
 _080108DC:
 	ldr r0, _080108F0 @ =0x02000E6C
 	ldr r0, [r0]
@@ -18181,6 +18284,7 @@ _080108DC:
 	.align 2, 0
 _080108EC: .4byte 0x02000E70
 _080108F0: .4byte 0x02000E6C
+	.global _080108F4
 _080108F4:
 	ldr r1, [r5]
 	asrs r1, r1, #8
@@ -18204,6 +18308,7 @@ _080108F4:
 	lsls r2, r2, #1
 	movs r1, #5
 	bl PlaySfx
+	.global _08010924
 _08010924:
 	add sp, #8
 	pop {r3}
@@ -18273,6 +18378,7 @@ _08010992:
 	mov pc, r0
 	.align 2, 0
 _0801099C: .4byte _080109A0
+	.global _080109A0
 _080109A0: @ jump table
 	.4byte _08010B1A @ case 0
 	.4byte _08010AFC @ case 1
@@ -18284,6 +18390,7 @@ _080109A0: @ jump table
 	.4byte _080109EC @ case 7
 	.4byte _08010B1A @ case 8
 	.4byte _080109C8 @ case 9
+	.global _080109C8
 _080109C8:
 	ldr r1, [r4]
 	asrs r1, r1, #8
@@ -18301,6 +18408,7 @@ _080109C8:
 	b _08010B38
 	.align 2, 0
 _080109E8: .4byte gEntitySpawner
+	.global _080109EC
 _080109EC:
 	ldr r0, _08010A38 @ =0x02000E6C
 	ldr r0, [r0]
@@ -18341,6 +18449,7 @@ _08010A38: .4byte 0x02000E6C
 _08010A3C: .4byte 0x0000FFFF
 _08010A40: .4byte 0x02000E64
 _08010A44: .4byte gEntitySpawner
+	.global _08010A48
 _08010A48:
 	ldr r0, _08010A7C @ =gPlayer
 	ldr r2, [r0]
@@ -18369,6 +18478,7 @@ _08010A48:
 	.align 2, 0
 _08010A7C: .4byte gPlayer
 _08010A80: .4byte 0x02000E6C
+	.global _08010A84
 _08010A84:
 	ldr r1, [r4]
 	asrs r1, r1, #8
@@ -18384,6 +18494,7 @@ _08010A84:
 	strb r6, [r3]
 	movs r3, #1
 	bl DropWumpa
+	.global _08010AA2
 _08010AA2:
 	ldr r1, [r4]
 	asrs r1, r1, #8
@@ -18399,6 +18510,7 @@ _08010AA2:
 	strb r6, [r3]
 	movs r3, #0
 	bl DropWumpa
+	.global _08010AC0
 _08010AC0:
 	ldr r1, [r4]
 	asrs r1, r1, #8
@@ -18414,6 +18526,7 @@ _08010AC0:
 	strb r6, [r3]
 	movs r3, #1
 	bl DropWumpa
+	.global _08010ADE
 _08010ADE:
 	ldr r1, [r4]
 	asrs r1, r1, #8
@@ -18429,6 +18542,7 @@ _08010ADE:
 	strb r6, [r3]
 	movs r3, #0
 	bl DropWumpa
+	.global _08010AFC
 _08010AFC:
 	ldr r1, [r4]
 	asrs r1, r1, #8
@@ -18444,6 +18558,7 @@ _08010AFC:
 	strb r6, [r3]
 	movs r3, #0
 	bl DropWumpa
+	.global _08010B1A
 _08010B1A:
 	ldr r1, [r4]
 	asrs r1, r1, #8
@@ -19556,6 +19671,7 @@ _0801139E:
 	mov pc, r0
 	.align 2, 0
 _080113A8: .4byte _080113AC
+	.global _080113AC
 _080113AC: @ jump table
 	.4byte _08011414 @ case 0
 	.4byte _08011418 @ case 1
@@ -19583,60 +19699,78 @@ _080113AC: @ jump table
 	.4byte _08011456 @ case 23
 	.4byte _080114B4 @ case 24
 	.4byte _0801145A @ case 25
+	.global _08011414
 _08011414:
 	movs r1, #0x1f
 	b _08011470
+	.global _08011418
 _08011418:
 	movs r1, #0x1a
 	b _08011470
+	.global _0801141C
 _0801141C:
 	movs r1, #0x17
 	b _08011470
+	.global _08011420
 _08011420:
 	movs r1, #0x18
 	b _08011470
+	.global _08011424
 _08011424:
 	movs r1, #4
 	b _08011470
+	.global _08011428
 _08011428:
 	movs r1, #0x20
 	b _08011470
+	.global _0801142C
 _0801142C:
 	movs r1, #2
 	b _08011470
+	.global _08011430
 _08011430:
 	movs r1, #5
 	b _08011470
+	.global _08011434
 _08011434:
 	movs r0, #0x2a
 	rsbs r0, r0, #0
 	str r0, [r4, #0x68]
 	movs r1, #0x19
 	b _08011470
+	.global _0801143E
 _0801143E:
 	movs r1, #6
 	b _08011470
+	.global _08011442
 _08011442:
 	movs r1, #0x11
 	b _08011470
+	.global _08011446
 _08011446:
 	movs r1, #0xe
 	b _08011470
+	.global _0801144A
 _0801144A:
 	movs r1, #0xf
 	b _08011470
+	.global _0801144E
 _0801144E:
 	movs r1, #0x10
 	b _08011470
+	.global _08011452
 _08011452:
 	movs r1, #0x26
 	b _08011470
+	.global _08011456
 _08011456:
 	movs r1, #0x27
 	b _08011470
+	.global _0801145A
 _0801145A:
 	movs r1, #0x2a
 	b _08011470
+	.global _0801145E
 _0801145E:
 	ldr r0, _0801148C @ =0x02000E64
 	ldr r0, [r0]
@@ -19676,6 +19810,7 @@ _08011490:
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
+	.global _080114B4
 _080114B4:
 	adds r0, r4, #0
 	bl OffsetFromHitboxEdge
@@ -20872,6 +21007,7 @@ _08011D8C:
 	.align 2, 0
 _08011DAC: .4byte gSpriteBankSet
 _08011DB0: .4byte _08011DB4
+	.global _08011DB4
 _08011DB4: @ jump table
 	.4byte _08011E24 @ case 0
 	.4byte _08011E70 @ case 1
@@ -20897,6 +21033,7 @@ _08011DB4: @ jump table
 	.4byte _08011E70 @ case 21
 	.4byte _08011E70 @ case 22
 	.4byte _08011E14 @ case 23
+	.global _08011E14
 _08011E14:
 	ldr r0, _08011E28 @ =0x02000E64
 	ldr r0, [r0]
@@ -20905,11 +21042,13 @@ _08011E14:
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	bne _08011E3C
+	.global _08011E24
 _08011E24:
 	movs r6, #1
 	b _08011E70
 	.align 2, 0
 _08011E28: .4byte 0x02000E64
+	.global _08011E2C
 _08011E2C:
 	ldr r0, _08011E40 @ =0x02000E64
 	ldr r0, [r0]
@@ -20923,6 +21062,7 @@ _08011E3C:
 	b _08011E70
 	.align 2, 0
 _08011E40: .4byte 0x02000E64
+	.global _08011E44
 _08011E44:
 	ldr r4, _08011EA0 @ =0x02000E64
 	ldr r0, [r4]
@@ -20945,6 +21085,7 @@ _08011E44:
 	cmp r7, #9
 	bne _08011E70
 	movs r7, #0
+	.global _08011E70
 _08011E70:
 	movs r4, #0
 	ldr r0, _08011EA0 @ =0x02000E64
@@ -21010,6 +21151,7 @@ _08011ED6:
 	.align 2, 0
 _08011EE0: .4byte 0x02000E70
 _08011EE4: .4byte _08011EE8
+	.global _08011EE8
 _08011EE8: @ jump table
 	.4byte _08011F50 @ case 0
 	.4byte _08011F54 @ case 1
@@ -21037,9 +21179,11 @@ _08011EE8: @ jump table
 	.4byte _08012158 @ case 23
 	.4byte _0801215C @ case 24
 	.4byte _08012198 @ case 25
+	.global _08011F50
 _08011F50:
 	movs r1, #0x1f
 	b _08012178
+	.global _08011F54
 _08011F54:
 	ldr r0, _08011F74 @ =0x02000E64
 	ldr r0, [r0]
@@ -21058,9 +21202,11 @@ _08011F54:
 	b _08012178
 	.align 2, 0
 _08011F74: .4byte 0x02000E64
+	.global _08011F78
 _08011F78:
 	movs r1, #0x17
 	b _08012178
+	.global _08011F7C
 _08011F7C:
 	ldr r0, _08011FC4 @ =0x02000E64
 	ldr r0, [r0]
@@ -21096,9 +21242,11 @@ _08011F7C:
 	b _080121B4
 	.align 2, 0
 _08011FC4: .4byte 0x02000E64
+	.global _08011FC8
 _08011FC8:
 	movs r1, #0x18
 	b _08012178
+	.global _08011FCC
 _08011FCC:
 	ldr r0, _08012010 @ =0x02000E64
 	ldr r0, [r0]
@@ -21133,15 +21281,19 @@ _08011FCC:
 	b _080121B4
 	.align 2, 0
 _08012010: .4byte 0x02000E64
+	.global _08012014
 _08012014:
 	movs r1, #4
 	b _08012178
+	.global _08012018
 _08012018:
 	movs r1, #0x20
 	b _08012178
+	.global _0801201C
 _0801201C:
 	movs r1, #2
 	b _08012178
+	.global _08012020
 _08012020:
 	movs r1, #0x1c
 	adds r0, r5, #0
@@ -21172,9 +21324,11 @@ _08012054:
 	b _080121B4
 	.align 2, 0
 _08012058: .4byte 0x02000E70
+	.global _0801205C
 _0801205C:
 	movs r1, #5
 	b _08012178
+	.global _08012060
 _08012060:
 	ldr r0, _08012098 @ =0x02000E64
 	ldr r0, [r0]
@@ -21202,18 +21356,22 @@ _08012060:
 	b _080121B4
 	.align 2, 0
 _08012098: .4byte 0x02000E64
+	.global _0801209C
 _0801209C:
 	movs r0, #0x2a
 	rsbs r0, r0, #0
 	str r0, [r5, #0x68]
 	movs r1, #0x19
 	b _08012178
+	.global _080120A6
 _080120A6:
 	movs r1, #6
 	b _08012178
+	.global _080120AA
 _080120AA:
 	movs r1, #0x11
 	b _08012178
+	.global _080120AE
 _080120AE:
 	ldr r0, _08012140 @ =0x02000E64
 	ldr r0, [r0]
@@ -21290,21 +21448,27 @@ _0801212A:
 	.align 2, 0
 _08012140: .4byte 0x02000E64
 _08012144: .4byte gUnknown_081CFAC0
+	.global _08012148
 _08012148:
 	movs r1, #0xe
 	b _08012178
+	.global _0801214C
 _0801214C:
 	movs r1, #0xf
 	b _08012178
+	.global _08012150
 _08012150:
 	movs r1, #0x10
 	b _08012178
+	.global _08012154
 _08012154:
 	movs r1, #0x26
 	b _08012178
+	.global _08012158
 _08012158:
 	movs r1, #0x27
 	b _08012178
+	.global _0801215C
 _0801215C:
 	ldr r0, _08012194 @ =0x02000E64
 	ldr r0, [r0]
@@ -21334,6 +21498,7 @@ _08012178:
 	b _080121B4
 	.align 2, 0
 _08012194: .4byte 0x02000E64
+	.global _08012198
 _08012198:
 	movs r1, #0x2a
 	adds r0, r5, #0
@@ -21346,6 +21511,7 @@ _08012198:
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
+	.global _080121B4
 _080121B4:
 	adds r2, r5, #0
 	adds r2, #0x34
@@ -25593,6 +25759,7 @@ _08014328:
 	mov pc, r0
 	.align 2, 0
 _08014334: .4byte _08014338
+	.global _08014338
 _08014338: @ jump table
 	.4byte _08014A40 @ case 0
 	.4byte _080149EC @ case 1
@@ -25626,6 +25793,7 @@ _08014338: @ jump table
 	.4byte _08014AF4 @ case 29
 	.4byte _08014466 @ case 30
 	.4byte _08014466 @ case 31
+	.global _080143B8
 _080143B8:
 	ldr r0, _08014400 @ =gPlayer
 	ldr r0, [r0]
@@ -25718,6 +25886,7 @@ _0801445A:
 	movs r1, #0
 	strb r2, [r0]
 	b _080149C2
+	.global _08014466
 _08014466:
 	ldr r0, [r6, #0x10]
 	bl sub_080091C4
@@ -25734,6 +25903,7 @@ _08014466:
 	mov pc, r0
 	.align 2, 0
 _08014484: .4byte _08014488
+	.global _08014488
 _08014488: @ jump table
 	.4byte _080144A4 @ case 0
 	.4byte _080144B0 @ case 1
@@ -25742,14 +25912,17 @@ _08014488: @ jump table
 	.4byte _080144B0 @ case 4
 	.4byte _080144B0 @ case 5
 	.4byte _080144AA @ case 6
+	.global _080144A4
 _080144A4:
 	adds r5, r2, #0
 	adds r5, #0x24
 	b _080144B2
+	.global _080144AA
 _080144AA:
 	adds r5, r2, #0
 	adds r5, #0x14
 	b _080144B2
+	.global _080144B0
 _080144B0:
 	ldr r5, _080144C8 @ =gUnknown_081CE00C
 _080144B2:
@@ -25847,6 +26020,7 @@ _0801454C:
 	mov pc, r0
 	.align 2, 0
 _08014568: .4byte _0801456C
+	.global _0801456C
 _0801456C: @ jump table
 	.4byte _08014588 @ case 0
 	.4byte _08014594 @ case 1
@@ -25855,14 +26029,17 @@ _0801456C: @ jump table
 	.4byte _08014594 @ case 4
 	.4byte _08014594 @ case 5
 	.4byte _0801458E @ case 6
+	.global _08014588
 _08014588:
 	adds r0, r2, #0
 	adds r0, #0x24
 	b _08014596
+	.global _0801458E
 _0801458E:
 	adds r0, r2, #0
 	adds r0, #0x14
 	b _08014596
+	.global _08014594
 _08014594:
 	ldr r0, _080145A0 @ =gUnknown_081CE00C
 _08014596:
@@ -25873,6 +26050,7 @@ _08014596:
 	b _080146CE
 	.align 2, 0
 _080145A0: .4byte gUnknown_081CE00C
+	.global _080145A4
 _080145A4:
 	ldr r0, [r6, #8]
 	cmp r0, #0x32
@@ -25920,6 +26098,7 @@ _080145CE:
 	b _08014BA0
 	.align 2, 0
 _080145F8: .4byte 0x7FFFFFFF
+	.global _080145FC
 _080145FC:
 	ldr r0, [r6, #0x10]
 	bl sub_080091C4
@@ -25936,6 +26115,7 @@ _080145FC:
 	mov pc, r0
 	.align 2, 0
 _08014618: .4byte _0801461C
+	.global _0801461C
 _0801461C: @ jump table
 	.4byte _08014638 @ case 0
 	.4byte _08014644 @ case 1
@@ -25944,14 +26124,17 @@ _0801461C: @ jump table
 	.4byte _08014644 @ case 4
 	.4byte _08014644 @ case 5
 	.4byte _0801463E @ case 6
+	.global _08014638
 _08014638:
 	adds r7, r2, #0
 	adds r7, #0x24
 	b _08014646
+	.global _0801463E
 _0801463E:
 	adds r7, r2, #0
 	adds r7, #0x14
 	b _08014646
+	.global _08014644
 _08014644:
 	ldr r7, _08014694 @ =gUnknown_081CE00C
 _08014646:
@@ -25995,6 +26178,7 @@ _08014646:
 	.align 2, 0
 _08014694: .4byte gUnknown_081CE00C
 _08014698: .4byte _0801469C
+	.global _0801469C
 _0801469C: @ jump table
 	.4byte _080146B8 @ case 0
 	.4byte _080146C4 @ case 1
@@ -26003,14 +26187,17 @@ _0801469C: @ jump table
 	.4byte _080146C4 @ case 4
 	.4byte _080146C4 @ case 5
 	.4byte _080146BE @ case 6
+	.global _080146B8
 _080146B8:
 	adds r0, r2, #0
 	adds r0, #0x24
 	b _080146C6
+	.global _080146BE
 _080146BE:
 	adds r0, r2, #0
 	adds r0, #0x14
 	b _080146C6
+	.global _080146C4
 _080146C4:
 	ldr r0, _080146DC @ =gUnknown_081CE00C
 _080146C6:
@@ -26028,6 +26215,7 @@ _080146CE:
 	b _08014BA0
 	.align 2, 0
 _080146DC: .4byte gUnknown_081CE00C
+	.global _080146E0
 _080146E0:
 	ldr r2, [r6, #8]
 	cmp r2, #0
@@ -26163,6 +26351,7 @@ _080147D2:
 	adds r0, #0x80
 	str r2, [r0]
 	b _08014BA0
+	.global _080147DC
 _080147DC:
 	ldr r0, _08014828 @ =gKeys
 	ldr r0, [r0]
@@ -26225,6 +26414,7 @@ _08014830:
 	b _0801497A
 	.align 2, 0
 _08014858: .4byte 0x7FFFFFFF
+	.global _0801485C
 _0801485C:
 	ldr r0, _080148A8 @ =gKeys
 	ldr r0, [r0]
@@ -26287,6 +26477,7 @@ _080148B0:
 	b _0801497A
 	.align 2, 0
 _080148D8: .4byte 0x7FFFFFFF
+	.global _080148DC
 _080148DC:
 	ldr r0, _08014930 @ =gKeys
 	ldr r4, [r0]
@@ -26368,6 +26559,7 @@ _0801497A:
 	movs r0, #0
 	str r0, [r6, #0x18]
 	b _08014BA0
+	.global _08014980
 _08014980:
 	ldr r1, [r6, #0xc]
 	movs r2, #0x28
@@ -26377,9 +26569,11 @@ _08014980:
 	movs r1, #0x2a
 	bl sub_08047970
 	b _080149C0
+	.global _08014992
 _08014992:
 	bl ClearCollectedSpawns
 	b _08014BA0
+	.global _08014998
 _08014998:
 	ldr r0, _080149E0 @ =0x02000E6C
 	ldr r0, [r0]
@@ -26421,16 +26615,19 @@ _080149C2:
 _080149E0: .4byte 0x02000E6C
 _080149E4: .4byte gPlayer
 _080149E8: .4byte 0x7FFFFFFF
+	.global _080149EC
 _080149EC:
 	adds r0, r6, #0
 	movs r1, #0x28
 	bl sub_08014BA8
 	b _08014BA0
+	.global _080149F6
 _080149F6:
 	adds r0, r6, #0
 	movs r1, #0x29
 	bl sub_08014BA8
 	b _08014BA0
+	.global _08014A00
 _08014A00:
 	adds r0, r6, #0
 	movs r1, #0x39
@@ -26463,6 +26660,7 @@ _08014A1C:
 	b _08014A72
 	.align 2, 0
 _08014A3C: .4byte 0xFFFFF95C
+	.global _08014A40
 _08014A40:
 	adds r0, r6, #0
 	movs r1, #0x1b
@@ -26501,11 +26699,13 @@ _08014A72:
 	.align 2, 0
 _08014A84: .4byte 0xFFFFFF00
 _08014A88: .4byte gCamera
+	.global _08014A8C
 _08014A8C:
 	adds r0, r6, #0
 	movs r1, #0x27
 	bl sub_08014BA8
 	b _08014BA0
+	.global _08014A96
 _08014A96:
 	ldr r0, _08014AAC @ =0x02000E70
 	ldr r0, [r0]
@@ -26517,6 +26717,7 @@ _08014A96:
 	b _08014BA0
 	.align 2, 0
 _08014AAC: .4byte 0x02000E70
+	.global _08014AB0
 _08014AB0:
 	ldr r0, _08014AF0 @ =gPlayer
 	ldr r0, [r0]
@@ -26550,6 +26751,7 @@ _08014AB0:
 	b _08014BA0
 	.align 2, 0
 _08014AF0: .4byte gPlayer
+	.global _08014AF4
 _08014AF4:
 	movs r0, #4
 	ands r0, r3
@@ -26638,6 +26840,7 @@ _08014B66:
 	strb r4, [r0]
 	adds r0, r6, #0
 	bl ApplyActionCtrlMotion
+	.global _08014BA0
 _08014BA0:
 	add sp, #4
 	pop {r4, r5, r6, r7}
@@ -26849,6 +27052,7 @@ _08014D26:
 	.align 2, 0
 _08014D30: .4byte 0x02000EA0
 _08014D34: .4byte _08014D38
+	.global _08014D38
 _08014D38: @ jump table
 	.4byte _08014DF8 @ case 0
 	.4byte _08014E7A @ case 1
@@ -26898,6 +27102,7 @@ _08014D38: @ jump table
 	.4byte _08014DF8 @ case 45
 	.4byte _08014DF8 @ case 46
 	.4byte _08014DF8 @ case 47
+	.global _08014DF8
 _08014DF8:
 	ldr r1, [r4, #0x10]
 	adds r1, #0x34
@@ -26968,6 +27173,7 @@ _08014E58:
 	strb r1, [r0]
 _08014E78:
 	movs r5, #1
+	.global _08014E7A
 _08014E7A:
 	adds r0, r5, #0
 	pop {r4, r5}
@@ -27231,6 +27437,7 @@ _08015064:
 	mov pc, r0
 	.align 2, 0
 _08015078: .4byte _0801507C
+	.global _0801507C
 _0801507C: @ jump table
 	.4byte _0801511A @ case 0
 	.4byte _08015114 @ case 1
@@ -27270,22 +27477,27 @@ _0801507C: @ jump table
 	.4byte _0801512C @ case 35
 	.4byte _0801512C @ case 36
 	.4byte _0801511A @ case 37
+	.global _08015114
 _08015114:
 	ldr r1, [r5, #0x10]
 	movs r0, #0x16
 	b _08015130
+	.global _0801511A
 _0801511A:
 	ldr r1, [r5, #0x10]
 	movs r0, #0x17
 	b _08015130
+	.global _08015120
 _08015120:
 	ldr r1, [r5, #0x10]
 	movs r0, #0x18
 	b _08015130
+	.global _08015126
 _08015126:
 	ldr r1, [r5, #0x10]
 	movs r0, #0x19
 	b _08015130
+	.global _0801512C
 _0801512C:
 	ldr r1, [r5, #0x10]
 	movs r0, #1
@@ -32108,6 +32320,7 @@ sub_080176B8: @ 0x080176B8
 	mov pc, r0
 	.align 2, 0
 _080176DC: .4byte _080176E0
+	.global _080176E0
 _080176E0: @ jump table
 	.4byte _080176FC @ case 0
 	.4byte _08017704 @ case 1
@@ -32116,12 +32329,15 @@ _080176E0: @ jump table
 	.4byte _08017704 @ case 4
 	.4byte _08017704 @ case 5
 	.4byte _08017700 @ case 6
+	.global _080176FC
 _080176FC:
 	adds r2, #0x24
 	b _08017706
+	.global _08017700
 _08017700:
 	adds r2, #0x14
 	b _08017706
+	.global _08017704
 _08017704:
 	ldr r2, _08017724 @ =gUnknown_081CE00C
 _08017706:
@@ -32206,6 +32422,7 @@ sub_08017768: @ 0x08017768
 _08017798: .4byte 0x02000EA0
 _0801779C: .4byte gKeys
 _080177A0: .4byte _080177A4
+	.global _080177A4
 _080177A4: @ jump table
 	.4byte _080177C0 @ case 0
 	.4byte _080177BC @ case 1
@@ -32213,9 +32430,11 @@ _080177A4: @ jump table
 	.4byte _080177BC @ case 3
 	.4byte _080177C0 @ case 4
 	.4byte _080177BC @ case 5
+	.global _080177BC
 _080177BC:
 	movs r1, #1
 	b _080177C6
+	.global _080177C0
 _080177C0:
 	movs r1, #2
 _080177C2:
@@ -32311,6 +32530,7 @@ _0801785A:
 	mov pc, r0
 	.align 2, 0
 _08017884: .4byte _08017888
+	.global _08017888
 _08017888: @ jump table
 	.4byte _080178A4 @ case 0
 	.4byte _080178AC @ case 1
@@ -32319,12 +32539,15 @@ _08017888: @ jump table
 	.4byte _080178AC @ case 4
 	.4byte _080178AC @ case 5
 	.4byte _080178A8 @ case 6
+	.global _080178A4
 _080178A4:
 	adds r2, #0x24
 	b _080178AE
+	.global _080178A8
 _080178A8:
 	adds r2, #0x14
 	b _080178AE
+	.global _080178AC
 _080178AC:
 	ldr r2, _080178CC @ =gUnknown_081CE00C
 _080178AE:
@@ -32570,6 +32793,7 @@ _08017A72:
 	mov pc, r0
 	.align 2, 0
 _08017A90: .4byte _08017A94
+	.global _08017A94
 _08017A94: @ jump table
 	.4byte _08017AB0 @ case 0
 	.4byte _08017AAC @ case 1
@@ -32577,9 +32801,11 @@ _08017A94: @ jump table
 	.4byte _08017AAC @ case 3
 	.4byte _08017AB0 @ case 4
 	.4byte _08017AAC @ case 5
+	.global _08017AAC
 _08017AAC:
 	movs r5, #1
 	b _08017AB6
+	.global _08017AB0
 _08017AB0:
 	movs r5, #2
 _08017AB2:
@@ -32740,6 +32966,7 @@ _08017BC6:
 	mov pc, r0
 	.align 2, 0
 _08017BF0: .4byte _08017BF4
+	.global _08017BF4
 _08017BF4: @ jump table
 	.4byte _08017C10 @ case 0
 	.4byte _08017C18 @ case 1
@@ -32748,12 +32975,15 @@ _08017BF4: @ jump table
 	.4byte _08017C18 @ case 4
 	.4byte _08017C18 @ case 5
 	.4byte _08017C14 @ case 6
+	.global _08017C10
 _08017C10:
 	adds r2, #0x24
 	b _08017C1A
+	.global _08017C14
 _08017C14:
 	adds r2, #0x14
 	b _08017C1A
+	.global _08017C18
 _08017C18:
 	ldr r2, _08017C38 @ =gUnknown_081CE00C
 _08017C1A:
@@ -32877,6 +33107,7 @@ _08017CF4:
 	mov pc, r0
 	.align 2, 0
 _08017D0C: .4byte _08017D10
+	.global _08017D10
 _08017D10: @ jump table
 	.4byte _08017D2C @ case 0
 	.4byte _08017D28 @ case 1
@@ -32884,9 +33115,11 @@ _08017D10: @ jump table
 	.4byte _08017D28 @ case 3
 	.4byte _08017D2C @ case 4
 	.4byte _08017D28 @ case 5
+	.global _08017D28
 _08017D28:
 	movs r5, #1
 	b _08017D32
+	.global _08017D2C
 _08017D2C:
 	movs r5, #2
 _08017D2E:
@@ -33042,6 +33275,7 @@ _08017E2E:
 	mov pc, r0
 	.align 2, 0
 _08017E58: .4byte _08017E5C
+	.global _08017E5C
 _08017E5C: @ jump table
 	.4byte _08017E78 @ case 0
 	.4byte _08017E80 @ case 1
@@ -33050,12 +33284,15 @@ _08017E5C: @ jump table
 	.4byte _08017E80 @ case 4
 	.4byte _08017E80 @ case 5
 	.4byte _08017E7C @ case 6
+	.global _08017E78
 _08017E78:
 	adds r2, #0x24
 	b _08017E82
+	.global _08017E7C
 _08017E7C:
 	adds r2, #0x14
 	b _08017E82
+	.global _08017E80
 _08017E80:
 	ldr r2, _08017EA0 @ =gUnknown_081CE00C
 _08017E82:
@@ -33497,18 +33734,22 @@ StartActionCtrlTornadoFall: @ 0x080181B0
 	mov pc, r0
 	.align 2, 0
 _080181D8: .4byte _080181DC
+	.global _080181DC
 _080181DC: @ jump table
 	.4byte _080181F0 @ case 0
 	.4byte _080181F0 @ case 1
 	.4byte _080181F4 @ case 2
 	.4byte _080181F8 @ case 3
 	.4byte _080181F8 @ case 4
+	.global _080181F0
 _080181F0:
 	movs r2, #0x19
 	b _080181FA
+	.global _080181F4
 _080181F4:
 	movs r2, #0x1a
 	b _080181FA
+	.global _080181F8
 _080181F8:
 	movs r2, #0x1b
 _080181FA:
@@ -35370,6 +35611,7 @@ sub_08019048: @ 0x08019048
 	mov pc, r0
 	.align 2, 0
 _08019068: .4byte _0801906C
+	.global _0801906C
 _0801906C: @ jump table
 	.4byte _08019088 @ case 0
 	.4byte _08019094 @ case 1
@@ -35378,14 +35620,17 @@ _0801906C: @ jump table
 	.4byte _08019094 @ case 4
 	.4byte _08019094 @ case 5
 	.4byte _0801908E @ case 6
+	.global _08019088
 _08019088:
 	adds r6, r2, #0
 	adds r6, #0x24
 	b _08019096
+	.global _0801908E
 _0801908E:
 	adds r6, r2, #0
 	adds r6, #0x14
 	b _08019096
+	.global _08019094
 _08019094:
 	ldr r6, _080190FC @ =gUnknown_081CE00C
 _08019096:
@@ -35440,6 +35685,7 @@ _080190A8:
 	.align 2, 0
 _080190FC: .4byte gUnknown_081CE00C
 _08019100: .4byte _08019104
+	.global _08019104
 _08019104: @ jump table
 	.4byte _08019120 @ case 0
 	.4byte _0801912C @ case 1
@@ -35448,14 +35694,17 @@ _08019104: @ jump table
 	.4byte _0801912C @ case 4
 	.4byte _0801912C @ case 5
 	.4byte _08019126 @ case 6
+	.global _08019120
 _08019120:
 	adds r1, r2, #0
 	adds r1, #0x24
 	b _0801912E
+	.global _08019126
 _08019126:
 	adds r1, r2, #0
 	adds r1, #0x14
 	b _0801912E
+	.global _0801912C
 _0801912C:
 	ldr r1, _08019180 @ =gUnknown_081CE00C
 _0801912E:
@@ -37150,6 +37399,7 @@ _08019D52:
 	mov pc, r0
 	.align 2, 0
 _08019D5C: .4byte _08019D60
+	.global _08019D60
 _08019D60: @ jump table
 	.4byte _08019DE4 @ case 0
 	.4byte _08019DE4 @ case 1
@@ -37184,6 +37434,7 @@ _08019D60: @ jump table
 	.4byte _08019E80 @ case 30
 	.4byte _08019E80 @ case 31
 	.4byte _08019E78 @ case 32
+	.global _08019DE4
 _08019DE4:
 	ldr r0, _08019DFC @ =gSpriteBankSet
 	ldr r0, [r0]
@@ -37197,6 +37448,7 @@ _08019DE4:
 	b _08019E80
 	.align 2, 0
 _08019DFC: .4byte gSpriteBankSet
+	.global _08019E00
 _08019E00:
 	movs r3, #3
 	ands r3, r5
@@ -37264,11 +37516,13 @@ _08019E68:
 	str r0, [r2, #0x78]
 	str r0, [r2, #0x7c]
 	b _08019E80
+	.global _08019E78
 _08019E78:
 	ldr r0, _08019E88 @ =gRoomFrameCount
 	ldr r0, [r0]
 	adds r0, #0xb4
 	str r0, [r4, #0x2c]
+	.global _08019E80
 _08019E80:
 	pop {r4, r5, r6}
 	pop {r0}
@@ -37667,6 +37921,7 @@ _0801A16C:
 	mov pc, r0
 	.align 2, 0
 _0801A184: .4byte _0801A188
+	.global _0801A188
 _0801A188: @ jump table
 	.4byte _0801A1B4 @ case 0
 	.4byte _0801A21E @ case 1
@@ -37679,10 +37934,12 @@ _0801A188: @ jump table
 	.4byte _0801A21E @ case 8
 	.4byte _0801A21E @ case 9
 	.4byte _0801A21E @ case 10
+	.global _0801A1B4
 _0801A1B4:
 	adds r0, r5, #0
 	movs r1, #7
 	b _0801A20C
+	.global _0801A1BA
 _0801A1BA:
 	adds r0, r5, #0
 	movs r1, #5
@@ -37702,6 +37959,7 @@ _0801A1C0:
 	mov pc, r0
 	.align 2, 0
 _0801A1D8: .4byte _0801A1DC
+	.global _0801A1DC
 _0801A1DC: @ jump table
 	.4byte _0801A208 @ case 0
 	.4byte _0801A21E @ case 1
@@ -37714,6 +37972,7 @@ _0801A1DC: @ jump table
 	.4byte _0801A21E @ case 8
 	.4byte _0801A21E @ case 9
 	.4byte _0801A21E @ case 10
+	.global _0801A208
 _0801A208:
 	adds r0, r5, #0
 	movs r1, #6
@@ -37721,11 +37980,13 @@ _0801A20C:
 	movs r2, #0
 	bl sub_0801A384
 	b _0801A21E
+	.global _0801A214
 _0801A214:
 	adds r0, r5, #0
 	movs r1, #4
 	movs r2, #0
 	bl sub_0801A384
+	.global _0801A21E
 _0801A21E:
 	movs r0, #2
 	ands r0, r6
@@ -41571,13 +41832,14 @@ _0801C1AA:
 	bls _0801C1B0
 	b _0801C30A
 _0801C1B0:
-	ldr r0, _0801C1BC @ =0x0801C1C0
+	ldr r0, _0801C1BC @ =_0801C1C0
 	adds r0, r7, r0
 	ldr r0, [r0]
 	mov pc, r0
 	.align 2, 0
 _0801C1B8: .4byte gPlayer
-_0801C1BC: .4byte 0x0801C1C0
+_0801C1BC: .4byte _0801C1C0
+	.global _0801C1C0
 _0801C1C0:
 	.byte 0xC2, 0xC2, 0x01, 0x08, 0x78, 0xC2, 0x01, 0x08, 0xD4, 0xC1, 0x01, 0x08, 0x30, 0xC2, 0x01, 0x08
 	.byte 0x0A, 0xC3, 0x01, 0x08, 0x40, 0x46, 0xA0, 0x30, 0x00, 0x68, 0x04, 0x21, 0x08, 0x40, 0x00, 0x28
@@ -51724,12 +51986,14 @@ sub_0802199C: @ 0x0802199C
 	mov pc, r0
 	.align 2, 0
 _080219B8: .4byte _080219BC
+	.global _080219BC
 _080219BC: @ jump table
 	.4byte _080219D0 @ case 0
 	.4byte _080219EA @ case 1
 	.4byte _08021A04 @ case 2
 	.4byte _08021A1E @ case 3
 	.4byte _08021A58 @ case 4
+	.global _080219D0
 _080219D0:
 	adds r0, r4, #0
 	bl HasTurboRun
@@ -51741,6 +52005,7 @@ _080219D0:
 	movs r0, #0
 	bl sub_0803A138
 	b _08021A64
+	.global _080219EA
 _080219EA:
 	adds r0, r4, #0
 	bl HasSuperBodySlam
@@ -51752,6 +52017,7 @@ _080219EA:
 	movs r0, #1
 	bl sub_0803A138
 	b _08021A64
+	.global _08021A04
 _08021A04:
 	adds r0, r4, #0
 	bl sub_08022A60
@@ -51763,6 +52029,7 @@ _08021A04:
 	movs r0, #2
 	bl sub_0803A138
 	b _08021A64
+	.global _08021A1E
 _08021A1E:
 	adds r0, r4, #0
 	bl HasTornadoSpin
@@ -51790,6 +52057,7 @@ _08021A36:
 	movs r0, #1
 	strb r0, [r1]
 	b _08021A64
+	.global _08021A58
 _08021A58:
 	ldrb r0, [r4, #3]
 	movs r1, #8
@@ -52725,6 +52993,7 @@ _08022184:
 	.align 2, 0
 _08022190: .4byte 0x02000E6C
 _08022194: .4byte _08022198
+	.global _08022198
 _08022198: @ jump table
 	.4byte _080221CE @ case 0
 	.4byte _0802230A @ case 1
@@ -52736,6 +53005,7 @@ _08022198: @ jump table
 	.4byte _0802230A @ case 7
 	.4byte _0802230A @ case 8
 	.4byte _08022300 @ case 9
+	.global _080221C0
 _080221C0:
 	adds r0, r6, #0
 	bl sub_080224F0
@@ -52743,6 +53013,7 @@ _080221C0:
 	cmp r0, #0
 	bne _080221C0
 	b _0802230C
+	.global _080221CE
 _080221CE:
 	adds r0, r6, #0
 	adds r0, #0xa4
@@ -52815,6 +53086,7 @@ _0802225C: .4byte 0x81000032
 _08022260: .4byte 0x02000E74
 _08022264: .4byte 0x0000014D
 _08022268: .4byte gPaletteCycles
+	.global _0802226C
 _0802226C:
 	adds r0, r6, #0
 	movs r1, #1
@@ -52823,6 +53095,7 @@ _08022270:
 	lsls r0, r0, #0x18
 	lsrs r5, r0, #0x18
 	b _0802230C
+	.global _0802227A
 _0802227A:
 	bl sub_08003504
 	movs r0, #0
@@ -52883,11 +53156,13 @@ _080222F0: .4byte 0x040000D4
 _080222F4: .4byte 0x81000032
 _080222F8: .4byte 0x02000E74
 _080222FC: .4byte 0x0000014D
+	.global _08022300
 _08022300:
 	movs r0, #0
 	bl RunCredits
 	movs r5, #1
 	b _08022170
+	.global _0802230A
 _0802230A:
 	movs r5, #0
 _0802230C:
@@ -53390,6 +53665,7 @@ _080226EE:
 	mov pc, r0
 	.align 2, 0
 _080226F8: .4byte _080226FC
+	.global _080226FC
 _080226FC: @ jump table
 	.4byte _08022770 @ case 0
 	.4byte _08022818 @ case 1
@@ -53420,6 +53696,7 @@ _080226FC: @ jump table
 	.4byte _08022794 @ case 26
 	.4byte _08022798 @ case 27
 	.4byte _0802280A @ case 28
+	.global _08022770
 _08022770:
 	adds r0, r4, #0
 	adds r0, #0xc8
@@ -53435,15 +53712,19 @@ _08022770:
 	bne _08022818
 	movs r0, #2
 	b _08022802
+	.global _0802278C
 _0802278C:
 	movs r0, #3
 	b _08022802
+	.global _08022790
 _08022790:
 	movs r0, #4
 	b _08022802
+	.global _08022794
 _08022794:
 	movs r0, #5
 	b _08022802
+	.global _08022798
 _08022798:
 	movs r0, #7
 	movs r1, #0
@@ -53498,12 +53779,14 @@ _08022802:
 	movs r1, #0
 	bl sub_08043A20
 	b _08022818
+	.global _0802280A
 _0802280A:
 	movs r0, #0xa
 	movs r1, #0
 	bl sub_08043A20
 	movs r0, #0
 	bl RunCredits
+	.global _08022818
 _08022818:
 	adds r0, r4, #0
 	adds r0, #0xc8
@@ -53556,12 +53839,13 @@ _0802286C:
 	bne _080228D6
 	cmp r1, #0xb
 	bhi _080228D6
-	ldr r0, _08022884 @ =0x08022888
+	ldr r0, _08022884 @ =_08022888
 	adds r0, r3, r0
 	ldr r0, [r0]
 	mov pc, r0
 	.align 2, 0
-_08022884: .4byte 0x08022888
+_08022884: .4byte _08022888
+	.global _08022888
 _08022888:
 	.byte 0xB8, 0x28, 0x02, 0x08, 0xD6, 0x28, 0x02, 0x08
 	.byte 0xBC, 0x28, 0x02, 0x08, 0xC4, 0x28, 0x02, 0x08, 0xD6, 0x28, 0x02, 0x08, 0xD6, 0x28, 0x02, 0x08
@@ -54210,24 +54494,30 @@ GetBossIndex: @ 0x08022C70
 	mov pc, r0
 	.align 2, 0
 _08022C8C: .4byte _08022C90
+	.global _08022C90
 _08022C90: @ jump table
 	.4byte _08022CA4 @ case 0
 	.4byte _08022CA8 @ case 1
 	.4byte _08022CAC @ case 2
 	.4byte _08022CB0 @ case 3
 	.4byte _08022CB4 @ case 4
+	.global _08022CA4
 _08022CA4:
 	movs r1, #8
 	b _08022CBC
+	.global _08022CA8
 _08022CA8:
 	movs r1, #9
 	b _08022CBC
+	.global _08022CAC
 _08022CAC:
 	movs r1, #0xa
 	b _08022CBC
+	.global _08022CB0
 _08022CB0:
 	movs r1, #0xb
 	b _08022CBC
+	.global _08022CB4
 _08022CB4:
 	movs r1, #0xc
 	b _08022CBC
@@ -56987,12 +57277,14 @@ _080242D0:
 	mov pc, r0
 	.align 2, 0
 _080242E4: .4byte _080242E8
+	.global _080242E8
 _080242E8: @ jump table
 	.4byte _080242FC @ case 0
 	.4byte _08024310 @ case 1
 	.4byte _08024324 @ case 2
 	.4byte _08024338 @ case 3
 	.4byte _0802434C @ case 4
+	.global _080242FC
 _080242FC:
 	ldr r0, _0802430C @ =0x02000E70
 	ldr r0, [r0]
@@ -57002,6 +57294,7 @@ _080242FC:
 	b _08024358
 	.align 2, 0
 _0802430C: .4byte 0x02000E70
+	.global _08024310
 _08024310:
 	ldr r0, _08024320 @ =0x02000E70
 	ldr r0, [r0]
@@ -57011,6 +57304,7 @@ _08024310:
 	b _08024358
 	.align 2, 0
 _08024320: .4byte 0x02000E70
+	.global _08024324
 _08024324:
 	ldr r0, _08024334 @ =0x02000E70
 	ldr r0, [r0]
@@ -57020,6 +57314,7 @@ _08024324:
 	b _08024358
 	.align 2, 0
 _08024334: .4byte 0x02000E70
+	.global _08024338
 _08024338:
 	ldr r0, _08024348 @ =0x02000E70
 	ldr r0, [r0]
@@ -57029,6 +57324,7 @@ _08024338:
 	b _08024358
 	.align 2, 0
 _08024348: .4byte 0x02000E70
+	.global _0802434C
 _0802434C:
 	ldr r0, _08024364 @ =0x02000E70
 	ldr r0, [r0]
@@ -59395,6 +59691,7 @@ _080254F6:
 	mov pc, r0
 	.align 2, 0
 _08025500: .4byte _08025504
+	.global _08025504
 _08025504: @ jump table
 	.4byte _0802566C @ case 0
 	.4byte _0802566C @ case 1
@@ -59486,8 +59783,10 @@ _08025504: @ jump table
 	.4byte _0802566E @ case 87
 	.4byte _0802566E @ case 88
 	.4byte _0802566C @ case 89
+	.global _0802566C
 _0802566C:
 	adds r6, #1
+	.global _0802566E
 _0802566E:
 	adds r3, #1
 _08025670:
@@ -63114,27 +63413,33 @@ sub_080271A0: @ 0x080271A0
 	mov pc, r0
 	.align 2, 0
 _080271B8: .4byte _080271BC
+	.global _080271BC
 _080271BC: @ jump table
 	.4byte _080271D0 @ case 0
 	.4byte _080271D8 @ case 1
 	.4byte _080271EE @ case 2
 	.4byte _080271E0 @ case 3
 	.4byte _080271E8 @ case 4
+	.global _080271D0
 _080271D0:
 	adds r0, r4, #0
 	bl StepCameraFacing
 	b _080271EE
+	.global _080271D8
 _080271D8:
 	adds r0, r4, #0
 	bl StepCameraDirectional
 	b _080271EE
+	.global _080271E0
 _080271E0:
 	adds r0, r4, #0
 	bl sub_08027160
 	b _080271EE
+	.global _080271E8
 _080271E8:
 	adds r0, r4, #0
 	bl sub_08027120
+	.global _080271EE
 _080271EE:
 	ldr r1, [r4]
 	ldr r2, [r4, #4]
@@ -64201,6 +64506,7 @@ _08027A62:
 	mov pc, r0
 	.align 2, 0
 _08027A78: .4byte _08027A7C
+	.global _08027A7C
 _08027A7C: @ jump table
 	.4byte _08027ABC @ case 0
 	.4byte _08027ABC @ case 1
@@ -64218,6 +64524,7 @@ _08027A7C: @ jump table
 	.4byte _08027AD4 @ case 13
 	.4byte _08027AD4 @ case 14
 	.4byte _08027AD4 @ case 15
+	.global _08027ABC
 _08027ABC:
 	ldr r0, _08027AD0 @ =0x02000E70
 	ldr r0, [r0]
@@ -64229,6 +64536,7 @@ _08027ABC:
 	b _08027AE2
 	.align 2, 0
 _08027AD0: .4byte 0x02000E70
+	.global _08027AD4
 _08027AD4:
 	ldr r0, _08027B1C @ =0x02000E70
 	ldr r0, [r0]
@@ -64236,6 +64544,7 @@ _08027AD4:
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _08027AF2
+	.global _08027AE2
 _08027AE2:
 	movs r0, #0x64
 	adds r1, r5, #0
@@ -64244,6 +64553,7 @@ _08027AE2:
 	adds r0, r0, r1
 	bl OffsetFromHitboxEdge
 	adds r4, r0, #0
+	.global _08027AF2
 _08027AF2:
 	ldr r0, _08027B1C @ =0x02000E70
 	ldr r0, [r0]
@@ -64267,6 +64577,7 @@ _08027AF2:
 	.align 2, 0
 _08027B1C: .4byte 0x02000E70
 _08027B20: .4byte _08027B24
+	.global _08027B24
 _08027B24: @ jump table
 	.4byte _08027B6C @ case 0
 	.4byte _08027B6C @ case 1
@@ -64286,6 +64597,7 @@ _08027B24: @ jump table
 	.4byte _08027B90 @ case 15
 	.4byte _08027BAA @ case 16
 	.4byte _08027B90 @ case 17
+	.global _08027B6C
 _08027B6C:
 	ldr r0, _08027B8C @ =gUnknown_081DEAE4
 	lsls r2, r5, #3
@@ -64304,6 +64616,7 @@ _08027B6C:
 	b _08027BE8
 	.align 2, 0
 _08027B8C: .4byte gUnknown_081DEAE4
+	.global _08027B90
 _08027B90:
 	movs r0, #0x64
 	adds r1, r5, #0
@@ -64318,6 +64631,7 @@ _08027B90:
 	ands r0, r2
 	orrs r0, r3
 	b _08027BF8
+	.global _08027BAA
 _08027BAA:
 	movs r0, #0x64
 	adds r1, r5, #0
@@ -64332,6 +64646,7 @@ _08027BAA:
 	ands r0, r2
 	orrs r0, r3
 	b _08027BF8
+	.global _08027BC4
 _08027BC4:
 	movs r0, #0x64
 	adds r1, r5, #0
@@ -64346,6 +64661,7 @@ _08027BC4:
 	ands r0, r2
 	orrs r0, r3
 	b _08027BF8
+	.global _08027BDE
 _08027BDE:
 	movs r0, #0x64
 	adds r1, r5, #0
@@ -66782,6 +67098,7 @@ _08028F14:
 	mov pc, r0
 	.align 2, 0
 _08028F20: .4byte _08028F24
+	.global _08028F24
 _08028F24: @ jump table
 	.4byte _08028FD0 @ case 0
 	.4byte _08028FFC @ case 1
@@ -66815,12 +67132,14 @@ _08028F24: @ jump table
 	.4byte _0802901C @ case 29
 	.4byte _0802901C @ case 30
 	.4byte _08028FA4 @ case 31
+	.global _08028FA4
 _08028FA4:
 	movs r0, #0x8a
 	lsls r0, r0, #1
 	adds r2, r5, r0
 	adds r0, #0x10
 	b _08028FC4
+	.global _08028FAE
 _08028FAE:
 	movs r2, #0x8a
 	lsls r2, r2, #1
@@ -66840,6 +67159,7 @@ _08028FC4:
 	adds r0, r0, r1
 	str r0, [r2]
 	b _08029024
+	.global _08028FD0
 _08028FD0:
 	ldr r0, _08028FF4 @ =0x02000E68
 	ldr r4, [r0]
@@ -66859,6 +67179,7 @@ _08028FD0:
 	.align 2, 0
 _08028FF4: .4byte 0x02000E68
 _08028FF8: .4byte gSpriteBankSet
+	.global _08028FFC
 _08028FFC:
 	movs r0, #0x9a
 	lsls r0, r0, #1
@@ -66868,6 +67189,7 @@ _08028FFC:
 	b _08029024
 	.align 2, 0
 _08029008: .4byte gUnknown_081DED40
+	.global _0802900C
 _0802900C:
 	movs r2, #0x9a
 	lsls r2, r2, #1
@@ -66877,6 +67199,7 @@ _0802900C:
 	b _08029024
 	.align 2, 0
 _08029018: .4byte gUnknown_081DED60
+	.global _0802901C
 _0802901C:
 	adds r0, r5, #0
 	adds r1, r2, #0
@@ -66910,6 +67233,7 @@ _08029042:
 	mov pc, r0
 	.align 2, 0
 _0802904C: .4byte _08029050
+	.global _08029050
 _08029050: @ jump table
 	.4byte _080290FC @ case 0
 	.4byte _08029128 @ case 1
@@ -66943,12 +67267,14 @@ _08029050: @ jump table
 	.4byte _08029148 @ case 29
 	.4byte _08029148 @ case 30
 	.4byte _080290D0 @ case 31
+	.global _080290D0
 _080290D0:
 	movs r0, #0x8a
 	lsls r0, r0, #1
 	adds r2, r5, r0
 	adds r0, #0x10
 	b _080290F0
+	.global _080290DA
 _080290DA:
 	movs r2, #0x8a
 	lsls r2, r2, #1
@@ -66968,6 +67294,7 @@ _080290F0:
 	adds r0, r0, r1
 	str r0, [r2]
 	b _08029150
+	.global _080290FC
 _080290FC:
 	ldr r0, _08029120 @ =0x02000E68
 	ldr r4, [r0]
@@ -66987,6 +67314,7 @@ _080290FC:
 	.align 2, 0
 _08029120: .4byte 0x02000E68
 _08029124: .4byte gSpriteBankSet
+	.global _08029128
 _08029128:
 	movs r0, #0x9a
 	lsls r0, r0, #1
@@ -66996,6 +67324,7 @@ _08029128:
 	b _08029150
 	.align 2, 0
 _08029134: .4byte gUnknown_081DED40
+	.global _08029138
 _08029138:
 	movs r2, #0x9a
 	lsls r2, r2, #1
@@ -67005,6 +67334,7 @@ _08029138:
 	b _08029150
 	.align 2, 0
 _08029144: .4byte gUnknown_081DED60
+	.global _08029148
 _08029148:
 	adds r0, r5, #0
 	adds r1, r2, #0
@@ -79494,6 +79824,7 @@ _0802FB68:
 	mov pc, r0
 	.align 2, 0
 _0802FB74: .4byte _0802FB78
+	.global _0802FB78
 _0802FB78: @ jump table
 	.4byte _0802FB94 @ case 0
 	.4byte _0802FC18 @ case 1
@@ -79502,6 +79833,7 @@ _0802FB78: @ jump table
 	.4byte _0802FCBA @ case 4
 	.4byte _0802FCF2 @ case 5
 	.4byte _0802FCD6 @ case 6
+	.global _0802FB94
 _0802FB94:
 	ldr r0, [r4, #8]
 	asrs r0, r0, #8
@@ -79568,6 +79900,7 @@ _0802FBE0:
 _0802FC0C: .4byte 0x02000E6C
 _0802FC10: .4byte 0x02000248
 _0802FC14: .4byte 0xFFFFD800
+	.global _0802FC18
 _0802FC18:
 	ldr r0, [r4, #0x60]
 	adds r0, #0x80
@@ -79599,6 +79932,7 @@ _0802FC28:
 	adds r0, #0x33
 	str r0, [r4, #0x6c]
 	b _0802FCF2
+	.global _0802FC54
 _0802FC54:
 	ldr r0, [r4, #0x60]
 	adds r0, #0xc0
@@ -79624,6 +79958,7 @@ _0802FC64:
 	b _0802FCF2
 	.align 2, 0
 _0802FC80: .4byte 0xFFFFFB00
+	.global _0802FC84
 _0802FC84:
 	ldr r0, [r4, #0x60]
 	subs r0, #0x80
@@ -79653,6 +79988,7 @@ _0802FCA2:
 	movs r0, #0
 	str r0, [r4, #0x58]
 	b _0802FCF2
+	.global _0802FCBA
 _0802FCBA:
 	ldr r0, [r4, #0x58]
 	adds r0, #1
@@ -79669,6 +80005,7 @@ _0802FCC4:
 	adds r0, #0x22
 	str r0, [r4, #0x6c]
 	b _0802FCF2
+	.global _0802FCD6
 _0802FCD6:
 	ldrb r0, [r4, #0xe]
 	cmp r0, #0
@@ -79683,6 +80020,7 @@ _0802FCD6:
 	movs r1, #3
 	bl sub_08047970
 	b _0802FD94
+	.global _0802FCF2
 _0802FCF2:
 	adds r0, r4, #0
 	adds r0, #0x5c
@@ -85499,6 +85837,7 @@ _08032C9E:
 _08032CA8: .4byte gUnknown_087FA554
 _08032CAC: .4byte 0x02001AD4
 _08032CB0: .4byte _08032CB4
+	.global _08032CB4
 _08032CB4: @ jump table
 	.4byte _08032D54 @ case 0
 	.4byte _08032DF2 @ case 1
@@ -85540,12 +85879,14 @@ _08032CB4: @ jump table
 	.4byte _08032D80 @ case 37
 	.4byte _08032DA8 @ case 38
 	.4byte _08032DD0 @ case 39
+	.global _08032D54
 _08032D54:
 	adds r0, r5, #0
 	movs r1, #0
 	movs r2, #0
 	bl sub_0802F7F8
 	b _08032DF2
+	.global _08032D60
 _08032D60:
 	adds r0, r5, #0
 	movs r1, #1
@@ -85562,6 +85903,7 @@ _08032D60:
 	b _08032DEA
 	.align 2, 0
 _08032D7C: .4byte 0xFFFE8000
+	.global _08032D80
 _08032D80:
 	adds r0, r5, #0
 	movs r1, #2
@@ -85580,6 +85922,7 @@ _08032D80:
 	b _08032DF0
 	.align 2, 0
 _08032DA4: .4byte 0xFFFE0000
+	.global _08032DA8
 _08032DA8:
 	adds r0, r5, #0
 	movs r1, #3
@@ -85598,6 +85941,7 @@ _08032DA8:
 	b _08032DF0
 	.align 2, 0
 _08032DCC: .4byte 0xFFFE0000
+	.global _08032DD0
 _08032DD0:
 	adds r0, r5, #0
 	movs r1, #4
@@ -85616,6 +85960,7 @@ _08032DEA:
 	bl __divsi3
 _08032DF0:
 	str r0, [r5, #0x68]
+	.global _08032DF2
 _08032DF2:
 	bl rand
 	movs r1, #1
@@ -86129,6 +86474,7 @@ _080331A2:
 	.align 2, 0
 _080331AC: .4byte gUnknown_087FA5A4
 _080331B0: .4byte _080331B4
+	.global _080331B4
 _080331B4: @ jump table
 	.4byte _08033260 @ case 0
 	.4byte _080332FE @ case 1
@@ -86173,12 +86519,14 @@ _080331B4: @ jump table
 	.4byte _0803328C @ case 40
 	.4byte _080332B4 @ case 41
 	.4byte _080332DC @ case 42
+	.global _08033260
 _08033260:
 	adds r0, r5, #0
 	movs r1, #0
 	movs r2, #3
 	bl sub_0802F7F8
 	b _080332FE
+	.global _0803326C
 _0803326C:
 	adds r0, r5, #0
 	movs r1, #1
@@ -86195,6 +86543,7 @@ _0803326C:
 	b _080332F6
 	.align 2, 0
 _08033288: .4byte 0xFFFE8000
+	.global _0803328C
 _0803328C:
 	adds r0, r5, #0
 	movs r1, #2
@@ -86213,6 +86562,7 @@ _0803328C:
 	b _080332FC
 	.align 2, 0
 _080332B0: .4byte 0xFFFE0000
+	.global _080332B4
 _080332B4:
 	adds r0, r5, #0
 	movs r1, #3
@@ -86231,6 +86581,7 @@ _080332B4:
 	b _080332FC
 	.align 2, 0
 _080332D8: .4byte 0xFFFE0000
+	.global _080332DC
 _080332DC:
 	adds r0, r5, #0
 	movs r1, #4
@@ -86249,6 +86600,7 @@ _080332F6:
 	bl __divsi3
 _080332FC:
 	str r0, [r5, #0x68]
+	.global _080332FE
 _080332FE:
 	adds r0, r5, #0
 	add sp, #8
@@ -86923,6 +87275,7 @@ sub_080337F8: @ 0x080337F8
 	.align 2, 0
 _08033834: .4byte gUnknown_087FA5F4
 _08033838: .4byte _0803383C
+	.global _0803383C
 _0803383C: @ jump table
 	.4byte _08033854 @ case 0
 	.4byte _0803385A @ case 1
@@ -86930,22 +87283,27 @@ _0803383C: @ jump table
 	.4byte _08033866 @ case 3
 	.4byte _0803386C @ case 4
 	.4byte _08033878 @ case 5
+	.global _08033854
 _08033854:
 	adds r0, r7, #0
 	movs r1, #0
 	b _08033870
+	.global _0803385A
 _0803385A:
 	adds r0, r7, #0
 	movs r1, #1
 	b _08033870
+	.global _08033860
 _08033860:
 	adds r0, r7, #0
 	movs r1, #2
 	b _08033870
+	.global _08033866
 _08033866:
 	adds r0, r7, #0
 	movs r1, #3
 	b _08033870
+	.global _0803386C
 _0803386C:
 	adds r0, r7, #0
 	movs r1, #4
@@ -86953,6 +87311,7 @@ _08033870:
 	movs r2, #0
 	bl sub_0802F7F8
 	b _08033882
+	.global _08033878
 _08033878:
 	adds r0, r7, #0
 	movs r1, #5
@@ -88359,6 +88718,7 @@ _080343A2:
 	.align 2, 0
 _080343AC: .4byte 0x02000E70
 _080343B0: .4byte _080343B4
+	.global _080343B4
 _080343B4: @ jump table
 	.4byte _0803445C @ case 0
 	.4byte _08034444 @ case 1
@@ -88392,6 +88752,7 @@ _080343B4: @ jump table
 	.4byte _08034468 @ case 29
 	.4byte _08034518 @ case 30
 	.4byte _08034508 @ case 31
+	.global _08034434
 _08034434:
 	ldr r0, _08034440 @ =0x02000E70
 	ldr r0, [r0]
@@ -88400,25 +88761,31 @@ _08034434:
 	b _0803451C
 	.align 2, 0
 _08034440: .4byte 0x02000E70
+	.global _08034444
 _08034444:
 	movs r0, #1
 	bl sub_0802D64C
 	b _0803451C
+	.global _0803444C
 _0803444C:
 	movs r0, #3
 	bl sub_0802D64C
 	b _0803451C
+	.global _08034454
 _08034454:
 	movs r0, #5
 	bl sub_0802D64C
 	b _0803451C
+	.global _0803445C
 _0803445C:
 	movs r0, #0x14
 	bl sub_0802D660
 	b _0803451C
+	.global _08034464
 _08034464:
 	movs r6, #6
 	b _0803451C
+	.global _08034468
 _08034468:
 	movs r6, #9
 	ldr r0, [r4, #0x24]
@@ -88435,6 +88802,7 @@ _08034468:
 	b _0803451C
 	.align 2, 0
 _08034488: .4byte 0xFFFFF100
+	.global _0803448C
 _0803448C:
 	ldr r0, _08034498 @ =0x02000E70
 	ldr r0, [r0]
@@ -88443,6 +88811,7 @@ _0803448C:
 	b _0803451C
 	.align 2, 0
 _08034498: .4byte 0x02000E70
+	.global _0803449C
 _0803449C:
 	ldr r0, _080344A8 @ =0x02000E70
 	ldr r0, [r0]
@@ -88451,6 +88820,7 @@ _0803449C:
 	b _0803451C
 	.align 2, 0
 _080344A8: .4byte 0x02000E70
+	.global _080344AC
 _080344AC:
 	ldr r0, _080344B8 @ =0x02000E70
 	ldr r0, [r0]
@@ -88459,6 +88829,7 @@ _080344AC:
 	b _0803451C
 	.align 2, 0
 _080344B8: .4byte 0x02000E70
+	.global _080344BC
 _080344BC:
 	movs r6, #0xa
 	ldr r0, _080344C8 @ =0x02000E70
@@ -88467,6 +88838,7 @@ _080344BC:
 	b _0803451C
 	.align 2, 0
 _080344C8: .4byte 0x02000E70
+	.global _080344CC
 _080344CC:
 	ldr r0, _08034500 @ =0x02000E6C
 	ldr r0, [r0]
@@ -88494,6 +88866,7 @@ _080344E4:
 	.align 2, 0
 _08034500: .4byte 0x02000E6C
 _08034504: .4byte 0x02000248
+	.global _08034508
 _08034508:
 	ldr r0, _08034514 @ =0x02000248
 	ldr r0, [r0]
@@ -88501,8 +88874,10 @@ _08034508:
 	b _0803451C
 	.align 2, 0
 _08034514: .4byte 0x02000248
+	.global _08034518
 _08034518:
 	bl StopYeti
+	.global _0803451C
 _0803451C:
 	ldr r0, _08034530 @ =0x02000E6C
 	ldr r0, [r0]
@@ -88848,6 +89223,7 @@ _080347A6:
 _080347B0: .4byte 0xFFFFF000
 _080347B4: .4byte 0x02001AEC
 _080347B8: .4byte _080347BC
+	.global _080347BC
 _080347BC: @ jump table
 	.4byte _080348CC @ case 0
 	.4byte _08034BF0 @ case 1
@@ -88886,6 +89262,7 @@ _080347BC: @ jump table
 	.4byte _08034950 @ case 34
 	.4byte _08034B9C @ case 35
 	.4byte _08034BB8 @ case 36
+	.global _08034850
 _08034850:
 	movs r0, #0x58
 	bl sub_0802F7D4
@@ -88906,6 +89283,7 @@ _08034850:
 	.align 2, 0
 _08034874: .4byte 0x02001AEC
 _08034878: .4byte gUnknown_087FA2D4
+	.global _0803487C
 _0803487C:
 	movs r0, #0x54
 	bl sub_0802F7D4
@@ -88922,6 +89300,7 @@ _0803487C:
 	b _08034BF2
 	.align 2, 0
 _0803489C: .4byte 0x02001AEC
+	.global _080348A0
 _080348A0:
 	movs r0, #0x58
 	bl sub_0802F7D4
@@ -88942,6 +89321,7 @@ _080348A0:
 	.align 2, 0
 _080348C4: .4byte 0x02001AEC
 _080348C8: .4byte gUnknown_087FA274
+	.global _080348CC
 _080348CC:
 	movs r0, #0x58
 	bl sub_0802F7D4
@@ -88962,6 +89342,7 @@ _080348CC:
 	.align 2, 0
 _080348F0: .4byte 0x02001AEC
 _080348F4: .4byte gUnknown_087FA394
+	.global _080348F8
 _080348F8:
 	movs r0, #0x58
 	bl sub_0802F7D4
@@ -88982,6 +89363,7 @@ _080348F8:
 	.align 2, 0
 _0803491C: .4byte 0x02001AEC
 _08034920: .4byte gUnknown_087FA304
+	.global _08034924
 _08034924:
 	movs r0, #0x58
 	bl sub_0802F7D4
@@ -89002,6 +89384,7 @@ _08034924:
 	.align 2, 0
 _08034948: .4byte 0x02001AEC
 _0803494C: .4byte gUnknown_087FA2A4
+	.global _08034950
 _08034950:
 	ldr r0, [sp, #0x20]
 	bl IsSpawnCollected
@@ -89050,6 +89433,7 @@ _08034988:
 	.align 2, 0
 _080349B4: .4byte 0x02001AEC
 _080349B8: .4byte gUnknown_087FA334
+	.global _080349BC
 _080349BC:
 	ldr r0, [sp, #0x20]
 	bl IsSpawnCollected
@@ -89098,6 +89482,7 @@ _080349F4:
 	.align 2, 0
 _08034A20: .4byte 0x02001AEC
 _08034A24: .4byte gUnknown_087FA334
+	.global _08034A28
 _08034A28:
 	movs r0, #0x58
 	bl sub_0802F7D4
@@ -89118,6 +89503,7 @@ _08034A28:
 	.align 2, 0
 _08034A4C: .4byte 0x02001AEC
 _08034A50: .4byte gUnknown_087FA364
+	.global _08034A54
 _08034A54:
 	movs r0, #0x54
 	bl sub_0802F7D4
@@ -89138,6 +89524,7 @@ _08034A54:
 	.align 2, 0
 _08034A78: .4byte 0x02001AEC
 _08034A7C: .4byte gUnknown_087FA454
+	.global _08034A80
 _08034A80:
 	movs r0, #0x54
 	bl sub_0802F7D4
@@ -89157,6 +89544,7 @@ _08034A80:
 	.align 2, 0
 _08034AA4: .4byte 0x02001AEC
 _08034AA8: .4byte gUnknown_087FA1E4
+	.global _08034AAC
 _08034AAC:
 	movs r0, #0x54
 	bl sub_0802F7D4
@@ -89176,6 +89564,7 @@ _08034AAC:
 	.align 2, 0
 _08034AD0: .4byte 0x02001AEC
 _08034AD4: .4byte gUnknown_087FA1B4
+	.global _08034AD8
 _08034AD8:
 	movs r0, #0x70
 	bl sub_0802F7D4
@@ -89191,6 +89580,7 @@ _08034AD8:
 	b _08034BF2
 	.align 2, 0
 _08034AF4: .4byte 0x02001AEC
+	.global _08034AF8
 _08034AF8:
 	movs r0, #0x58
 	bl sub_0802F7D4
@@ -89208,6 +89598,7 @@ _08034AF8:
 	b _08034BF2
 	.align 2, 0
 _08034B18: .4byte 0x02001AEC
+	.global _08034B1C
 _08034B1C:
 	movs r0, #0x54
 	bl sub_0802F7D4
@@ -89230,6 +89621,7 @@ _08034B3C:
 	.align 2, 0
 _08034B44: .4byte 0x02001AEC
 _08034B48: .4byte gUnknown_087FA3F4
+	.global _08034B4C
 _08034B4C:
 	movs r0, #0x5c
 	bl sub_0802F7D4
@@ -89242,6 +89634,7 @@ _08034B4C:
 	b _08034BCA
 	.align 2, 0
 _08034B60: .4byte 0x02001AEC
+	.global _08034B64
 _08034B64:
 	bl sub_0802EF9C
 	movs r0, #0x5c
@@ -89254,6 +89647,7 @@ _08034B64:
 	b _08034BC8
 	.align 2, 0
 _08034B7C: .4byte 0x02001AEC
+	.global _08034B80
 _08034B80:
 	ldr r0, _08034B98 @ =0x02000248
 	ldr r0, [r0]
@@ -89267,6 +89661,7 @@ _08034B80:
 	b _08034BF0
 	.align 2, 0
 _08034B98: .4byte 0x02000248
+	.global _08034B9C
 _08034B9C:
 	bl sub_0802EF9C
 	movs r0, #0x5c
@@ -89280,6 +89675,7 @@ _08034B9C:
 	b _08034BCA
 	.align 2, 0
 _08034BB4: .4byte 0x02001AEC
+	.global _08034BB8
 _08034BB8:
 	movs r0, #0x5c
 	bl sub_0802F7D4
@@ -89308,6 +89704,7 @@ _08034BCA:
 	.align 2, 0
 _08034BE8: .4byte 0x02001AEC
 _08034BEC: .4byte gUnknown_087FA9A4
+	.global _08034BF0
 _08034BF0:
 	movs r0, #0
 _08034BF2:
@@ -89351,6 +89748,7 @@ _08034C2A:
 	.align 2, 0
 _08034C34: .4byte 0x02001AEC
 _08034C38: .4byte _08034C3C
+	.global _08034C3C
 _08034C3C: @ jump table
 	.4byte _08034D04 @ case 0
 	.4byte _08034F40 @ case 1
@@ -89402,6 +89800,7 @@ _08034C3C: @ jump table
 	.4byte _08034EF4 @ case 47
 	.4byte _08034EF4 @ case 48
 	.4byte _08034EF4 @ case 49
+	.global _08034D04
 _08034D04:
 	movs r0, #0x80
 	bl sub_0802F7D4
@@ -89417,6 +89816,7 @@ _08034D04:
 	b _08034F56
 	.align 2, 0
 _08034D20: .4byte 0x02001AEC
+	.global _08034D24
 _08034D24:
 	movs r0, #0x70
 	bl sub_0802F7D4
@@ -89430,6 +89830,7 @@ _08034D24:
 	b _08034F56
 	.align 2, 0
 _08034D3C: .4byte 0x02001AEC
+	.global _08034D40
 _08034D40:
 	movs r0, #0x64
 	bl sub_0802F7D4
@@ -89443,6 +89844,7 @@ _08034D40:
 	b _08034F56
 	.align 2, 0
 _08034D58: .4byte 0x02001AEC
+	.global _08034D5C
 _08034D5C:
 	movs r0, #0x64
 	bl sub_0802F7D4
@@ -89456,6 +89858,7 @@ _08034D5C:
 	b _08034F56
 	.align 2, 0
 _08034D74: .4byte 0x02001AEC
+	.global _08034D78
 _08034D78:
 	movs r0, #0x64
 	bl sub_0802F7D4
@@ -89469,6 +89872,7 @@ _08034D78:
 	b _08034F56
 	.align 2, 0
 _08034D90: .4byte 0x02001AEC
+	.global _08034D94
 _08034D94:
 	movs r0, #0x64
 	bl sub_0802F7D4
@@ -89484,6 +89888,7 @@ _08034D94:
 	b _08034F56
 	.align 2, 0
 _08034DB0: .4byte 0x02001AEC
+	.global _08034DB4
 _08034DB4:
 	movs r0, #0x64
 	bl sub_0802F7D4
@@ -89499,6 +89904,7 @@ _08034DB4:
 	b _08034F56
 	.align 2, 0
 _08034DD0: .4byte 0x02001AEC
+	.global _08034DD4
 _08034DD4:
 	movs r0, #0x64
 	bl sub_0802F7D4
@@ -89514,6 +89920,7 @@ _08034DD4:
 	b _08034F56
 	.align 2, 0
 _08034DF0: .4byte 0x02001AEC
+	.global _08034DF4
 _08034DF4:
 	movs r0, #0x5c
 	bl sub_0802F7D4
@@ -89529,6 +89936,7 @@ _08034DF4:
 	b _08034F56
 	.align 2, 0
 _08034E10: .4byte 0x02001AEC
+	.global _08034E14
 _08034E14:
 	movs r0, #0x70
 	bl sub_0802F7D4
@@ -89540,6 +89948,7 @@ _08034E14:
 	b _08034F4C
 	.align 2, 0
 _08034E28: .4byte 0x02001AEC
+	.global _08034E2C
 _08034E2C:
 	movs r0, #0x70
 	bl sub_0802F7D4
@@ -89551,6 +89960,7 @@ _08034E2C:
 	b _08034F4C
 	.align 2, 0
 _08034E40: .4byte 0x02001AEC
+	.global _08034E44
 _08034E44:
 	movs r0, #0x70
 	bl sub_0802F7D4
@@ -89562,6 +89972,7 @@ _08034E44:
 	b _08034F4C
 	.align 2, 0
 _08034E58: .4byte 0x02001AEC
+	.global _08034E5C
 _08034E5C:
 	movs r0, #0x70
 	bl sub_0802F7D4
@@ -89573,6 +89984,7 @@ _08034E5C:
 	b _08034F4C
 	.align 2, 0
 _08034E70: .4byte 0x02001AEC
+	.global _08034E74
 _08034E74:
 	movs r0, #0x70
 	bl sub_0802F7D4
@@ -89588,6 +90000,7 @@ _08034E74:
 	b _08034F56
 	.align 2, 0
 _08034E90: .4byte 0x02001AEC
+	.global _08034E94
 _08034E94:
 	movs r0, #0x70
 	bl sub_0802F7D4
@@ -89603,6 +90016,7 @@ _08034E94:
 	b _08034F56
 	.align 2, 0
 _08034EB0: .4byte 0x02001AEC
+	.global _08034EB4
 _08034EB4:
 	movs r0, #0x70
 	bl sub_0802F7D4
@@ -89618,6 +90032,7 @@ _08034EB4:
 	b _08034F56
 	.align 2, 0
 _08034ED0: .4byte 0x02001AEC
+	.global _08034ED4
 _08034ED4:
 	movs r0, #0x70
 	bl sub_0802F7D4
@@ -89633,6 +90048,7 @@ _08034ED4:
 	b _08034F56
 	.align 2, 0
 _08034EF0: .4byte 0x02001AEC
+	.global _08034EF4
 _08034EF4:
 	movs r0, #0x5c
 	bl sub_0802F7D4
@@ -89649,6 +90065,7 @@ _08034EF4:
 	b _08034F56
 	.align 2, 0
 _08034F14: .4byte 0x02001AEC
+	.global _08034F18
 _08034F18:
 	movs r0, #0x68
 	bl sub_0802F7D4
@@ -89667,6 +90084,7 @@ _08034F18:
 	b _08034F56
 	.align 2, 0
 _08034F3C: .4byte 0x02001AEC
+	.global _08034F40
 _08034F40:
 	movs r0, #0x70
 	bl sub_0802F7D4
@@ -91187,6 +91605,7 @@ sub_08035B4C: @ 0x08035B4C
 	mov pc, r0
 	.align 2, 0
 _08035B68: .4byte _08035B6C
+	.global _08035B6C
 _08035B6C: @ jump table
 	.4byte _08035BC8 @ case 0
 	.4byte _08035C06 @ case 1
@@ -91211,6 +91630,7 @@ _08035B6C: @ jump table
 	.4byte _08035BFC @ case 20
 	.4byte _08035BF2 @ case 21
 	.4byte _08035BFC @ case 22
+	.global _08035BC8
 _08035BC8:
 	bl rand
 	movs r1, #0xf
@@ -91221,26 +91641,31 @@ _08035BC8:
 	movs r1, #1
 	bl SetActorAnim
 	b _08035C0E
+	.global _08035BDE
 _08035BDE:
 	adds r0, r4, #0
 	movs r1, #8
 	bl SetActorAnim
 	b _08035C0E
+	.global _08035BE8
 _08035BE8:
 	adds r0, r4, #0
 	movs r1, #0xb
 	bl SetActorAnim
 	b _08035C0E
+	.global _08035BF2
 _08035BF2:
 	adds r0, r4, #0
 	movs r1, #0x13
 	bl SetActorAnim
 	b _08035C0E
+	.global _08035BFC
 _08035BFC:
 	adds r0, r4, #0
 	movs r1, #0x14
 	bl SetActorAnim
 	b _08035C0E
+	.global _08035C06
 _08035C06:
 	adds r0, r4, #0
 	movs r1, #0
@@ -91268,6 +91693,7 @@ _08035C1C:
 	.align 2, 0
 _08035C34: .4byte 0x02001B20
 _08035C38: .4byte _08035C3C
+	.global _08035C3C
 _08035C3C: @ jump table
 	.4byte _08035C98 @ case 0
 	.4byte _08035C98 @ case 1
@@ -91292,6 +91718,7 @@ _08035C3C: @ jump table
 	.4byte _08035CC2 @ case 20
 	.4byte _08035CB8 @ case 21
 	.4byte _08035CB8 @ case 22
+	.global _08035C98
 _08035C98:
 	bl rand
 	movs r5, #3
@@ -91306,15 +91733,18 @@ _08035C98:
 	adds r0, r4, #0
 	bl sub_0803695C
 	b _08035CCA
+	.global _08035CB8
 _08035CB8:
 	adds r0, r4, #0
 	movs r1, #5
 	bl sub_0803695C
 	b _08035CCA
+	.global _08035CC2
 _08035CC2:
 	adds r0, r4, #0
 	movs r1, #6
 	bl sub_0803695C
+	.global _08035CCA
 _08035CCA:
 	ldr r0, _08035D1C @ =0x02001B52
 	ldrb r0, [r0]
@@ -92554,6 +92984,7 @@ sub_08036668: @ 0x08036668
 	mov pc, r0
 	.align 2, 0
 _08036680: .4byte _08036684
+	.global _08036684
 _08036684: @ jump table
 	.4byte _080366C2 @ case 0
 	.4byte _080366CC @ case 1
@@ -92569,19 +93000,24 @@ _08036684: @ jump table
 	.4byte _080366CE @ case 11
 	.4byte _080366BC @ case 12
 	.4byte _080366C2 @ case 13
+	.global _080366BC
 _080366BC:
 	movs r2, #5
 	rsbs r2, r2, #0
 	b _080366CE
+	.global _080366C2
 _080366C2:
 	movs r2, #6
 	b _080366CE
+	.global _080366C6
 _080366C6:
 	movs r2, #0xb
 	rsbs r2, r2, #0
 	b _080366CE
+	.global _080366CC
 _080366CC:
 	movs r2, #0x11
+	.global _080366CE
 _080366CE:
 	adds r0, r2, #0
 	pop {r1}
@@ -94642,6 +95078,7 @@ sub_080377C8: @ 0x080377C8
 	mov pc, r0
 	.align 2, 0
 _080377E4: .4byte _080377E8
+	.global _080377E8
 _080377E8: @ jump table
 	.4byte _0803781C @ case 0
 	.4byte _0803784C @ case 1
@@ -94656,30 +95093,36 @@ _080377E8: @ jump table
 	.4byte _08037844 @ case 10
 	.4byte _08037830 @ case 11
 	.4byte _08037830 @ case 12
+	.global _0803781C
 _0803781C:
 	adds r0, r5, #0
 	movs r1, #2
 	bl SetActorAnim
 	b _0803784C
+	.global _08037826
 _08037826:
 	adds r0, r5, #0
 	movs r1, #5
 	bl SetActorAnim
 	b _0803784C
+	.global _08037830
 _08037830:
 	adds r0, r5, #0
 	movs r1, #0
 	bl SetActorAnim
 	b _0803784C
+	.global _0803783A
 _0803783A:
 	adds r0, r5, #0
 	movs r1, #0xb
 	bl SetActorAnim
 	b _0803784C
+	.global _08037844
 _08037844:
 	adds r0, r5, #0
 	movs r1, #0xc
 	bl SetActorAnim
+	.global _0803784C
 _0803784C:
 	ldr r3, _080378B8 @ =0x02001BB0
 	ldr r0, _080378BC @ =0x02001B6C
@@ -94920,6 +95363,7 @@ _08037A24:
 	mov pc, r0
 	.align 2, 0
 _08037A40: .4byte _08037A44
+	.global _08037A44
 _08037A44: @ jump table
 	.4byte _08037A74 @ case 0
 	.4byte _08037A60 @ case 1
@@ -94928,16 +95372,19 @@ _08037A44: @ jump table
 	.4byte _08037A6A @ case 4
 	.4byte _08037A6A @ case 5
 	.4byte _08037A6A @ case 6
+	.global _08037A60
 _08037A60:
 	adds r0, r5, #0
 	movs r1, #9
 	bl SetActorAnim
 	b _08037A7C
+	.global _08037A6A
 _08037A6A:
 	adds r0, r5, #0
 	movs r1, #0xa
 	bl SetActorAnim
 	b _08037A7C
+	.global _08037A74
 _08037A74:
 	adds r0, r5, #0
 	movs r1, #8
@@ -96312,6 +96759,7 @@ _08038558:
 	mov pc, r0
 	.align 2, 0
 _0803859C: .4byte _080385A0
+	.global _080385A0
 _080385A0: @ jump table
 	.4byte _080385DC @ case 0
 	.4byte _0803860A @ case 1
@@ -96328,29 +96776,35 @@ _080385A0: @ jump table
 	.4byte _08038602 @ case 12
 	.4byte _0803860A @ case 13
 	.4byte _0803860A @ case 14
+	.global _080385DC
 _080385DC:
 	ldr r1, [r4]
 	adds r0, r6, #0
 	bl sub_08038620
 	b _0803860A
+	.global _080385E6
 _080385E6:
 	ldr r1, [r4]
 	adds r0, r6, #0
 	bl sub_08000210
 	b _0803860A
+	.global _080385F0
 _080385F0:
 	ldr r1, [r4]
 	adds r0, r6, #0
 	bl sub_0800020C
 	b _0803860A
+	.global _080385FA
 _080385FA:
 	adds r0, r6, #0
 	bl sub_0803874C
 	b _0803860A
+	.global _08038602
 _08038602:
 	ldr r1, [r4]
 	adds r0, r6, #0
 	bl sub_08038704
+	.global _0803860A
 _0803860A:
 	adds r7, #1
 _0803860C:
@@ -96775,7 +97229,7 @@ sub_080388E0: @ 0x080388E0
 	str r0, [r1]
 	cmp r0, #1
 	bne _08038914
-	ldr r0, _08038920 @ =0x08038929
+	ldr r0, _08038920 @ =_08038928 + 1
 	bl AddVBlankCallback
 	ldr r1, _08038924 @ =0x02000280
 	str r0, [r1]
@@ -96786,8 +97240,9 @@ _08038914:
 	bx r1
 	.align 2, 0
 _0803891C: .4byte 0x02000284
-_08038920: .4byte 0x08038929
+_08038920: .4byte _08038928 + 1
 _08038924: .4byte 0x02000280
+	.global _08038928
 _08038928:
 	.byte 0x02, 0x49, 0x08, 0x68, 0x01, 0x30, 0x08, 0x60
 	.byte 0x70, 0x47, 0x00, 0x00, 0x7C, 0x02, 0x00, 0x02
@@ -97416,6 +97871,7 @@ _08038E02:
 	mov pc, r0
 	.align 2, 0
 _08038E0C: .4byte _08038E10
+	.global _08038E10
 _08038E10: @ jump table
 	.4byte _08038E48 @ case 0
 	.4byte _08038E8C @ case 1
@@ -97427,17 +97883,21 @@ _08038E10: @ jump table
 	.4byte _08038EB0 @ case 7
 	.4byte _08038E38 @ case 8
 	.4byte _08038EA4 @ case 9
+	.global _08038E38
 _08038E38:
 	ldrh r7, [r4]
 	b _08038EF0
+	.global _08038E3C
 _08038E3C:
 	ldrh r0, [r4]
 	str r0, [r5, #0x34]
 	b _08038EF0
+	.global _08038E42
 _08038E42:
 	ldrh r0, [r4]
 	str r0, [r5, #0x30]
 	b _08038EF0
+	.global _08038E48
 _08038E48:
 	str r4, [r5, #0x28]
 	movs r0, #0
@@ -97474,6 +97934,7 @@ _08038E74:
 	.align 2, 0
 _08038E84: .4byte 0x0000FFFF
 _08038E88: .4byte 0x02000294
+	.global _08038E8C
 _08038E8C:
 	str r4, [r5, #0x2c]
 	ldrh r0, [r4]
@@ -97488,6 +97949,7 @@ _08038E96:
 	b _08038EF0
 	.align 2, 0
 _08038EA0: .4byte 0x0000FFFF
+	.global _08038EA4
 _08038EA4:
 	movs r0, #1
 	mov r1, sb
@@ -97495,6 +97957,7 @@ _08038EA4:
 	ldrh r0, [r4]
 	str r0, [r5, #0x50]
 	b _08038EF0
+	.global _08038EB0
 _08038EB0:
 	ldr r6, [r5, #0x48]
 	cmp r6, #0
@@ -97525,6 +97988,7 @@ _08038EE8: .4byte 0x02000288
 _08038EEC: .4byte 0x0600A000
 _08038EF0:
 	adds r4, #2
+	.global _08038EF2
 _08038EF2:
 	ldrh r1, [r4]
 	ldr r0, _08038F1C @ =0x0000FFFF
@@ -97973,12 +98437,14 @@ _08039288: .4byte gDispcnt
 _0803928C: .4byte 0x02000E9C
 _08039290: .4byte 0x02000E68
 _08039294: .4byte _08039298
+	.global _08039298
 _08039298: @ jump table
 	.4byte _080392AC @ case 0
 	.4byte _080392B8 @ case 1
 	.4byte _080392D0 @ case 2
 	.4byte _080392E4 @ case 3
 	.4byte _08039308 @ case 4
+	.global _080392AC
 _080392AC:
 	ldr r1, _080392B4 @ =0x04000050
 	movs r0, #0
@@ -97986,6 +98452,7 @@ _080392AC:
 	b _0803931E
 	.align 2, 0
 _080392B4: .4byte 0x04000050
+	.global _080392B8
 _080392B8:
 	ldr r1, _080392C8 @ =0x04000050
 	movs r0, #0xff
@@ -97998,6 +98465,7 @@ _080392B8:
 	.align 2, 0
 _080392C8: .4byte 0x04000050
 _080392CC: .4byte 0x04000054
+	.global _080392D0
 _080392D0:
 	ldr r1, _080392E0 @ =0x04000050
 	movs r0, #0xff
@@ -98008,6 +98476,7 @@ _080392D0:
 	b _0803931E
 	.align 2, 0
 _080392E0: .4byte 0x04000050
+	.global _080392E4
 _080392E4:
 	ldr r1, _080392FC @ =0x04000050
 	ldr r2, _08039300 @ =0x00002450
@@ -98025,6 +98494,7 @@ _080392E4:
 _080392FC: .4byte 0x04000050
 _08039300: .4byte 0x00002450
 _08039304: .4byte 0x04000052
+	.global _08039308
 _08039308:
 	ldr r1, _080393D0 @ =0x04000050
 	ldr r2, _080393D4 @ =0x00002450
@@ -98521,6 +98991,7 @@ _080396BC:
 	mov pc, r0
 	.align 2, 0
 _080396C8: .4byte _080396CC
+	.global _080396CC
 _080396CC: @ jump table
 	.4byte _080397B8 @ case 0
 	.4byte _080397F0 @ case 1
@@ -98554,6 +99025,7 @@ _080396CC: @ jump table
 	.4byte _08039A44 @ case 29
 	.4byte _08039A12 @ case 30
 	.4byte _08039A28 @ case 31
+	.global _0803974C
 _0803974C:
 	ldr r0, _08039774 @ =0x02000E6C
 	ldr r0, [r0]
@@ -98604,6 +99076,7 @@ _080397AA:
 	adds r0, r4, #0
 	bl sub_080273E0
 	b _08039A44
+	.global _080397B8
 _080397B8:
 	ldr r0, _080397D0 @ =0x02000E6C
 	ldr r0, [r0]
@@ -98618,6 +99091,7 @@ _080397B8:
 	b _08039A3E
 	.align 2, 0
 _080397D0: .4byte 0x02000E6C
+	.global _080397D4
 _080397D4:
 	ldr r0, _080397EC @ =0x02000E6C
 	ldr r0, [r0]
@@ -98632,6 +99106,7 @@ _080397D4:
 	b _08039810
 	.align 2, 0
 _080397EC: .4byte 0x02000E6C
+	.global _080397F0
 _080397F0:
 	ldr r0, _08039818 @ =0x02000E6C
 	ldr r0, [r0]
@@ -98655,6 +99130,7 @@ _08039810:
 	b _08039A44
 	.align 2, 0
 _08039818: .4byte 0x02000E6C
+	.global _0803981C
 _0803981C:
 	ldr r0, _08039830 @ =0x02000E6C
 	ldr r0, [r0]
@@ -98666,6 +99142,7 @@ _0803981C:
 	b _08039A38
 	.align 2, 0
 _08039830: .4byte 0x02000E6C
+	.global _08039834
 _08039834:
 	ldr r0, _08039848 @ =0x02000E6C
 	ldr r0, [r0]
@@ -98677,6 +99154,7 @@ _08039834:
 	b _08039A38
 	.align 2, 0
 _08039848: .4byte 0x02000E6C
+	.global _0803984C
 _0803984C:
 	ldr r0, _08039860 @ =0x02000E6C
 	ldr r0, [r0]
@@ -98689,6 +99167,7 @@ _0803984C:
 	b _08039A3C
 	.align 2, 0
 _08039860: .4byte 0x02000E6C
+	.global _08039864
 _08039864:
 	ldr r0, _08039878 @ =0x02000E6C
 	ldr r0, [r0]
@@ -98700,6 +99179,7 @@ _08039864:
 	b _08039A0A
 	.align 2, 0
 _08039878: .4byte 0x02000E6C
+	.global _0803987C
 _0803987C:
 	ldr r0, _08039890 @ =0x02000E6C
 	ldr r0, [r0]
@@ -98711,6 +99191,7 @@ _0803987C:
 	b _08039A0A
 	.align 2, 0
 _08039890: .4byte 0x02000E6C
+	.global _08039894
 _08039894:
 	ldr r0, _080398A8 @ =0x02000E6C
 	ldr r0, [r0]
@@ -98722,6 +99203,7 @@ _08039894:
 	b _08039A38
 	.align 2, 0
 _080398A8: .4byte 0x02000E6C
+	.global _080398AC
 _080398AC:
 	ldr r0, _080398C8 @ =0x02000E6C
 	ldr r0, [r0]
@@ -98736,6 +99218,7 @@ _080398AC:
 	b _08039A44
 	.align 2, 0
 _080398C8: .4byte 0x02000E6C
+	.global _080398CC
 _080398CC:
 	ldr r0, _080398E8 @ =0x02000E6C
 	ldr r0, [r0]
@@ -98750,6 +99233,7 @@ _080398CC:
 	b _08039A44
 	.align 2, 0
 _080398E8: .4byte 0x02000E6C
+	.global _080398EC
 _080398EC:
 	ldr r0, _08039908 @ =0x02000E6C
 	ldr r0, [r0]
@@ -98764,6 +99248,7 @@ _080398EC:
 	b _08039A44
 	.align 2, 0
 _08039908: .4byte 0x02000E6C
+	.global _0803990C
 _0803990C:
 	adds r0, r5, #0
 	bl sub_08039CD8
@@ -98790,6 +99275,7 @@ _08039936:
 	b _08039A08
 	.align 2, 0
 _08039938: .4byte gUnknown_081E36C4
+	.global _0803993C
 _0803993C:
 	adds r0, r5, #0
 	bl sub_08039C64
@@ -98843,6 +99329,7 @@ _08039994:
 _080399A2:
 	movs r0, #3
 	b _08039A0A
+	.global _080399A6
 _080399A6:
 	adds r0, r5, #0
 	bl sub_08039BB4
@@ -98896,6 +99383,7 @@ _08039A0A:
 	movs r0, #2
 	str r0, [r5, #0x1c]
 	b _08039A44
+	.global _08039A12
 _08039A12:
 	ldr r0, _08039A24 @ =0x02000E6C
 	ldr r0, [r0]
@@ -98907,6 +99395,7 @@ _08039A12:
 	b _08039A38
 	.align 2, 0
 _08039A24: .4byte 0x02000E6C
+	.global _08039A28
 _08039A28:
 	ldr r0, _08039A4C @ =0x02000E6C
 	ldr r0, [r0]
@@ -98924,6 +99413,7 @@ _08039A3E:
 	str r0, [r5, #4]
 	movs r0, #0
 	str r0, [r5]
+	.global _08039A44
 _08039A44:
 	add sp, #4
 	pop {r4, r5, r6}
@@ -99642,6 +100132,7 @@ sub_08039F80: @ 0x08039F80
 	mov pc, r0
 	.align 2, 0
 _08039F98: .4byte _08039F9C
+	.global _08039F9C
 _08039F9C: @ jump table
 	.4byte _08039FF0 @ case 0
 	.4byte _0803A02C @ case 1
@@ -99664,36 +100155,43 @@ _08039F9C: @ jump table
 	.4byte _0803A02C @ case 18
 	.4byte _0803A018 @ case 19
 	.4byte _0803A022 @ case 20
+	.global _08039FF0
 _08039FF0:
 	adds r0, r3, #0
 	adds r1, r4, #0
 	bl sub_08039F50
 	b _0803A02E
+	.global _08039FFA
 _08039FFA:
 	adds r0, r3, #0
 	adds r1, r4, #0
 	bl sub_08039EC8
 	b _0803A02E
+	.global _0803A004
 _0803A004:
 	adds r0, r3, #0
 	adds r1, r4, #0
 	bl sub_08039E74
 	b _0803A02E
+	.global _0803A00E
 _0803A00E:
 	adds r0, r3, #0
 	adds r1, r4, #0
 	bl sub_08039DB8
 	b _0803A02E
+	.global _0803A018
 _0803A018:
 	adds r0, r3, #0
 	adds r1, r4, #0
 	bl sub_08039D6C
 	b _0803A02E
+	.global _0803A022
 _0803A022:
 	adds r0, r3, #0
 	adds r1, r4, #0
 	bl sub_08039AE0
 	b _0803A02E
+	.global _0803A02C
 _0803A02C:
 	movs r0, #0
 _0803A02E:
@@ -101161,6 +101659,7 @@ _0803ABF0:
 	mov pc, r0
 	.align 2, 0
 _0803ABFC: .4byte _0803AC00
+	.global _0803AC00
 _0803AC00: @ jump table
 	.4byte _0803ACD4 @ case 0
 	.4byte _0803AC90 @ case 1
@@ -101173,6 +101672,7 @@ _0803AC00: @ jump table
 	.4byte _0803AC98 @ case 8
 	.4byte _0803ACA8 @ case 9
 	.4byte _0803ACA0 @ case 10
+	.global _0803AC2C
 _0803AC2C:
 	movs r0, #0x34
 	bl sub_080273EC
@@ -101180,6 +101680,7 @@ _0803AC2C:
 	b _0803AC74
 	.align 2, 0
 _0803AC38: .4byte gUnknown_081E39B4
+	.global _0803AC3C
 _0803AC3C:
 	movs r0, #0x34
 	bl sub_080273EC
@@ -101187,6 +101688,7 @@ _0803AC3C:
 	b _0803AC74
 	.align 2, 0
 _0803AC48: .4byte gUnknown_081E39C0
+	.global _0803AC4C
 _0803AC4C:
 	movs r0, #0x34
 	bl sub_080273EC
@@ -101194,6 +101696,7 @@ _0803AC4C:
 	b _0803AC74
 	.align 2, 0
 _0803AC58: .4byte gUnknown_081E39CC
+	.global _0803AC5C
 _0803AC5C:
 	movs r0, #0x34
 	bl sub_080273EC
@@ -101201,6 +101704,7 @@ _0803AC5C:
 	b _0803AC74
 	.align 2, 0
 _0803AC68: .4byte gUnknown_081E39D8
+	.global _0803AC6C
 _0803AC6C:
 	movs r0, #0x34
 	bl sub_080273EC
@@ -101217,21 +101721,25 @@ _0803AC74:
 	.align 2, 0
 _0803AC88: .4byte gUnknown_081E39E4
 _0803AC8C: .4byte 0x02000450
+	.global _0803AC90
 _0803AC90:
 	ldr r1, _0803AC94 @ =gUnknown_081E3984
 	b _0803ACAA
 	.align 2, 0
 _0803AC94: .4byte gUnknown_081E3984
+	.global _0803AC98
 _0803AC98:
 	ldr r1, _0803AC9C @ =gUnknown_081E399C
 	b _0803ACAA
 	.align 2, 0
 _0803AC9C: .4byte gUnknown_081E399C
+	.global _0803ACA0
 _0803ACA0:
 	ldr r1, _0803ACA4 @ =gUnknown_081E3990
 	b _0803ACAA
 	.align 2, 0
 _0803ACA4: .4byte gUnknown_081E3990
+	.global _0803ACA8
 _0803ACA8:
 	ldr r1, _0803ACB8 @ =gUnknown_081E39A8
 _0803ACAA:
@@ -101243,6 +101751,7 @@ _0803ACAA:
 	b _0803ACD4
 	.align 2, 0
 _0803ACB8: .4byte gUnknown_081E39A8
+	.global _0803ACBC
 _0803ACBC:
 	ldrb r2, [r5, #4]
 	movs r3, #0
@@ -101256,6 +101765,7 @@ _0803ACBC:
 	str r1, [r2, #8]
 	str r5, [r2]
 	str r3, [r2, #0xc]
+	.global _0803ACD4
 _0803ACD4:
 	adds r0, r6, #0
 	add sp, #4
@@ -107030,6 +107540,7 @@ _0803DD2A:
 _0803DD34: .4byte gCrateList
 _0803DD38: .4byte 0x02001BD8
 _0803DD3C: .4byte _0803DD40
+	.global _0803DD40
 _0803DD40: @ jump table
 	.4byte _0803DD74 @ case 0
 	.4byte _0803DDB8 @ case 1
@@ -107044,6 +107555,7 @@ _0803DD40: @ jump table
 	.4byte _0803DFE0 @ case 10
 	.4byte _0803E000 @ case 11
 	.4byte _0803E020 @ case 12
+	.global _0803DD74
 _0803DD74:
 	ldr r0, _0803DDB4 @ =0x020001C8
 	ldr r0, [r0]
@@ -107077,6 +107589,7 @@ _0803DD74:
 	b _0803DF44
 	.align 2, 0
 _0803DDB4: .4byte 0x020001C8
+	.global _0803DDB8
 _0803DDB8:
 	ldr r2, [r5]
 	ldrb r0, [r2, #0x18]
@@ -107107,6 +107620,7 @@ _0803DDB8:
 	lsls r0, r0, #2
 	str r0, [r5, #0x44]
 	b _0803DF48
+	.global _0803DDF4
 _0803DDF4:
 	ldr r0, _0803DE14 @ =0x020001C8
 	ldr r0, [r0]
@@ -107125,6 +107639,7 @@ _0803DDF4:
 	b _0803DF44
 	.align 2, 0
 _0803DE14: .4byte 0x020001C8
+	.global _0803DE18
 _0803DE18:
 	ldr r0, [r5, #0x40]
 	subs r0, #1
@@ -107193,6 +107708,7 @@ _0803DE8A:
 	movs r1, #0
 	bl sub_0800956C
 	b _0803E04E
+	.global _0803DEA8
 _0803DEA8:
 	adds r1, r5, #0
 	adds r1, #0x49
@@ -107240,6 +107756,7 @@ _0803DEF4:
 	movs r1, #7
 	bl sub_08047970
 	b _0803E04E
+	.global _0803DF06
 _0803DF06:
 	ldr r4, [r5]
 	adds r0, r4, #0
@@ -107317,6 +107834,7 @@ _0803DF8C:
 	.align 2, 0
 _0803DF98: .4byte gRoomFrameCount
 _0803DF9C: .4byte 0x0000028A
+	.global _0803DFA0
 _0803DFA0:
 	ldr r0, [r5]
 	adds r0, #0x4c
@@ -107333,6 +107851,7 @@ _0803DFA0:
 	movs r1, #1
 	bl sub_08047970
 	b _0803E04E
+	.global _0803DFC0
 _0803DFC0:
 	ldr r0, [r5]
 	adds r0, #0x4c
@@ -107349,6 +107868,7 @@ _0803DFC0:
 	movs r1, #0xa
 	bl sub_08047970
 	b _0803E04E
+	.global _0803DFE0
 _0803DFE0:
 	ldr r0, [r5]
 	adds r0, #0x4c
@@ -107365,6 +107885,7 @@ _0803DFE0:
 	movs r1, #4
 	bl sub_08047970
 	b _0803E04E
+	.global _0803E000
 _0803E000:
 	ldr r0, [r5]
 	adds r0, #0x4c
@@ -107381,6 +107902,7 @@ _0803E000:
 	movs r1, #0xc
 	bl sub_08047970
 	b _0803E04E
+	.global _0803E020
 _0803E020:
 	ldr r2, [r5]
 	ldr r1, [r2, #4]
@@ -107403,6 +107925,7 @@ _0803E020:
 	cmp r0, #0
 	bne _0803E04E
 	bl ClearCollectedSpawns
+	.global _0803E04E
 _0803E04E:
 	movs r0, #0
 	strb r0, [r6]
@@ -107434,6 +107957,7 @@ _0803E076:
 	mov pc, r0
 	.align 2, 0
 _0803E080: .4byte _0803E084
+	.global _0803E084
 _0803E084: @ jump table
 	.4byte _0803E0B0 @ case 0
 	.4byte _0803E0DC @ case 1
@@ -107446,6 +107970,7 @@ _0803E084: @ jump table
 	.4byte _0803E180 @ case 8
 	.4byte _0803E18C @ case 9
 	.4byte _0803E1AC @ case 10
+	.global _0803E0B0
 _0803E0B0:
 	adds r1, r6, #0
 	adds r1, #0x34
@@ -107466,6 +107991,7 @@ _0803E0B0:
 	movs r0, #0x78
 	str r0, [r6, #0x38]
 	b _0803E1DC
+	.global _0803E0DC
 _0803E0DC:
 	ldr r4, [r6]
 	movs r1, #0
@@ -107484,6 +108010,7 @@ _0803E0DC:
 	movs r0, #1
 	str r0, [r6, #0x40]
 	b _0803E1DC
+	.global _0803E104
 _0803E104:
 	adds r1, r6, #0
 	adds r1, #0x34
@@ -107495,6 +108022,7 @@ _0803E104:
 	ldr r4, [r6]
 	movs r1, #4
 	b _0803E190
+	.global _0803E118
 _0803E118:
 	ldr r4, [r6]
 	movs r1, #4
@@ -107517,6 +108045,7 @@ _0803E118:
 	movs r0, #1
 	strb r0, [r1]
 	b _0803E1DC
+	.global _0803E148
 _0803E148:
 	ldr r4, [r6]
 	movs r1, #0
@@ -107528,6 +108057,7 @@ _0803E148:
 	movs r1, #3
 	subs r0, #0x44
 	b _0803E194
+	.global _0803E15C
 _0803E15C:
 	ldr r4, [r6]
 	movs r1, #1
@@ -107544,14 +108074,17 @@ _0803E15C:
 	movs r0, #0xb4
 	str r0, [r6, #0x38]
 	b _0803E1DC
+	.global _0803E180
 _0803E180:
 	ldr r4, [r6]
 	movs r1, #2
 	b _0803E190
+	.global _0803E186
 _0803E186:
 	ldr r4, [r6]
 	movs r1, #5
 	b _0803E190
+	.global _0803E18C
 _0803E18C:
 	ldr r4, [r6]
 	movs r1, #8
@@ -107568,6 +108101,7 @@ _0803E194:
 	movs r1, #0
 	bl sub_0800956C
 	b _0803E1DC
+	.global _0803E1AC
 _0803E1AC:
 	ldr r4, [r6]
 	movs r1, #0xc0
@@ -110285,6 +110819,7 @@ _0803F814:
 _0803F824: .4byte gRoomFrameCount
 _0803F828: .4byte 0x02000E6C
 _0803F82C: .4byte _0803F830
+	.global _0803F830
 _0803F830: @ jump table
 	.4byte _0803F886 @ case 0
 	.4byte _0803F84C @ case 1
@@ -110293,22 +110828,27 @@ _0803F830: @ jump table
 	.4byte _0803F864 @ case 4
 	.4byte _0803F86C @ case 5
 	.4byte _0803F880 @ case 6
+	.global _0803F84C
 _0803F84C:
 	adds r0, r4, #0
 	bl sub_0803EDCC
 	b _0803F886
+	.global _0803F854
 _0803F854:
 	adds r0, r4, #0
 	bl sub_0803F1B4
 	b _0803F886
+	.global _0803F85C
 _0803F85C:
 	adds r0, r4, #0
 	bl sub_0803F244
 	b _0803F886
+	.global _0803F864
 _0803F864:
 	adds r0, r4, #0
 	bl sub_0803F578
 	b _0803F886
+	.global _0803F86C
 _0803F86C:
 	ldr r0, _0803F87C @ =gRoomFrameCount
 	ldr r1, [r4, #0x40]
@@ -110319,9 +110859,11 @@ _0803F86C:
 	b _0803F886
 	.align 2, 0
 _0803F87C: .4byte gRoomFrameCount
+	.global _0803F880
 _0803F880:
 	adds r0, r4, #0
 	bl sub_0803F758
+	.global _0803F886
 _0803F886:
 	pop {r4}
 	pop {r0}
@@ -110881,6 +111423,7 @@ sub_0803FEF4: @ 0x0803FEF4
 	.align 2, 0
 _0803FF18: .4byte gPlayer
 _0803FF1C: .4byte _0803FF20
+	.global _0803FF20
 _0803FF20: @ jump table
 	.4byte _0803FF7E @ case 0
 	.4byte _0803FF4E @ case 1
@@ -110889,18 +111432,22 @@ _0803FF20: @ jump table
 	.4byte _0803FF42 @ case 4
 	.4byte _0803FF48 @ case 5
 	.4byte _0803FF48 @ case 6
+	.global _0803FF3C
 _0803FF3C:
 	ldr r1, [r5]
 	movs r0, #0
 	b _0803FF82
+	.global _0803FF42
 _0803FF42:
 	ldr r1, [r5]
 	movs r0, #0
 	b _0803FF82
+	.global _0803FF48
 _0803FF48:
 	ldr r1, [r5]
 	movs r0, #0
 	b _0803FF82
+	.global _0803FF4E
 _0803FF4E:
 	ldr r3, [r5]
 	ldr r1, [r3, #4]
@@ -110926,6 +111473,7 @@ _0803FF4E:
 	movs r0, #0xa
 	strb r0, [r3, #0xa]
 	b _0803FF84
+	.global _0803FF7E
 _0803FF7E:
 	ldr r1, [r5]
 	movs r0, #1
@@ -111349,6 +111897,7 @@ sub_0804029C: @ 0x0804029C
 	mov pc, r0
 	.align 2, 0
 _080402C4: .4byte _080402C8
+	.global _080402C8
 _080402C8: @ jump table
 	.4byte _080402E4 @ case 0
 	.4byte _080402F0 @ case 1
@@ -111357,14 +111906,17 @@ _080402C8: @ jump table
 	.4byte _080402F0 @ case 4
 	.4byte _080402F0 @ case 5
 	.4byte _080402EA @ case 6
+	.global _080402E4
 _080402E4:
 	adds r3, r2, #0
 	adds r3, #0x24
 	b _080402F2
+	.global _080402EA
 _080402EA:
 	adds r3, r2, #0
 	adds r3, #0x14
 	b _080402F2
+	.global _080402F0
 _080402F0:
 	ldr r3, _08040314 @ =gUnknown_081CE00C
 _080402F2:
@@ -111570,6 +112122,7 @@ sub_08040458: @ 0x08040458
 	mov pc, r0
 	.align 2, 0
 _08040478: .4byte _0804047C
+	.global _0804047C
 _0804047C: @ jump table
 	.4byte _08040498 @ case 0
 	.4byte _080404A0 @ case 1
@@ -111578,12 +112131,15 @@ _0804047C: @ jump table
 	.4byte _080404A0 @ case 4
 	.4byte _080404A0 @ case 5
 	.4byte _0804049C @ case 6
+	.global _08040498
 _08040498:
 	adds r2, #0x24
 	b _080404A2
+	.global _0804049C
 _0804049C:
 	adds r2, #0x14
 	b _080404A2
+	.global _080404A0
 _080404A0:
 	ldr r2, _080404C4 @ =gUnknown_081CE00C
 _080404A2:
@@ -111717,6 +112273,7 @@ sub_08040588: @ 0x08040588
 	mov pc, r0
 	.align 2, 0
 _080405A8: .4byte _080405AC
+	.global _080405AC
 _080405AC: @ jump table
 	.4byte _080405C8 @ case 0
 	.4byte _080405D0 @ case 1
@@ -111725,12 +112282,15 @@ _080405AC: @ jump table
 	.4byte _080405D0 @ case 4
 	.4byte _080405D0 @ case 5
 	.4byte _080405CC @ case 6
+	.global _080405C8
 _080405C8:
 	adds r2, #0x24
 	b _080405D2
+	.global _080405CC
 _080405CC:
 	adds r2, #0x14
 	b _080405D2
+	.global _080405D0
 _080405D0:
 	ldr r2, _080405F4 @ =gUnknown_081CE00C
 _080405D2:
@@ -111849,6 +112409,7 @@ _08040662:
 _080406A8: .4byte gCamera
 _080406AC: .4byte gUnknown_081E3BA4
 _080406B0: .4byte _080406B4
+	.global _080406B4
 _080406B4: @ jump table
 	.4byte _080406D0 @ case 0
 	.4byte _080406DC @ case 1
@@ -111857,14 +112418,17 @@ _080406B4: @ jump table
 	.4byte _080406DC @ case 4
 	.4byte _080406DC @ case 5
 	.4byte _080406D6 @ case 6
+	.global _080406D0
 _080406D0:
 	adds r3, r2, #0
 	adds r3, #0x24
 	b _080406DE
+	.global _080406D6
 _080406D6:
 	adds r3, r2, #0
 	adds r3, #0x14
 	b _080406DE
+	.global _080406DC
 _080406DC:
 	ldr r3, _08040700 @ =gUnknown_081CE00C
 _080406DE:
@@ -112083,6 +112647,7 @@ _0804087A:
 	mov pc, r0
 	.align 2, 0
 _0804088C: .4byte _08040890
+	.global _08040890
 _08040890: @ jump table
 	.4byte _080408B0 @ case 0
 	.4byte _080408B8 @ case 1
@@ -112092,34 +112657,42 @@ _08040890: @ jump table
 	.4byte _080408D8 @ case 5
 	.4byte _080408E0 @ case 6
 	.4byte _080408E8 @ case 7
+	.global _080408B0
 _080408B0:
 	adds r0, r4, #0
 	bl sub_0803FFB0
 	b _080408EE
+	.global _080408B8
 _080408B8:
 	adds r0, r4, #0
 	bl sub_08040024
 	b _080408EE
+	.global _080408C0
 _080408C0:
 	adds r0, r4, #0
 	bl sub_080400D4
 	b _080408EE
+	.global _080408C8
 _080408C8:
 	adds r0, r4, #0
 	bl sub_0804021C
 	b _080408EE
+	.global _080408D0
 _080408D0:
 	adds r0, r4, #0
 	bl sub_0804029C
 	b _080408EE
+	.global _080408D8
 _080408D8:
 	adds r0, r4, #0
 	bl sub_08040458
 	b _080408EE
+	.global _080408E0
 _080408E0:
 	adds r0, r4, #0
 	bl sub_08040588
 	b _080408EE
+	.global _080408E8
 _080408E8:
 	adds r0, r4, #0
 	bl sub_08040640
@@ -112981,6 +113554,7 @@ _08040FA6:
 	mov pc, r0
 	.align 2, 0
 _08040FB8: .4byte _08040FBC
+	.global _08040FBC
 _08040FBC: @ jump table
 	.4byte _08040FE8 @ case 0
 	.4byte _08040FF0 @ case 1
@@ -112993,46 +113567,57 @@ _08040FBC: @ jump table
 	.4byte _08041028 @ case 8
 	.4byte _08041030 @ case 9
 	.4byte _08041038 @ case 10
+	.global _08040FE8
 _08040FE8:
 	adds r0, r5, #0
 	bl sub_08041684
 	b _0804103E
+	.global _08040FF0
 _08040FF0:
 	adds r0, r5, #0
 	bl sub_08041708
 	b _0804103E
+	.global _08040FF8
 _08040FF8:
 	adds r0, r5, #0
 	bl sub_0804175C
 	b _0804103E
+	.global _08041000
 _08041000:
 	adds r0, r5, #0
 	bl sub_080418DC
 	b _0804103E
+	.global _08041008
 _08041008:
 	adds r0, r5, #0
 	bl sub_080419F0
 	b _0804103E
+	.global _08041010
 _08041010:
 	adds r0, r5, #0
 	bl sub_08041AA8
 	b _0804103E
+	.global _08041018
 _08041018:
 	adds r0, r5, #0
 	bl sub_08041B70
 	b _0804103E
+	.global _08041020
 _08041020:
 	adds r0, r5, #0
 	bl sub_08041C74
 	b _0804103E
+	.global _08041028
 _08041028:
 	adds r0, r5, #0
 	bl sub_08041D28
 	b _0804103E
+	.global _08041030
 _08041030:
 	adds r0, r5, #0
 	bl sub_08041EFC
 	b _0804103E
+	.global _08041038
 _08041038:
 	adds r0, r5, #0
 	bl sub_08041E88
@@ -116069,6 +116654,7 @@ _08042890:
 	mov pc, r0
 	.align 2, 0
 _0804289C: .4byte _080428A0
+	.global _080428A0
 _080428A0: @ jump table
 	.4byte _08042ACC @ case 0
 	.4byte _0804291C @ case 1
@@ -116079,6 +116665,7 @@ _080428A0: @ jump table
 	.4byte _08042ACC @ case 6
 	.4byte _08042ACC @ case 7
 	.4byte _080429B8 @ case 8
+	.global _080428C4
 _080428C4:
 	ldr r0, _08042914 @ =gRoomFrameCount
 	ldr r0, [r0]
@@ -116121,6 +116708,7 @@ _08042902:
 	.align 2, 0
 _08042914: .4byte gRoomFrameCount
 _08042918: .4byte gPlayer
+	.global _0804291C
 _0804291C:
 	ldr r4, [r7]
 	movs r1, #8
@@ -116189,6 +116777,7 @@ _080429A8: .4byte gRoomFrameCount
 _080429AC: .4byte gCamera
 _080429B0: .4byte gPlayer
 _080429B4: .4byte 0x02000ED0
+	.global _080429B8
 _080429B8:
 	ldr r0, _080429E4 @ =0x02000E70
 	ldr r0, [r0]
@@ -116314,6 +116903,7 @@ _080429E8:
 _08042AC0: .4byte 0x02000ED0
 _08042AC4: .4byte gCamera
 _08042AC8: .4byte gBlendRegs
+	.global _08042ACC
 _08042ACC:
 	adds r0, r7, #0
 	adds r0, #0x88
@@ -116942,6 +117532,7 @@ _08042FBE:
 	mov pc, r0
 	.align 2, 0
 _08042FC8: .4byte _08042FCC
+	.global _08042FCC
 _08042FCC: @ jump table
 	.4byte _08043036 @ case 0
 	.4byte _08043098 @ case 1
@@ -116962,6 +117553,7 @@ _08042FCC: @ jump table
 	.4byte _0804314C @ case 16
 	.4byte _08043036 @ case 17
 	.4byte _080430CE @ case 18
+	.global _08043018
 _08043018:
 	ldr r4, [r5]
 	adds r0, r4, #0
@@ -116980,10 +117572,12 @@ _08043026:
 _08043032:
 	movs r1, #0x12
 	b _080430B2
+	.global _08043036
 _08043036:
 	adds r0, r5, #0
 	bl sub_08042E9C
 	b _0804314C
+	.global _0804303E
 _0804303E:
 	ldr r4, [r5]
 	adds r0, r4, #0
@@ -117025,6 +117619,7 @@ _0804304C:
 	.align 2, 0
 _08043090: .4byte gRoomFrameCount
 _08043094: .4byte 0x02000E6C
+	.global _08043098
 _08043098:
 	ldr r4, [r5]
 	adds r0, r4, #0
@@ -117052,6 +117647,7 @@ _080430B2:
 	movs r1, #0
 	bl sub_0800956C
 	b _0804314C
+	.global _080430CE
 _080430CE:
 	ldr r4, [r5]
 	adds r0, r4, #0
@@ -117090,6 +117686,7 @@ _080430CE:
 	.align 2, 0
 _0804311C: .4byte gRoomFrameCount
 _08043120: .4byte 0x02000E6C
+	.global _08043124
 _08043124:
 	ldr r4, [r5]
 	adds r0, r4, #0
@@ -117108,6 +117705,7 @@ _08043124:
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
+	.global _0804314C
 _0804314C:
 	pop {r4, r5}
 	pop {r0}
@@ -117134,6 +117732,7 @@ _08043168:
 	mov pc, r0
 	.align 2, 0
 _08043174: .4byte _08043178
+	.global _08043178
 _08043178: @ jump table
 	.4byte _0804326A @ case 0
 	.4byte _0804336C @ case 1
@@ -117151,6 +117750,7 @@ _08043178: @ jump table
 	.4byte _080433B4 @ case 13
 	.4byte _080433B4 @ case 14
 	.4byte _080431B8 @ case 15
+	.global _080431B8
 _080431B8:
 	ldr r1, [r5]
 	adds r0, r1, #0
@@ -117210,6 +117810,7 @@ _080431EA:
 	b _080433B4
 	.align 2, 0
 _08043234: .4byte gCamera
+	.global _08043238
 _08043238:
 	movs r2, #0
 	ldr r4, [r5]
@@ -117239,6 +117840,7 @@ _08043254:
 	movs r1, #3
 	subs r0, #0x40
 	b _0804334E
+	.global _0804326A
 _0804326A:
 	ldr r0, [r5]
 	ldr r0, [r0, #0x44]
@@ -117305,6 +117907,7 @@ _080432F0: .4byte 0x02000E6C
 _080432F4: .4byte gCamera
 _080432F8: .4byte 0x02000ED0
 _080432FC: .4byte gPlayer
+	.global _08043300
 _08043300:
 	ldr r4, [r5]
 	adds r0, r4, #0
@@ -117332,6 +117935,7 @@ _08043300:
 	b _080433B4
 	.align 2, 0
 _08043338: .4byte gRoomFrameCount
+	.global _0804333C
 _0804333C:
 	ldr r0, _08043368 @ =gRoomFrameCount
 	ldr r1, [r5, #0x54]
@@ -117354,6 +117958,7 @@ _0804334E:
 	b _080433B4
 	.align 2, 0
 _08043368: .4byte gRoomFrameCount
+	.global _0804336C
 _0804336C:
 	ldr r4, [r5]
 	adds r0, r4, #0
@@ -117386,6 +117991,7 @@ _0804336C:
 	adds r0, r5, #0
 	movs r1, #6
 	bl sub_0804287C
+	.global _080433B4
 _080433B4:
 	add sp, #4
 	pop {r4, r5}
@@ -117564,6 +118170,7 @@ sub_080434E8: @ 0x080434E8
 	.align 2, 0
 _0804350C: .4byte 0x02001BDC
 _08043510: .4byte _08043514
+	.global _08043514
 _08043514: @ jump table
 	.4byte _08043572 @ case 0
 	.4byte _0804355A @ case 1
@@ -117574,6 +118181,7 @@ _08043514: @ jump table
 	.4byte _08043538 @ case 6
 	.4byte _0804355A @ case 7
 	.4byte _0804355A @ case 8
+	.global _08043538
 _08043538:
 	adds r2, r3, #0
 	adds r2, #0x87
@@ -117592,6 +118200,7 @@ _08043538:
 	movs r1, #0x40
 	orrs r0, r1
 	b _08043594
+	.global _0804355A
 _0804355A:
 	adds r0, r3, #0
 	adds r0, #0x87
@@ -117605,6 +118214,7 @@ _0804355A:
 	rsbs r0, r0, #0
 	ands r0, r1
 	b _08043588
+	.global _08043572
 _08043572:
 	adds r1, r3, #0
 	adds r1, #0x87
@@ -118153,6 +118763,7 @@ sub_08043960: @ 0x08043960
 	mov pc, r0
 	.align 2, 0
 _08043998: .4byte _0804399C
+	.global _0804399C
 _0804399C: @ jump table
 	.4byte _080439E8 @ case 0
 	.4byte _080439F8 @ case 1
@@ -118163,38 +118774,47 @@ _0804399C: @ jump table
 	.4byte _080439E0 @ case 6
 	.4byte _080439F0 @ case 7
 	.4byte _08043A00 @ case 8
+	.global _080439C0
 _080439C0:
 	adds r0, r4, #0
 	bl sub_08042FAC
 	b _08043A06
+	.global _080439C8
 _080439C8:
 	adds r0, r4, #0
 	bl sub_08043154
 	b _08043A06
+	.global _080439D0
 _080439D0:
 	adds r0, r4, #0
 	bl sub_080437E0
 	b _08043A06
+	.global _080439D8
 _080439D8:
 	adds r0, r4, #0
 	bl sub_080437DC
 	b _08043A06
+	.global _080439E0
 _080439E0:
 	adds r0, r4, #0
 	bl sub_080433C4
 	b _08043A06
+	.global _080439E8
 _080439E8:
 	adds r0, r4, #0
 	bl sub_08042C48
 	b _08043A06
+	.global _080439F0
 _080439F0:
 	adds r0, r4, #0
 	bl sub_08043430
 	b _08043A06
+	.global _080439F8
 _080439F8:
 	adds r0, r4, #0
 	bl sub_080438D0
 	b _08043A06
+	.global _08043A00
 _08043A00:
 	adds r0, r4, #0
 	bl sub_08042AE0
@@ -120381,12 +121001,12 @@ sub_08044CBC: @ 0x08044CBC
 	movs r0, #2
 	strb r0, [r1]
 	ldr r0, [r5]
-	ldr r3, _08044D0C @ =0x0804783C
-	ldr r2, _08044D10 @ =0x08047890
+	ldr r3, _08044D0C @ =_0804783C
+	ldr r2, _08044D10 @ =_08047890
 	subs r2, r3, r2
 	ldr r1, [r0, #0x60]
 	subs r4, r1, r2
-	ldr r0, _08044D14 @ =0x0804790C
+	ldr r0, _08044D14 @ =_0804790C
 	subs r3, r3, r0
 	subs r1, r1, r3
 	ldr r6, _08044D18 @ =0x000090AB
@@ -120401,9 +121021,9 @@ sub_08044CBC: @ 0x08044CBC
 	b _08044D98
 	.align 2, 0
 _08044D08: .4byte 0x0200266C
-_08044D0C: .4byte 0x0804783C
-_08044D10: .4byte 0x08047890
-_08044D14: .4byte 0x0804790C
+_08044D0C: .4byte _0804783C
+_08044D10: .4byte _08047890
+_08044D14: .4byte _0804790C
 _08044D18: .4byte 0x000090AB
 _08044D1C: .4byte 0x0000A0A8
 _08044D20:
@@ -120416,12 +121036,12 @@ _08044D20:
 	movs r0, #1
 	strb r0, [r1]
 	ldr r0, [r5]
-	ldr r3, _08044D58 @ =0x0804783C
-	ldr r2, _08044D5C @ =0x08047890
+	ldr r3, _08044D58 @ =_0804783C
+	ldr r2, _08044D5C @ =_08047890
 	subs r2, r3, r2
 	ldr r1, [r0, #0x60]
 	subs r4, r1, r2
-	ldr r0, _08044D60 @ =0x0804790C
+	ldr r0, _08044D60 @ =_0804790C
 	subs r3, r3, r0
 	subs r1, r1, r3
 	ldr r6, _08044D64 @ =0x0000912B
@@ -120435,9 +121055,9 @@ _08044D20:
 	ldr r3, _08044D68 @ =0x0000A128
 	b _08044D98
 	.align 2, 0
-_08044D58: .4byte 0x0804783C
-_08044D5C: .4byte 0x08047890
-_08044D60: .4byte 0x0804790C
+_08044D58: .4byte _0804783C
+_08044D5C: .4byte _08047890
+_08044D60: .4byte _0804790C
 _08044D64: .4byte 0x0000912B
 _08044D68: .4byte 0x0000A128
 _08044D6C:
@@ -120446,12 +121066,12 @@ _08044D6C:
 	movs r0, #0
 	strb r0, [r1]
 	ldr r0, [r5]
-	ldr r3, _08044DA4 @ =0x0804783C
-	ldr r2, _08044DA8 @ =0x08047890
+	ldr r3, _08044DA4 @ =_0804783C
+	ldr r2, _08044DA8 @ =_08047890
 	subs r2, r3, r2
 	ldr r1, [r0, #0x60]
 	subs r4, r1, r2
-	ldr r0, _08044DAC @ =0x0804790C
+	ldr r0, _08044DAC @ =_0804790C
 	subs r3, r3, r0
 	subs r1, r1, r3
 	ldr r6, _08044DB0 @ =0x000091AB
@@ -120471,9 +121091,9 @@ _08044D98:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08044DA4: .4byte 0x0804783C
-_08044DA8: .4byte 0x08047890
-_08044DAC: .4byte 0x0804790C
+_08044DA4: .4byte _0804783C
+_08044DA8: .4byte _08047890
+_08044DAC: .4byte _0804790C
 _08044DB0: .4byte 0x000091AB
 _08044DB4: .4byte 0x0000A1A8
 
@@ -121929,8 +122549,8 @@ _080458C2:
 	cmp r0, #0
 	bne _080458C2
 _080458CC:
-	ldr r0, _08045904 @ =0x0804772C
-	ldr r1, _08045908 @ =0x08047828
+	ldr r0, _08045904 @ =_0804772C
+	ldr r1, _08045908 @ =_08047828
 	bl sub_08044960
 	ldr r1, _080458F8 @ =0x0200266C
 	ldr r1, [r1]
@@ -121943,8 +122563,8 @@ _080458DA:
 	lsrs r1, r0, #0x10
 	cmp r1, #0
 	beq _08045914
-	ldr r0, _0804590C @ =0x08047660
-	ldr r1, _08045910 @ =0x0804772C
+	ldr r0, _0804590C @ =_08047660
+	ldr r1, _08045910 @ =_0804772C
 	bl sub_08044960
 	ldr r1, _080458F8 @ =0x0200266C
 	ldr r1, [r1]
@@ -121954,28 +122574,28 @@ _080458DA:
 _080458F8: .4byte 0x0200266C
 _080458FC: .4byte gUnknown_0852CED8
 _08045900: .4byte gUnknown_0852CEE4
-_08045904: .4byte 0x0804772C
-_08045908: .4byte 0x08047828
-_0804590C: .4byte 0x08047660
-_08045910: .4byte 0x0804772C
+_08045904: .4byte _0804772C
+_08045908: .4byte _08047828
+_0804590C: .4byte _08047660
+_08045910: .4byte _0804772C
 _08045914:
 	ldr r0, _080459DC @ =0x0200266C
 	ldr r0, [r0]
 	str r1, [r0, #0x70]
 _0804591A:
-	ldr r0, _080459E0 @ =0x08047540
-	ldr r1, _080459E4 @ =0x08047660
+	ldr r0, _080459E0 @ =_08047540
+	ldr r1, _080459E4 @ =_08047660
 	bl sub_08044960
 	ldr r5, _080459DC @ =0x0200266C
 	ldr r1, [r5]
 	str r0, [r1, #0x68]
-	ldr r0, _080459E8 @ =0x0804783C
-	ldr r1, _080459EC @ =0x080478B0
+	ldr r0, _080459E8 @ =_0804783C
+	ldr r1, _080459EC @ =_080478B0
 	bl sub_08044960
 	ldr r1, [r5]
 	str r0, [r1, #0x60]
-	ldr r0, _080459F0 @ =0x080478B0
-	ldr r1, _080459F4 @ =0x08047968
+	ldr r0, _080459F0 @ =_080478B0
+	ldr r1, _080459F4 @ =_08047968
 	bl sub_08044960
 	ldr r1, [r5]
 	str r0, [r1, #0x64]
@@ -122058,12 +122678,12 @@ _08045990:
 	b _08045A02
 	.align 2, 0
 _080459DC: .4byte 0x0200266C
-_080459E0: .4byte 0x08047540
-_080459E4: .4byte 0x08047660
-_080459E8: .4byte 0x0804783C
-_080459EC: .4byte 0x080478B0
-_080459F0: .4byte 0x080478B0
-_080459F4: .4byte 0x08047968
+_080459E0: .4byte _08047540
+_080459E4: .4byte _08047660
+_080459E8: .4byte _0804783C
+_080459EC: .4byte _080478B0
+_080459F0: .4byte _080478B0
+_080459F4: .4byte _08047968
 _080459F8:
 	ldr r0, _08045A14 @ =0x0200266C
 	ldr r0, [r0]
@@ -124107,6 +124727,7 @@ _08046C34:
 	.align 2, 0
 _08046C48: .4byte 0x0200266C
 _08046C4C: .4byte _08046C50
+	.global _08046C50
 _08046C50: @ jump table
 	.4byte _08046C8C @ case 0
 	.4byte _08046C90 @ case 1
@@ -124123,13 +124744,16 @@ _08046C50: @ jump table
 	.4byte _08046CDE @ case 12
 	.4byte _08046CF0 @ case 13
 	.4byte _08046CE8 @ case 14
+	.global _08046C8C
 _08046C8C:
 	strh r5, [r4, #0x1a]
 	b _08046CF0
+	.global _08046C90
 _08046C90:
 	rsbs r0, r5, #0
 	strh r0, [r4, #0x1a]
 	b _08046CF0
+	.global _08046C96
 _08046C96:
 	cmp r5, #0
 	beq _08046CF0
@@ -124147,6 +124771,7 @@ _08046C96:
 	bl __divsi3
 	strh r0, [r4, #0x22]
 	b _08046CF0
+	.global _08046CB8
 _08046CB8:
 	lsrs r0, r5, #4
 	lsls r1, r5, #8
@@ -124160,27 +124785,33 @@ _08046CB8:
 	subs r0, #1
 	strb r0, [r1, #0x14]
 	b _08046CF0
+	.global _08046CD0
 _08046CD0:
 	strh r5, [r4, #0x18]
 	b _08046CF0
+	.global _08046CD4
 _08046CD4:
 	rsbs r0, r5, #0
 	strh r0, [r4, #0x18]
 	b _08046CF0
+	.global _08046CDA
 _08046CDA:
 	strb r5, [r4, #0x14]
 	b _08046CF0
+	.global _08046CDE
 _08046CDE:
 	movs r0, #1
 	mov r2, ip
 	strb r0, [r2, #0x1a]
 	strh r5, [r2, #0x1c]
 	b _08046CF0
+	.global _08046CE8
 _08046CE8:
 	mov r3, ip
 	strh r5, [r3, #0x10]
 	subs r0, r5, #1
 	strb r0, [r3, #0x14]
+	.global _08046CF0
 _08046CF0:
 	pop {r3}
 	mov r8, r3
@@ -124307,6 +124938,7 @@ _08046DB8:
 	mov pc, r0
 	.align 2, 0
 _08046DD8: .4byte _08046DDC
+	.global _08046DDC
 _08046DDC: @ jump table
 	.4byte _08046E18 @ case 0
 	.4byte _08046E1C @ case 1
@@ -124323,13 +124955,16 @@ _08046DDC: @ jump table
 	.4byte _08046E5A @ case 12
 	.4byte _08046E5A @ case 13
 	.4byte _08046E58 @ case 14
+	.global _08046E18
 _08046E18:
 	strh r2, [r3, #0x1e]
 	b _08046E5A
+	.global _08046E1C
 _08046E1C:
 	rsbs r0, r2, #0
 	strh r0, [r3, #0x1e]
 	b _08046E5A
+	.global _08046E22
 _08046E22:
 	ldrb r0, [r3, #0x16]
 	cmp r0, #0
@@ -124342,6 +124977,7 @@ _08046E22:
 _08046E32:
 	strh r2, [r3, #0x26]
 	b _08046E5A
+	.global _08046E36
 _08046E36:
 	ldrb r0, [r3, #0x16]
 	cmp r0, #0
@@ -124355,18 +124991,23 @@ _08046E44:
 _08046E46:
 	strb r0, [r3, #0x16]
 	b _08046E5A
+	.global _08046E4A
 _08046E4A:
 	strh r2, [r3, #0x1c]
 	b _08046E5A
+	.global _08046E4E
 _08046E4E:
 	rsbs r0, r2, #0
 	strh r0, [r3, #0x1c]
 	b _08046E5A
+	.global _08046E54
 _08046E54:
 	strb r2, [r3, #0xb]
 	b _08046E5A
+	.global _08046E58
 _08046E58:
 	strb r2, [r3, #0x12]
+	.global _08046E5A
 _08046E5A:
 	adds r4, #1
 	cmp r4, #1
@@ -124882,7 +125523,7 @@ _080471EE:
 	adds r0, r0, r2
 	ldr r1, [r0]
 	adds r0, r6, #0
-	ldr r3, _08047328 @ =0x08047828
+	ldr r3, _08047328 @ =_08047828
 	bl StartCtrlTargetMotionY
 	str r0, [sp]
 	movs r0, #0
@@ -125019,7 +125660,7 @@ _080472D4:
 _0804731C: .4byte 0xFFFFF400
 _08047320: .4byte gUnknown_0852D228
 _08047324: .4byte 0x0200266C
-_08047328: .4byte 0x08047828
+_08047328: .4byte _08047828
 _0804732C:
 	movs r0, #1
 	strb r0, [r4, #5]
@@ -125302,6 +125943,8 @@ _08047532:
 	bx r1
 _0804753C:
 	.byte 0x00, 0x00, 0x00, 0x00
+	.global _08047540
+_08047540:
 	.byte 0xF0, 0x1F, 0x2D, 0xE9, 0x0F, 0x00, 0xB0, 0xE8, 0x03, 0x32, 0xA0, 0xE1, 0x01, 0x20, 0x82, 0xE0
 	.byte 0x01, 0xA8, 0xA0, 0xE3, 0x01, 0xA0, 0x4A, 0xE2, 0xFF, 0xB0, 0xA0, 0xE3, 0x8B, 0xC2, 0xA0, 0xE1
 	.byte 0xC0, 0x03, 0xB0, 0xE8, 0x0A, 0x50, 0x06, 0xE0, 0x05, 0x50, 0x63, 0xE0, 0xFE, 0x0E, 0x75, 0xE3
@@ -125320,6 +125963,8 @@ _0804753C:
 	.byte 0xFE, 0x0E, 0x79, 0xE3, 0xFE, 0x9E, 0xE0, 0xB3, 0xFE, 0x0E, 0x59, 0xE3, 0xFE, 0x9E, 0xA0, 0xC3
 	.byte 0x09, 0x90, 0x0C, 0xE0, 0x85, 0x75, 0x88, 0xE1, 0x89, 0x79, 0x87, 0xE1, 0xC0, 0x00, 0xA1, 0xE8
 	.byte 0x02, 0x00, 0x51, 0xE1, 0xC1, 0xFF, 0xFF, 0xBA, 0xF0, 0x1F, 0xBD, 0xE8, 0x1E, 0xFF, 0x2F, 0xE1
+	.global _08047660
+_08047660:
 	.byte 0xF0, 0x0F, 0x2D, 0xE9, 0x0C, 0x10, 0x90, 0xE5, 0x08, 0x70, 0x90, 0xE5, 0x04, 0x20, 0x90, 0xE5
 	.byte 0x00, 0x00, 0x90, 0xE5, 0xA4, 0x40, 0x8F, 0xE2, 0x04, 0x50, 0x94, 0xE5, 0x00, 0x40, 0x94, 0xE5
 	.byte 0xCD, 0x8F, 0xA0, 0xE3, 0x98, 0x07, 0x07, 0xE0, 0x47, 0x74, 0xA0, 0xE1, 0x7F, 0x90, 0xA0, 0xE3
@@ -125332,7 +125977,10 @@ _0804753C:
 	.byte 0x02, 0x00, 0x80, 0xE2, 0x02, 0x20, 0x52, 0xE2, 0x00, 0x00, 0x52, 0xE3, 0xE5, 0xFF, 0xFF, 0xCA
 	.byte 0x18, 0x00, 0x8F, 0xE2, 0x00, 0x40, 0x80, 0xE5, 0x04, 0x50, 0x80, 0xE5, 0xF0, 0x0F, 0xBD, 0xE8
 	.byte 0x1E, 0xFF, 0x2F, 0xE1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-	.byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x49, 0x4C, 0x54, 0xF0, 0x07, 0x2D, 0xE9
+	.byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x49, 0x4C, 0x54
+	.global _0804772C
+_0804772C:
+	.byte 0xF0, 0x07, 0x2D, 0xE9
 	.byte 0xE8, 0x50, 0x9F, 0xE5, 0x00, 0x40, 0x90, 0xE5, 0x0C, 0x30, 0x90, 0xE5, 0x10, 0x20, 0x90, 0xE5
 	.byte 0x08, 0x10, 0x90, 0xE5, 0x14, 0x90, 0x90, 0xE5, 0x09, 0x92, 0xA0, 0xE1, 0x18, 0xA0, 0x90, 0xE5
 	.byte 0x0A, 0xA2, 0xA0, 0xE1, 0x04, 0x00, 0x90, 0xE5, 0x00, 0x40, 0x84, 0xE0, 0x03, 0x00, 0x55, 0xE1
@@ -125348,21 +125996,34 @@ _0804753C:
 	.byte 0xB0, 0x80, 0xC0, 0xE1, 0x02, 0x00, 0x80, 0xE2, 0x02, 0x50, 0x85, 0xE2, 0x04, 0x00, 0x50, 0xE1
 	.byte 0xD5, 0xFF, 0xFF, 0xBA, 0x14, 0x00, 0x8F, 0xE2, 0x00, 0x50, 0x80, 0xE5, 0xF0, 0x07, 0xBD, 0xE8
 	.byte 0x1E, 0xFF, 0x2F, 0xE1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-	.byte 0x00, 0x00, 0x00, 0x00, 0x42, 0x41, 0x52, 0x54, 0x18, 0x00, 0x2D, 0xE9, 0x90, 0x31, 0x84, 0xE0
-	.byte 0x04, 0x00, 0xA0, 0xE1, 0x18, 0x00, 0xBD, 0xE8, 0x1E, 0xFF, 0x2F, 0xE1, 0xF0, 0x0F, 0x2D, 0xE9
+	.byte 0x00, 0x00, 0x00, 0x00, 0x42, 0x41, 0x52, 0x54
+	.global _08047828
+_08047828:
+	.byte 0x18, 0x00, 0x2D, 0xE9, 0x90, 0x31, 0x84, 0xE0
+	.byte 0x04, 0x00, 0xA0, 0xE1, 0x18, 0x00, 0xBD, 0xE8, 0x1E, 0xFF, 0x2F, 0xE1
+	.global _0804783C
+_0804783C:
+	.byte 0xF0, 0x0F, 0x2D, 0xE9
 	.byte 0xFE, 0x00, 0x90, 0xE8, 0xC4, 0x85, 0xD1, 0xE7, 0x07, 0x40, 0x94, 0xE0, 0x05, 0x40, 0x44, 0x50
 	.byte 0xC4, 0x95, 0xD1, 0xE7, 0x07, 0x40, 0x94, 0xE0, 0x05, 0x40, 0x44, 0x50, 0x09, 0x88, 0x88, 0xE1
 	.byte 0x96, 0x08, 0x08, 0xE0, 0x07, 0xB8, 0xC8, 0xE3, 0xC4, 0x85, 0xD1, 0xE7, 0x07, 0x40, 0x94, 0xE0
 	.byte 0x05, 0x40, 0x44, 0x50, 0xC4, 0x95, 0xD1, 0xE7, 0x07, 0x40, 0x94, 0xE0, 0x05, 0x40, 0x44, 0x50
 	.byte 0x09, 0x88, 0x88, 0xE1, 0x96, 0x08, 0x08, 0xE0, 0x07, 0x88, 0xC8, 0xE3, 0x00, 0x06, 0x92, 0xE8
+	.global _08047890
+_08047890:
 	.byte 0xAB, 0x91, 0x89, 0xE0, 0xA8, 0xA1, 0x8A, 0xE0, 0x00, 0x06, 0xA2, 0xE8, 0x04, 0x30, 0x53, 0xE2
 	.byte 0xE7, 0xFF, 0xFF, 0xCA, 0x0C, 0x40, 0x80, 0xE5, 0xF0, 0x0F, 0xBD, 0xE8, 0x1E, 0xFF, 0x2F, 0xE1
+	.global _080478B0
+_080478B0:
 	.byte 0xF0, 0x4F, 0x2D, 0xE9, 0xFE, 0x00, 0x90, 0xE8, 0x00, 0x00, 0x57, 0xE3, 0x20, 0x00, 0x00, 0xEB
 	.byte 0xC4, 0x85, 0xD1, 0xE7, 0x07, 0x40, 0x94, 0xE0, 0x19, 0x00, 0x00, 0x5B, 0xC4, 0x95, 0xD1, 0xE7
 	.byte 0x07, 0x40, 0x94, 0xE0, 0x16, 0x00, 0x00, 0x5B, 0x09, 0x88, 0x88, 0xE1, 0x96, 0x08, 0x08, 0xE0
 	.byte 0x07, 0xB8, 0xC8, 0xE3, 0xC4, 0x85, 0xD1, 0xE7, 0x07, 0x40, 0x94, 0xE0, 0x10, 0x00, 0x00, 0x5B
 	.byte 0xC4, 0x95, 0xD1, 0xE7, 0x07, 0x40, 0x94, 0xE0, 0x0D, 0x00, 0x00, 0x5B, 0x09, 0x88, 0x88, 0xE1
-	.byte 0x96, 0x08, 0x08, 0xE0, 0x07, 0x88, 0xC8, 0xE3, 0x00, 0x06, 0x92, 0xE8, 0xAB, 0x91, 0x89, 0xE0
+	.byte 0x96, 0x08, 0x08, 0xE0, 0x07, 0x88, 0xC8, 0xE3, 0x00, 0x06, 0x92, 0xE8
+	.global _0804790C
+_0804790C:
+	.byte 0xAB, 0x91, 0x89, 0xE0
 	.byte 0xA8, 0xA1, 0x8A, 0xE0, 0x00, 0x06, 0xA2, 0xE8, 0x04, 0x30, 0x53, 0xE2, 0xE7, 0xFF, 0xFF, 0xCA
 	.byte 0x0C, 0x40, 0x80, 0xE5, 0x18, 0x70, 0x80, 0xE5, 0x00, 0x10, 0x80, 0xE5, 0xF0, 0x4F, 0xBD, 0xE8
 	.byte 0x1E, 0xFF, 0x2F, 0xE1, 0x00, 0x70, 0x77, 0xE2, 0x87, 0x40, 0x84, 0xE0, 0x05, 0x40, 0x44, 0x50
@@ -125372,6 +126033,8 @@ _0804753C:
 
 	thumb_func_start _call_via_r0
 _call_via_r0: @ 0x08047968
+	.global _08047968
+_08047968:
 	bx r0
 	nop
 
@@ -125977,6 +126640,7 @@ _08047DD0: .4byte 0x02000520
 _08047DD4: .4byte 0x02000524
 _08047DD8: .4byte 0x02000548
 _08047DDC: .4byte _08047DE0
+	.global _08047DE0
 _08047DE0: @ jump table
 	.4byte _08047DF8 @ case 0
 	.4byte _08047E10 @ case 1
@@ -125984,6 +126648,7 @@ _08047DE0: @ jump table
 	.4byte _08047E1C @ case 3
 	.4byte _08047DF8 @ case 4
 	.4byte _08047DF8 @ case 5
+	.global _08047DF8
 _08047DF8:
 	ldr r0, _08047E0C @ =0x02000548
 	ldr r0, [r0]
@@ -125994,6 +126659,7 @@ _08047DF8:
 	b _08047E28
 	.align 2, 0
 _08047E0C: .4byte 0x02000548
+	.global _08047E10
 _08047E10:
 	ldr r1, _08047E18 @ =0x02001BE0
 	movs r0, #1
@@ -126001,6 +126667,7 @@ _08047E10:
 	b _08047E7E
 	.align 2, 0
 _08047E18: .4byte 0x02001BE0
+	.global _08047E1C
 _08047E1C:
 	ldr r1, _08047E24 @ =0x02001BE0
 	movs r0, #2
@@ -126469,6 +127136,7 @@ _08048200:
 	mov pc, r0
 	.align 2, 0
 _08048210: .4byte _08048214
+	.global _08048214
 _08048214: @ jump table
 	.4byte _08048272 @ case 0
 	.4byte _08048270 @ case 1
@@ -126493,8 +127161,10 @@ _08048214: @ jump table
 	.4byte _08048272 @ case 20
 	.4byte _08048272 @ case 21
 	.4byte _08048272 @ case 22
+	.global _08048270
 _08048270:
 	adds r3, #1
+	.global _08048272
 _08048272:
 	adds r2, #0x10
 _08048274:
@@ -128944,7 +129614,7 @@ sub_08049508: @ 0x08049508
 	strh r3, [r7]
 	movs r1, #0
 	bl IrqSetHandler
-	ldr r1, _080495B8 @ =0x0804BC7F
+	ldr r1, _080495B8 @ =_0804BC7E + 1
 	movs r0, #7
 	bl IrqSetHandler
 	ldrh r0, [r6]
@@ -128993,7 +129663,7 @@ _0804959A:
 _080495AC: .4byte 0x04000208
 _080495B0: .4byte 0x04000200
 _080495B4: .4byte 0x0000FF7F
-_080495B8: .4byte 0x0804BC7F
+_080495B8: .4byte _0804BC7E + 1
 _080495BC: .4byte sub_0804A328
 _080495C0: .4byte 0x04000100
 _080495C4: .4byte 0x00044444
@@ -129645,7 +130315,7 @@ _08049A88:
 	ldrb r5, [r6, #6]
 	ldrb r4, [r6, #7]
 	lsls r4, r4, #8
-	ldr r0, _08049B88 @ =0x080000AC
+	ldr r0, _08049B88 @ =_080000AC
 	ldr r2, [r0]
 	lsrs r2, r2, #8
 	lsls r2, r2, #0x10
@@ -129773,7 +130443,7 @@ _08049B82:
 	adds r6, #8
 	b _08049B92
 	.align 2, 0
-_08049B88: .4byte 0x080000AC
+_08049B88: .4byte _080000AC
 _08049B8C: .4byte gUnknown_086C522C
 _08049B90:
 	adds r6, #2
@@ -129970,7 +130640,7 @@ sub_08049C88: @ 0x08049C88
 	strh r0, [r6, #2]
 	ldrh r0, [r3, #2]
 	strh r0, [r6, #4]
-	ldr r0, _08049D94 @ =0x080000AC
+	ldr r0, _08049D94 @ =_080000AC
 	ldr r1, [r0]
 	lsrs r1, r1, #8
 	lsls r1, r1, #0x10
@@ -130043,7 +130713,7 @@ sub_08049C88: @ 0x08049C88
 	pop {r1}
 	bx r1
 	.align 2, 0
-_08049D94: .4byte 0x080000AC
+_08049D94: .4byte _080000AC
 _08049D98: .4byte gUnknown_086C522C
 
 	thumb_func_start sub_08049D9C
@@ -133813,6 +134483,7 @@ sub_0804BC78: @ 0x0804BC78
 	ldr r1, _0804BC88 @ =0x03001EB0
 	str r0, [r1]
 	bx lr
+	.global _0804BC7E
 _0804BC7E:
 	.byte 0x03, 0x49
 	.byte 0x08, 0x68, 0x03, 0x49, 0x08, 0x47, 0x00, 0x00
@@ -133876,6 +134547,7 @@ sub_0804BCDC: @ 0x0804BCDC
 _0804BCE8:
 	.byte 0x38, 0x2A, 0x00, 0x03
 _0804BCEC: .4byte 0x03002804
+	.global _0804BCF0
 _0804BCF0:
 	.byte 0xF0, 0x0F, 0x2D, 0xE9, 0x08, 0x30, 0xA0, 0xE3, 0x08, 0x40, 0xA0, 0xE3, 0xE0, 0x1F, 0xB1, 0xE8
 	.byte 0x60, 0x00, 0x80, 0xE8, 0x40, 0x00, 0x80, 0xE2, 0x80, 0x01, 0x80, 0xE8, 0x40, 0x00, 0x80, 0xE2
@@ -133887,6 +134559,8 @@ _0804BCF0:
 
 	thumb_func_start sub_0804BD60
 sub_0804BD60: @ 0x0804BD60
+	.global _0804BD60
+_0804BD60:
 	push {r4, r5, r6, r7, lr}
 	adds r6, r0, #0
 	adds r7, r3, #0
@@ -135396,6 +136070,7 @@ _0804D7AC:
 	mov pc, r0
 	.align 2, 0
 _0804D7B8: .4byte _0804D7BC
+	.global _0804D7BC
 _0804D7BC: @ jump table
 	.4byte _0804D9D2 @ case 0
 	.4byte _0804D7F0 @ case 1
@@ -135410,6 +136085,7 @@ _0804D7BC: @ jump table
 	.4byte _0804D8A0 @ case 10
 	.4byte _0804D910 @ case 11
 	.4byte _0804D970 @ case 12
+	.global _0804D7F0
 _0804D7F0:
 	ldr r3, [r4]
 	ldr r1, [r5]
@@ -135418,6 +136094,7 @@ _0804D7F0:
 	b _0804D828
 	.align 2, 0
 _0804D7FC: .4byte 0x00002FFF
+	.global _0804D800
 _0804D800:
 	ldr r0, [r4]
 	ldr r1, _0804D810 @ =0x00002FFF
@@ -135429,6 +136106,7 @@ _0804D800:
 	b _0804D9D2
 	.align 2, 0
 _0804D810: .4byte 0x00002FFF
+	.global _0804D814
 _0804D814:
 	ldr r3, [r4]
 	ldr r0, [r5]
@@ -135438,6 +136116,7 @@ _0804D814:
 	b _0804D9D0
 	.align 2, 0
 _0804D820: .4byte 0x00002FFF
+	.global _0804D824
 _0804D824:
 	ldr r3, [r4]
 	ldr r0, [r5]
@@ -135445,6 +136124,7 @@ _0804D828:
 	str r0, [r4]
 	str r3, [r5]
 	b _0804D9D2
+	.global _0804D82E
 _0804D82E:
 	ldr r1, [r5]
 	ldr r0, _0804D838 @ =0x00002FFF
@@ -135452,6 +136132,7 @@ _0804D82E:
 	b _0804D9D0
 	.align 2, 0
 _0804D838: .4byte 0x00002FFF
+	.global _0804D83C
 _0804D83C:
 	ldr r3, [r4]
 	ldr r0, [r5]
@@ -135463,6 +136144,7 @@ _0804D83C:
 	b _0804D9D2
 	.align 2, 0
 _0804D84C: .4byte 0x00002FFF
+	.global _0804D850
 _0804D850:
 	ldr r1, [r4]
 	ldr r0, _0804D85C @ =0x00002FFF
@@ -135471,6 +136153,7 @@ _0804D850:
 	b _0804D9D2
 	.align 2, 0
 _0804D85C: .4byte 0x00002FFF
+	.global _0804D860
 _0804D860:
 	ldr r3, [r4]
 	ldr r0, [r5]
@@ -135504,6 +136187,7 @@ _0804D88E:
 _0804D894: .4byte 0xFFFFD000
 _0804D898: .4byte 0x00005A82
 _0804D89C: .4byte 0x00007FFF
+	.global _0804D8A0
 _0804D8A0:
 	ldr r3, [r4]
 	ldr r2, _0804D904 @ =0xFFFFE800
@@ -135560,6 +136244,7 @@ _0804D8FC:
 _0804D904: .4byte 0xFFFFE800
 _0804D908: .4byte 0x00005A82
 _0804D90C: .4byte 0x00007FFF
+	.global _0804D910
 _0804D910:
 	ldr r3, [r4]
 	ldr r2, [r5]
@@ -135609,6 +136294,7 @@ _0804D960:
 	.align 2, 0
 _0804D968: .4byte 0xFFFFD000
 _0804D96C: .4byte 0x00007FFF
+	.global _0804D970
 _0804D970:
 	ldr r3, [r4]
 	ldr r0, _0804D9D8 @ =0xFFFFE800
@@ -135662,6 +136348,7 @@ _0804D9CC:
 	adds r0, r0, r3
 _0804D9D0:
 	str r0, [r5]
+	.global _0804D9D2
 _0804D9D2:
 	pop {r4, r5, r6, r7}
 	pop {r0}
@@ -135698,6 +136385,7 @@ _0804DA08:
 	mov pc, r0
 	.align 2, 0
 _0804DA14: .4byte _0804DA18
+	.global _0804DA18
 _0804DA18: @ jump table
 	.4byte _0804DB4E @ case 0
 	.4byte _0804DA4C @ case 1
@@ -135712,11 +136400,13 @@ _0804DA18: @ jump table
 	.4byte _0804DAA8 @ case 10
 	.4byte _0804DAE0 @ case 11
 	.4byte _0804DB10 @ case 12
+	.global _0804DA4C
 _0804DA4C:
 	ldr r3, [r5]
 	ldr r0, [r5, #4]
 	rsbs r0, r0, #0
 	b _0804DA6E
+	.global _0804DA54
 _0804DA54:
 	ldr r0, [r5]
 	rsbs r0, r0, #0
@@ -135724,12 +136414,14 @@ _0804DA54:
 	ldr r0, [r5, #4]
 	rsbs r0, r0, #0
 	b _0804DB4C
+	.global _0804DA60
 _0804DA60:
 	ldr r3, [r5]
 	ldr r0, [r5, #4]
 	str r0, [r5]
 	rsbs r0, r3, #0
 	b _0804DB4C
+	.global _0804DA6A
 _0804DA6A:
 	ldr r3, [r5]
 	ldr r0, [r5, #4]
@@ -135737,10 +136429,12 @@ _0804DA6E:
 	str r0, [r5]
 	str r3, [r5, #4]
 	b _0804DB4E
+	.global _0804DA74
 _0804DA74:
 	ldr r0, [r5, #4]
 	rsbs r0, r0, #0
 	b _0804DB4C
+	.global _0804DA7A
 _0804DA7A:
 	ldr r3, [r5]
 	ldr r0, [r5, #4]
@@ -135748,11 +136442,13 @@ _0804DA7A:
 	str r0, [r5]
 	rsbs r0, r3, #0
 	b _0804DB4C
+	.global _0804DA86
 _0804DA86:
 	ldr r0, [r5]
 	rsbs r0, r0, #0
 	str r0, [r5]
 	b _0804DB4E
+	.global _0804DA8E
 _0804DA8E:
 	ldr r3, [r5]
 	ldr r4, [r5, #4]
@@ -135768,6 +136464,7 @@ _0804DA9E:
 	subs r0, r4, r3
 	muls r0, r1, r0
 	b _0804DB44
+	.global _0804DAA8
 _0804DAA8:
 	ldr r3, [r5]
 	lsls r0, r3, #1
@@ -135798,6 +136495,7 @@ _0804DAC6:
 	muls r1, r2, r1
 	subs r0, r0, r1
 	b _0804DB44
+	.global _0804DAE0
 _0804DAE0:
 	ldr r3, [r5]
 	ldr r4, [r5, #4]
@@ -135824,6 +136522,7 @@ _0804DAFA:
 	adds r0, r0, r2
 	rsbs r0, r0, #0
 	b _0804DB44
+	.global _0804DB10
 _0804DB10:
 	ldr r3, [r5]
 	movs r6, #0xb5
@@ -135860,6 +136559,7 @@ _0804DB4A:
 	asrs r0, r0, #8
 _0804DB4C:
 	str r0, [r5, #4]
+	.global _0804DB4E
 _0804DB4E:
 	ldr r0, _0804DB84 @ =0x0200254C
 	ldr r0, [r0]
@@ -135890,6 +136590,7 @@ _0804DB78:
 	.align 2, 0
 _0804DB84: .4byte 0x0200254C
 _0804DB88: .4byte _0804DB8C
+	.global _0804DB8C
 _0804DB8C: @ jump table
 	.4byte _0804DCBA @ case 0
 	.4byte _0804DBC0 @ case 1
@@ -135904,11 +136605,13 @@ _0804DB8C: @ jump table
 	.4byte _0804DC30 @ case 10
 	.4byte _0804DC60 @ case 11
 	.4byte _0804DC98 @ case 12
+	.global _0804DBC0
 _0804DBC0:
 	ldr r0, [r5, #4]
 	str r0, [r5]
 	rsbs r0, r2, #0
 	b _0804DCB8
+	.global _0804DBC8
 _0804DBC8:
 	ldr r0, [r5]
 	rsbs r0, r0, #0
@@ -135916,31 +136619,37 @@ _0804DBC8:
 	ldr r0, [r5, #4]
 	rsbs r0, r0, #0
 	b _0804DCB8
+	.global _0804DBD4
 _0804DBD4:
 	ldr r0, [r5, #4]
 	rsbs r0, r0, #0
 	b _0804DBDC
+	.global _0804DBDA
 _0804DBDA:
 	ldr r0, [r5, #4]
 _0804DBDC:
 	str r0, [r5]
 	str r2, [r5, #4]
 	b _0804DCBA
+	.global _0804DBE2
 _0804DBE2:
 	ldr r0, [r5, #4]
 	rsbs r0, r0, #0
 	b _0804DCB8
+	.global _0804DBE8
 _0804DBE8:
 	ldr r0, [r5, #4]
 	rsbs r0, r0, #0
 	str r0, [r5]
 	rsbs r0, r2, #0
 	b _0804DCB8
+	.global _0804DBF2
 _0804DBF2:
 	ldr r0, [r5]
 	rsbs r0, r0, #0
 	str r0, [r5]
 	b _0804DCBA
+	.global _0804DBFA
 _0804DBFA:
 	ldr r3, [r5]
 	movs r6, #0xb5
@@ -135970,6 +136679,7 @@ _0804DC18:
 	adds r0, r0, r3
 	adds r0, r2, r0
 	b _0804DCB0
+	.global _0804DC30
 _0804DC30:
 	ldr r3, [r5]
 	ldr r4, [r5, #4]
@@ -135996,6 +136706,7 @@ _0804DC4A:
 	adds r0, r0, r2
 	rsbs r0, r0, #0
 	b _0804DCB0
+	.global _0804DC60
 _0804DC60:
 	ldr r3, [r5]
 	lsls r0, r3, #1
@@ -136026,6 +136737,7 @@ _0804DC7E:
 	muls r1, r2, r1
 	subs r0, r0, r1
 	b _0804DCB0
+	.global _0804DC98
 _0804DC98:
 	ldr r3, [r5]
 	ldr r4, [r5, #4]
@@ -136048,6 +136760,7 @@ _0804DCB6:
 	asrs r0, r0, #8
 _0804DCB8:
 	str r0, [r5, #4]
+	.global _0804DCBA
 _0804DCBA:
 	add sp, #0xc
 	pop {r3}
@@ -136172,6 +136885,7 @@ _0804DD9C:
 	.align 2, 0
 _0804DDA8: .4byte 0x0200254C
 _0804DDAC: .4byte _0804DDB0
+	.global _0804DDB0
 _0804DDB0: @ jump table
 	.4byte _0804DF26 @ case 0
 	.4byte _0804DDE4 @ case 1
@@ -136186,11 +136900,13 @@ _0804DDB0: @ jump table
 	.4byte _0804DE68 @ case 10
 	.4byte _0804DEAC @ case 11
 	.4byte _0804DEF8 @ case 12
+	.global _0804DDE4
 _0804DDE4:
 	ldr r0, [r6, #4]
 	str r0, [r6]
 	rsbs r0, r7, #0
 	b _0804DF24
+	.global _0804DDEC
 _0804DDEC:
 	ldr r0, [r6]
 	rsbs r0, r0, #0
@@ -136198,31 +136914,37 @@ _0804DDEC:
 	ldr r0, [r6, #4]
 	rsbs r0, r0, #0
 	b _0804DF24
+	.global _0804DDF8
 _0804DDF8:
 	ldr r0, [r6, #4]
 	rsbs r0, r0, #0
 	b _0804DE00
+	.global _0804DDFE
 _0804DDFE:
 	ldr r0, [r6, #4]
 _0804DE00:
 	str r0, [r6]
 	str r7, [r6, #4]
 	b _0804DF26
+	.global _0804DE06
 _0804DE06:
 	ldr r0, [r6, #4]
 	rsbs r0, r0, #0
 	b _0804DF24
+	.global _0804DE0C
 _0804DE0C:
 	ldr r0, [r6, #4]
 	rsbs r0, r0, #0
 	str r0, [r6]
 	rsbs r0, r7, #0
 	b _0804DF24
+	.global _0804DE16
 _0804DE16:
 	ldr r0, [r6]
 	rsbs r0, r0, #0
 	str r0, [r6]
 	b _0804DF26
+	.global _0804DE1E
 _0804DE1E:
 	ldr r0, [r6]
 	cmp r0, #0
@@ -136264,6 +136986,7 @@ _0804DE56:
 	adds r0, r0, r2
 	adds r0, r3, r0
 	b _0804DF24
+	.global _0804DE68
 _0804DE68:
 	ldr r2, [r6]
 	cmp r2, #0
@@ -136302,6 +137025,7 @@ _0804DE98:
 	adds r0, r0, r2
 	rsbs r0, r0, #0
 	b _0804DF24
+	.global _0804DEAC
 _0804DEAC:
 	ldr r2, [r6]
 	cmp r2, #0
@@ -136344,6 +137068,7 @@ _0804DEF0:
 	muls r0, r5, r0
 	subs r0, r1, r0
 	b _0804DF24
+	.global _0804DEF8
 _0804DEF8:
 	ldr r0, [r6]
 	cmp r0, #0
@@ -136372,6 +137097,7 @@ _0804DF1E:
 	muls r0, r2, r0
 _0804DF24:
 	str r0, [r6, #4]
+	.global _0804DF26
 _0804DF26:
 	add sp, #8
 	pop {r4, r5, r6, r7}
@@ -137258,6 +137984,7 @@ _0804F04A:
 	mov pc, r0
 	.align 2, 0
 _0804F068: .4byte _0804F06C
+	.global _0804F06C
 _0804F06C: @ jump table
 	.4byte _0804F10E @ case 0
 	.4byte _0804F10E @ case 1
@@ -137271,6 +137998,7 @@ _0804F06C: @ jump table
 	.4byte _0804F09C @ case 9
 	.4byte _0804F09C @ case 10
 	.4byte _0804F09C @ case 11
+	.global _0804F09C
 _0804F09C:
 	movs r1, #0x90
 	lsls r1, r1, #2
@@ -137324,6 +138052,7 @@ _0804F0F4:
 	ldr r0, [r2]
 	ldr r1, [r4]
 	bl sub_0805763C
+	.global _0804F10E
 _0804F10E:
 	adds r6, #1
 	movs r3, #0x9c
@@ -146044,8 +146773,8 @@ _080538D8: .4byte 0x02002550
 	thumb_func_start sub_080538DC
 sub_080538DC: @ 0x080538DC
 	push {r4, r5, r6, lr}
-	ldr r4, _08053924 @ =0x0804BD60
-	ldr r6, _08053928 @ =0x0804BCF0
+	ldr r4, _08053924 @ =_0804BD60
+	ldr r6, _08053928 @ =_0804BCF0
 	subs r4, r4, r6
 	ldr r5, _0805392C @ =0x02002550
 	movs r1, #0x80
@@ -146079,8 +146808,8 @@ _08053910:
 	str r0, [r4]
 	b _08053936
 	.align 2, 0
-_08053924: .4byte 0x0804BD60
-_08053928: .4byte 0x0804BCF0
+_08053924: .4byte _0804BD60
+_08053928: .4byte _0804BCF0
 _0805392C: .4byte 0x02002550
 _08053930: .4byte 0x03002AD0
 _08053934:
@@ -146142,6 +146871,7 @@ sub_08053970: @ 0x08053970
 	.align 2, 0
 _08053998: .4byte 0x02000520
 _0805399C: .4byte _080539A0
+	.global _080539A0
 _080539A0: @ jump table
 	.4byte _08053A3E @ case 0
 	.4byte _080539DC @ case 1
@@ -146158,6 +146888,7 @@ _080539A0: @ jump table
 	.4byte _08053A3E @ case 12
 	.4byte _08053A3E @ case 13
 	.4byte _08053A3E @ case 14
+	.global _080539DC
 _080539DC:
 	ldr r0, [sp]
 	subs r0, #0xb5
@@ -146165,6 +146896,7 @@ _080539DC:
 	ldr r0, [sp, #4]
 	subs r0, #0xb5
 	b _08053A3C
+	.global _080539E8
 _080539E8:
 	ldr r0, [sp]
 	adds r0, #0xb5
@@ -146172,6 +146904,7 @@ _080539E8:
 	ldr r0, [sp, #4]
 	adds r0, #0xb5
 	b _08053A3C
+	.global _080539F4
 _080539F4:
 	ldr r0, [sp]
 	adds r0, #0xb5
@@ -146179,6 +146912,7 @@ _080539F4:
 	ldr r0, [sp, #4]
 	subs r0, #0xb5
 	b _08053A3C
+	.global _08053A00
 _08053A00:
 	ldr r0, [sp]
 	subs r0, #0xb5
@@ -146186,6 +146920,7 @@ _08053A00:
 	ldr r0, [sp, #4]
 	adds r0, #0xb5
 	b _08053A3C
+	.global _08053A0C
 _08053A0C:
 	ldr r0, [sp, #4]
 	ldr r1, _08053A14 @ =0xFFFFFF00
@@ -146193,6 +146928,7 @@ _08053A0C:
 	b _08053A3C
 	.align 2, 0
 _08053A14: .4byte 0xFFFFFF00
+	.global _08053A18
 _08053A18:
 	ldr r0, [sp]
 	ldr r3, _08053A24 @ =0xFFFFFF00
@@ -146201,6 +146937,7 @@ _08053A18:
 	b _08053A3E
 	.align 2, 0
 _08053A24: .4byte 0xFFFFFF00
+	.global _08053A28
 _08053A28:
 	ldr r0, [sp]
 	movs r1, #0x80
@@ -146208,6 +146945,7 @@ _08053A28:
 	adds r0, r0, r1
 	str r0, [sp]
 	b _08053A3E
+	.global _08053A34
 _08053A34:
 	ldr r0, [sp, #4]
 	movs r3, #0x80
@@ -146215,6 +146953,7 @@ _08053A34:
 	adds r0, r0, r3
 _08053A3C:
 	str r0, [sp, #4]
+	.global _08053A3E
 _08053A3E:
 	ldr r0, [r7, #8]
 	mov r1, sp
@@ -149877,6 +150616,7 @@ sub_080557E0: @ 0x080557E0
 	mov pc, r0
 	.align 2, 0
 _08055804: .4byte _08055808
+	.global _08055808
 _08055808: @ jump table
 	.4byte _08055828 @ case 0
 	.4byte _08055834 @ case 1
@@ -149886,6 +150626,7 @@ _08055808: @ jump table
 	.4byte _08055864 @ case 5
 	.4byte _08055870 @ case 6
 	.4byte _0805587C @ case 7
+	.global _08055828
 _08055828:
 	ldr r0, [r7, #0xc]
 	subs r0, #0xb5
@@ -149893,6 +150634,7 @@ _08055828:
 	ldr r0, [r7, #0x10]
 	subs r0, #0xb5
 	b _08055884
+	.global _08055834
 _08055834:
 	ldr r0, [r7, #0xc]
 	adds r0, #0xb5
@@ -149900,6 +150642,7 @@ _08055834:
 	ldr r0, [r7, #0x10]
 	adds r0, #0xb5
 	b _08055884
+	.global _08055840
 _08055840:
 	ldr r0, [r7, #0xc]
 	adds r0, #0xb5
@@ -149907,6 +150650,7 @@ _08055840:
 	ldr r0, [r7, #0x10]
 	subs r0, #0xb5
 	b _08055884
+	.global _0805584C
 _0805584C:
 	ldr r0, [r7, #0xc]
 	subs r0, #0xb5
@@ -149914,18 +150658,21 @@ _0805584C:
 	ldr r0, [r7, #0x10]
 	adds r0, #0xb5
 	b _08055884
+	.global _08055858
 _08055858:
 	ldr r0, [r7, #0x10]
 	ldr r1, _08055860 @ =0xFFFFFF00
 	b _08055882
 	.align 2, 0
 _08055860: .4byte 0xFFFFFF00
+	.global _08055864
 _08055864:
 	ldr r0, [r7, #0xc]
 	ldr r1, _0805586C @ =0xFFFFFF00
 	b _08055876
 	.align 2, 0
 _0805586C: .4byte 0xFFFFFF00
+	.global _08055870
 _08055870:
 	ldr r0, [r7, #0xc]
 	movs r1, #0x80
@@ -149934,6 +150681,7 @@ _08055876:
 	adds r0, r0, r1
 	str r0, [r7, #0xc]
 	b _08055886
+	.global _0805587C
 _0805587C:
 	ldr r0, [r7, #0x10]
 	movs r1, #0x80
@@ -151822,6 +152570,7 @@ _080569CA:
 	.align 2, 0
 _080569E0: .4byte 0x03007FFF
 _080569E4: .4byte _080569E8
+	.global _080569E8
 _080569E8: @ jump table
 	.4byte _08056A0C @ case 0
 	.4byte _08056A2C @ case 1
@@ -151832,6 +152581,7 @@ _080569E8: @ jump table
 	.4byte _08056A90 @ case 6
 	.4byte _08056A90 @ case 7
 	.4byte _08056A66 @ case 8
+	.global _08056A0C
 _08056A0C:
 	ldr r2, _08056A28 @ =0x040000D4
 	adds r0, r3, #4
@@ -151849,6 +152599,7 @@ _08056A0C:
 	b _08056A90
 	.align 2, 0
 _08056A28: .4byte 0x040000D4
+	.global _08056A2C
 _08056A2C:
 	cmp r2, #0
 	beq _08056A3A
@@ -151861,11 +152612,13 @@ _08056A3A:
 	adds r1, r4, #0
 	bl sub_0805AFC4
 	b _08056A90
+	.global _08056A44
 _08056A44:
 	adds r0, r3, #0
 	adds r1, r4, #0
 	bl sub_0805AFBC
 	b _08056A90
+	.global _08056A4E
 _08056A4E:
 	cmp r2, #0
 	beq _08056A5C
@@ -151878,6 +152631,7 @@ _08056A5C:
 	adds r1, r4, #0
 	bl sub_0805AFD0
 	b _08056A90
+	.global _08056A66
 _08056A66:
 	ldrb r1, [r5]
 	movs r0, #0xf
@@ -151899,6 +152653,7 @@ _08056A88:
 	adds r0, r3, #0
 	adds r1, r4, #0
 	bl sub_0805AFB8
+	.global _08056A90
 _08056A90:
 	pop {r4, r5}
 	pop {r0}
@@ -152292,6 +153047,7 @@ _08056F90:
 	mov pc, r0
 	.align 2, 0
 _08056F9C: .4byte _08056FA0
+	.global _08056FA0
 _08056FA0: @ jump table
 	.4byte _080570FE @ case 0
 	.4byte _08056FFC @ case 1
@@ -152316,90 +153072,105 @@ _08056FA0: @ jump table
 	.4byte _080570C0 @ case 20
 	.4byte _080570D0 @ case 21
 	.4byte _080570FE @ case 22
+	.global _08056FFC
 _08056FFC:
 	movs r0, #0x3c
 	bl sub_080273EC
 	adds r1, r4, #0
 	bl sub_08059324
 	b _08057100
+	.global _0805700A
 _0805700A:
 	movs r0, #0x3c
 	bl sub_080273EC
 	adds r1, r4, #0
 	bl sub_080592C0
 	b _08057100
+	.global _08057018
 _08057018:
 	movs r0, #0x40
 	bl sub_080273EC
 	adds r1, r4, #0
 	bl sub_08059258
 	b _08057100
+	.global _08057026
 _08057026:
 	movs r0, #0x3c
 	bl sub_080273EC
 	adds r1, r4, #0
 	bl sub_080591C0
 	b _08057100
+	.global _08057034
 _08057034:
 	movs r0, #0x3c
 	bl sub_080273EC
 	adds r1, r4, #0
 	bl sub_08059154
 	b _08057100
+	.global _08057042
 _08057042:
 	movs r0, #0x3c
 	bl sub_080273EC
 	adds r1, r4, #0
 	bl sub_080590DC
 	b _08057100
+	.global _08057050
 _08057050:
 	movs r0, #0x3c
 	bl sub_080273EC
 	adds r1, r4, #0
 	bl sub_0805905C
 	b _08057100
+	.global _0805705E
 _0805705E:
 	movs r0, #0x3c
 	bl sub_080273EC
 	adds r1, r4, #0
 	bl sub_08059010
 	b _08057100
+	.global _0805706C
 _0805706C:
 	movs r0, #0x3c
 	bl sub_080273EC
 	adds r1, r4, #0
 	bl sub_08058FA4
 	b _08057100
+	.global _0805707A
 _0805707A:
 	movs r0, #0x3c
 	bl sub_080273EC
 	adds r1, r4, #0
 	bl sub_08058F38
 	b _08057100
+	.global _08057088
 _08057088:
 	movs r0, #0x3c
 	bl sub_080273EC
 	adds r1, r4, #0
 	bl sub_08058ECC
 	b _08057100
+	.global _08057096
 _08057096:
 	movs r0, #0x3c
 	bl sub_080273EC
 	adds r1, r4, #0
 	bl sub_08058E74
 	b _08057100
+	.global _080570A4
 _080570A4:
 	movs r0, #0x3c
 	bl sub_080273EC
 	adds r1, r4, #0
 	bl sub_08058E14
 	b _08057100
+	.global _080570B2
 _080570B2:
 	movs r0, #0x3c
 	bl sub_080273EC
 	adds r1, r4, #0
 	bl sub_08058D8C
 	b _08057100
+	.global _080570C0
 _080570C0:
 	movs r0, #0x3c
 	bl sub_080273EC
@@ -152407,12 +153178,14 @@ _080570C0:
 	adds r2, r4, #0
 	bl sub_08058D3C
 	b _08057100
+	.global _080570D0
 _080570D0:
 	movs r0, #0x3c
 	bl sub_080273EC
 	adds r1, r4, #0
 	bl sub_08058D20
 	b _08057100
+	.global _080570DE
 _080570DE:
 	movs r0, #0x44
 	bl sub_080273EC
@@ -152420,6 +153193,7 @@ _080570DE:
 	adds r2, r6, #0
 	bl sub_0805AE9C
 	b _08057100
+	.global _080570EE
 _080570EE:
 	movs r0, #0x3c
 	bl sub_080273EC
@@ -152427,6 +153201,7 @@ _080570EE:
 	adds r2, r6, #0
 	bl sub_0805ADE4
 	b _08057100
+	.global _080570FE
 _080570FE:
 	movs r0, #0
 _08057100:
@@ -152711,6 +153486,7 @@ _080572AE:
 	.align 2, 0
 _08057328: .4byte gUnknown_086D786C
 _0805732C: .4byte _08057330
+	.global _08057330
 _08057330: @ jump table
 	.4byte _0805737A @ case 0
 	.4byte _0805737A @ case 1
@@ -152727,6 +153503,7 @@ _08057330: @ jump table
 	.4byte _0805737A @ case 12
 	.4byte _0805737A @ case 13
 	.4byte _0805737A @ case 14
+	.global _0805736C
 _0805736C:
 	ldr r1, [sp, #0x14]
 	adds r0, r1, r6
@@ -152735,6 +153512,7 @@ _0805736C:
 	ldr r1, [r0]
 	movs r0, #0x20
 	b _08057386
+	.global _0805737A
 _0805737A:
 	ldr r2, [sp, #0x14]
 	adds r0, r2, r6
@@ -153745,6 +154523,7 @@ _08057D02:
 	mov pc, r1
 	.align 2, 0
 _08057D0C: .4byte _08057D10
+	.global _08057D10
 _08057D10: @ jump table
 	.4byte _08058094 @ case 0
 	.4byte _08057D38 @ case 1
@@ -153756,6 +154535,7 @@ _08057D10: @ jump table
 	.4byte _08057F54 @ case 7
 	.4byte _08058004 @ case 8
 	.4byte _08058094 @ case 9
+	.global _08057D38
 _08057D38:
 	movs r0, #0x24
 	bl sub_080273EC
@@ -153810,6 +154590,7 @@ _08057DA8: .4byte 0x020005A8
 _08057DAC: .4byte gUnknown_086D7C20
 _08057DB0: .4byte gUnknown_087FB87C
 _08057DB4: .4byte 0x00001030
+	.global _08057DB8
 _08057DB8:
 	movs r0, #0x24
 	bl sub_080273EC
@@ -153835,6 +154616,7 @@ _08057DE4: .4byte 0x020005AC
 _08057DE8: .4byte gUnknown_086D7C38
 _08057DEC: .4byte gUnknown_087FB87C
 _08057DF0: .4byte 0x00002030
+	.global _08057DF4
 _08057DF4:
 	movs r0, #0x24
 	bl sub_080273EC
@@ -153860,6 +154642,7 @@ _08057E20: .4byte 0x020005B0
 _08057E24: .4byte gUnknown_086D7C58
 _08057E28: .4byte gUnknown_087FB87C
 _08057E2C: .4byte 0x00002030
+	.global _08057E30
 _08057E30:
 	movs r0, #0x24
 	bl sub_080273EC
@@ -153885,6 +154668,7 @@ _08057E5C: .4byte 0x020005A8
 _08057E60: .4byte gUnknown_086D7C20
 _08057E64: .4byte gUnknown_087FB87C
 _08057E68: .4byte 0x00002030
+	.global _08057E6C
 _08057E6C:
 	ldr r1, [r7]
 	ldr r2, [r7, #4]
@@ -153955,6 +154739,7 @@ _08057EFC: .4byte 0x020005B4
 _08057F00: .4byte gUnknown_086D7C78
 _08057F04: .4byte gUnknown_087FB87C
 _08057F08: .4byte 0x00001030
+	.global _08057F0C
 _08057F0C:
 	ldr r0, _08057F40 @ =gUnknown_087EAFA8
 	movs r1, #0xb0
@@ -153985,6 +154770,7 @@ _08057F44: .4byte 0x020005B8
 _08057F48: .4byte gUnknown_086D7C94
 _08057F4C: .4byte gUnknown_087FB87C
 _08057F50: .4byte 0x0000B030
+	.global _08057F54
 _08057F54:
 	ldr r0, _08057FF0 @ =gUnknown_087EAFC8
 	movs r1, #0xc0
@@ -154064,6 +154850,7 @@ _08057FF4: .4byte 0x020005B8
 _08057FF8: .4byte gUnknown_086D7C94
 _08057FFC: .4byte gUnknown_087FB87C
 _08058000: .4byte 0x0000C030
+	.global _08058004
 _08058004:
 	movs r0, #0x24
 	bl sub_080273EC
@@ -154130,6 +154917,7 @@ _08058004:
 	mov r0, sl
 	str r0, [r4, #0x20]
 	adds r0, r4, #0
+	.global _08058094
 _08058094:
 	add sp, #0x14
 	pop {r3, r4, r5}
@@ -154384,12 +155172,14 @@ _08058300:
 	mov pc, r0
 	.align 2, 0
 _0805830C: .4byte _08058310
+	.global _08058310
 _08058310: @ jump table
 	.4byte _08058470 @ case 0
 	.4byte _08058324 @ case 1
 	.4byte _08058368 @ case 2
 	.4byte _0805838E @ case 3
 	.4byte _080583CA @ case 4
+	.global _08058324
 _08058324:
 	adds r3, r4, #0
 	adds r3, #0x22
@@ -154426,6 +155216,7 @@ _08058324:
 _08058364:
 	lsls r0, r5, #8
 	b _08058438
+	.global _08058368
 _08058368:
 	adds r0, r4, #0
 	adds r0, #0x22
@@ -154446,6 +155237,7 @@ _08058368:
 	bge _0805843A
 	lsls r0, r0, #8
 	b _08058438
+	.global _0805838E
 _0805838E:
 	adds r5, r4, #0
 	adds r5, #0x22
@@ -154477,6 +155269,7 @@ _0805838E:
 	rsbs r0, r0, #0
 	strb r0, [r5]
 	b _0805843A
+	.global _080583CA
 _080583CA:
 	movs r1, #0x26
 	ldrsh r0, [r4, r1]
@@ -154562,6 +155355,7 @@ _08058464:
 	ldr r2, [r6, #4]
 	adds r0, r5, #0
 	bl sub_08047970
+	.global _08058470
 _08058470:
 	pop {r4, r5, r6, r7}
 	pop {r0}
@@ -158664,12 +159458,14 @@ sub_0805A638: @ 0x0805A638
 	mov pc, r0
 	.align 2, 0
 _0805A650: .4byte _0805A654
+	.global _0805A654
 _0805A654: @ jump table
 	.4byte _0805A668 @ case 0
 	.4byte _0805A680 @ case 1
 	.4byte _0805A69E @ case 2
 	.4byte _0805A6B0 @ case 3
 	.4byte _0805A6F2 @ case 4
+	.global _0805A668
 _0805A668:
 	ldr r1, [r5, #4]
 	lsls r0, r1, #1
@@ -158683,6 +159479,7 @@ _0805A668:
 	str r0, [r5, #4]
 	movs r0, #1
 	b _0805A6CC
+	.global _0805A680
 _0805A680:
 	ldr r4, [r5, #4]
 	lsls r0, r4, #6
@@ -158698,6 +159495,7 @@ _0805A680:
 	str r0, [r5, #4]
 	movs r0, #2
 	b _0805A6CC
+	.global _0805A69E
 _0805A69E:
 	movs r2, #0x80
 	lsls r2, r2, #1
@@ -158708,6 +159506,7 @@ _0805A69E:
 	str r0, [r5, #4]
 	movs r0, #3
 	b _0805A6CC
+	.global _0805A6B0
 _0805A6B0:
 	ldr r4, [r5, #4]
 	lsls r0, r4, #8
@@ -158743,6 +159542,7 @@ _0805A6EC:
 	ldr r0, [r5, #4]
 	adds r0, #1
 	str r0, [r5, #4]
+	.global _0805A6F2
 _0805A6F2:
 	pop {r4, r5}
 	pop {r0}
@@ -158888,27 +159688,33 @@ sub_0805A7D8: @ 0x0805A7D8
 	mov pc, r0
 	.align 2, 0
 _0805A7EC: .4byte _0805A7F0
+	.global _0805A7F0
 _0805A7F0: @ jump table
 	.4byte _0805A822 @ case 0
 	.4byte _0805A804 @ case 1
 	.4byte _0805A80C @ case 2
 	.4byte _0805A814 @ case 3
 	.4byte _0805A81C @ case 4
+	.global _0805A804
 _0805A804:
 	adds r0, r2, #0
 	bl sub_0805A4D8
 	b _0805A822
+	.global _0805A80C
 _0805A80C:
 	adds r0, r2, #0
 	bl sub_0805A638
 	b _0805A822
+	.global _0805A814
 _0805A814:
 	adds r0, r2, #0
 	bl sub_0805A76C
 	b _0805A822
+	.global _0805A81C
 _0805A81C:
 	adds r0, r2, #0
 	bl sub_0805A6F8
+	.global _0805A822
 _0805A822:
 	pop {r0}
 	bx r0
