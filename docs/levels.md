@@ -994,7 +994,8 @@ its number.
 1. **Add the theme** at the end of `"themes"` (its number is its place):
    `{"constant": "THEME_LAB", "name": "lab", "song": "intro",
    "picture": "level_select/pictures/space.png", "palette_cycle": "lab"}`.
-   It picks one of the songs (new music is out of scope) and one of the
+   It picks one of the songs (a new one is an XM, [audio.md, "Adding a
+   song"](./audio.md#adding-a-song)) and one of the
    level-select pictures, or none (then its levels must be off the grid,
    like mega-mix). A picture of its own is a new PNG in
    `graphics/level_select/pictures/` with a manifest entry without a ROM

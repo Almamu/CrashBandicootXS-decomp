@@ -45,7 +45,8 @@ High level structure of the music block (base = `0x0855BCB4`):
 [zero pad to a word boundary, 2 bytes]
 [sample table: {offset, length} x N]
 [4-byte zero pad]
-per song (in ROM address order, NOT alphabetical - see gax_manifest.json "song_order"):
+per song (in ROM address order, NOT alphabetical - see gax_manifest.json "song_order";
+then the new songs, see "Adding a song"):
     [patterns, allocated in true physical ROM order per song ("pattern_group_order")]
     [title/artist string, verbatim padded bytes]
     [pattern-header tables, one per channel, in true physical channel order ("channel_order"),
@@ -396,7 +397,8 @@ Everything is generated from editable sources, never read from
   strings, etc), and `song_table`, the song IDs (`gSongTable`'s order,
   which isn't `song_order`, the block's).
 - `sound/songs/*.xm` — one FastTracker II module per song (patterns/notes),
-  editable in any XM tracker.
+  editable in any XM tracker; and a new song's optional settings,
+  `sound/songs/<key>.json` (see "Adding a song").
 - `sound/samples/*.wav` — one sample per instrument sample slot.
 - `sound/gax_sfx_manifest.json` — the sound-effect set: its 88 instruments
   (the same fields as the music's), the voice type's song-header fields,
@@ -443,6 +445,92 @@ Everything is generated from editable sources, never read from
 Both tools write into `build/crashbandicootxs/sound/`, and the constants
 headers into `build/include/constants/` — `sound/` itself only ever holds
 editable sources, never build products.
+
+## Adding a song
+
+A new song is an XM in `sound/songs/` and an entry of the manifest's
+`song_table`. The ROM's 19 songs keep the scaffold the manifest recorded
+for them (`songs`: how their patterns are shared and laid out, their
+transposes, their title bytes), which is what makes them rebuild byte for
+byte. A song that isn't in `songs` has no ROM history, and
+`tools/gax_audio.py` derives its scaffold from the XM.
+
+1. **Write the XM**, `sound/songs/<key>.xm`. The key is the song's name
+   (`SONG_<KEY>`), so lower case and `_`.
+   - Its instruments are the shared pool's, by name: an XM instrument
+     named `Instrument N` plays the pool's instrument N (0-51, the
+     manifest's `instruments`), as in the ROM's songs. The XM's own
+     samples and envelopes aren't read; the ROM songs' XMs carry each
+     pool instrument with its sample, so copy them from one of those to
+     hear the song in a tracker. New instruments and samples are out of
+     scope.
+   - Every pattern the order list plays has the same number of rows (a
+     GAX2 song has one pattern length), and the module's speed is 6, the
+     speed GAX2 starts at (set another with an `Fxx` effect on the first
+     row). The BPM isn't used: GAX2 steps one tick per frame, about 150
+     BPM.
+   - The order list is the song's order, and the restart position is
+     where it loops back to.
+   - A row has at most one effect: the effect column's portamentos
+     (`1xx`, `2xx`, `3xx`), volume (`Cxx`), pattern break (`Dxx`), `Exx`
+     and speed (`Fxx` under 0x20), or else the volume column's volume or
+     fine volume slide. Other effects are dropped.
+2. **Settings** (optional), `sound/songs/<key>.json`; every field has a
+   default, the ROM's level songs':
+
+   | field | default | what |
+   |---|---|---|
+   | `title`, `artist` | the XM's module name, none | the `"title" © artist` string stored after the patterns (the game never shows it) |
+   | `volume` | 256 | `GaxSongData.volume`, Q8 (256 = 1.0) |
+   | `sample_rate` | 15769 | the mix rate, Hz |
+   | `num_fx_channels` | 3 | the default number of sound-effect voices (`StartSong` asks for 3) |
+   | `half_rate_fx` | 1 | mix the sound effects at half the mix rate (`GaxSongData.halfRateFx`, see "GAX2_Song / SoundHandler / SongInfo") |
+   | `mixer_data_bytes` | 28 zeros | the mixer's echo taps (`GaxDspParams`), as in the manifest's songs; all 0 is no echo |
+
+3. **Give it an id**: add `{"song": "<key>", "comment": "..."}` at the
+   end of `song_table` in `sound/gax_manifest.json`. Its place is its id,
+   `SONG_<KEY>` (`constants/songs.h`), and `gSongTable` gets its entry
+   (`song_table.inc`). At the end, the ROM's ids stay as they are;
+   `SONG_COUNT` and `SONG_NONE` grow by one.
+4. **Use it**: a level theme's `"song"` (`data/levels/levels.json`,
+   [levels.md, "Adding a theme"](./levels.md#adding-a-theme)) names it.
+5. **Run `make`.** The song is linked after the ROM's songs, before the
+   default song, so the music block grows and everything after it moves
+   ([shifting.md](./shifting.md)).
+
+What the tool derives (`new_song`):
+
+- one GAX2 channel per XM channel, and one order position per entry of
+  the order list, each channel's pattern there its column of the XM
+  pattern the position plays, with no transpose;
+- the loop point from the restart position, the row count from the
+  patterns, `num_items` (3 handlers and one per channel);
+- pattern sharing: identical packed patterns are stored once (a pattern
+  the order plays again, or the same notes on two channels), in the order
+  they first appear;
+- the title string, padded with zeros to a word the way the ROM's are
+  (`n gin`'s ends on one and has no terminator).
+
+It stops with a message on an XM it can't take: an instrument that isn't
+`Instrument N` of the pool, patterns of different lengths, another speed,
+a restart position past the order list, or over 64 KiB of patterns (a
+channel's order entry is a 16-bit offset). `--constants` and `--table`
+stop when `song_table` names a song that is neither the ROM's nor a
+`sound/songs/<key>.xm`, or leaves one of the ROM's out. An XM that no
+`song_table` entry names isn't built.
+
+Tested in scratch with plain `make`: a 2-channel test tune written for the
+test (16-row patterns, a melody on pool instrument 7 and a drum on 2,
+order `0 1 2 1`, restart position 1, `"volume": 300`) as
+`test_tune`, the 20th song (`SONG_TEST_TUNE`, 0x13; `SONG_NONE` 0x14), a
+12th theme `THEME_TEST` playing it, and jungle jam given that theme. In
+mGBA, entering jungle jam calls `PlaySong(0x13)`, and `GAX2_init` starts
+`gSongTable[19]`, the new song. The Info handler's order position goes
+0, 1, 2, 3, then loops to 1, a pattern every 96 frames (16 rows at speed 6). The
+captured output (the 8-bit buffer each `GAX_play` mixed, at 15769 Hz) is
+not silent, and the two order positions that play XM pattern 1 (1 and 3)
+give the same samples (correlation 1.000), while positions 1 and 2 don't
+(0.348).
 
 ## Tooling used during reverse-engineering (not part of the build)
 

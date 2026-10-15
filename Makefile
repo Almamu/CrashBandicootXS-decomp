@@ -137,7 +137,9 @@ include levels.mk
 include text.mk
 include cutscenes.mk
 
-SOUND_SONGS := $(wildcard sound/songs/*.xm)
+# A new song's settings are its sound/songs/<key>.json (docs/audio.md,
+# "Adding a song").
+SOUND_SONGS := $(wildcard sound/songs/*.xm) $(wildcard sound/songs/*.json)
 SOUND_SAMPLES := $(wildcard sound/samples/*.wav)
 SOUND_SFX_SOURCES := sound/gax_sfx_manifest.json $(wildcard sound/sfx_samples/*.wav)
 SOUND_BUILT := $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_audio_data.s \
