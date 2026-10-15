@@ -1,0 +1,78 @@
+# The sample mod (mods/sample, docs/modding.md), built and played on every
+# PR (#1090): `make compare` proves the original data still gives the ROM,
+# and this proves other data still builds and runs. It needs no ROM (no
+# secrets), so it runs the same on fork PRs.
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  sample-mod:
+    runs-on: ubuntu-24.04
+    name: The sample mod (built from data and boot-tested in mGBA, no ROM)
+    timeout-minutes: 90
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        persist-credentials: false
+
+    # mgba-sdl is mGBA's SDL frontend (/usr/games/mgba), which
+    # tools/boottest.py runs headless with its GDB stub.
+    - name: Install dependencies
+      run: sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 update && sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 install -y --no-install-recommends build-essential binutils-arm-none-eabi gcc-arm-none-eabi libpng-dev zlib1g-dev python3-pil gettext mgba-sdl
+
+    # The compilers, as in build.yml.
+    - name: Checkout agbcc
+      uses: actions/checkout@v5
+      with:
+        path: agbcc
+        repository: SAT-R/agbcc
+        persist-credentials: false
+
+    - name: Install agbcc
+      working-directory: agbcc
+      run: ./build.sh && ./install.sh ../
+
+    - name: Checkout agbcc (C++)
+      uses: actions/checkout@v5
+      with:
+        path: agbcc-cp
+        repository: notyourav/agbcc
+        ref: 1caa6becde5e4676b59c31c74d68f45ced79557c
+        persist-credentials: false
+
+    - name: Build agbcp, old_agbcp and agbcp_arm_patched
+      run: tools/build_agbccpp.sh agbcc-cp .
+
+    # tools/apply_mod.py copies the tree (no baserom.gba: there is none
+    # here) to build/mods/sample, applies the mod there, and a plain make
+    # builds it: its ROM is build/mods/sample/crashbandicootxs.gba.
+    - name: Apply and build the sample mod
+      run: make -j"$(nproc)" mod MOD=mods/sample
+
+    - name: Check the mod's translations
+      working-directory: build/mods/sample
+      run: make text-check
+
+    - name: Check the mod's graphics manifest
+      working-directory: build/mods/sample
+      run: python3 tools/gfx_manifest.py check
+
+    # mods/sample/boottest.py plays the mod's ROM: its new room and song,
+    # its recoloured category, its level-select page, boss HUD, cutscene
+    # and 64 Kbit save. It fails the step if any check fails.
+    - name: Boot-test the sample mod
+      working-directory: build/mods/sample
+      run: PATH="/usr/games:$PATH" python3 mods/sample/boottest.py --out boottest.json
+
+    - name: Upload the boot test's log
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: sample_mod_boottest
+        path: build/mods/sample/boottest.json
+        if-no-files-found: ignore

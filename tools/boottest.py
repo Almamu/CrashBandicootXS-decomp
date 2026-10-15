@@ -244,9 +244,13 @@ class State:
         self.events = []
         self.level = None
         self.room = None
+        self.actions = []  # functions of the Gdb, run before the next frame's keys
 
 
-def run_script(rom_path, syms, rom, script, timeout):
+def run_script(rom_path, syms, rom, script, timeout, extra_hooks=None):
+    """Plays the script in a fresh mGBA and returns its log. extra_hooks:
+    {address: function(gdb) -> event or None}, more breakpoints whose
+    events go into the log (mods/sample/boottest.py's)."""
     by_addr = {}
     for name, a in syms.items():
         by_addr.setdefault(a, name)
@@ -261,6 +265,7 @@ def run_script(rom_path, syms, rom, script, timeout):
         syms["RunSaveMenu"]: lambda g: ["RunSaveMenu", g.reg(0)],
         syms["EEPROMWrite"]: lambda g: ["EEPROMWrite", g.reg(0)],
     }
+    hooks.update(extra_hooks or {})
     mixer = syms["GaxMixerPlay"]
 
     st = State()
@@ -295,7 +300,9 @@ def run_script(rom_path, syms, rom, script, timeout):
                 mixer_ran = True
                 g.bp(mixer, False)  # once a checkpoint is enough
             elif pc in hooks:
-                st.events.append([st.frame] + hooks[pc](g))
+                e = hooks[pc](g)
+                if e is not None:
+                    st.events.append([st.frame] + e)
             elif pc == level_bp:
                 if st.level is not None:
                     st.events.append([st.frame, "SetLevel", st.level])
@@ -308,6 +315,8 @@ def run_script(rom_path, syms, rom, script, timeout):
                     st.room = None
             elif pc == keys_bp:
                 st.frame += 1
+                while st.actions:
+                    st.actions.pop(0)(g)
                 try:
                     k = next(keys)
                 except StopIteration:
@@ -337,7 +346,9 @@ def run_script(rom_path, syms, rom, script, timeout):
         emu.wait()
         sav = os.path.join(work, "rom.sav")
         if os.path.exists(sav):
-            log["save"] = hashlib.sha1(open(sav, "rb").read()).hexdigest()[:16]
+            data = open(sav, "rb").read()
+            log["save"] = hashlib.sha1(data).hexdigest()[:16]
+            log["save_size"] = len(data)
         shutil.rmtree(work, ignore_errors=True)
     log["seconds"] = round(time.time() - start, 1)
     return log
