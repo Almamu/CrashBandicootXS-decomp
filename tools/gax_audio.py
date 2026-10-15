@@ -12,6 +12,10 @@ sources:
                               notes and instrument assignments are read from
                               here - this is what a modder edits to change a
                               song.
+  sound/songs/<key>.json    - a new song's settings (optional): a song of
+                              the manifest's song_table with no recorded
+                              scaffold has it derived from its XM
+                              (new_song, docs/audio.md "Adding a song").
   sound/samples/*.wav       - one 8-bit mono PCM sample per instrument voice
                               (shared across songs) - this is what a modder
                               edits to change a sound.
@@ -459,10 +463,13 @@ def read_xm(path):
     buf = open(path, 'rb').read()
     if buf[:17] != b'Extended Module: ':
         raise ValueError(f"{path}: not an XM file")
+    name = buf[17:37].split(b'\x00')[0].decode('latin-1').strip()
     header_size = struct.unpack_from('<I', buf, 60)[0]
-    song_length = struct.unpack_from('<H', buf, 64)[0]
+    song_length, restart = struct.unpack_from('<HH', buf, 64)
     num_channels = struct.unpack_from('<H', buf, 68)[0]
     num_patterns = struct.unpack_from('<H', buf, 70)[0]
+    tempo, bpm = struct.unpack_from('<HH', buf, 76)
+    order = list(buf[80:80 + song_length])
 
     pos = 60 + header_size
     patterns = []
@@ -493,7 +500,8 @@ def read_xm(path):
             pos += 40
         pos += sum(sample_lengths)
 
-    return {'num_channels': num_channels, 'patterns': patterns,
+    return {'name': name, 'num_channels': num_channels, 'patterns': patterns,
+            'order': order, 'restart': restart, 'tempo': tempo, 'bpm': bpm,
             'gax_instrument_indices': gax_instrument_indices}
 
 
@@ -690,7 +698,9 @@ class Song:
         self.mixer_data_bytes = bytes(manifest_entry['mixer_data_bytes'])
         self.title = manifest_entry['title']
         self.artist = manifest_entry['artist']
-        self.title_bytes = base64.b64decode(manifest_entry['title_bytes'])
+        # the ROM's songs keep their title bytes as recorded (padding
+        # included); a new song's are written from title and artist
+        self.title_bytes = base64.b64decode(manifest_entry['title_bytes']) if 'title_bytes' in manifest_entry else None
         self.num_items = num_items
         self.unk_ptr = unk_ptr
         self.channels = []
@@ -814,7 +824,13 @@ def link(instruments_by_index, songs, samples_by_index, header_prefix):
         # A `"Title" (c) Artist` metadata string (with its original padding)
         # sits right after the song's patterns and before its pattern-header
         # tables - captured verbatim in the manifest since it never changes.
-        alloc.alloc(song.title_bytes)
+        # A new song's is padded the way the ROM's are: zeros up to a word,
+        # no terminator if it ends on one (n gin's).
+        if song.title_bytes is not None:
+            alloc.alloc(song.title_bytes)
+        else:
+            alloc.alloc(title_text(song.title, song.artist))
+            alloc.align(4)
 
         # Layout order from here on matches what's observed in the original
         # data: all pattern-header tables grouped together, then SongInfo +
@@ -833,6 +849,8 @@ def link(instruments_by_index, songs, samples_by_index, header_prefix):
             hdr_bytes = bytearray()
             for i, p in enumerate(ch.patterns):
                 seq_off = pattern_addrs_by_channel[ci][i] - anchor
+                if seq_off > 0xFFFF:
+                    sys.exit(f"{song.title}: over 64 KiB of patterns (GaxOrderEntry.patternOffset is 16 bits)")
                 transpose, reserved = ch.pattern_headers[i]
                 hdr_bytes += struct.pack('<Hbb', seq_off, transpose, reserved)
             headers_addrs[ci] = alloc.alloc(bytes(hdr_bytes))
@@ -963,13 +981,28 @@ def write_header(path, songs_by_key):
         f.write('\n'.join(out))
 
 
+def check_song_table(manifest, manifest_path):
+    """song_table lists every song once: each of the ROM's (the manifest's
+    `songs`) and the new ones, songs with an XM in sound/songs/ but no
+    recorded scaffold."""
+    rel = os.path.relpath(manifest_path, ROOT)
+    keys = [t['song'] for t in manifest['song_table']]
+    twice = sorted({k for k in keys if keys.count(k) > 1})
+    if twice:
+        sys.exit(f"{rel}: song_table lists {', '.join(twice)} more than once")
+    missing = [k for k in manifest['songs'] if k not in keys]
+    if missing:
+        sys.exit(f"{rel}: song_table doesn't list {', '.join(missing)}")
+    for k in keys:
+        if k not in manifest['songs'] and not os.path.exists(os.path.join(SOUND_DIR, 'songs', f'{k}.xm')):
+            sys.exit(f"{rel}: song_table's {k} is neither a song of the ROM nor sound/songs/{k}.xm")
+
+
 def write_constants(manifest_path, path):
     """constants/songs.h: SONG_<KEY> for each song, in gSongTable order."""
     manifest = json.load(open(manifest_path))
+    check_song_table(manifest, manifest_path)
     table = manifest['song_table']
-    keys = [t['song'] for t in table]
-    assert sorted(keys) == sorted(manifest['songs']), \
-        f"{manifest_path}: song_table must list every song exactly once"
     rows = [('SONG_' + t['song'].upper(), f'{i:#x}', t['comment']) for i, t in enumerate(table)]
     width = max(len(n) + len(v) for n, v, _ in rows)
     rel = os.path.relpath(manifest_path, ROOT)
@@ -983,7 +1016,8 @@ def write_constants(manifest_path, path):
         ' * that PlaySong/StartSong take, in the order of the manifest\'s',
         ' * song_table. Each name is the song\'s key in sound/gax_manifest.json',
         ' * (the title the ROM stores with the song, e.g. "jungle (c) Manfred',
-        ' * Linzner"), and gSongTable pairs every SONG_<NAME> with the generated',
+        ' * Linzner"; a new song\'s is its XM\'s, sound/songs/<key>.xm), and',
+        ' * gSongTable pairs every SONG_<NAME> with the generated',
         " * GAX_SONG_<NAME> offset, so the two can't drift apart. The comments",
         ' * say where the game plays each one.',
         ' */',
@@ -1008,6 +1042,7 @@ def write_song_table(manifest_path, path):
     order: the song's GAX_SONG_<KEY> offset in the music block (gax_songs.h).
     Generated with constants/songs.h's ids, so no song is left NULL."""
     manifest = json.load(open(manifest_path))
+    check_song_table(manifest, manifest_path)
     rel = os.path.relpath(manifest_path, ROOT)
     out = [
         f'/* Generated by tools/gax_audio.py from {rel}\'s song_table. Do not edit. */',
@@ -1021,42 +1056,165 @@ def write_song_table(manifest_path, path):
         f.write('\n'.join(out))
 
 
+def rom_song(sm, xm, instruments):
+    """A song of the ROM: its patterns from the XM, laid out with the
+    scaffold the manifest recorded (pattern sharing and order, channel
+    order, transposes, title bytes), so it rebuilds byte for byte."""
+    song = Song(sm, num_items=sm['num_items'], unk_ptr=0)
+    used_indices = xm['gax_instrument_indices']
+
+    song.pattern_group_bytes = {
+        int(gid): base64.b64decode(b) for gid, b in sm.get('pattern_group_bytes', {}).items()
+    }
+    song.pattern_group_order = sm['pattern_group_order']
+    song.channel_order = sm['channel_order']
+
+    transposes = sm['channel_transposes']
+    pattern_groups = sm['pattern_groups']
+    for ci in range(sm['num_channels']):
+        ch = Channel()
+        ch_transposes = transposes[ci]
+        ch.pattern_groups = pattern_groups[ci]
+        for pi in range(sm['num_patterns_per_channel']):
+            transpose = ch_transposes[pi]
+            xm_rows_for_channel = [row[ci] for row in xm['patterns'][pi]]
+            pat = build_pattern_from_xm(xm_rows_for_channel, used_indices, instruments, transpose)
+            ch.patterns.append(pat)
+            ch.pattern_headers.append((transpose, 0))
+        song.channels.append(ch)
+        song.channel_handlers.append(SoundHandler(*HANDLER_FUNCS['channel'], type_flags=0x48))
+    return song
+
+
+# A new song's settings (sound/songs/<key>.json, every field optional):
+# its title and artist (the `"title" (c) artist` string stored with it) and
+# its GaxSongData fields. The defaults are the ROM's level songs': volume
+# 1.0, the 15769 Hz mix rate, 3 sound-effect voices mixed at half that
+# rate, and no echo (mixer_data_bytes, the mixer's 28 bytes of echo taps,
+# all 0 as in jungle's).
+NEW_SONG_DEFAULTS = {
+    'title': None,  # the XM's module name, or the key
+    'artist': None,  # none: the string is just `"title"`
+    'volume': 256,
+    'sample_rate': 15769,
+    'num_fx_channels': 3,
+    'half_rate_fx': 1,
+    'mixer_data_bytes': [0] * 28,
+}
+
+
+def title_text(title, artist):
+    """The string stored after a song's patterns: `"title" (c) artist`."""
+    text = f'"{title}" \xa9 {artist}' if artist else f'"{title}"'
+    return text.encode('latin-1')
+
+
+def new_song(key, xm_path, xm, instruments):
+    """A song with no ROM history: its scaffold derived from the XM, with
+    the settings of the optional sound/songs/<key>.json next to it.
+
+    - one GAX2 channel per XM channel, in order;
+    - one order position per entry of the XM's order list (a channel's
+      pattern there is its column of the XM pattern the position plays),
+      looping back to the XM's restart position;
+    - identical patterns stored once (a pattern the order repeats, or the
+      same notes on two channels); no transposes.
+
+    The XM's instruments name the shared pool's (`Instrument N`, as in the
+    ROM's songs). Every pattern the order plays must have the same number
+    of rows, and the module's speed must be 6, GAX2's starting speed
+    (change it with an Fxx effect). The BPM is ignored: GAX2 steps a tick
+    per frame."""
+    where = os.path.relpath(xm_path, ROOT)
+
+    def fail(msg):
+        sys.exit(f"{where}: {msg}")
+
+    settings = dict(NEW_SONG_DEFAULTS)
+    json_path = os.path.splitext(xm_path)[0] + '.json'
+    if os.path.exists(json_path):
+        given = json.load(open(json_path))
+        unknown = sorted(set(given) - set(NEW_SONG_DEFAULTS))
+        if unknown:
+            sys.exit(f"{os.path.relpath(json_path, ROOT)}: unknown settings {', '.join(unknown)} "
+                     f"(a song's are {', '.join(NEW_SONG_DEFAULTS)})")
+        settings.update(given)
+    if len(settings['mixer_data_bytes']) != 28:
+        fail("mixer_data_bytes must be 28 bytes")
+
+    order = xm['order']
+    if not order:
+        fail("the order list is empty")
+    if any(p >= len(xm['patterns']) for p in order):
+        fail("the order list plays a pattern the module doesn't have")
+    rows = {len(xm['patterns'][p]) for p in order}
+    if len(rows) != 1:
+        fail(f"the patterns the order plays have {sorted(rows)} rows: a GAX2 song has one pattern length")
+    if xm['tempo'] != 6:
+        fail(f"speed {xm['tempo']}: a GAX2 song starts at speed 6 (set another with an Fxx effect on the first row)")
+    if xm['restart'] >= len(order):
+        fail(f"restart position {xm['restart']} is past the order list")
+    used = xm['gax_instrument_indices']
+    for i, idx in enumerate(used):
+        if idx not in instruments:
+            fail(f"instrument {i + 1} must be named \"Instrument N\", N one of the {len(instruments)} "
+                 "instruments of the pool (sound/gax_manifest.json)")
+    for p in order:
+        for row in xm['patterns'][p]:
+            for cell in row:
+                if cell.instrument > len(used):
+                    fail(f"pattern {p} plays instrument {cell.instrument}, which the module doesn't have")
+
+    num_channels = xm['num_channels']
+    entry = {
+        'num_channels': num_channels,
+        'num_rows_per_pattern': rows.pop(),
+        'num_patterns_per_channel': len(order),
+        'loop_point': xm['restart'],
+        'ushort_0a': 0,
+        'title': settings['title'] or xm['name'] or key,
+    }
+    for field in ('artist', 'volume', 'sample_rate', 'num_fx_channels', 'half_rate_fx', 'mixer_data_bytes'):
+        entry[field] = settings[field]
+    song = Song(entry, num_items=3 + num_channels, unk_ptr=0)
+
+    groups = {}  # packed pattern -> its group
+    for ci in range(num_channels):
+        ch = Channel()
+        for p in order:
+            pat = build_pattern_from_xm([row[ci] for row in xm['patterns'][p]], used, instruments, 0)
+            ch.patterns.append(pat)
+            ch.pattern_headers.append((0, 0))
+            ch.pattern_groups.append(groups.setdefault(pat.pack(), len(groups)))
+        song.channels.append(ch)
+        song.channel_handlers.append(SoundHandler(*HANDLER_FUNCS['channel'], type_flags=0x48))
+    song.pattern_group_order = list(range(len(groups)))
+    song.channel_order = list(range(num_channels))
+    return song
+
+
+def block_songs(manifest):
+    """The songs' keys in the music block's order: the ROM's
+    (`song_order`), then the songs of `song_table` that aren't in it (new
+    ones), in song id order."""
+    keys = list(manifest['song_order'])
+    return keys + [t['song'] for t in manifest['song_table'] if t['song'] not in keys]
+
+
 def build(manifest_path, songs_dir, samples_dir, out_path, layout_path=None, header_path=None):
     manifest = json.load(open(manifest_path))
 
     instruments, samples = load_pool(manifest, samples_dir)
 
+    keys = block_songs(manifest)
     songs = []
-    for key in manifest['song_order']:
-        sm = manifest['songs'][key]
-        song = Song(sm, num_items=sm['num_items'], unk_ptr=0)
-
+    for key in keys:
         xm_path = os.path.join(songs_dir, f"{key}.xm")
         xm = read_xm(xm_path)
-        used_indices = xm['gax_instrument_indices']
-
-        song.pattern_group_bytes = {
-            int(gid): base64.b64decode(b) for gid, b in sm.get('pattern_group_bytes', {}).items()
-        }
-        song.pattern_group_order = sm['pattern_group_order']
-        song.channel_order = sm['channel_order']
-
-        transposes = sm['channel_transposes']
-        pattern_groups = sm['pattern_groups']
-        for ci in range(sm['num_channels']):
-            ch = Channel()
-            ch_transposes = transposes[ci]
-            ch.pattern_groups = pattern_groups[ci]
-            for pi in range(sm['num_patterns_per_channel']):
-                transpose = ch_transposes[pi]
-                xm_rows_for_channel = [row[ci] for row in xm['patterns'][pi]]
-                pat = build_pattern_from_xm(xm_rows_for_channel, used_indices, instruments, transpose)
-                ch.patterns.append(pat)
-                ch.pattern_headers.append((transpose, 0))
-            song.channels.append(ch)
-            song.channel_handlers.append(SoundHandler(*HANDLER_FUNCS['channel'], type_flags=0x48))
-
-        songs.append(song)
+        if key in manifest['songs']:
+            songs.append(rom_song(manifest['songs'][key], xm, instruments))
+        else:
+            songs.append(new_song(key, xm_path, xm, instruments))
 
     default = default_song(manifest['default_song'])
     _, header_prefix = build_sfx(SFX_MANIFEST, SFX_SAMPLES_DIR)
@@ -1073,7 +1231,7 @@ def build(manifest_path, songs_dir, samples_dir, out_path, layout_path=None, hea
         n = alloc.write(layout_path, asm_path(layout_path), split)
         print(f"wrote {layout_path}: {n} bytes")
     if header_path:
-        write_header(header_path, list(zip(manifest['song_order'], songs)))
+        write_header(header_path, list(zip(keys, songs)))
         print(f"wrote {header_path}")
 
 
