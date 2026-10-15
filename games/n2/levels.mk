@@ -106,23 +106,26 @@ $(C_BUILDDIR)/game/level/data/level_bg_tiles_1.o: $(foreach t,gVolcanoBgTiles \
 # - CRATE_KIND_COUNT: the gCrateKind* tables (0x081CFAC4, ...) are 26 bytes
 #   apart (XS's 22), and gCrateHitResponse (0x081CFC04) has 26 rows (of
 #   8, ATTACK_KIND_COUNT) up to gAttackKindBreakLimited.
-# - ENTITY_COUNT: the length of gEntitySpawnFuncs, levels.json's
-#   "entity_types".
 # - SFX_COUNT and SONG_COUNT (constants/sfx.h, songs.h, which XS's build
 #   generates from its sound data): gSfxTable (0x081CD958) has 64 entries
 #   of 12 bytes up to gCrc16Table, gSongTable (0x081CD904) 21 pointers up
 #   to gSfxTable.
 N2_CONSTANTS_levels     := LEVEL_COUNT 29 UI_TEXT_COUNT 196 PROGRESS_EXTRA_FLAG_BYTES 0
 N2_CONSTANTS_themes     := THEME_COUNT 12
-N2_CONSTANTS_entities   := ENTITY_COUNT $(shell python3 -c "import json; print(json.load(open('$(N2_LEVELS_DIR)/levels.json'))['entity_types'])")
 N2_CONSTANTS_categories :=
 N2_CONSTANTS_crates     := CRATE_KIND_COUNT 26
 N2_CONSTANTS_sfx        := SFX_COUNT 64
 N2_CONSTANTS_songs      := SONG_COUNT 21
-N2_PLACEHOLDER_CONSTANTS := $(foreach h,levels themes entities categories crates sfx songs,$(GENERATED_INCLUDE_DIR)/constants/$(h).h)
+N2_PLACEHOLDER_CONSTANTS := $(foreach h,levels themes categories crates sfx songs,$(GENERATED_INCLUDE_DIR)/constants/$(h).h)
 $(N2_PLACEHOLDER_CONSTANTS): $(GENERATED_INCLUDE_DIR)/constants/%.h: $(N2_DIR)/levels.mk $(N2_LEVELS_DIR)/levels.json
 	@mkdir -p $(dir $@)
 	printf '/* N-Tranced: not generated from its levels yet (games/n2/levels.mk). */\n#ifndef GUARD_CONSTANTS_$*_H\n#define GUARD_CONSTANTS_$*_H\n' > $@
 	$(if $(N2_CONSTANTS_$*),printf '#define %s %s\n' $(N2_CONSTANTS_$*) >> $@)
 	printf '#endif\n' >> $@
-$(CXX_OBJS) $(C_OBJS) $(LIB_C_OBJS): | $(N2_PLACEHOLDER_CONSTANTS)
+$(CXX_OBJS) $(C_OBJS) $(LIB_C_OBJS): | $(N2_PLACEHOLDER_CONSTANTS) $(GENERATED_INCLUDE_DIR)/constants/entities.h
+
+# constants/entities.h (ENTITY_*, ENTITY_COUNT), generated as XS's from
+# N-Tranced's entity_types.json (docs/n_tranced.md, "Levels")
+$(GENERATED_INCLUDE_DIR)/constants/entities.h: $(N2_LEVELS_DIR)/entity_types.json tools/levels.py
+	@mkdir -p $(dir $@)
+	$(N2_LEVELS) constants entities $@
