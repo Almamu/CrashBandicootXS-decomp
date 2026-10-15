@@ -1821,7 +1821,7 @@ a level gives is the level's.
 |---|---|---|
 | `"power"` | a power of `save->flags`: `TURBO_RUN`, `SUPER_BODY_SLAM`, `TORNADO_SPIN` or `DOUBLE_JUMP` (a new power is code). Given the first time the level is cleared, with its dialog | `if (!Has<Power>()) { ...; Give<Power>(); Show<Power>Dialog(); ... }` |
 | `"open_world"` | with a `"power"`, when it is given: the next level select turns to the next page by itself if it is open (see "Level-select pages") | `LevelSelect::SetNewWorldOpened()`, first in the block |
-| `"cutscene"` | a cutscene index, 0-10 (`gCutscenes`, `PlayCutscene`). With a `"power"`, played once, last in its block; without one, at every clear | `PlayCutscene(N)` |
+| `"cutscene"` | a cutscene of `data/cutscenes.json` (`gCutscenes`, `PlayCutscene`): its index (0-10 for the ROM's) or its constant (`"CUTSCENE_LAB"`, a new one, [data.md, "A new cutscene"](./data.md#a-new-cutscene)). With a `"power"`, played once, last in its block; without one, at every clear | `PlayCutscene(N)`, N the index |
 | `"mark_cleared"` | sets the level word's `cleared` bit (`LEVEL_FLAG_CRYSTAL`, the bit the crystal pickup sets) | `GetCurrentLevelFlags()->w.cleared = 1` |
 | `"next_level"` | `{"if_completion_over": N, "cutscene": C, "level": L}`: over N% completion (0-99), play C (optional) and go straight on to level L, with no level select in between | `if (progress.GetCompletionPercent() > N) { PlayCutscene(C); room.level += L - <this level>; room.roomIndex = 0; goto start; }` |
 | `"credits"` | `{}` or `{"cutscene": C}`: play C, then the credits | `PlayCutscene(C); RunCredits()` |
@@ -1859,8 +1859,9 @@ powers, but only one level each: the power is a bit of the save, and the
 second level's block would never run.
 
 **Checks.** `levels.py` stops on an unknown key or power, a power given
-by two levels, `"open_world"` without a `"power"`, a cutscene index past
-`gCutscenes` (`CUTSCENE_COUNT`, 11), a `"next_level"` level that doesn't
+by two levels, `"open_world"` without a `"power"`, a cutscene that isn't
+one of `data/cutscenes.json`'s (an index past `CUTSCENE_COUNT`, 11 in the
+ROM, or an unknown constant), a `"next_level"` level that doesn't
 exist, a percentage past 0-99, and `"next_level"`s that come back round
 (a level that leads back to itself would replay forever). It warns
 (and builds) when a numbered level with a `"boss_kind"` is never marked

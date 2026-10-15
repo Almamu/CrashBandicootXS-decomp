@@ -2846,9 +2846,10 @@ def level_bosses_h(data):
 # bit is set when the room it ended in is a category stage.
 ON_CLEAR_KEYS = ["power", "open_world", "cutscene", "mark_cleared", "next_level", "credits"]
 NEXT_LEVEL_KEYS = ["if_completion_over", "cutscene", "level"]
-# The cutscenes LevelState::PlayCutscene plays by index (gCutscenes,
-# src/game/ui/data/cutscenes.cpp).
-CUTSCENE_COUNT = 11
+# The cutscenes LevelState::PlayCutscene plays by index (gCutscenes), from
+# data/cutscenes.json (#1092): an "on_clear" cutscene is an index or a
+# cutscene's constant.
+CUTSCENES_JSON = Path("data/cutscenes.json")
 # The ROM's rewards, which extract checks the kept "on_clear"s give.
 ROM_ON_CLEAR = {
     "LEVEL_DINGODILE": {"power": "SUPER_BODY_SLAM", "open_world": True, "cutscene": 4},
@@ -2876,9 +2877,16 @@ def level_on_clear(data):
     def fail(c, msg):
         sys.exit("%s: %s: \"on_clear\": %s (docs/levels.md, \"Boss levels\")" % (LEVELS_JSON, c, msg))
 
+    cutscenes = [cs["constant"] for cs in read_json(CUTSCENES_JSON)["cutscenes"]]
+
     def check_cutscene(c, v, where):
-        if not isinstance(v, int) or isinstance(v, bool) or not 0 <= v < CUTSCENE_COUNT:
-            fail(c, "%s is a cutscene, 0-%d (gCutscenes), not %s" % (where, CUTSCENE_COUNT - 1, json.dumps(v)))
+        """The cutscene's index: v is one, or a constant of cutscenes.json."""
+        if isinstance(v, str) and v in cutscenes:
+            return cutscenes.index(v)
+        if not isinstance(v, int) or isinstance(v, bool) or not 0 <= v < len(cutscenes):
+            fail(c, "%s is a cutscene of %s, an index 0-%d (gCutscenes) or its constant (%s), not %s"
+                 % (where, CUTSCENES_JSON, len(cutscenes) - 1, ", ".join(cutscenes), json.dumps(v)))
+        return v
 
     out, given = {}, {}
     for c, lv in levels.items():
@@ -2902,8 +2910,9 @@ def level_on_clear(data):
             given[power] = c
         elif oc.get("open_world"):
             fail(c, "\"open_world\" comes with a \"power\": it is done the first time the power is given")
+        oc = dict(oc)  # the cutscenes resolved to their indices
         if "cutscene" in oc:
-            check_cutscene(c, oc["cutscene"], "\"cutscene\"")
+            oc["cutscene"] = check_cutscene(c, oc["cutscene"], "\"cutscene\"")
         nl = oc.get("next_level")
         if nl is not None:
             if not isinstance(nl, dict) or [k for k in nl if k not in NEXT_LEVEL_KEYS] or \
@@ -2916,13 +2925,14 @@ def level_on_clear(data):
             if nl["level"] not in levels:
                 fail(c, "\"next_level\" \"level\" %s isn't a level" % nl["level"])
             if "cutscene" in nl:
-                check_cutscene(c, nl["cutscene"], "\"next_level\" \"cutscene\"")
+                oc["next_level"] = nl = dict(nl, cutscene=check_cutscene(c, nl["cutscene"],
+                                                                        "\"next_level\" \"cutscene\""))
         cr = oc.get("credits")
         if cr is not None:
             if not isinstance(cr, dict) or [k for k in cr if k != "cutscene"]:
                 fail(c, "\"credits\" is {} or {\"cutscene\": N}, the cutscene played before them")
             if "cutscene" in cr:
-                check_cutscene(c, cr["cutscene"], "\"credits\" \"cutscene\"")
+                oc["credits"] = dict(cr, cutscene=check_cutscene(c, cr["cutscene"], "\"credits\" \"cutscene\""))
         out[c] = oc
     for c in out:
         chain = [c]

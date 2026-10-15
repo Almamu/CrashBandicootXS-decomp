@@ -965,8 +965,9 @@ with the size the data gives it.
 4. **The text**: the pages' strings in `text/crashxs.pot`
    (`cutscene11.page0.0`, ...), then `make text-update` and each
    language's text ([text.md](./text.md)).
-5. **What plays it**: code calls `PlayCutscene(CUTSCENE_LAB)`, or a boss
-   level names its constant (#1086).
+5. **What plays it**: code calls `PlayCutscene(CUTSCENE_LAB)`, or a
+   level's `"on_clear"` names its constant (`"cutscene": "CUTSCENE_LAB"`,
+   [levels.md, "What clearing a level does"](./levels.md#what-clearing-a-level-does)).
 
 `make` builds it: `CUTSCENE_COUNT` grows, and the tables with it.
 

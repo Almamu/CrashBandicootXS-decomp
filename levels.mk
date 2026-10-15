@@ -241,12 +241,13 @@ $(GENERATED_INCLUDE_DIR)/category_palette_cycles.h: $(GENERATED_INCLUDE_DIR)/cat
 # What clearing a level does (level_on_clear.h, `levels.py on-clear`,
 # docs/levels.md "Boss levels"): LevelState::UpdateGameFrame's cases on the
 # cleared level (the powers, cutscenes, the step on to mega-mix and the
-# credits), from levels.json's "on_clear"; it warns about a numbered boss
+# credits), from levels.json's "on_clear" (its cutscenes are
+# data/cutscenes.json's, by index or constant); it warns about a numbered boss
 # level that nothing marks cleared, which reads its rooms. Written only if it
 # changed, behind a stamp.
 GENERATED_HEADERS += $(GENERATED_INCLUDE_DIR)/level_on_clear.h
 $(GENERATED_INCLUDE_DIR)/level_on_clear.h.stamp: data/levels/levels.json $(LEVEL_ROOM_JSONS) $(CATEGORY_DEPS) \
-	data/levels/entity_types.json tools/levels.py
+	data/levels/entity_types.json data/cutscenes.json tools/levels.py
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py on-clear $(GENERATED_INCLUDE_DIR)/level_on_clear.h
 	@touch $@
