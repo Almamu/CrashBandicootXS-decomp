@@ -120,6 +120,7 @@ $(N2_NO_PROLOGUE_BUGFIX_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1F
 
 include $(N2_DIR)/levels.mk
 include $(N2_DIR)/graphics.mk
+include $(N2_DIR)/text.mk
 
 $(GFX):
 	$(MAKE) -C tools/gbagfx

@@ -53,6 +53,7 @@
 0x081CDFEC 0x00024 src/engine/gfx/data/obj_piece_sizes.cpp
 0x081CE454 0x00050 src/game/crash/data/input_ctrl_motion_set.cpp
 0x081D0E10 0x0072C src/game/level/data/terrain_types.cpp
+0x081D1C8C 0x0CDB4 games/n2/src/game/ui/data/ui_text.cpp
 0x081E44C4 0x00ED0 games/n2/src/game/level/data/level_rooms_0.cpp
 0x081E5394 0x32104 games/n2/src/game/level/data/level_bg0_tiles_0.cpp
 0x08217498 0x093A8 games/n2/src/game/level/data/level_rooms_1.cpp
