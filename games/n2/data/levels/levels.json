@@ -39,9 +39,14 @@
   ],
   "regions": [
     {
-      "name": "level_rooms",
+      "name": "level_rooms_0",
       "rooms": [
-        "level00/main",
+        "level00/main"
+      ]
+    },
+    {
+      "name": "level_rooms_1",
+      "rooms": [
         "level01/main",
         "level01/bonus",
         "level05/main",
@@ -49,7 +54,12 @@
         "level12/main",
         "level12/bonus",
         "level17/main",
-        "level17/bonus",
+        "level17/bonus"
+      ]
+    },
+    {
+      "name": "level_rooms_2",
+      "rooms": [
         "level06/main",
         "level06/bonus",
         "level10/main",
@@ -57,7 +67,12 @@
         "level13/main",
         "level13/bonus",
         "level18/main",
-        "level18/bonus",
+        "level18/bonus"
+      ]
+    },
+    {
+      "name": "level_rooms_3",
+      "rooms": [
         "level04/main",
         "level04/bonus",
         "level07/main",
@@ -120,5 +135,18 @@
       "level27/part2",
       "level25/main"
     ]
-  }
+  },
+  "room_layout": [
+    "params",
+    "type_counts",
+    "entity_list",
+    "links",
+    "grids",
+    "palette",
+    "desc",
+    "groups",
+    "layers",
+    "entities"
+  ],
+  "entity_types": 110
 }

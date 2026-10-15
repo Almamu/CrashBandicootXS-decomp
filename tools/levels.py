@@ -191,6 +191,11 @@ CHUNK_CELLS = CHUNK_W * CHUNK_H
 # Number of entity types (the length of the per-type count table): the
 # spawn-function table indexed by level_entity.type.
 ENTITY_TYPES = 93
+# The order of a room's parts in its region (room_c): XS's. Another game's
+# levels.json can give its own, "room_layout" (N-Tranced's differs), and
+# its entity type count, "entity_types" (use_levels_dir).
+ROOM_LAYOUT = ["params", "grids", "palette", "type_counts", "links", "desc", "entity_list", "layers",
+               "groups", "entities"]
 # Entities are grouped into 256-px columns (x >> 8).
 GROUP_SHIFT = 8
 
@@ -205,6 +210,7 @@ def use_levels_dir(path):
     games/n2/data/levels/ (docs/n_tranced.md). Its collision_legend.json,
     if it has one, is the collision images' legend."""
     global LEVELS_DIR, ENTITY_TYPES_JSON, CRATE_KINDS_JSON, LEVELS_JSON, TILESET_ORDER_JSON, SPAWNS_DIR
+    global ENTITY_TYPES, ROOM_LAYOUT
     LEVELS_DIR = Path(path)
     ENTITY_TYPES_JSON = LEVELS_DIR / "entity_types.json"
     CRATE_KINDS_JSON = LEVELS_DIR / "crate_kinds.json"
@@ -213,6 +219,10 @@ def use_levels_dir(path):
     SPAWNS_DIR = LEVELS_DIR / "spawns"
     if (LEVELS_DIR / "collision_legend.json").exists():
         collision_bmp.LEGEND_JSON = LEVELS_DIR / "collision_legend.json"
+    if LEVELS_JSON.exists():
+        levels = read_json(LEVELS_JSON)
+        ENTITY_TYPES = levels.get("entity_types", ENTITY_TYPES)
+        ROOM_LAYOUT = levels.get("room_layout", ROOM_LAYOUT)
 
 
 # ---------------------------------------------------------------------------
@@ -693,6 +703,7 @@ def room_c(room_dir, build_dir=None):
         layout = read_json(Path(build_dir) / room_key(room_dir) / "asset.layout.json")
         offsets, grids = layout["offsets"], layout["grids"]
     out = []
+    blocks = {}  # each part of the room, written in ROOM_LAYOUT's order
     externs = set()
 
     def ext(s):
@@ -702,7 +713,9 @@ def room_c(room_dir, build_dir=None):
 
     by_name = {n: t for t, n in enumerate(entity_type_names()) if n}
     types = [entity_type(name, e["type"], by_name) for e in room["entities"]]
-    out.append("/* data/levels/%s: level_desc %s, %d entities */" % (name, sym["desc"], len(room["entities"])))
+    head = out
+    out.append("/* %s/%s: level_desc %s, %d entities */" % (LEVELS_DIR.as_posix(), name, sym["desc"],
+                                                        len(room["entities"])))
     # forward declarations for the pointers to objects defined further down
     out.append("extern const struct level_entity_list %s;" % sym["entities"])
     out.append("extern const struct level_layer_desc %s[];" % sym["layers"])
@@ -710,6 +723,7 @@ def room_c(room_dir, build_dir=None):
     out.append("extern const struct level_entity %s[];\n" % sym["items"])
 
     # Spawn parameter records.
+    out = blocks.setdefault("params", [])
     recs = room["params"]
     stype = "level_params_%s" % sym["desc"][1:].removesuffix("Desc").lower()
     out.append("struct %s\n{" % stype)
@@ -726,6 +740,7 @@ def room_c(room_dir, build_dir=None):
     out.append("};\n")
 
     # Chunk grids, one chunk row per line.
+    out = blocks.setdefault("grids", [])
     for lname, layer in room_layers(room):
         g = grids[lname]
         w, h = layer["size_chunks"]
@@ -735,6 +750,7 @@ def room_c(room_dir, build_dir=None):
         out.append("};\n")
 
     # BG palette, from the layer pictures.
+    out = blocks.setdefault("palette", [])
     pal = room_palette(room_dir, room)
     out.append("/* %s */" % sym["palette"])
     out.append("const u16 %s[256] =\n{" % member(room, "palette"))
@@ -742,6 +758,7 @@ def room_c(room_dir, build_dir=None):
     out.append("};\n")
 
     # Per-type entity counts.
+    out = blocks.setdefault("type_counts", [])
     counts = [0] * ENTITY_TYPES
     for t in types:
         counts[t] += 1
@@ -750,6 +767,7 @@ def room_c(room_dir, build_dir=None):
     out.append("};\n")
 
     # Entity links.
+    out = blocks.setdefault("links", [])
     links = room.get("links")
     if links is not None:
         out.append("extern const LEVEL_LINKS(%d) %s =\n{\n    %d,\n    {" % (len(links), sym["links"], len(links)))
@@ -758,6 +776,7 @@ def room_c(room_dir, build_dir=None):
         out.append("    },\n};\n")
 
     # The level descriptor.
+    out = blocks.setdefault("desc", [])
     layer_idx = {n: i for i, (n, _) in enumerate(room_layers(room))}
 
     def lref(n):
@@ -775,6 +794,7 @@ def room_c(room_dir, build_dir=None):
     out.append("};\n")
 
     # Entity list header.
+    out = blocks.setdefault("entity_list", [])
     groups = entity_groups(room)
     out.append("extern const struct level_entity_list %s =\n{" % sym["entities"])
     out.append("    %d, %d, %s, %s, (const u8 *)&%s, %s,"
@@ -783,6 +803,7 @@ def room_c(room_dir, build_dir=None):
     out.append("};\n")
 
     # Layer descriptors.
+    out = blocks.setdefault("layers", [])
     out.append("extern const struct level_layer_desc %s[%d] =\n{" % (sym["layers"], len(layer_idx)))
     for lname, layer in room_layers(room):
         w, h = layer["size_chunks"]
@@ -795,17 +816,23 @@ def room_c(room_dir, build_dir=None):
     out.append("};\n")
 
     # Entity groups and the entities.
+    out = blocks.setdefault("groups", [])
     out.append("extern const struct level_entity_group %s[%d] =\n{" % (sym["groups"], len(groups)))
     for first, count, stored in groups:
         out.append("    { %d, %d, &%s[%d] }," % (first, count, sym["items"], stored))
     out.append("};\n")
+    out = blocks.setdefault("entities", [])
     ents = room["entities"]
     out.append("/* In id order: type, x, y, param */")
     out.append("extern const struct level_entity %s[%d] =\n{" % (sym["items"], len(ents)))
     for i, e in enumerate(ents):
         out.append("    { %d, %d, %d, %d }, /* %d */" % (types[i], e["x"], e["y"], e["param"], i))
     out.append("};\n")
-    return externs, "\n".join(out) + "\n"
+    missing = set(blocks) ^ set(ROOM_LAYOUT)
+    if missing:
+        sys.exit("levels.json: \"room_layout\" must list each of %s once" % ", ".join(sorted(blocks)))
+    text = head + [line for b in ROOM_LAYOUT for line in blocks[b]]
+    return externs, "\n".join(text) + "\n"
 
 
 def region_c(region_name, out_path, build_dir=None):
@@ -3843,12 +3870,38 @@ def extract_rooms_from_table(rom_path, table):
     raw = {rom.w(d + 0x14): raw_asset_size(rom, d) for _, d in rooms if not rom.b(d + 0x18)}
     names, pieces, assets, rom_tiles, decoded, set_blocks = extract_rooms(rom, rooms, records, folders, raw,
                                                                           strict=False)
-    order = []
-    for _, n in sorted(pieces):
-        if n not in order:
-            order.append(n)
-    levels = {"rooms": names, "regions": [{"name": "level_rooms", "rooms": order}],
-              "assets": {"name": "level_assets", "rooms": [n for _, n in sorted(assets)]}}
+    # each room's parts, by address: the layout room_c writes (the same in
+    # every room), and the regions (the rooms' runs, with something else
+    # between them)
+    layouts, spans, counts = set(), [], set()
+    for (pal, desc), name in zip(rooms, names):
+        d = [rom.w(desc + 4 * k) for k in range(9)]
+        el = d[7]
+        parts = {"params": rom.w(el + 12), "type_counts": rom.w(el + 16), "entity_list": el,
+                 "grids": min(rom.w(d[k]) for k in range(5) if d[k]), "palette": pal, "desc": desc,
+                 "layers": min(d[k] for k in range(5) if d[k]), "groups": rom.w(el + 4),
+                 "entities": min(rom.w(rom.w(el + 4) + 8 * g + 4) for g in range(rom.h(el + 2)))}
+        if d[8]:
+            parts["links"] = d[8]
+        layouts.add(tuple(sorted(parts, key=parts.get)))
+        # up to the next part, which can be 2 bytes of alignment further
+        after = min(a for a in parts.values() if a > parts["type_counts"])
+        counts.add((after - parts["type_counts"]) // 2)
+        spans.append((parts["params"], parts["entities"] + 8 * rom.h(el), name))
+    full = [l for l in layouts if "links" in l]
+    if len(full) != 1 or any([p for p in l if p != "links"] != [p for p in full[0] if p != "links"]
+                             for l in layouts) or max(counts) - min(counts) > 1:
+        sys.exit("extract-rooms: the rooms' parts aren't in one order (%s) or of one type count (%s)"
+                 % (layouts, counts))
+    regions, end = [], None
+    for start, stop, name in sorted(spans):
+        if end is None or start - end > 3:
+            regions.append({"name": "level_rooms_%d" % len(regions), "rooms": []})
+        regions[-1]["rooms"].append(name)
+        end = stop
+    levels = {"rooms": names, "regions": regions,
+              "assets": {"name": "level_assets", "rooms": [n for _, n in sorted(assets)]},
+              "room_layout": list(full[0]), "entity_types": min(counts)}
     LEVELS_JSON.write_text(json.dumps(levels, indent=2) + "\n")
     check_tilesets(levels, names, rom_tiles, set_blocks, decoded, list(set_blocks))
     print("%d rooms, %d tile sets: the ROM's" % (len(names), len(set_blocks)), file=sys.stderr)
