@@ -85,13 +85,28 @@ $(C_BUILDDIR)/game/level/data/level_bg_tiles_0.o: $(foreach t,gStaticData_085346
 $(C_BUILDDIR)/game/level/data/level_bg_tiles_1.o: $(foreach t,gStaticData_0853FD10 \
 	gStaticData_0854309C,$(N2_LEVELS_BUILDDIR)/tilesets/$(t).bin.lz.inc)
 
-# The constants XS generates from its levels.json's levels and categories
-# (constants/levels.h, constants/categories.h): N-Tranced's level table and
-# categories aren't extracted yet (#1113), so for now they are empty, which
-# is all level_data.h's structs need. A source that uses one of their
-# constants doesn't build for N-Tranced until they are generated.
-N2_PLACEHOLDER_CONSTANTS := $(GENERATED_INCLUDE_DIR)/constants/levels.h $(GENERATED_INCLUDE_DIR)/constants/categories.h
-$(N2_PLACEHOLDER_CONSTANTS):
+# The constants XS generates from its levels.json and entity_types.json
+# (constants/levels.h, themes.h, entities.h, categories.h): N-Tranced's
+# aren't generated yet (#1113), so each is a placeholder with only the
+# counts the shared headers' declarations need, N-Tranced's own values
+# (N2_CONSTANTS_<header>, "NAME value" pairs). A source that uses one of
+# their other constants doesn't build for N-Tranced until they are
+# generated.
+# - LEVEL_COUNT: gLevelTable (0x081D0430) has 29 levels (24, then the 5
+#   bosses), its 0x24-byte records up to their room lists (0x081D0844),
+#   whose 29 records of 16 end at gThemeMusicCues.
+# - THEME_COUNT: the levels' themes are 0-11, and gThemeMusicCues
+#   (0x081D0A14) has 12 entries where XS's has 11 and a padding byte.
+# - ENTITY_COUNT: the length of gEntitySpawnFuncs, levels.json's
+#   "entity_types".
+N2_CONSTANTS_levels     := LEVEL_COUNT 29
+N2_CONSTANTS_themes     := THEME_COUNT 12
+N2_CONSTANTS_entities   := ENTITY_COUNT $(shell python3 -c "import json; print(json.load(open('$(N2_LEVELS_DIR)/levels.json'))['entity_types'])")
+N2_CONSTANTS_categories :=
+N2_PLACEHOLDER_CONSTANTS := $(foreach h,levels themes entities categories,$(GENERATED_INCLUDE_DIR)/constants/$(h).h)
+$(N2_PLACEHOLDER_CONSTANTS): $(GENERATED_INCLUDE_DIR)/constants/%.h: $(N2_DIR)/levels.mk $(N2_LEVELS_DIR)/levels.json
 	@mkdir -p $(dir $@)
-	printf '/* N-Tranced: not generated from its levels yet (games/n2/levels.mk). */\n#ifndef GUARD_N2_$(basename $(notdir $@))_H\n#define GUARD_N2_$(basename $(notdir $@))_H\n#endif\n' > $@
-$(foreach r,$(N2_LEVEL_REGIONS),$(C_BUILDDIR)/game/level/data/$(r).o): $(N2_PLACEHOLDER_CONSTANTS)
+	printf '/* N-Tranced: not generated from its levels yet (games/n2/levels.mk). */\n#ifndef GUARD_CONSTANTS_$*_H\n#define GUARD_CONSTANTS_$*_H\n' > $@
+	$(if $(N2_CONSTANTS_$*),printf '#define %s %s\n' $(N2_CONSTANTS_$*) >> $@)
+	printf '#endif\n' >> $@
+$(CXX_OBJS) $(C_OBJS) $(LIB_C_OBJS): | $(N2_PLACEHOLDER_CONSTANTS)

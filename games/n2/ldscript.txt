@@ -18,6 +18,12 @@ SECTIONS
 		build/ntranced/src/engine/sys/vram_dma_queue.o(.text);
 		build/ntranced/games/n2/asm/code_08007620.o(.text);
 		build/ntranced/games/n2/data/data_0805BEA8.o(.rodata);
+		build/ntranced/src/engine/gfx/data/obj_piece_sizes.o(.rodata);
+		build/ntranced/games/n2/data/data_081CE010.o(.rodata);
+		build/ntranced/src/game/crash/data/input_ctrl_motion_set.o(.rodata);
+		build/ntranced/games/n2/data/data_081CE4A4.o(.rodata);
+		build/ntranced/src/game/level/data/terrain_types.o(.rodata);
+		build/ntranced/games/n2/data/data_081D153C.o(.rodata);
 		build/ntranced/src/game/level/data/level_rooms_0.o(.rodata);
 		build/ntranced/src/game/level/data/level_bg0_tiles_0.o(.rodata);
 		build/ntranced/src/game/level/data/level_rooms_1.o(.rodata);
@@ -31,6 +37,8 @@ SECTIONS
 		build/ntranced/src/engine/gfx/data/sprite_banks_26_46.o(.rodata);
 		build/ntranced/src/engine/gfx/data/sprite_banks_47_48.o(.rodata);
 		build/ntranced/games/n2/data/data_08492ACB.o(.rodata);
+		build/ntranced/lib/libgcc/data/clz_tab.o(.rodata);
+		build/ntranced/games/n2/data/data_085293D0.o(.rodata);
 		build/ntranced/src/game/ui/data/menu_graphics.o(.rodata);
 		build/ntranced/src/game/level/data/level_bg_tiles_0.o(.rodata);
 		build/ntranced/games/n2/data/data_0853E37B.o(.rodata);
@@ -38,6 +46,8 @@ SECTIONS
 		build/ntranced/games/n2/data/data_08544635.o(.rodata);
 		build/ntranced/src/game/level/data/level_assets.o(.rodata);
 		build/ntranced/games/n2/data/data_0869B8CC.o(.rodata);
+		build/ntranced/lib/agb_eeprom/data/eeprom_data.o(.rodata);
+		build/ntranced/games/n2/data/data_087F84B4.o(.rodata);
 	} = 0
 
 	INCLUDE "games/n2/symbols.txt"

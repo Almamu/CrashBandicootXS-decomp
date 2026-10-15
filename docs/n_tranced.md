@@ -177,14 +177,17 @@ match it, and the original's bytes:
    (`NEW_COMPILER_OBJS`) before changing the source.
 
 A source that includes a generated header (`constants/levels.h`, ...)
-can't be built for N-Tranced yet: those come from the game's data, and
-N-Tranced's aren't generated yet (`build/ntranced/include/`, #1113).
+gets N-Tranced's placeholder for it (`games/n2/levels.mk`): only the
+counts the shared headers' declarations need (`LEVEL_COUNT` 29,
+`THEME_COUNT` 12, `ENTITY_COUNT` 110), N-Tranced's own, until #1113
+generates the headers from its data. A source that needs another of
+their constants doesn't build for N-Tranced yet.
 
 `gbadisasm.cfg` seeds the disassembly with crt0, the N-Tranced address of
 each XS function the XS/N-Tranced comparison found in it (#1107) and the
 targets of the ROM's code pointers. 760 of its 2,703 functions have their
 XS name; the rest are `sub_<address>`. `symbols.txt` names 76 of its RAM
-variables and `data_names.txt` 19 data tables after XS's, and the
+variables and `data_names.txt` 37 data symbols after XS's, and the
 disassembly's literal-pool words use the names, or the data's
 `gUnknown_<address>` labels (`.4byte gLevelTable`), or the code's own
 labels: no word in the code holds a raw ROM address.
@@ -211,6 +214,31 @@ code can: the data is the original's bytes, and the pointers in it
 the data and 3,445 into the code) stay where they are when what they
 point at moves. It shifts once its data is source, as XS's is: the
 level, text and graphics data (#1113, #1114, #1115) and the tables.
+
+### Tables shared with XS (#1131)
+
+`tools/nt_compare/xs_data_objects.py` lists XS's data objects that
+N-Tranced has whole: each one's bytes in N-Tranced's ROM as one run, and
+every pointer in it to the N-Tranced address of the same symbol. Those are
+linked into N-Tranced from XS's sources, as the code's are, with
+`data_names.txt` giving XS's names to what N-Tranced's code points at in
+them (`disasm.py` stops at a pointer into an object to an unnamed
+`gUnknown_`):
+
+| Source | N-Tranced |
+|---|---|
+| `src/engine/gfx/data/obj_piece_sizes.cpp` | `0x081CDFEC` |
+| `src/game/crash/data/input_ctrl_motion_set.cpp` | `0x081CE454` |
+| `src/game/level/data/terrain_types.cpp` | `0x081D0E10` |
+| `lib/libgcc/data/clz_tab.c` | `0x085291D0` |
+| `lib/agb_eeprom/data/eeprom_data.c` | `0x087F8430` |
+
+`pause_menu_bg.cpp` and `continue_prompt_bgs.cpp` match too, but they
+include `game/ui/menus.hpp`, which needs the level select's and the
+worlds' counts: they come with N-Tranced's level select. Most of XS's
+other tables are in N-Tranced as well, but inside data objects that hold
+other tables too and differ as a whole: those become N-Tranced's own
+sources, table by table.
 
 ## Levels (#1113)
 
