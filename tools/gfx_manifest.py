@@ -638,6 +638,8 @@ def extract_check(rom_path):
         (root / "data/levels/anim_tables").mkdir()
         for f in Path("data/levels/anim_tables").glob("*.json"):
             shutil.copy(f, root / "data/levels/anim_tables" / f.name)
+        # the cutscenes, which levels' "on_clear" can name
+        shutil.copy("data/cutscenes.json", root / "data")
         # the actor kinds, which name the actor categories' spawns
         (root / "include/constants").mkdir(parents=True)
         shutil.copy("include/constants/actor_kinds.h", root / "include/constants")

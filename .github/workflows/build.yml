@@ -108,6 +108,13 @@ jobs:
       if: env.HAS_ROM == 'true'
       run: make compare
 
+    # The ROM's graphics and levels extracted again in a scratch tree and
+    # compared with the checked-in sources (tools/gfx_manifest.py, which
+    # also runs levels.py extract). It needs baserom.gba.
+    - name: Check the extracted graphics and levels against the ROM
+      if: env.HAS_ROM == 'true'
+      run: python3 tools/gfx_manifest.py extract baserom.gba --check
+
     # Crash Bandicoot 2: N-Tranced (#1106): its build still incbins the
     # original's data, so it needs baserom_n2.gba to build at all.
     # `make GAME=n2 compare` checks it against games/n2/checksum.sha1.
