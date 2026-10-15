@@ -9,11 +9,14 @@
  * - the keys are the key file's (--keys) for that frame;
  * - every --checkpoint-every frames (60, boottest's CHECKPOINT_EVERY), a
  *   checkpoint: the SHA-1 of palette RAM, VRAM and OAM, in that order, as
- *   boottest hashes mGBA's, and the picture hash, the same with the OAM
+ *   boottest hashes mGBA's, the picture hash, the same with the OAM
  *   bits the display ignores cleared (boottest's picture_hash: the game
- *   leaves some as its stack's garbage), printed as `checkpoint FRAME HASH
- *   PICTURE` (their first 16 hex digits) and, with --dump DIR, those bytes
- *   in DIR/FRAME.bin;
+ *   leaves some as its stack's garbage), and the screen's hash, the SHA-1
+ *   of the RGB bytes of the picture the PPU finished last (ppu.c), as
+ *   platform/pc/tools/mgba_screens.c hashes mGBA's; printed as `checkpoint
+ *   FRAME HASH PICTURE SCREEN` (their first 16 hex digits). With --dump
+ *   DIR, the memory goes to DIR/FRAME.bin; with --screens DIR, the
+ *   picture to DIR/FRAME.png;
  * - after --frames N frames the run ends (`done at frame N+1`, as
  *   boottest ends when the script has no keys for a frame).
  *
@@ -21,7 +24,8 @@
  * next line's. KEYS is `-` (none), a number (C syntax, the active-high
  * bits of REG_KEYINPUT) or key names joined by `+`: A B SELECT START RIGHT
  * LEFT UP DOWN R L. `#` starts a comment. Without a key file no key is
- * ever held. */
+ * ever held but the window's (sdl.c): in a window, the keys held there
+ * are added to the key file's. */
 
 #include <errno.h>
 #include <stdio.h>
@@ -152,6 +156,18 @@ static void PictureOam(u16 *oam)
     }
 }
 
+/* The finished picture's RGB bytes, row by row. */
+static void ScreenRgb(u8 *rgb)
+{
+    u32 i;
+
+    for (i = 0; i < HOST_SCREEN_WIDTH * HOST_SCREEN_HEIGHT; i++) {
+        rgb[3 * i] = gHostScreen[i] >> 16;
+        rgb[3 * i + 1] = gHostScreen[i] >> 8;
+        rgb[3 * i + 2] = gHostScreen[i];
+    }
+}
+
 static void PrintHash(const u8 *digest)
 {
     u32 i;
@@ -174,7 +190,9 @@ static void Checkpoint(void)
     struct HostSha1 sha;
     u8 digest[20];
     u8 picture[20];
+    u8 screen[20];
     u16 oam[HOST_OAM_SIZE / 2];
+    static u8 rgb[HOST_SCREEN_WIDTH * HOST_SCREEN_HEIGHT * 3];
     u32 i;
 
     HostSha1Init(&sha);
@@ -188,13 +206,28 @@ static void Checkpoint(void)
     HostSha1Update(&sha, gHostVram, HOST_VRAM_SIZE);
     HostSha1Update(&sha, oam, HOST_OAM_SIZE);
     HostSha1Final(&sha, picture);
+    ScreenRgb(rgb);
+    HostSha1Init(&sha);
+    HostSha1Update(&sha, rgb, sizeof(rgb));
+    HostSha1Final(&sha, screen);
     if (!gHostOptions.quiet) {
         printf("checkpoint %u ", sFrame);
         PrintHash(digest);
         printf(" ");
         PrintHash(picture);
+        printf(" ");
+        PrintHash(screen);
         printf("\n");
         fflush(stdout);
+    }
+    if (gHostOptions.screenDir != NULL) {
+        char path[4096];
+
+        snprintf(path, sizeof(path), "%s/%05u.png", gHostOptions.screenDir, sFrame);
+        if (!HostWritePng(path, gHostScreen, HOST_SCREEN_WIDTH, HOST_SCREEN_HEIGHT)) {
+            fprintf(stderr, "%s: can't write\n", path);
+            exit(2);
+        }
     }
     if (gHostOptions.dumpDir != NULL) {
         char path[4096];
@@ -231,6 +264,9 @@ u16 HostReadKeys(void)
     }
     if (sRunCount != 0 && sRuns[sRun].frame <= sFrame) {
         keys = sRuns[sRun].keys;
+    }
+    if (!gHostOptions.headless) {
+        keys |= HostFrontendKeys();
     }
     if (gHostOptions.checkpointEvery != 0 && sFrame % gHostOptions.checkpointEvery == 0) {
         Checkpoint();

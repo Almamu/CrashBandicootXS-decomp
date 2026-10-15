@@ -8,7 +8,10 @@
  * VBlank: line 161 to 227, then 0 to 160, one frame. Per line it sets
  * VCOUNT and DISPSTAT's flags as the GBA's display does, and raises in IF
  * the interrupts DISPSTAT enables: VCount at the line in DISPSTAT's top
- * byte (the music fade's 0x35, audio.cpp), VBlank at line 160. HBlank is
+ * byte (the music fade's 0x35, audio.cpp), VBlank at line 160. Each
+ * visible line is drawn (ppu.c) once its IRQs have run, and at line 160
+ * the frame is the finished picture, which the window shows (sdl.c),
+ * waiting there for the frame's time to pass. HBlank is
  * never raised (the game enables no HBlank IRQ). A raised interrupt that
  * IE enables runs the game's handler from gIntrTable (Irq::Setup) right
  * away, as IntrMain does; VBlankIntrWait returns once the VBlank's has
@@ -97,6 +100,13 @@ static void NextScanline(void)
 
     if (sLine == VBLANK_LINE) {
         gHostVBlanks++;
+        /* The picture is finished: shown (the window), and the time a
+         * frame takes waited for, before the game's VBlank handler. */
+        HostPpuFrame();
+        HostSaveFlush();
+        if (!gHostOptions.headless) {
+            HostFrontendVBlank();
+        }
         if (gHostOptions.vblanks != 0 && gHostVBlanks > gHostOptions.vblanks) {
             HostExit(0, "vblanks");
         }
@@ -107,6 +117,11 @@ static void NextScanline(void)
     if ((dispstat & (DISPSTAT_VCOUNT | DISPSTAT_VCOUNT_INTR)) ==
         (DISPSTAT_VCOUNT | DISPSTAT_VCOUNT_INTR)) {
         RaiseIrq(INTR_FLAG_VCOUNT);
+    }
+    /* The line is drawn after its VCount IRQ, as the GBA draws it during
+     * the line's H-draw, after the IRQ at its start. */
+    if (sLine < VBLANK_LINE) {
+        HostPpuLine(sLine);
     }
 }
 

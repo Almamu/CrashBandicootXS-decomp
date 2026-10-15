@@ -39,6 +39,17 @@
 // memory skips a free of an address outside its heaps (#1093).
 #define MEM_FREE_LOST(p) 0
 
+// STRUCT_RETURN_VIEW(name): the asm name of a declaration that calls
+// `name`, the C name of a method returning a struct (cxx_symbols.txt), as
+// a function returning that struct, where the game's other declarations
+// of `name` give it a pointer to the struct to fill (objects.h's
+// GetSpriteAttackBox, dingodile.cpp's GetSpriteAttackBox_s, whose frame
+// and copy the ROM needs). On the ARM the two are the same call: the
+// struct comes back through a pointer in r0. A platform whose ABI returns
+// a small struct in registers defines `name` as the pointer form and
+// names its own function here (#1093).
+#define STRUCT_RETURN_VIEW(name) name
+
 // TODO: Move these elsewhere?
 // #ifdef __GNUC__
 #define NAKED __attribute__((naked))

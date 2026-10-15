@@ -11,3 +11,13 @@ strcat GameStrcat
 strcpy GameStrcpy
 strlen GameStrlen
 strncpy GameStrncpy
+# The global operator new and delete (operator_new.cpp, the game's heap):
+# a program may replace them, but then every C++ library in the process
+# uses them too, before the game has set its heap up (SDL's audio loads
+# libjack, whose constructors allocate). The game keeps its own under
+# these names; host_link.py gives OperatorNew & co. (cxx_symbols.txt) the
+# renamed definitions.
+_Znwm GameOperatorNew
+_Znam GameOperatorNewArray
+_ZdlPv GameOperatorDelete
+_ZdaPv GameOperatorDeleteArray

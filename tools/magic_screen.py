@@ -274,6 +274,13 @@ CLASSES = [
     ("coincidence", r"platform/pc/src/sha1\.c", r".", "SHA-1's 80 rounds"),
     (
         "hardware",
+        r"platform/pc/src/(ppu\.c|host_platform\.h)|platform/pc/tools/mgba_screens\.c",
+        r".",
+        "the GBA PPU's own picture, which the pc platform's PPU draws: 240x160, the bitmap modes' "
+        "frames, OAM's 8-bit Y",
+    ),
+    (
+        "hardware",
         r".",
         r"\b(?:s?[xy]|screen[XY])\s*&\s*0x1?ff\b",
         "OAM attribute width (9-bit X, 8-bit Y): spell with OAM_X()/OAM_Y()",

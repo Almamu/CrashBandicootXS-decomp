@@ -417,7 +417,8 @@ static inline void new_row_icon(UiSprite **slot, u32 bank, u32 frame)
     icon->SetAnimDone(0);
 
     s32 lo = (*slot)->GetAnimPaletteSlot();
-    u8 *p = (u8 *)*slot + 0x29; // the palette nibble's byte
+    /* the palette nibble's byte, the one after `mirror` (0x29 on the GBA) */
+    u8 *p = &(*slot)->mirror + 1;
     s32 m = -16;
 
     lo &= 15;

@@ -30,9 +30,10 @@ With --libs, it also checks that no object defines a name the host's
 libraries (libc, libm, libstdc++) export: the game's own strcpy, rand,
 sprintf and the like would be linked in front of the C library's, for its
 other users too, so platform.mk renames them in the game's objects
-(platform/pc/libc_names.txt). The global operator new and delete are the
-exception: C++ lets a program replace them, as the game does
-(operator_new.cpp).
+(platform/pc/libc_names.txt, given as --renames). So are the global
+operator new and delete the game defines (operator_new.cpp): a C++ name
+renamed there still stands for its qualified name (`operator new`), which
+the C names in cxx_symbols.txt (OperatorNew) are bound to.
 """
 
 import argparse
@@ -110,11 +111,6 @@ def demangle_gxx29(name):
     return None
 
 
-# The replaceable global allocation functions (operator new, new[],
-# delete, delete[]), which the game defines (operator_new.cpp).
-REPLACEABLE = {"_Znwm", "_Znam", "_ZdlPv", "_ZdaPv"}
-
-
 def host_qualified(demangled):
     """(is_vtable, qualified name) of a c++filt-demangled host name, or None."""
     if demangled.startswith("vtable for "):
@@ -143,6 +139,7 @@ def main():
     ap.add_argument("--iwram", required=True)
     ap.add_argument("--ewram", required=True)
     ap.add_argument("--libs", nargs="*", default=[], help="the host's shared libraries, to check names against")
+    ap.add_argument("--renames", help="the renames platform.mk made in the objects (OLD NEW lines)")
     ap.add_argument("-o", "--output", required=True)
     ap.add_argument("objects", nargs="+")
     args = ap.parse_args()
@@ -179,14 +176,23 @@ def main():
         out = subprocess.run(shlex.split(args.nm) + ["-D", "--defined-only", "-P", lib], capture_output=True,
                              text=True, check=True).stdout
         lib_names.update(line.split()[0].split("@")[0] for line in out.splitlines() if line.split())
-    clashes = sorted(n for n in defined & lib_names if n not in REPLACEABLE)
+    clashes = sorted(defined & lib_names)
     for name in clashes:
         print(f"host_link.py: the objects define {name}, which the host's libraries do too: "
               f"add it to platform/pc/libc_names.txt", file=sys.stderr)
     if clashes:
         return 1
 
-    names = sorted(defined | undefined)
+    # The objects' C++ names renamed from the host's mangled ones.
+    renamed = {}
+    if args.renames:
+        with open(args.renames) as f:
+            for line in f:
+                line = line.split("#", 1)[0].split()
+                if len(line) == 2 and line[0].startswith("_Z") and line[1] in defined:
+                    renamed[line[0]] = line[1]
+
+    names = sorted(defined | undefined | set(renamed))
     mangled = [n for n in names if n.startswith("_Z")]
     filt = subprocess.run(shlex.split(args.cxxfilt), input="\n".join(mangled) + "\n", capture_output=True, text=True, check=True).stdout.splitlines()
     host_qual = {}
@@ -202,6 +208,8 @@ def main():
     for raw in mangled:
         if raw in defined and raw in host_qual:
             definitions.setdefault(host_qual[raw], []).append(raw)
+        elif raw in renamed and raw in host_qual:
+            definitions.setdefault(host_qual[raw], []).append(renamed[raw])
 
     def pick(cands):
         if len(cands) == 1:

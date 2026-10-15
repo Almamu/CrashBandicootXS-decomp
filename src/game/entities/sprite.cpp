@@ -216,7 +216,8 @@ s32 Sprite::CheckPlayerContact()
     if (!IsTouched() && IsContactEnabled()) {
         struct aabb a = GetAnimHitbox();
 
-        if (gPlayer->f.flags >> ENTITY_BIT_COLLIDES) {
+        /* NULL outside a level: the save menu's icons are Sprites too */
+        if (NULL_READ(gPlayer)->f.flags >> ENTITY_BIT_COLLIDES) {
             struct aabb b = gPlayer->GetAnimHitbox();
 
             if (AabbOverlaps(&b, &a)) {

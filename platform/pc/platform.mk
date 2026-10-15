@@ -6,9 +6,9 @@
 # levels.mk, text.mk, cutscenes.mk, the sound) and their dependencies,
 # all under build/pc/crashbandicootxs/.
 #
-# Phase 1 of #1093: the game compiles and links into a host executable,
-# with the platform's functions stubbed or in plain C (platform/pc/src/).
-# It doesn't run the game yet.
+# The game compiles and links into a host executable, with the platform's
+# functions in plain C (platform/pc/src/): the frame loop, a software PPU,
+# and an SDL2 window with the keyboard and gamepads (docs/platforms.md).
 
 HOST_CC      ?= cc
 HOST_CXX     ?= c++
@@ -17,6 +17,16 @@ HOST_CXXFILT ?= c++filt
 HOST_OBJCOPY ?= objcopy
 
 HOST_EXE := build/$(PLATFORM)/crashbandicootxs_$(PLATFORM)
+
+# The window (src/sdl.c) needs SDL2, found by pkg-config; without it (or
+# with HOST_SDL=0) the executable runs headless only, which is all the
+# tests need.
+HOST_PKG_CONFIG ?= pkg-config
+HOST_SDL ?= $(shell $(HOST_PKG_CONFIG) --exists sdl2 2>/dev/null && echo 1 || echo 0)
+ifeq ($(HOST_SDL),1)
+HOST_SDL_CFLAGS := -DHOST_SDL $(shell $(HOST_PKG_CONFIG) --cflags sdl2)
+HOST_SDL_LIBS := $(shell $(HOST_PKG_CONFIG) --libs sdl2)
+endif
 
 .PHONY: all
 all: $(HOST_EXE)
@@ -83,22 +93,28 @@ SYM_EWRAM := $(dir $(LDSCRIPT))sym_ewram.txt
 HOST_LINK := $(OBJ_DIR)/host_link.ld
 
 #
-# The game's own strcpy, strlen, rand, sprintf, ... (libc_names.txt) are
-# renamed in its objects as they are built, so that they don't stand in
-# for the C library's in the executable; host_link.py checks that no
-# other name clashes with the host's libraries (HOST_LIBS).
+# The game's own strcpy, strlen, rand, sprintf, ... and its global
+# operator new and delete (libc_names.txt) are renamed in its objects as
+# they are built, so that they don't stand in for the C library's and
+# libstdc++'s in the executable; host_link.py checks that no other name
+# clashes with the host's libraries (HOST_LIBS).
 HOST_RENAMES := $(PLATFORM_DIR)/libc_names.txt
 HOST_LIBS := $(wildcard $(shell $(HOST_CC) -print-file-name=libc.so.6) $(shell $(HOST_CC) -print-file-name=libm.so.6) \
 	$(shell $(HOST_CXX) -print-file-name=libstdc++.so.6))
 
-$(HOST_LINK): $(HOST_OBJS) $(CXX_SYMBOLS) $(SYM_IWRAM) $(SYM_EWRAM) $(PLATFORM_DIR)/tools/host_link.py
+$(HOST_LINK): $(HOST_OBJS) $(CXX_SYMBOLS) $(SYM_IWRAM) $(SYM_EWRAM) $(HOST_RENAMES) $(PLATFORM_DIR)/tools/host_link.py
 	python3 $(PLATFORM_DIR)/tools/host_link.py --nm '$(HOST_NM)' --cxxfilt '$(HOST_CXXFILT)' \
 		--cxx-symbols $(CXX_SYMBOLS) --iwram $(SYM_IWRAM) --ewram $(SYM_EWRAM) --libs $(HOST_LIBS) \
-		-o $@ $(HOST_OBJS)
+		--renames $(HOST_RENAMES) -o $@ $(HOST_OBJS)
+
+# --level and --room (src/level_pick.c) wrap the two functions that pick
+# the level and its room.
+comma := ,
+HOST_WRAPS := _ZN4Game2Ui11LevelSelect3RunEPi _ZN4Game5Level13LevelProgress10SelectRoomEv
 
 $(HOST_EXE): $(HOST_OBJS) $(HOST_LINK)
 	@mkdir -p $(dir $@)
-	$(HOST_CXX) -o $@ $(HOST_OBJS) $(HOST_LINK) -lm
+	$(HOST_CXX) -o $@ $(HOST_OBJS) $(HOST_LINK) $(addprefix -Wl$(comma)--wrap=,$(HOST_WRAPS)) $(HOST_SDL_LIBS) -lm
 
 $(PLATFORM_UNIT_OBJS): $(C_BUILDDIR)/%.o: $(PLATFORM_DIR)/units/%.cpp $(HOST_RENAMES)
 	@mkdir -p $(dir $@)
@@ -122,6 +138,16 @@ $(PLATFORM_BUILDDIR)/src/%.o: $(PLATFORM_DIR)/src/%.c
 $(PLATFORM_BUILDDIR)/src/%.o: $(PLATFORM_DIR)/src/%.S
 	@mkdir -p $(dir $@)
 	$(HOST_CC) $(HOST_CPPFLAGS) $(DEPFLAGS) -c -o $@ $<
+
+# sdl.o is rebuilt when HOST_SDL changes (the flags file).
+$(PLATFORM_BUILDDIR)/src/sdl.o: HOST_CFLAGS += $(HOST_SDL_CFLAGS)
+$(PLATFORM_BUILDDIR)/src/sdl.o: $(PLATFORM_BUILDDIR)/sdl_flags
+$(PLATFORM_BUILDDIR)/sdl_flags: FORCE
+	@mkdir -p $(dir $@)
+	@echo '$(HOST_SDL_CFLAGS) $(HOST_SDL_LIBS)' | cmp -s - $@ || echo '$(HOST_SDL_CFLAGS) $(HOST_SDL_LIBS)' > $@
+
+.PHONY: FORCE
+FORCE:
 
 $(PLATFORM_BUILDDIR)/src/sound_data.o: $(SOUND_BUILT)
 $(PLATFORM_BUILDDIR)/src/sound_data.o: HOST_CPPFLAGS += -D 'SFX_TABLE_BIN="$(SOUND_BUILDDIR)/sfx_table.bin"' \
