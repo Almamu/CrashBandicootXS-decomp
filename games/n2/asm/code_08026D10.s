@@ -807,11 +807,11 @@ _080273AC: .4byte gUnknown_087F9974
 	thumb_func_start sub_080273B0
 sub_080273B0: @ 0x080273B0
 	push {lr}
-	ldr r2, _080273C0 @ =gUnknown_087F98B4
+	ldr r2, _080273C0 @ =gBgLayerVtable
 	str r2, [r0, #0x30]
 	bl DestroyBgLayerBase
 	pop {r0}
 	bx r0
 	.align 2, 0
-_080273C0: .4byte gUnknown_087F98B4
+_080273C0: .4byte gBgLayerVtable
 	.align 2, 0

@@ -10,7 +10,8 @@ SECTIONS
 	{
 		build/ntranced/games/n2/asm/code_08000000.o(.text);
 		build/ntranced/src/engine/gfx/bitmap_screen.o(.text);
-		build/ntranced/games/n2/asm/code_080009E8.o(.text);
+		build/ntranced/src/engine/util/fixed_math.o(.text);
+		build/ntranced/games/n2/asm/code_08000A84.o(.text);
 		build/ntranced/src/engine/util/line.o(.text);
 		build/ntranced/games/n2/asm/code_08000F50.o(.text);
 		build/ntranced/src/engine/util/time_format.o(.text);
@@ -29,6 +30,7 @@ SECTIONS
 		build/ntranced/src/engine/gfx/oam_buffer.o(.text);
 		build/ntranced/src/engine/sys/vram_dma_queue.o(.text);
 		build/ntranced/games/n2/asm/code_08007620.o(.text);
+		build/ntranced/src/game/crates/crate_list_update.o(.text);
 		build/ntranced/src/game/crates/crate_list_draw.o(.text);
 		build/ntranced/games/n2/asm/code_0800A3AC.o(.text);
 		build/ntranced/src/game/crates/crate_list_reset.o(.text);
@@ -40,7 +42,10 @@ SECTIONS
 		build/ntranced/src/game/crates/collision_queue.o(.text);
 		build/ntranced/games/n2/asm/code_08012CF8.o(.text);
 		build/ntranced/src/game/level/tile_cache_cell.o(.text);
-		build/ntranced/games/n2/asm/code_08025170.o(.text);
+		build/ntranced/src/game/level/entity_bitmap.o(.text);
+		build/ntranced/games/n2/asm/code_080251F4.o(.text);
+		build/ntranced/src/game/level/bg_layer.o(.text);
+		build/ntranced/src/game/level/pooled_bg_layer.o(.text);
 		build/ntranced/src/game/level/tile_slot_pool.o(.text);
 		build/ntranced/src/game/level/terrain_probe.o(.text);
 		build/ntranced/games/n2/asm/code_080267F8.o(.text);
@@ -109,6 +114,12 @@ SECTIONS
 	INCLUDE "games/n2/symbols.txt"
 
 	/* names inside the shared objects */
+	PROVIDE(FixedDist = ((FixedDistSq & ~1) + 0x18) | 1);
+	PROVIDE(FixedDiv = ((FixedDistSq & ~1) + 0x3C) | 1);
+	PROVIDE(FixedMul = ((FixedDistSq & ~1) + 0x48) | 1);
+	PROVIDE(FixedInverse16 = ((FixedDistSq & ~1) + 0x5C) | 1);
+	PROVIDE(FixedDiv16 = ((FixedDistSq & ~1) + 0x74) | 1);
+	PROVIDE(FixedMul16 = ((FixedDistSq & ~1) + 0x8C) | 1);
 	PROVIDE(LoadBackgroundTileAndPalette = ((LoadTaggedAsset & ~1) + 0x4C) | 1);
 	PROVIDE(FadeBrightness = ((StepBrightnessFade & ~1) + 0x80) | 1);
 	PROVIDE(DarkenPalette = ((StepBrightnessFade & ~1) + 0x150) | 1);
@@ -133,6 +144,9 @@ SECTIONS
 	PROVIDE(QueueVramDmaTransfer = ((FlushVramDmaQueue & ~1) + 0x78) | 1);
 	PROVIDE(FreeVramDmaQueue = ((FlushVramDmaQueue & ~1) + 0xC8) | 1);
 	PROVIDE(AllocVramDmaQueue = ((FlushVramDmaQueue & ~1) + 0xE4) | 1);
+	PROVIDE(UnlinkCrateFromGrid = ((InitCrateList & ~1) + 0xE8) | 1);
+	PROVIDE(LinkCrateToActiveBucket = ((InitCrateList & ~1) + 0x230) | 1);
+	PROVIDE(UpdateCrateList = ((InitCrateList & ~1) + 0x2B4) | 1);
 	PROVIDE(ClearPartList = ((ResetCrateList & ~1) + 0x8) | 1);
 	PROVIDE(sub_0800E7A8 = ((UpdatePeriodicSpawner & ~1) + 0x54) | 1);
 	PROVIDE(sub_0800E7E4 = ((UpdatePeriodicSpawner & ~1) + 0x90) | 1);
@@ -140,6 +154,36 @@ SECTIONS
 	PROVIDE(DestroyCollisionQueue = ((ResolveCollisionCandidates & ~1) + 0x2A8) | 1);
 	PROVIDE(ResetCollisionQueue = ((ResolveCollisionCandidates & ~1) + 0x2C0) | 1);
 	PROVIDE(SetCollisionSource = ((GetCollisionCell & ~1) + 0x38) | 1);
+	PROVIDE(ClearBitmap = ((SetBitmapBit & ~1) + 0x58) | 1);
+	PROVIDE(InitBitmap = ((SetBitmapBit & ~1) + 0x74) | 1);
+	PROVIDE(GrowBgLayerRows = ((InitBgLayer & ~1) + 0x74) | 1);
+	PROVIDE(GrowBgLayerColumns = ((InitBgLayer & ~1) + 0xB8) | 1);
+	PROVIDE(ClipBgLayerColumns = ((InitBgLayer & ~1) + 0xFC) | 1);
+	PROVIDE(ClipBgLayerRows = ((InitBgLayer & ~1) + 0x114) | 1);
+	PROVIDE(ScrollBgLayer = ((InitBgLayer & ~1) + 0x12C) | 1);
+	PROVIDE(CommitBgLayerScroll = ((InitBgLayer & ~1) + 0x1B8) | 1);
+	PROVIDE(DrawBgLayerColumn = ((InitBgLayer & ~1) + 0x1D0) | 1);
+	PROVIDE(DrawBgLayerRow = ((InitBgLayer & ~1) + 0x25C) | 1);
+	PROVIDE(RedrawBgLayer = ((InitBgLayer & ~1) + 0x2C0) | 1);
+	PROVIDE(ResetBgLayer = ((InitBgLayer & ~1) + 0x320) | 1);
+	PROVIDE(LoadBgLayerTiles = ((InitBgLayer & ~1) + 0x348) | 1);
+	PROVIDE(LoadBgLayer = ((InitBgLayer & ~1) + 0x368) | 1);
+	PROVIDE(GetBgLayerCharBase = ((InitBgLayer & ~1) + 0x424) | 1);
+	PROVIDE(WriteBgLayerOffsetRegs = ((InitBgLayer & ~1) + 0x448) | 1);
+	PROVIDE(WriteBgLayerCntReg = ((InitBgLayer & ~1) + 0x450) | 1);
+	PROVIDE(DestroyBgLayer = ((InitBgLayer & ~1) + 0x458) | 1);
+	PROVIDE(ClampPooledBgLayerScrollStep = ((DrawPooledBgLayerColumn & ~1) + 0x84) | 1);
+	PROVIDE(ReleasePooledBgLayerColumn = ((DrawPooledBgLayerColumn & ~1) + 0x9C) | 1);
+	PROVIDE(ReleasePooledBgLayerRow = ((DrawPooledBgLayerColumn & ~1) + 0xDC) | 1);
+	PROVIDE(ClipPooledBgLayerColumns = ((DrawPooledBgLayerColumn & ~1) + 0x120) | 1);
+	PROVIDE(ClipPooledBgLayerRows = ((DrawPooledBgLayerColumn & ~1) + 0x160) | 1);
+	PROVIDE(DrawPooledBgLayerRow = ((DrawPooledBgLayerColumn & ~1) + 0x1A0) | 1);
+	PROVIDE(ResetPooledBgLayer = ((DrawPooledBgLayerColumn & ~1) + 0x214) | 1);
+	PROVIDE(LoadPooledBgLayerTiles = ((DrawPooledBgLayerColumn & ~1) + 0x230) | 1);
+	PROVIDE(nullsub_26 = ((DrawPooledBgLayerColumn & ~1) + 0x24C) | 1);
+	PROVIDE(DestroyPooledBgLayer = ((DrawPooledBgLayerColumn & ~1) + 0x250) | 1);
+	PROVIDE(InitPooledBgLayer = ((DrawPooledBgLayerColumn & ~1) + 0x280) | 1);
+	PROVIDE(GetPooledBgLayerPriority = ((DrawPooledBgLayerColumn & ~1) + 0x2BC) | 1);
 	PROVIDE(AcquireTileSlot = ((ResetTileSlotPool & ~1) + 0x6C) | 1);
 	PROVIDE(ReleaseTileSlot = ((ResetTileSlotPool & ~1) + 0x114) | 1);
 	PROVIDE(UploadTileSlot = ((ResetTileSlotPool & ~1) + 0x170) | 1);

@@ -8,6 +8,7 @@
 # games/n2/disasm.py cuts games/n2/asm/ and games/n2/data/ around them and
 # writes the linker script.
 0x08000920 0x0C8 src/engine/gfx/bitmap_screen.cpp
+0x080009E8 0x09C src/engine/util/fixed_math.cpp
 0x08000ED8 0x078 src/engine/util/line.cpp
 0x080010AC 0x074 src/engine/util/time_format.cpp
 0x080011B0 0x080 src/engine/gfx/asset.cpp
@@ -19,12 +20,16 @@
 0x080028D4 0x184 src/engine/link/link_sio.cpp
 0x080073E0 0x134 src/engine/gfx/oam_buffer.cpp
 0x08007514 0x10C src/engine/sys/vram_dma_queue.cpp
+0x08009DA4 0x52C src/game/crates/crate_list_update.cpp
 0x0800A2D0 0x0DC src/game/crates/crate_list_draw.cpp
 0x0800A5A4 0x0DC src/game/crates/crate_list_reset.cpp
 0x0800AA78 0x0C0 src/game/entities/moving_sprite_probe.cpp
 0x0800E754 0x098 src/game/enemies/periodic_spawner.cpp
 0x08012A30 0x2C8 src/game/crates/collision_queue.cpp
 0x080250DC 0x094 src/game/level/tile_cache_cell.cpp
+0x08025170 0x084 src/game/level/entity_bitmap.cpp
+0x08025E94 0x46C src/game/level/bg_layer.cpp
+0x08026300 0x2C8 src/game/level/pooled_bg_layer.cpp
 0x080265C8 0x19C src/game/level/tile_slot_pool.cpp
 0x08026764 0x094 src/game/level/terrain_probe.cpp
 0x08026B68 0x1A8 src/game/level/terrain_probe_axes.cpp

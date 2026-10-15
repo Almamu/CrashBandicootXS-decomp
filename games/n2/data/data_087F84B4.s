@@ -168,12 +168,12 @@ gUnknown_087F987C:
 gUnknown_087F988C:
 	.incbin "baserom_n2.gba", 0x7F988C, 0x28
 
-	.global gUnknown_087F98B4
-gUnknown_087F98B4:
+	.global gBgLayerVtable
+gBgLayerVtable:
 	.incbin "baserom_n2.gba", 0x7F98B4, 0x50
 
-	.global gUnknown_087F9904
-gUnknown_087F9904:
+	.global gPooledBgLayerVtable
+gPooledBgLayerVtable:
 	.incbin "baserom_n2.gba", 0x7F9904, 0x50
 
 	.global gUnknown_087F9954

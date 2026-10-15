@@ -19,6 +19,8 @@ link sets). Prints per object:
              has there, less the addend)
     differs  N bytes differ (the first few offsets)
     no build the build fails (the first error)
+With --agbcp, as agbcp without -fprologue-bugfix builds them: N-Tranced's
+build used it for some objects XS's built with old_agbcp (game.mk).
     linked   already in objects.txt (an object given by name is checked)
 
 Needs build/nt_compare/match.json (run.py) and XS built.
@@ -75,6 +77,8 @@ def text_of(obj):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
     ap.add_argument('--min', type=float, default=0.9, help='the share of exact/near bytes (default 0.9)')
+    ap.add_argument('--agbcp', action='store_true',
+                    help="build them with agbcp without -fprologue-bugfix (game.mk's N2_AGBCP_NO_BUGFIX_OBJS)")
     ap.add_argument('objects', nargs='*')
     args = ap.parse_args()
     rom = open('baserom_n2.gba', 'rb').read()
@@ -105,7 +109,8 @@ def main():
         # and flags are then the ones the link would have
         src = next((s for s in (obj[:-2] + '.cpp', obj[:-2] + '.c') if Path(s).exists()), obj[:-2] + '.cpp')
         Path(out).unlink(missing_ok=True)
-        r = subprocess.run(['make', 'GAME=n2', '-s', 'N2_TRY_SRCS=' + src, out], capture_output=True, text=True)
+        r = subprocess.run(['make', 'GAME=n2', '-s', 'N2_TRY_SRCS=' + src] + (['N2_TRY_AGBCP=' + out] if args.agbcp else [])
+                           + [out], capture_output=True, text=True)
         if r.returncode:
             err = [l for l in (r.stdout + r.stderr).splitlines() if 'error' in l.lower() or 'not declared' in l]
             print('%-50s no build: %s' % (obj, (err or ['?'])[0][:110]))
