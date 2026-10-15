@@ -11,8 +11,8 @@ using Engine::Link::LinkSession;
 /* Link-session reset/init - see docs/rom_map.md's SIO/link-cable
  * section. Sets the link-active flag (`gLinkSessionReset`), resets a
  * handful of session-header fields, seeds a per-session 8-byte
- * handshake id via `MakeLinkHandshakeId` (`id`, self+0x30), mirrors that id into
- * `prevPacket` and every one of the 4 per-player 0xc8-byte
+ * handshake id via `MakeLinkHandshakeId` (`packets[OUT_PACKET]`, self+0x30),
+ * mirrors that id into `packets[PREV_PACKET]` and every one of the 4 per-player 0xc8-byte
  * records (self+0xd0+playerIndex*0xc8), resets each per-player
  * sub-record's own RX-ring bookkeeping, writes the literal `0x1234`
  * link sync/ready magic into each player's data-exchange field
@@ -29,9 +29,13 @@ using Engine::Link::LinkSession;
  *   counting up; the first loop still reverses because it is written
  *   over one pointer (`p[9]`/`p[8]` read, `p[0]`/`p[1]` written) with its
  *   own counter `k` (sharing `i` with the outer loop moved every
- *   register).
- * - MakeLinkHandshakeId takes `this->id`, and the local `id` is set
- *   from `this->id` after the call. The call's own `self + 0x30` is then
+ *   register). The pointer walks `packetBytes`, both packets as one
+ *   array, so the read 8 bytes on stays in bounds. Two pointers (one per
+ *   packet) take two registers; indexing both packets by `k * 2` (or by
+ *   an offset) gives the ROM's one pointer, but set after the loop's
+ *   constants, which keeps `k` counting up (or swaps two stack slots).
+ * - MakeLinkHandshakeId takes `packets[OUT_PACKET].bytes`, and the local
+ *   `id` is set from it after the call. The call's own `self + 0x30` is then
  *   a temporary that lives in the first basic block only and crosses
  *   the call, so local-alloc (which runs before global-alloc) gives it
  *   the first call-saved register, r4. `self`, allocated by global-alloc
@@ -42,10 +46,10 @@ using Engine::Link::LinkSession;
  *   `str r4, [sp, #4]`.
  * - rxSeq goes through a `f30` base plus an `s32 t` offset, so the
  *   base is hoisted and the add is `f30 + t`.
- * - The inner destination is `(players + i)->id`, which expands to
+ * - The inner destination is `(players + i)->packet.bytes`, which expands to
  *   ((i * 200 + self) + 0xd0) + j * 2: the 0xd0 is added on top of an
  *   i-dependent value, so the inner loop's strength reduction builds
- *   the ROM's per-pass `i * 200 + (self + 0xd0)` (#908). `players[i].id`
+ *   the ROM's per-pass `i * 200 + (self + 0xd0)` (#908). `players[i].packet`
  *   expands to (self + 0xd0) + (j * 2 + i * 200) instead, and loop
  *   hoists that `self + 0xd0` out of the outer loop into a stack slot
  *   (46 lines off). A `LinkPlayer *` or `u8 *dst` local for the record,
@@ -58,7 +62,8 @@ using Engine::Link::LinkSession;
  * - The nibble address is `self + t` with `t = i * 0xc8` in a local, so
  *   the add is built as (plus self t): the ROM's `adds r0, r5, r2`.
  *   `&self->players[i]` expands to (plus (mult i 200) self) instead.
- *   (`&players[i].id[1]` is 2 lines off for that operand order alone.)
+ *   (`&players[i].packet.fields.seq` (then `id[1]`) is 2 lines off for that
+ *   operand order alone.)
  *   Decremented through the cast expression, the pointer gets r4 and the
  *   base ip as in the ROM; an `nb` pointer local swaps the two.
  * - `magic` holds 0x1234 in a function-scope local. Its set is then
@@ -71,10 +76,11 @@ using Engine::Link::LinkSession;
  * - The tail stores handshakeWord into sendWord and reads it back through a
  *   plain `u16 *` into `v`.
  * #662 round 10: the 13 `MATCH_USE(id)` that used to give `id` r4 are
- * gone. Rounds 3-9 had `id = this->id; MakeLinkHandshakeId(id);`, which
+ * gone. Rounds 3-9 had `id = this->id; MakeLinkHandshakeId(id);` (the
+ * packet was `u8 id[6]` and `u16 hash` then), which
  * makes `id` itself the call's argument: one pseudo from the call across
  * the first loop, ranked by global-alloc at 3 references over 29 insns
- * against `self`'s 34 over 140, so `self` took r4. Passing `this->id`
+ * against `self`'s 34 over 140, so `self` took r4. Passing the member
  * and setting `id` after the call leaves the register choice to
  * local-alloc instead (above). */
 s32 LinkSession::ResetState()
@@ -92,10 +98,10 @@ s32 LinkSession::ResetState()
     playerCount = -1;
     playerId = -1;
     ring.Reset();
-    MakeLinkHandshakeId(this->id);
-    id = this->id;
+    MakeLinkHandshakeId(packets[OUT_PACKET].bytes);
+    id = packets[OUT_PACKET].bytes;
 
-    u8 *p = prevPacket;
+    u8 *p = packetBytes;
 
     for (k = 0; k <= 3; k++) {
         u32 v = (p[9] << 8) | p[8];
@@ -123,19 +129,19 @@ s32 LinkSession::ResetState()
             u32 w = (src[j * 2 + 1] << 8) | src[j * 2];
             u32 lo = w & 0xff;
 
-            (players + i)->id[j * 2] = lo;
-            (players + i)->id[j * 2 + 1] = w >> 8;
+            (players + i)->packet.bytes[j * 2] = lo;
+            (players + i)->packet.bytes[j * 2 + 1] = w >> 8;
         }
         /* scoped: its own `t` (shared, the registers differ) */
         {
             s32 t = i * sizeof(LinkPlayer);
 
-            /* players[i].id[1]'s low nibble */
+            /* players[i].packet.fields.seq's low nibble */
             ((struct nibble_pair *)((u8 *)this + t + 0xd1))->lo--;
         }
         players[i].totalReceived = 0;
         players[i].rxCount = 0;
-        players[i].prevHash = (players[i].hash = magic);
+        players[i].prevHash = (players[i].packet.fields.hash = magic);
     }
     ackedMask = 0;
     receivedMask = 0;
