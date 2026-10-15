@@ -14,7 +14,7 @@
   ],
   "links": null,
   "entities": [
-    {"type": 98, "x": 305, "y": 277, "param": 1},
+    {"type": "N_TRANCE", "x": 305, "y": 277, "param": 1},
     {"type": 0, "x": 211, "y": 295, "param": 1}
   ]
 }

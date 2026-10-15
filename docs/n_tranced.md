@@ -322,8 +322,20 @@ tile sets are named by the levels that use them, `levels.json`'s
 `gVolcanoBg0Tiles` and `gEgyptBg0Tiles` (BG0), and `gArabiaBgTiles`,
 `gArabiaSkyBgTiles` (Runaway Rug, 101 Arabian Kites, Evil Crunch, N.
 Tropy's first part), `gEgyptBgTiles`, `gVolcanoBgTiles` and
-`gIslandBgTiles` (BG1-3). The entity types are numbers until they have
-names (there is no `entity_types.json` yet: 110 types, XS has 93).
+`gIslandBgTiles` (BG1-3).
+
+Its 110 entity types (XS has 93) are in
+[`entity_types.json`](../games/n2/data/levels/entity_types.json), one per
+`gEntitySpawnFuncs` slot (`0x081D0244`), as XS's: `room.json` gives a
+placed entity's type by its name, and the build generates
+`constants/entities.h` from it. 45 have names: the ones whose spawner is
+XS's (the crates, `WUMPA`, ...) keep XS's name, and the ones whose
+spawner loads a sprite bank no other type does are named after it (its
+`Bank(n)` call, `0x08007D80`: `POT_CARRIER`, `MUMMY`, `N_TRANCE`, ...),
+their spawner `Spawn<Name>` in `gbadisasm.cfg`. The others stay numbers
+until their spawner is read: the ones sharing a bank (`traps`,
+`platforms`, `gems`, ...), whose spawner each type's entry gives, and 21
+empty spawners (`bx lr`, XS's `SpawnNoEntity`).
 
 What differs from XS, in `levels.py`:
 

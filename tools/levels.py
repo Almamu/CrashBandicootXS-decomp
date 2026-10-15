@@ -4268,7 +4268,7 @@ def constants_h(which):
         ents.append(("ENTITY_COUNT", "0x%02X" % len(types), "the length of gEntitySpawnFuncs"))
         kinds = sorted((t["enemy_kind"], "ENEMY_KIND_" + t.get("enemy_kind_name", t["name"]), t["spawner"])
                        for t in types if "enemy_kind" in t)
-        body = define_lines(ents) + [""] + define_lines([(n, "0x%02X" % v, c) for v, n, c in kinds])
+        body = define_lines(ents) + ([""] + define_lines([(n, "0x%02X" % v, c) for v, n, c in kinds]) if kinds else [])
     elif which == "crates":
         src, guard = CRATE_KINDS_JSON, "GUARD_CONSTANTS_CRATES_H"
         kinds = read_json(src)["kinds"]

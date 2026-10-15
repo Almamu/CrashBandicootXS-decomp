@@ -13,6 +13,6 @@
   "links": null,
   "entities": [
     {"type": 0, "x": 135, "y": 138, "param": 1},
-    {"type": 97, "x": 62, "y": 82, "param": 1}
+    {"type": "EVIL_COCO", "x": 62, "y": 82, "param": 1}
   ]
 }

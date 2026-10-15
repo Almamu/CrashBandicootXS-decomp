@@ -20033,8 +20033,8 @@ _0801CBC0: .4byte 0x02000E6C
 _0801CBC4: .4byte 0x0000FFFF
 _0801CBC8: .4byte gCollidableList
 
-	thumb_func_start sub_0801CBCC
-sub_0801CBCC: @ 0x0801CBCC
+	thumb_func_start SpawnCrystal
+SpawnCrystal: @ 0x0801CBCC
 	push {r4, r5, r6, r7, lr}
 	mov r7, sl
 	mov r6, sb
@@ -20884,8 +20884,8 @@ _0801D2DC:
 	.byte 0xFF, 0xFF, 0x00, 0x00, 0x80, 0x0E, 0x00, 0x02, 0x88, 0xE8, 0x1C, 0x08, 0x70, 0xE8, 0x1C, 0x08
 	.byte 0x64, 0x0E, 0x00, 0x02, 0xC0, 0x0E, 0x00, 0x02
 
-	thumb_func_start sub_0801D418
-sub_0801D418: @ 0x0801D418
+	thumb_func_start SpawnPotCarrier
+SpawnPotCarrier: @ 0x0801D418
 	push {r4, r5, r6, r7, lr}
 	mov r7, sl
 	mov r6, sb
@@ -21043,8 +21043,8 @@ _0801D560: .4byte gUnknown_081CE714
 _0801D564: .4byte 0x02000E64
 _0801D568: .4byte gCollidableList
 
-	thumb_func_start sub_0801D56C
-sub_0801D56C: @ 0x0801D56C
+	thumb_func_start SpawnScimitarGuard
+SpawnScimitarGuard: @ 0x0801D56C
 	push {r4, r5, r6, r7, lr}
 	mov r7, sb
 	mov r6, r8
@@ -21186,8 +21186,8 @@ _0801D694: .4byte gUnknown_081CE6B4
 _0801D698: .4byte 0x02000E64
 _0801D69C: .4byte gCollidableList
 
-	thumb_func_start sub_0801D6A0
-sub_0801D6A0: @ 0x0801D6A0
+	thumb_func_start SpawnScorpion
+SpawnScorpion: @ 0x0801D6A0
 	push {r4, r5, r6, r7, lr}
 	mov r7, sb
 	mov r6, r8
@@ -21327,8 +21327,8 @@ _0801D7C4: .4byte gUnknown_081CE654
 _0801D7C8: .4byte 0x02000E64
 _0801D7CC: .4byte gCollidableList
 
-	thumb_func_start sub_0801D7D0
-sub_0801D7D0: @ 0x0801D7D0
+	thumb_func_start SpawnFireJuggler
+SpawnFireJuggler: @ 0x0801D7D0
 	push {r4, r5, r6, r7, lr}
 	mov r7, r8
 	push {r7}
@@ -21559,8 +21559,8 @@ _0801D9BC: .4byte gUnknown_081CE9C0
 _0801D9C0: .4byte 0x02000E64
 _0801D9C4: .4byte gCollidableList
 
-	thumb_func_start sub_0801D9C8
-sub_0801D9C8: @ 0x0801D9C8
+	thumb_func_start SpawnGenie
+SpawnGenie: @ 0x0801D9C8
 	push {r4, r5, r6, r7, lr}
 	mov r7, sl
 	mov r6, sb
@@ -22135,8 +22135,8 @@ _0801DE8C: .4byte gUnknown_081CEB10
 _0801DE90: .4byte gUnknown_081CEA20
 _0801DE94: .4byte gCollidableList
 
-	thumb_func_start sub_0801DE98
-sub_0801DE98: @ 0x0801DE98
+	thumb_func_start SpawnRockPusher
+SpawnRockPusher: @ 0x0801DE98
 	push {r4, r5, r6, r7, lr}
 	mov r7, r8
 	push {r7}
@@ -22270,8 +22270,8 @@ _0801DFA8: .4byte 0x02000E64
 _0801DFAC: .4byte gCollidableList
 _0801DFB0: .4byte 0x02000ED0
 
-	thumb_func_start sub_0801DFB4
-sub_0801DFB4: @ 0x0801DFB4
+	thumb_func_start SpawnSpikeBlockMummy
+SpawnSpikeBlockMummy: @ 0x0801DFB4
 	push {r4, r5, r6, r7, lr}
 	mov r7, sb
 	mov r6, r8
@@ -22400,8 +22400,8 @@ _0801E0BC: .4byte gUnknown_081CECE4
 _0801E0C0: .4byte 0x02000E64
 _0801E0C4: .4byte gCollidableList
 
-	thumb_func_start sub_0801E0C8
-sub_0801E0C8: @ 0x0801E0C8
+	thumb_func_start SpawnShieldGuard
+SpawnShieldGuard: @ 0x0801E0C8
 	push {r4, r5, r6, r7, lr}
 	mov r7, r8
 	push {r7}
@@ -22528,8 +22528,8 @@ _0801E1B4:
 	pop {r0}
 	bx r0
 
-	thumb_func_start sub_0801E1D4
-sub_0801E1D4: @ 0x0801E1D4
+	thumb_func_start SpawnScarab
+SpawnScarab: @ 0x0801E1D4
 	push {r4, r5, r6, r7, lr}
 	mov r7, r8
 	push {r7}
@@ -22664,8 +22664,8 @@ _0801E2E8: .4byte gUnknown_081CEE58
 _0801E2EC: .4byte 0x02000E64
 _0801E2F0: .4byte gCollidableList
 
-	thumb_func_start sub_0801E2F4
-sub_0801E2F4: @ 0x0801E2F4
+	thumb_func_start SpawnMummy
+SpawnMummy: @ 0x0801E2F4
 	push {r4, r5, r6, r7, lr}
 	mov r7, sb
 	mov r6, r8
@@ -22794,8 +22794,8 @@ _0801E3FC: .4byte gUnknown_081CEFD8
 _0801E400: .4byte 0x02000E64
 _0801E404: .4byte gCollidableList
 
-	thumb_func_start sub_0801E408
-sub_0801E408: @ 0x0801E408
+	thumb_func_start SpawnCrocodile
+SpawnCrocodile: @ 0x0801E408
 	push {r4, r5, r6, r7, lr}
 	mov r7, r8
 	push {r7}
@@ -22909,8 +22909,8 @@ _0801E4F0: .4byte gUnknown_081CF104
 _0801E4F4: .4byte 0x02000E64
 _0801E4F8: .4byte gCollidableList
 
-	thumb_func_start sub_0801E4FC
-sub_0801E4FC: @ 0x0801E4FC
+	thumb_func_start SpawnCobraBasket
+SpawnCobraBasket: @ 0x0801E4FC
 	push {r4, r5, r6, r7, lr}
 	lsls r1, r1, #0x10
 	lsrs r1, r1, #0x10
@@ -23245,8 +23245,8 @@ _0801E78A:
 _0801E7BC: .4byte 0xFFFFFB80
 _0801E7C0: .4byte gPlayer
 
-	thumb_func_start sub_0801E7C4
-sub_0801E7C4: @ 0x0801E7C4
+	thumb_func_start SpawnSarcophagus
+SpawnSarcophagus: @ 0x0801E7C4
 	push {r4, r5, r6, r7, lr}
 	mov r7, sb
 	mov r6, r8
@@ -24227,8 +24227,8 @@ _0801EFFC: .4byte gUnknown_081CF2FC
 _0801F000: .4byte gUnknown_081CF254
 _0801F004: .4byte gCollidableList
 
-	thumb_func_start sub_0801F008
-sub_0801F008: @ 0x0801F008
+	thumb_func_start SpawnSpearTribesman
+SpawnSpearTribesman: @ 0x0801F008
 	push {r4, r5, r6, r7, lr}
 	mov r7, r8
 	push {r7}
@@ -24345,8 +24345,8 @@ _0801F0FC: .4byte gUnknown_081CF434
 _0801F100: .4byte 0x02000E64
 _0801F104: .4byte gCollidableList
 
-	thumb_func_start sub_0801F108
-sub_0801F108: @ 0x0801F108
+	thumb_func_start SpawnBananaMonkey
+SpawnBananaMonkey: @ 0x0801F108
 	push {r4, r5, r6, r7, lr}
 	mov r7, sl
 	mov r6, sb
@@ -24508,8 +24508,8 @@ _0801F258: .4byte gUnknown_081CF38C
 _0801F25C: .4byte 0x02000E64
 _0801F260: .4byte gCollidableList
 
-	thumb_func_start sub_0801F264
-sub_0801F264: @ 0x0801F264
+	thumb_func_start SpawnFireballTribesman
+SpawnFireballTribesman: @ 0x0801F264
 	push {r4, r5, r6, r7, lr}
 	mov r7, r8
 	push {r7}
@@ -24626,8 +24626,8 @@ _0801F358: .4byte gUnknown_081CF524
 _0801F35C: .4byte 0x02000E64
 _0801F360: .4byte gCollidableList
 
-	thumb_func_start sub_0801F364
-sub_0801F364: @ 0x0801F364
+	thumb_func_start SpawnParrot
+SpawnParrot: @ 0x0801F364
 	push {r4, r5, r6, r7, lr}
 	mov r7, sb
 	mov r6, r8
@@ -25357,8 +25357,8 @@ _0801F990: .4byte 0x02000E64
 _0801F994: .4byte 0x02000ED0
 _0801F998: .4byte 0x02000EB8
 
-	thumb_func_start sub_0801F99C
-sub_0801F99C: @ 0x0801F99C
+	thumb_func_start SpawnNTrance
+SpawnNTrance: @ 0x0801F99C
 	push {r4, r5, r6, lr}
 	lsls r1, r1, #0x10
 	lsrs r1, r1, #0x10
@@ -25784,8 +25784,8 @@ _0801FD44: .4byte 0x02000E70
 _0801FD48: .4byte gSpriteBankSet
 _0801FD4C: .4byte gTouchableList
 
-	thumb_func_start sub_0801FD50
-sub_0801FD50: @ 0x0801FD50
+	thumb_func_start SpawnNTropy
+SpawnNTropy: @ 0x0801FD50
 	push {r4, r5, r6, r7, lr}
 	mov r7, sb
 	mov r6, r8
@@ -26240,8 +26240,8 @@ _08020124: .4byte gUnknown_081CF7AC
 _08020128: .4byte 0x02000E64
 _0802012C: .4byte gTouchableList
 
-	thumb_func_start sub_08020130
-sub_08020130: @ 0x08020130
+	thumb_func_start SpawnScorpionStanding
+SpawnScorpionStanding: @ 0x08020130
 	push {r4, r5, r6, r7, lr}
 	mov r7, sl
 	mov r6, sb
@@ -26456,8 +26456,8 @@ _080202F8: .4byte gSpriteBankSet
 _080202FC: .4byte gUnknown_087FAFEC
 _08020300: .4byte gCollidableList
 
-	thumb_func_start sub_08020304
-sub_08020304: @ 0x08020304
+	thumb_func_start SpawnPowers
+SpawnPowers: @ 0x08020304
 	push {r4, r5, r6, r7, lr}
 	adds r6, r0, #0
 	lsls r1, r1, #0x10
@@ -26539,8 +26539,8 @@ _080203B0: .4byte gSpriteBankSet
 _080203B4: .4byte 0x02000E64
 _080203B8: .4byte gCollidableList
 
-	thumb_func_start sub_080203BC
-sub_080203BC: @ 0x080203BC
+	thumb_func_start SpawnEvilCoco
+SpawnEvilCoco: @ 0x080203BC
 	push {r4, r5, lr}
 	lsls r1, r1, #0x10
 	lsrs r1, r1, #0x10
@@ -26605,8 +26605,8 @@ _08020444: .4byte gSpriteBankSet
 _08020448: .4byte 0x02000E70
 _0802044C: .4byte gCollidableList
 
-	thumb_func_start sub_08020450
-sub_08020450: @ 0x08020450
+	thumb_func_start SpawnEvilCrunch
+SpawnEvilCrunch: @ 0x08020450
 	push {r4, r5, lr}
 	lsls r1, r1, #0x10
 	lsrs r1, r1, #0x10
@@ -27277,8 +27277,8 @@ _080209FC: .4byte 0x02000ECC
 _08020A00:
 	.byte 0x70, 0x47, 0x00, 0x00, 0x70, 0x47, 0x00, 0x00
 
-	thumb_func_start sub_08020A08
-sub_08020A08: @ 0x08020A08
+	thumb_func_start SpawnFlame
+SpawnFlame: @ 0x08020A08
 	push {r4, r5, lr}
 	lsls r1, r1, #0x10
 	lsrs r1, r1, #0x10
@@ -27840,8 +27840,8 @@ _08020E28:
 	.byte 0x70, 0x47, 0x00, 0x00, 0x70, 0x47, 0x00, 0x00
 	.byte 0x70, 0x47, 0x00, 0x00, 0x70, 0x47, 0x00, 0x00
 
-	thumb_func_start sub_08020E38
-sub_08020E38: @ 0x08020E38
+	thumb_func_start SpawnStopwatch
+SpawnStopwatch: @ 0x08020E38
 	push {r4, r5, r6, r7, lr}
 	mov r7, sb
 	mov r6, r8
