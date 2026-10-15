@@ -14,7 +14,7 @@
  * docs/cplusplus.md "Namespaces"):
  * `Update__Q34Game7Enemies9EnemyCtrlPQ34Game8Entities12MovingSprite`,
  * `_vt.Q34Game7Enemies9EnemyCtrl` (in the section
- * `.gnu.linkonce.d._vt.Q34Game7Enemies9EnemyCtrl`, which ldscript.txt
+ * `.gnu.linkonce.d._vt.Q34Game7Enemies9EnemyCtrl`, which games/xs/ldscript.txt
  * names) & co. enemies.h's C declarations stay global. */
 
 #include "game/entities/ctrl.hpp"

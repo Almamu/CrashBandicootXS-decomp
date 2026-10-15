@@ -232,7 +232,7 @@ void ObjTileAllocator::Walk()
 
 /* ROM 0x08028D94 - the original disassembly never gave this address its
  * own function label; it's a separate function from `Walk`
- * above (see `expected/corrections.txt`'s `split` entry), also with no
+ * above (see `games/xs/expected/corrections.txt`'s `split` entry), also with no
  * caller anywhere in the ROM. Sums the `size` of every FREE block
  * currently in the `list` list - a "how many free VRAM
  * tile bytes are left" query the rest of this cluster never calls. */

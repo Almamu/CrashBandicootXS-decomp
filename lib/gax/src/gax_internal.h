@@ -456,7 +456,7 @@ extern struct GaxHandlerLayout gGaxDefaultSong;
  * (GaxFatalError decompresses it with GaxHuffUnComp). */
 extern u32 gGaxHaltFont[70];
 
-/* sym_iwram.txt (gGaxPlayerState is declared above) */
+/* games/xs/sym_iwram.txt (gGaxPlayerState is declared above) */
 extern u64 gGaxMixRateReciprocal; /* 2^32 / mix rate (GaxChannelInit), scales gGaxPeriodTable */
 
 /* ---- Shin'en's inline asm (original source, not matching workarounds:

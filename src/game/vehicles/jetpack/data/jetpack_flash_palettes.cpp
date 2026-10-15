@@ -6,7 +6,7 @@ extern "C" {
 
 /*
  * ROM 0x0817C200-0x0817C260. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* A 3-frame palette strip: AnimateJetpackPlayerPalette (jetpack_player.cpp) queues frame

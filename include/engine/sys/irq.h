@@ -15,7 +15,7 @@ struct vblank_callbacks {
     irq_handler_t funcs[8];
 };
 
-/* gIntrTable[INTR_INDEX_TIMER2] under its own sym_iwram.txt name: the
+/* gIntrTable[INTR_INDEX_TIMER2] under its own games/xs/sym_iwram.txt name: the
  * slot SetEepromTimerIntr() installs the EEPROM timer handler in
  * (save_data.cpp). */
 extern void (*gIntrTableTimer2)(void);

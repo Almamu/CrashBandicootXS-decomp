@@ -6,7 +6,7 @@ extern "C" {
 
 /*
  * ROM 0x0817E714-0x0817E72C. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 extern const u8 gLanguageNameEnglish[];

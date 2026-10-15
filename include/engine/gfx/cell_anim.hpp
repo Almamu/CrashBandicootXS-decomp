@@ -16,7 +16,7 @@
  *
  * The data members are only declared: cxx_symbols.txt (block "#915
  * CellAnim") maps each one to its C name (`_Q36Engine3Gfx8CellAnim.cols` is
- * gCellAnimCols, ...), whose address is in sym_iwram.txt, and the
+ * gCellAnimCols, ...), whose address is in games/xs/sym_iwram.txt, and the
  * functions keep their C names the same way (`Advance__Q36Engine3Gfx8CellAnim` is
  * AdvanceCellAnim).
  *
@@ -53,7 +53,7 @@ private:
     static void UploadFrame();                         // UploadCellAnimFrame
     static void FillTilemap(s32 screen, s32 w, s32 h); // FillCellAnimTilemap: UNUSED
 
-    /* IWRAM (sym_iwram.txt) */
+    /* IWRAM (games/xs/sym_iwram.txt) */
     static void *data;    // gCellAnim - the cell record (a struct cell_anim_header)
     static s32 cols;      // gCellAnimCols - the cells across
     static s32 rows;      // gCellAnimRows - the cells down

@@ -5,7 +5,7 @@ extern "C" {
 
 /*
  * ROM 0x0816B98C-0x0816BB6C. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* The 8-word animation maps the enemy spawners (spawn_enemies.cpp) give

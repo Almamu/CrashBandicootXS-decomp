@@ -221,10 +221,10 @@ gGaxDefaultSong:
 @ gRoom00Asset..gRoom33Asset (the 41 level assets): src/game/level/data/level_assets.cpp
 
 @ gEntityVtable..gLogoActorVtable: the C++ classes' vtables, each object's
-@ .gnu.linkonce.d._vt.* section placed by ldscript.txt
+@ .gnu.linkonce.d._vt.* section placed by games/xs/ldscript.txt
 
 @ 0x087E55E4..0x087E5FCC: the IWRAM image (platform/gba/asm/intr_main.s, src/engine/*/*_arm.cpp,
 @ src/engine/sys/iwram_data.cpp),
-@ linked to run at 0x03000000 - the `iwram` section in ldscript.txt.
+@ linked to run at 0x03000000 - the `iwram` section in games/xs/ldscript.txt.
 @ 0x087E5FCC..0x08800000: 0xFF cartridge fill, the `rom_fill` section.
 

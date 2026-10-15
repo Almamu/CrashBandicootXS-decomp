@@ -60,7 +60,7 @@ void *MemCopy32(void *dst, const void *src, u32 byteCount)
 
 /* The controllers' base Update (gCtrlVtable's slot 1, UpdateCtrl): does
  * nothing. It's Ctrl's key method, its first virtual one (include/game/entities/ctrl.hpp),
- * so g++ emits gCtrlVtable here (ldscript.txt places it); Ctrl's other
+ * so g++ emits gCtrlVtable here (games/xs/ldscript.txt places it); Ctrl's other
  * methods are in src/game/entities/ctrl.cpp. Built as C++ (agbcp) for that
  * since #664 step 10b; DivMod and MemCopy32 compile the same. */
 void Ctrl::Update(MovingSprite *part)

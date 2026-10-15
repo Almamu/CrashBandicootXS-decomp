@@ -143,7 +143,7 @@ void PooledBgLayer::LoadTiles()
     pool->SetSource(GetCharBase(), tiles + 4);
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked asm/, expected/, src/
+/* UNUSED - no caller anywhere in the ROM (checked asm/, games/xs/expected/, src/
  * and every word-aligned Thumb pointer in baserom.gba). Empty and in no
  * method table (PooledBgLayer's slots all point elsewhere), so it keeps
  * the nullsub_N name (docs/naming.md). */

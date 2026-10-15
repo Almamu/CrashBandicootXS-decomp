@@ -154,7 +154,7 @@ s32 LevelLayers::GetTerrainFlags(s32 x, s32 y)
  * same file: sub_8026C80 (10 bytes) and sub_8026C8C (4 bytes), both
  * flush byte-exact on the first isolated-compile attempt (no relocation
  * sites, no register pins). Neither has any caller anywhere in the ROM,
- * checked every asm/*.s, expected/*.s (aside from their own definitions
+ * checked every asm/*.s, games/xs/expected/*.s (aside from their own definitions
  * there), and every .c file under src/ for a bl/.4byte reference to
  * either symbol, none found, so both are UNUSED, matched anyway following this
  * project usual practice of still routing genuinely dead code through
@@ -227,7 +227,7 @@ s32 LevelLayers::ProbeSolidFloor(struct vec2 *pos, s32 *outValue)
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked every asm/*.s,
- * expected/*.s, and every .c file under src/ for a bl/.4byte reference).
+ * games/xs/expected/*.s, and every .c file under src/ for a bl/.4byte reference).
  * See the file-level comment above. */
 s32 LevelLayers::sub_8026C80(s32 cond, volatile s32 *ptr)
 {
@@ -237,7 +237,7 @@ s32 LevelLayers::sub_8026C80(s32 cond, volatile s32 *ptr)
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked every asm/*.s,
- * expected/*.s, and every .c file under src/ for a bl/.4byte reference).
+ * games/xs/expected/*.s, and every .c file under src/ for a bl/.4byte reference).
  * See the file-level comment above. */
 s32 sub_8026C8C(void)
 {

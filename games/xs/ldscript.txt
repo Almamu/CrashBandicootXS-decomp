@@ -5,14 +5,14 @@ SECTIONS
     EWRAM (NOLOAD) :
     ALIGN(4)
     {
-        INCLUDE "sym_ewram.txt"
+        INCLUDE "games/xs/sym_ewram.txt"
     }
 
     . = 0x03000000;
     IWRAM (NOLOAD) :
     ALIGN(4)
     {
-        INCLUDE "sym_iwram.txt"
+        INCLUDE "games/xs/sym_iwram.txt"
     }
 
 	. = 0x08000000;

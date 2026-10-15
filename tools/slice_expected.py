@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Extracts a contiguous, address-bounded text slice out of one of the
-frozen expected/*.s sources (never edits the source itself - see
+frozen games/xs/expected/*.s sources (never edits the source itself - see
 docs/progress_report.md and tools/report_units.py, which drives this to build
 one objdiff unit per matched src/*.c file so the report shows
 per-category progress).
@@ -8,7 +8,7 @@ per-category progress).
 Slicing works at the text level (find the label line for the start
 address, find the label line for the end address, take everything in
 between) rather than on assembled bytes, so relocations/literal pools
-stay intact - the same technique expected/legacy.s itself was carved
+stay intact - the same technique games/xs/expected/legacy.s itself was carved
 out with.
 """
 import re
@@ -75,7 +75,7 @@ def main():
     sys.stdout.write(HEADER)
     sys.stdout.writelines(sliced)
 
-    # `resolve` entries in expected/corrections.txt: a function right after
+    # `resolve` entries in games/xs/expected/corrections.txt: a function right after
     # this slice that the base object calls through a local `.set` alias
     # of a symbol it defines itself (the libgcc `__udivsi3` alias, back
     # when libgcc2.c and __udivsi3 were one object and before that

@@ -14,7 +14,7 @@
  * functions. The data member is only declared: cxx_symbols.txt (block
  * "#915 CategorySpriteSheet") maps it to its C name
  * (`_Q36Engine3Gfx19CategorySpriteSheet.data` is gCategorySpriteSheet), whose address
- * is in sym_iwram.txt, and the functions keep their C names the same way
+ * is in games/xs/sym_iwram.txt, and the functions keep their C names the same way
  * (`Free__Q36Engine3Gfx19CategorySpriteSheet` is FreeCategorySpriteSheet).
  *
  * In the namespace Engine::Gfx (#1033, docs/cplusplus.md "Namespaces").

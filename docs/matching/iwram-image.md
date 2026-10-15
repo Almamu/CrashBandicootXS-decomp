@@ -887,7 +887,7 @@ point at the ARM functions by name, the cutscene language table
 the pointers into still-raw blobs (`gCrc16Table`,
 `gTerrainHeights3`, `gTitleMenuBlinkPalette`) are the blob plus an
 offset. `gGaxHaltFont` is GAX2's Huffman-compressed fatal-error
-font. `sym_iwram.txt` lost the 46 entries below `0x9E8`, which are now
+font. `games/xs/sym_iwram.txt` lost the 46 entries below `0x9E8`, which are now
 defined by these objects.
 
 ## Verification

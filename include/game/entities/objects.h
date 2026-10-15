@@ -126,7 +126,7 @@ extern const struct hitbox_quad gEmptySpriteBox;
  * (same file): {0, 0}. */
 extern const struct sprite_point gEmptySpritePoint;
 
-/* sym_iwram.txt */
+/* games/xs/sym_iwram.txt */
 extern s32 gLastSpriteVelY;
 
 #endif /* __OBJECTS_H__ */

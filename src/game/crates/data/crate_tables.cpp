@@ -10,7 +10,7 @@ extern "C" {
 
 /*
  * ROM 0x0816BB6C-0x0816BF20. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* ResetEnemyCtrl's (enemy_ctrl.cpp) entry set and its entries. */

@@ -8,7 +8,7 @@ extern "C" {
 /*
  * ROM 0x084a5600-0x084b0ae0: sprite banks 0-9 of the sprite-bank
  * animation system (gSpriteBankTable, include/engine/gfx/sprite_bank.h). Linked in
- * ROM order between data/data.s sections by ldscript.txt - see
+ * ROM order between data/data.s sections by games/xs/ldscript.txt - see
  * docs/data.md and docs/data_map.md ("gSpriteBankTable").
  *
  * Extracted once from baserom.gba by tools/sprite_banks.py; this file is

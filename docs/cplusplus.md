@@ -404,7 +404,7 @@ $(OBJCOPY) --redefine-syms=cxx_symbols.txt foo.o
 - **Vtables are g++'s.** A class header has no `#pragma interface`, so
   g++ emits each class's vtable in its key-method object, as a weak
   symbol in a `.gnu.linkonce.d._vt.<len><Class>` section, and
-  ldscript.txt places that section at the table's ROM address. A key-method
+  games/xs/ldscript.txt places that section at the table's ROM address. A key-method
   object that would also get out-of-line copies of the class's inline
   methods the ROM doesn't have is in the Makefile's
   `NO_IMPLEMENT_INLINES_OBJS` (`-fno-implement-inlines`). See [Emitting
@@ -476,7 +476,7 @@ part per scope:
 | a free function in a namespace (`Tick()` in `Actor`) | `Tick__5Actorv` |
 
 More than nine parts would be `Q_<n>_`. A vtable is `_vt.Q36Engine3Gfx...`
-(its section `.gnu.linkonce.d._vt.Q...`, which ldscript.txt names).
+(its section `.gnu.linkonce.d._vt.Q...`, which games/xs/ldscript.txt names).
 cxx_symbols.txt maps the new names to the same C names, so the .map,
 the report and the C callers don't change. tools/magic_numbers.py reads
 a `Q` name as its last part, the class (`mangled_class`).
@@ -621,7 +621,7 @@ checks the change is only a rename:
   them the first vtables to move (`_vt.Q36Engine4Text4Font`, ...), no code
   change. Their sections are renamed too
   (`.gnu.linkonce.d._vt.Q36Engine4Text4Font`), which cxx_rename.py lists
-  as renames not in cxx_symbols.txt: ldscript.txt's three lines that
+  as renames not in cxx_symbols.txt: games/xs/ldscript.txt's three lines that
   place them are updated by hand. text.h forward declares Font for
   gSmallFont and gLargeFont and the two wrapped-text functions; the
   cutscene player (cutscene.hpp), the continue prompt and the title
@@ -654,7 +654,7 @@ checks the change is only a rename:
   202 symbols renamed, among them the four vtables
   (`_vt.Q34Game5Crash6Player`, ...), no code change. Their sections are
   renamed too (`.gnu.linkonce.d._vt.Q34Game5Crash6Player`), so
-  ldscript.txt's four lines that place them are updated by hand.
+  games/xs/ldscript.txt's four lines that place them are updated by hand.
   globals.h (gPlayer), player.hpp (gSwimCtrl) and sprite_obj.hpp
   (MovingSprite::AsPlayer) forward declare the classes in the namespace;
   39 .cpp files name them with using declarations. The C structs
@@ -675,7 +675,7 @@ checks the change is only a rename:
   src/game/enemies/, with EnemyCtrl's 26 static spawners (src/game/level/
   spawn_enemies.cpp, SpawnSeal included) and PeriodicSpawner::Spawn
   (spawn_objects.cpp). 69 symbols renamed, among them the three vtables
-  (`_vt.Q34Game7Enemies9EnemyCtrl`, ...), no code change; ldscript.txt's
+  (`_vt.Q34Game7Enemies9EnemyCtrl`, ...), no code change; games/xs/ldscript.txt's
   three lines that place their sections are updated by hand. The entity
   spawn table (entity_spawn_funcs.cpp) names the spawners through
   using declarations, and boss_ctrl.hpp's `DingodileSharkCtrl` derives
@@ -703,7 +703,7 @@ checks the change is only a rename:
   src/game/bosses/, with the bosses' Spawn (src/game/bosses/spawn_bosses.cpp) and the
   weapons' (src/game/vehicles/jetpack/jetpack_spawn.cpp). 214 symbols renamed,
   among them 21 vtables, and LevelState::SetLevelBoss, which takes a
-  `BossCtrl *`; no code change. ldscript.txt's 21 lines that place the
+  `BossCtrl *`; no code change. games/xs/ldscript.txt's 21 lines that place the
   vtable sections are updated by hand. level_state.hpp forward declares
   BossCtrl in the namespace for `LevelState::boss`. The bosses' ROM tables
   (`Hovercraft::palette`, `picture`, `attacks`, ..., in src/*/data) are
@@ -735,7 +735,7 @@ checks the change is only a rename:
   `PolarCheckpointCrate`, and the all-static `Yeti` (yeti.hpp). All of
   src/vehicle/polar/, with the PolarPlayer hooks of the actor category
   driver and the factories of polar_actor_factory.cpp. 162 symbols renamed,
-  among them 22 vtables, no code change; ldscript.txt's 22 lines that place
+  among them 22 vtables, no code change; games/xs/ldscript.txt's 22 lines that place
   the vtable sections are updated by hand. The class names keep their
   `Polar` prefix (renaming them is a separate change). vehicle.hpp closes
   and reopens the namespace around the two global declarations among
@@ -762,7 +762,7 @@ checks the change is only a rename:
   all-static `Airship` (airship.hpp) and its `AirshipFireball`
   (boss_actors.hpp). All of src/vehicle/jetpack/, with the JetpackPlayer
   hooks of the actor category driver. 221 symbols renamed, among them 17
-  vtables, no code change; ldscript.txt's 17 lines that place the vtable
+  vtables, no code change; games/xs/ldscript.txt's 17 lines that place the vtable
   sections are updated by hand. As for Polar, vehicle.hpp closes and
   reopens the namespace around ActorSelf::AsJetpackPlayer's inline
   definition, and actor_self.hpp forward declares JetpackPlayer in it.
@@ -779,7 +779,7 @@ checks the change is only a rename:
   of src/game/crates/, with the crates' Spawn* (src/game/crates/spawn_crates.cpp)
   and src/game/crates/collision_queue.cpp. 115 symbols renamed, among them
   the vtable `_vt.Q34Game6Crates5Crate` and Player::StoreListEntry, which
-  takes a `Crate *`; no code change. ldscript.txt's line that places the
+  takes a `Crate *`; no code change. games/xs/ldscript.txt's line that places the
   vtable section is updated by hand. Forward declarations in the
   namespace: crate.hpp (for `struct crate_group`'s items), part_list.hpp,
   player.hpp (the player's crate list and collision queue), globals.h
@@ -811,7 +811,7 @@ checks the change is only a rename:
   spawn_gem_platforms.cpp); all in src/game/objects/ since #1071. 103 symbols renamed, among them 7 vtables
   (`_vt.Q34Game7Objects5Wumpa`, ...) and LevelState::SetBonusPlatform and
   SetGemPlatform, which take a `Platform *`; no code change.
-  ldscript.txt's 7 lines that place the vtable sections are updated by
+  games/xs/ldscript.txt's 7 lines that place the vtable sections are updated by
   hand. `CortexBossPlatformMover` (`Game::Bosses`) derives from
   `Game::Objects::PlatformMover`; level_state.hpp forward declares
   Platform in the namespace, and input_ctrl.hpp (the camera lead) and
@@ -844,7 +844,7 @@ checks the change is only a rename:
   src/game/level/game_progress.cpp. 518 symbols
   renamed (254 of them the rooms' members), among them 4 vtables
   (`_vt.Q34Game5Level7BgLayer`, ...) and SaveMenu::SummarizeProgress,
-  which takes a `GameProgress *`; no code change. ldscript.txt's 4 lines
+  which takes a `GameProgress *`; no code change. games/xs/ldscript.txt's 4 lines
   that place the vtable sections are updated by hand. globals.h (gEntityFlags,
   gLevelState, gCamera, gLevelLayers) and level.h (gGameFrameLevelState,
   gLevelLayersSingleton) forward declare the classes in the namespace,
@@ -877,7 +877,7 @@ checks the change is only a rename:
   (save_menu.hpp). All of src/game/ui/, src/game/ui/, src/game/ui/,
   src/game/ui/ (then src/cutscene/ and src/save/'s save_menu*.cpp). 253 symbols renamed,
   among them 3 vtables (`_vt.Q34Game2Ui7HudPart`, LevelSelectEntry's,
-  LogoActor's); no code change. ldscript.txt's 3 lines that place the
+  LogoActor's); no code change. games/xs/ldscript.txt's 3 lines that place the
   vtable sections are updated by hand. globals.h (gHud) and frontend.hpp
   (gLanguageSelect) forward declare the classes in the namespace;
   hud.hpp's HUDPART_CLAMP_FRAME names `Game::Ui::HudPart`. The headers
@@ -909,7 +909,7 @@ checks the change is only a rename:
   `EffectCtrl` (ctrl.hpp). 278 symbols renamed, among them the 7 vtables
   (`_vt.Q34Game8Entities6Entity`, ...) and every method of another class
   that takes one of them (`Update__Q34Game7Enemies9EnemyCtrlPQ34Game8Entities12MovingSprite`);
-  no code change. ldscript.txt's 7 lines that place the vtable sections
+  no code change. games/xs/ldscript.txt's 7 lines that place the vtable sections
   are updated by hand, and so is tools/shiftcheck.py's `vtables` shift
   point (`entity.o(.gnu.linkonce.d._vt.Q34Game8Entities6Entity)`).
   **How the other namespaces name them:** the headers always write the
@@ -959,7 +959,7 @@ checks the change is only a rename:
   helpers BoxOverlap, BoxMove and WorldBox (the box test on an
   ActorSelf's `box`, the same header). 25 symbols renamed, among them
   ActorSelf's vtable (`_vt.Q34Game8Entities9ActorSelf`, gActorVtable),
-  no code change; ldscript.txt's line that places its section is updated
+  no code change; games/xs/ldscript.txt's line that places its section is updated
   by hand. HpActor's own vtable (actor_destructors.cpp) has no C
   name and goes to /DISCARD/ (the ROM has no such table: every subclass
   has its own), so only its name in the .map changes, with the
@@ -1001,7 +1001,7 @@ a namespace but these, which stay in the global namespace on purpose:
 - **The globals** (globals.h, level.h, ...: gPlayer, gLevelState,
   gCrateList, ...) and **the data tables** (src/*/data/, the ROM tables
   and the generated string tables): their C names are what the linker script,
-  sym_iwram.txt and the C files use. Static data members of the
+  games/xs/sym_iwram.txt and the C files use. Static data members of the
   namespaced classes are mapped to their C names by cxx_symbols.txt.
 - **The records**: the C structs (`struct level_save`,
   `struct crate_placement`, ...) and the plain C++ records with no
@@ -2341,7 +2341,7 @@ player_collide.o and player_event.o were old_agbcc already.
 - **`ApplyVelocity` is `MovingSprite::ApplyVelocity`'s code.** The C's 14
   pins, gotos, two retyped reads and the 8-instruction `asm` block for
   the redundant store go. The global is a new name, `gLastPlayerVelY`
-  (0x0300129C, the word after `gLastSpriteVelY`; sym_iwram.txt), where the
+  (0x0300129C, the word after `gLastSpriteVelY`; games/xs/sym_iwram.txt), where the
   C wrote the address: the object's literal becomes a relocation, the
   ROM's word is the same.
 - **`gPlayer` is a `Player *` to C++** (globals.h, above). The 42 C++ files
@@ -3123,7 +3123,7 @@ operand, the height re-read; both tried without, and both still needed).
   jetpack_plane_bomber_state_tables.c's three tables, and that file's other two
   (`JetpackPlane`'s and `JetpackBomber`'s) are 11f's, so the table moves
   to a file of its own, airship_fireball_state_table.cpp, linked right after
-  jetpack_plane_bomber_state_tables.o (ldscript.txt, data/data.s, docs/data.md). Its two
+  jetpack_plane_bomber_state_tables.o (games/xs/ldscript.txt, data/data.s, docs/data.md). Its two
   flight states are still C (jetpack_plane.c, 11f) and are mapped to
   their C names, as part 11a's polar player states.
 - **The airship is an `AnimPart`**: `gAirship` is an `AnimPart *` to
@@ -3529,7 +3529,7 @@ agbcp and old_agbcp and stay agbcp.
   between the airship's function table (C, kept there) and the balloon
   crate's (11g's, still read from C): it moves to jetpack_balloon_state_table.cpp
   and the crate's to a new C file, jetpack_balloon_crate_state_table.c, both linked after
-  airship_state_table.o (ldscript.txt, data/data.s, docs/data.md). The
+  airship_state_table.o (games/xs/ldscript.txt, data/data.s, docs/data.md). The
   three objects' `.rodata` and relocations are the old one's.
 - **The airship fireball's two flight states** are `AirshipFireball`
   methods: the C's split locals (centre, target, player) stay, its three
@@ -3727,7 +3727,7 @@ data.
   the constructors and destructors store the same symbol, and the
   remaining C files' references still resolve. Only the section keeps
   its mangled name.
-- **The placement.** ldscript.txt lists the 93 tables one by one, in ROM
+- **The placement.** games/xs/ldscript.txt lists the 93 tables one by one, in ROM
   order (0x087E3BEC-0x087E55E4), each as `<key-method
   object>(.gnu.linkonce.d._vt.<len><Class>)` (until step 10b, a C one as
   `entity_vtables_7e3bec.o(.rodata.<name>)`, in a section of its own
@@ -3901,7 +3901,7 @@ GAX's mixer), which aren't C++. The report stays 2059/2059 functions
 and 100% data.
 
 - **The dead C declarations.** 391 C prototypes had no user left in a
-  .c, .cpp or .s file, ldscript.txt, sym_*.txt or another header: the C
+  .c, .cpp or .s file, games/xs/ldscript.txt, games/xs/sym_*.txt or another header: the C
   names of C++ methods whose last C callers were converted (objects.h
   111, player.h 118, crates.h 65, gfx.h 31, bosses.h 23, pickups.h 16,
   frontend.h 16, actor.h 9). They went, with the C structs whose only use
@@ -4448,7 +4448,7 @@ every object is byte-identical.
 - **Data.** `table` (gIntrTable), `prevTable` (gPrevIntrTable) and
   `vblankCallbacks` (gVBlankCallbacks) are private static data members,
   only declared. cxx_symbols.txt's `#915 Irq` block maps them to their C
-  names, which sym_iwram.txt places and crt0.s and intr_main.s still name.
+  names, which games/xs/sym_iwram.txt places and crt0.s and intr_main.s still name.
   gIntrTableTimer2, the table's timer-2 slot under its own name, stays a
   global in irq.h for save_data.cpp's EEPROM timer, as do the types
   `irq_handler_t` and `struct vblank_callbacks`.
@@ -4479,7 +4479,7 @@ and every object is byte-identical.
 - **Data.** `enabled` (gFrameLimitEnabled), `target` (gFrameLimitTarget)
   and `interval` (gFrameLimitInterval) are private static data members.
   cxx_symbols.txt's `#915 FrameLimiter` block maps them to their C names.
-  sym_iwram.txt places `target` and `interval`; `enabled` is an
+  games/xs/sym_iwram.txt places `target` and `interval`; `enabled` is an
   initialised IWRAM global, so iwram_data.cpp defines it in its place
   (`u8 FrameLimiter::enabled = 0;`), and its `.data` is unchanged.
   SetFrameLimit's argument had a member's name and is `frameCount` now.
@@ -4519,7 +4519,7 @@ No other object reads their globals, and every object is byte-identical.
   `enabled`. `state` stays one `struct brightness_fade` (gfx.h, with
   the FADE_FLAG_* flags its callers pass), not three members: it is one
   symbol in the .map. `PaletteFade`'s `backup` (gPaletteBackup) and
-  `buffer` (gPaletteFadeBuffer) are only declared; sym_iwram.txt places
+  `buffer` (gPaletteFadeBuffer) are only declared; games/xs/sym_iwram.txt places
   them. cxx_symbols.txt's `#915 BrightnessFade and PaletteFade` block
   maps all of them to their C names.
 - **Functions.** All are public static member functions under their C
@@ -4552,7 +4552,7 @@ static data member `instance`, and every object is byte-identical.
   methods they would take gEntitySpawner in r0 at every call, and
   LaunchHarmfulEffectPart's six arguments would move up one register.
 - **Data member.** `instance` is gEntitySpawner: the same block maps
-  `_13EntitySpawner.instance` to the C name, and sym_iwram.txt still
+  `_13EntitySpawner.instance` to the C name, and games/xs/sym_iwram.txt still
   places it at 0x30012E4, so the .map is unchanged. Create, Destroy and
   LaunchHarmfulEffectPart use it directly; globals.h's extern goes.
 - **Readers.** Its readers are everywhere: the crates, the player's
@@ -4841,7 +4841,7 @@ functions, and every object is byte-identical.
   logos, the credits, the starfield, the level cutscene and the start
   marker set `Display::dispcnt`, and SetupRoomBlend builds
   `Display::blendRegs`. cxx_symbols.txt's `#915 Display` block maps them
-  to their C names, which sym_iwram.txt places. Their types (`union
+  to their C names, which games/xs/sym_iwram.txt places. Their types (`union
   dispcnt`, `struct blend_regs`) stay in gfx.h, which the menus' and the
   level select's own DISPCNT copies share.
 - **Functions.** All 15 are static member functions under their C names
@@ -4863,7 +4863,7 @@ and every object is byte-identical.
 
 - **Data.** `queue` (gVramDmaQueue) is a private static data member,
   only declared; cxx_symbols.txt's `#915 VramDmaQueue` block maps it to
-  its C name, which sym_iwram.txt places. It stays one `struct
+  its C name, which games/xs/sym_iwram.txt places. It stays one `struct
   dma_queue` rather than two members (`entries`, `count`): the ROM
   addresses both fields off one literal-pool address, and two members
   would be two symbols in the .map. `struct dma_queue` and `struct
@@ -5218,7 +5218,7 @@ reasoning).
 - **Data.** The 31 IWRAM variables (0x1590-0x1600) are static data
   members, only declared, as before: cxx_symbols.txt's `#772 Hovercraft`
   block maps `_10Hovercraft.x` to gHovercraftX and so on, so the addresses
-  still come from sym_iwram.txt and the map, objdiff and report names
+  still come from games/xs/sym_iwram.txt and the map, objdiff and report names
   don't change. Members drop the prefix (`x`, `velZ`, `anim` for
   gHovercraft, `stateFuncs` for gHovercraftStateFuncs); where a parameter
   or local had a member's name, it was renamed (`Spawn`'s `sx`/`sy`/`sz`,
@@ -5368,7 +5368,7 @@ and gCellAnimUploaded in FlipCellAnimPage. Every object is byte-identical.
   `data` (gCellAnim, the cell record), `cols`, `rows`, `tileBytes`,
   `frameSize`, `distance`, `length`, `time`, `speed`, `hasBanks`, `page`,
   `uploaded`, `frameStep`. cxx_symbols.txt's `#915 CellAnim` block maps
-  them to their C names, which sym_iwram.txt places. A local and a
+  them to their C names, which games/xs/sym_iwram.txt places. A local and a
   parameter had a member's name and were renamed: Init's
   `frameSize` pointer is `pFrameSize`, SetSpeed's argument `value`, and
   FillTilemap's `page` argument `screen`.
@@ -5398,7 +5398,7 @@ and every object is byte-identical.
   `scrollX`, `scrollY`, `shake`, `layerDepth`, `scrollType`, `easeShift`,
   `rangeX`, `rangeY`, `maxX`, `maxY`, `bg0VOffset`, `width`, `height`.
   cxx_symbols.txt's `#915 ActorBg` block maps them to their C names, which
-  sym_iwram.txt places. Shake's argument had a member's name and is
+  games/xs/sym_iwram.txt places. Shake's argument had a member's name and is
   `amount` now.
 - **Functions.** All 8 are public static member functions under their C
   names (`Shake__7ActorBgi ShakeActorBg`, ...): `InitScroll` and
@@ -5426,7 +5426,7 @@ and every object is byte-identical.
 - **Data.** `spawns` (gCollectedSpawns) and `count`
   (gCollectedSpawnCount) are private static data members.
   cxx_symbols.txt's `#915 CollectedSpawns` block maps them to their C
-  names. sym_iwram.txt places `spawns`; `count` is an initialised IWRAM
+  names. games/xs/sym_iwram.txt places `spawns`; `count` is an initialised IWRAM
   global, so iwram_data.cpp defines it in its place
   (`s32 CollectedSpawns::count = 0;`), like
   [the frame limiter's](#the-frame-limiter-as-an-all-static-class-915)
@@ -5826,7 +5826,7 @@ and every object is byte-identical.
   `checkpointMissedNitros` (gActorCheckpointMissedNitros) and
   `checkpoint` (gActorCheckpoint) are private static data members.
   cxx_symbols.txt's `#915 ActorCategoryStats` block maps them to their C
-  names. sym_iwram.txt places the four counters; `checkpoint` is an
+  names. games/xs/sym_iwram.txt places the four counters; `checkpoint` is an
   initialised IWRAM global, so iwram_data.cpp defines it in its place
   (`s32 ActorCategoryStats::checkpoint = 0;`).
 - **Functions.** 5 public static member functions under their C names:
@@ -5859,7 +5859,7 @@ object is byte-identical.
   `useBonus` (gActorSpawnUseBonus), `paused` (gActorSpawnsPaused) and
   `offset` (gActorSpawnOffset) are private static data members.
   cxx_symbols.txt's `#915 ActorSpawns` block maps them to their C names,
-  which sym_iwram.txt places. GetKindIndex's local `table` had a member's
+  which games/xs/sym_iwram.txt places. GetKindIndex's local `table` had a member's
   name and is `t` now.
 - **Functions.** 8 public static member functions under their C names:
   `GetOffset` (the statistics' SetCheckpoint), `Pause` and `Resume` (the
@@ -5894,7 +5894,7 @@ object is byte-identical.
   `drawCount` (gActorDrawCount), `exitStatus` (gActorCategoryExitStatus),
   `vtable` (gActorCategoryVtable) and `frameCount`
   (gActorCategoryFrameCount) are private static data members, which
-  sym_iwram.txt places. The ROM tables are too: `descriptors`
+  games/xs/sym_iwram.txt places. The ROM tables are too: `descriptors`
   (gActorCategories) and `vtables` (gActorCategoryVtables), still defined
   in src/engine/actor/data/actor_categories.cpp. cxx_symbols.txt's `#915
   ActorCategory` block maps them all to their C names.
@@ -5939,7 +5939,7 @@ plain functions, and every object is byte-identical.
   address-ordered list's sentinel record), `rover` (the next-fit search's
   start), `spares` (the free records' stack) and `index` (a tile's
   record). cxx_symbols.txt's `#915 ObjTileAllocator` block maps them to
-  their C names, which sym_iwram.txt places. `struct vram_tile_block`
+  their C names, which games/xs/sym_iwram.txt places. `struct vram_tile_block`
   stays sprite_frame.cpp's: the header only names it. Alloc's `rover`
   local had the member's name and is `start` now.
 - **Functions.** All six are static member functions under their C names
@@ -5969,7 +5969,7 @@ is byte-identical.
   const members, defined in actor_palette_cycle_frames.cpp as the members, as
   for the yeti's tables: `frames`, `startFrames`, `targetFrames`.
   cxx_symbols.txt's `#915 ActorPaletteCycle` block maps them all to their
-  C names; sym_iwram.txt places the IWRAM ones. Update's `target` local
+  C names; games/xs/sym_iwram.txt places the IWRAM ones. Update's `target` local
   had a member's name and is `bound` now.
 - **Functions.** All 5 are public static member functions under their C
   names (`Update__17ActorPaletteCycle UpdateActorPaletteCycle`, ...):
@@ -6000,7 +6000,7 @@ and every object is byte-identical.
   (gSpriteAffineQueue), `count` and `affineCount`; `SpriteFrameCache`'s
   `current`, `previous` (the two lists' sentinels), `spares` and `pool`.
   cxx_symbols.txt's `#915 SpriteOamQueue and SpriteFrameCache` block maps
-  them to their C names, which sym_iwram.txt places. `struct
+  them to their C names, which games/xs/sym_iwram.txt places. `struct
   queued_oam_entry` stays sprite_frame.cpp's and `struct
   sprite_frame_cache_node` gfx.h's (the ARM file uses it too); the headers
   only name them.
@@ -6033,7 +6033,7 @@ and every object is byte-identical.
 
 - **Data.** `data` (gCategorySpriteSheet) is a public static data
   member, only declared. cxx_symbols.txt's `#915 CategorySpriteSheet`
-  block maps it to its C name, which sym_iwram.txt places.
+  block maps it to its C name, which games/xs/sym_iwram.txt places.
 - **Functions.** `Free` (FreeCategorySpriteSheet: the category's
   teardown and the company logos') and `Decompress`
   (DecompressCategorySpriteSheet: InitActorCategory) are public static
@@ -6234,7 +6234,7 @@ in experiment 2 no matching workarounds at all. Plan:
 5. **Vtables** are emitted by g++ once a class's key method is C++
    (drop the header's `#pragma interface`), which also checks the
    hierarchy: the slot order and overrides come out as the ROM has them
-   or `make compare` fails. ldscript.txt places each
+   or `make compare` fails. games/xs/ldscript.txt places each
    `.gnu.linkonce.d._vt.<class>` section at its ROM address, between the
    C tables left. Done in step 10 for 85 of the 93
    ([Emitting the vtables](#emitting-the-vtables-step-10)) and in step
@@ -6280,7 +6280,7 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   the objcopy rename.
 - **Without `#pragma interface`,** g++ emits each class's vtable in the
   file that defines its first non-inline virtual method, as a weak
-  `.gnu.linkonce.d` section (ldscript.txt places it, step 10). That file
+  `.gnu.linkonce.d` section (games/xs/ldscript.txt places it, step 10). That file
   also gets an out-of-line copy of **every** inline method of the class,
   used or not, at its end, in the reverse of their declaration order:
   that is how graphics.cpp (entity.cpp since #767) ends with `InitEntity`, the accessors and

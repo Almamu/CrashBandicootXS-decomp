@@ -6,7 +6,7 @@ extern "C" {
 /*
  * ROM 0x08172CD4-0x08174BE0: the game's own text (menus, level names,
  * popups, credits labels) in the six languages. Linked in ROM order
- * between data/data.s sections by ldscript.txt - see docs/data.md.
+ * between data/data.s sections by games/xs/ldscript.txt - see docs/data.md.
  *
  * Per language (English, French, German, Spanish, Italian, Dutch) the
  * strings it adds, then its array of UI_TEXT_COUNT strings, which

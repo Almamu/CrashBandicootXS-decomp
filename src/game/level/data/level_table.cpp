@@ -10,7 +10,7 @@ extern "C" {
 
 /*
  * ROM 0x0816C814-0x0816D1C8: the level table and the room records under
- * it. Linked in ROM order between data/data.s sections by ldscript.txt -
+ * it. Linked in ROM order between data/data.s sections by games/xs/ldscript.txt -
  * see docs/data.md and docs/levels.md.
  *
  * - the level themes' colour cycles: the palette-entry lists RunRoom

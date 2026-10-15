@@ -22,7 +22,7 @@ using Game::Crash::SwimCtrl;
  * `GetEntityPixelY` entry for the established precedent: a disassembler-
  * rendered `movs r0, r0` at a function gap is usually just a zero-fill
  * halfword, not a literal instruction). The name survives only as the
- * frozen disassembly's label, dropped by expected/corrections.txt's
+ * frozen disassembly's label, dropped by games/xs/expected/corrections.txt's
  * `unlabel sub_8016046`. */
 
 /* The player's Y drift ramp (`rampY`), like SetDriftX (swim_ctrl.cpp) for

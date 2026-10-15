@@ -169,7 +169,7 @@ void WorldPosToScreen(s32 *pos, s32 *outX, s32 *outY)
 }
 
 /* UNUSED - empty, no caller anywhere in the ROM (checked src/, asm/,
- * expected/ and every word-aligned Thumb pointer in baserom.gba). Keeps
+ * games/xs/expected/ and every word-aligned Thumb pointer in baserom.gba). Keeps
  * the nullsub_N name (docs/naming.md): no call, table slot or neighbour
  * shows what it stood for. */
 void nullsub_12(void)

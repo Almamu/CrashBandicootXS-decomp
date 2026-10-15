@@ -72,7 +72,7 @@ struct entry_set;
 #define CORTEX_BOSS_GEM_KIND_YELLOW 2 // SpawnYellowGem: animation 0, shrinks with 0xD
 extern void SpawnCortexBossGem(u32 id, u16 x, u16 y, u16 param, s32 kind);
 
-/* The bosses' globals (sym_iwram.txt): the airship's and the
+/* The bosses' globals (games/xs/sym_iwram.txt): the airship's and the
  * hovercraft's variables are Airship's and Hovercraft's static members
  * (include/game/vehicles/jetpack/airship.hpp, include/game/bosses/hovercraft.hpp; #772). */
 

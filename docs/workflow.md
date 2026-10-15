@@ -75,7 +75,7 @@ incomplete pass and should be finished before moving on.
 4. Once it matches (or is deliberately parked), cut that function's
    block out of whichever `asm/code_3_*.s` file currently holds it (it
    becomes two files: everything before, and everything after), add the
-   C version to the right `.c` file, and add an entry to `ldscript.txt`'s
+   C version to the right `.c` file, and add an entry to `games/xs/ldscript.txt`'s
    `ROM :` block placing the new object file exactly where the removed
    asm block used to sit in link order - the linker concatenates
    whatever's listed there in that literal order, so this is what keeps
@@ -192,6 +192,6 @@ incomplete pass and should be finished before moving on.
    this function got a real name only now (rather than already having
    one before it was matched),
    or turned out to be a separate function the original disassembly
-   never gave its own label, add a line to `expected/corrections.txt` -
+   never gave its own label, add a line to `games/xs/expected/corrections.txt` -
    see [docs/progress_report.md](./progress_report.md) for why, and check with
    `make NON_MATCHING=1 report` (see the same doc) that it's picked up.

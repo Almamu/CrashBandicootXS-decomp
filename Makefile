@@ -72,7 +72,7 @@ OBJ_DIR:= build/crashbandicootxs
 ROM      := crashbandicootxs.gba
 ELF      := $(ROM:.gba=.elf)
 MAP      := $(ROM:.gba=.map)
-LDSCRIPT := ldscript.txt
+LDSCRIPT := games/xs/ldscript.txt
 
 C_SUBDIR = src
 ASM_SUBDIR = asm
@@ -115,7 +115,7 @@ DATA_ASM_OBJS := $(patsubst $(DATA_ASM_SUBDIR)/%.s,$(DATA_ASM_BUILDDIR)/%.o,$(DA
 #### Libraries ####
 # Third-party and SDK code linked into the ROM, kept apart from the game
 # under lib/ (see docs/libraries.md). They are linked as plain objects:
-# ldscript.txt interleaves them with the game code in ROM order.
+# games/xs/ldscript.txt interleaves them with the game code in ROM order.
 #  - lib/gax: Shin'en's GAX2 sound engine (src/*.c code, asm/*.s its
 #    hand-written ARM DSP routines, data/*.c tables)
 #  - lib/agb_eeprom: Nintendo's AgbEeprom SDK library, EEPROM_V122
@@ -295,8 +295,8 @@ screen-check-objs: $(filter-out $(DATA_OBJS),$(C_OBJS) $(CXX_OBJS)) $(SCREEN_CHE
 # per-category (Graphics/Util/System) progress, not just an overall
 # total - tools/report_units.py has the full explanation of why it has
 # to be this fine-grained, the per-file address table, and how it slices
-# expected/legacy.s/expected/code_3.s (frozen, never rebuilt from
-# anything else) and applies expected/corrections.txt per slice. Run
+# games/xs/expected/legacy.s/expected/code_3.s (frozen, never rebuilt from
+# anything else) and applies games/xs/expected/corrections.txt per slice. Run
 # under `NON_MATCHING=1` so parked functions are included as their
 # (possibly imperfect) C reconstruction rather than omitted or silently
 # swapped for raw asm. The data units (data/data.s) need the repo-built

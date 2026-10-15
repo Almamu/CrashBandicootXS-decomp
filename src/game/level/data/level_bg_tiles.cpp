@@ -11,7 +11,7 @@ extern "C" {
  * Every asset is an LZ77 stream (gbagfx) that starts on a word boundary,
  * hence aligned(4): the 0-3 zero bytes after a stream are the next one's
  * alignment. tools/bin2c.py --lz writes the stream's bytes (levels.mk).
- * Linked in ROM order between data/data.s sections by ldscript.txt, see
+ * Linked in ROM order between data/data.s sections by games/xs/ldscript.txt, see
  * docs/data.md.
  */
 

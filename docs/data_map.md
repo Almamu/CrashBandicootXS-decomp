@@ -453,7 +453,7 @@ and the encoder are in [levels.md](./levels.md).
 `crt0.s` DMA-copies `(gIntrTable - IntrMain_Buffer) / 4` words
 from here (`__iwram_lma`) to `0x03000000` at boot. **Converted**: the
 image is now built from source and linked to run at `0x03000000`
-(ldscript.txt's `iwram` section, stored in ROM with `AT(...)`):
+(games/xs/ldscript.txt's `iwram` section, stored in ROM with `AT(...)`):
 `IntrMain`, the hand-written interrupt dispatcher (`platform/gba/asm/intr_main.s`),
 ten ARM routines (`src/engine/util/string_arm.cpp`, `src/engine/gfx/sprite_arm.cpp`,
 built with agbcp_arm_patched) and the initialised IWRAM globals
@@ -571,7 +571,7 @@ Steps 2-5 alone take data progress from 20.4% to about 83%.
 ### Conversion convention for small tables
 
 **Recommendation: C `const` arrays in `src/*/data/*.c`, placed by
-`ldscript.txt` in ROM order, with typed `.s` directives as the fallback**
+`games/xs/ldscript.txt` in ROM order, with typed `.s` directives as the fallback**
 for the cases below. C matches the standing "prefer structs" direction:
 the structs already exist in `include/` and `src/`, so the table and its
 consumers share one definition, and function pointers are just the
@@ -582,7 +582,7 @@ file is changed): `gObjPieceWidths`/`0816B2EC` (the OBJ piece
 width/height tables, `u8[12]` each) moved into `src/*/data/obj_piece_sizes.c`
 as `const u8` arrays. `data/data.s` got a second section
 (`.section .rodata.after_0816B2F8, "a"`) from the next label on.
-`ldscript.txt` got
+`games/xs/ldscript.txt` got
 `data.o(.rodata); src/*/data/obj_piece_sizes.o(.rodata); data.o(.rodata.after_0816B2F8);`.
 Result: `make compare` said **`crashbandicootxs.gba: OK`**, with the
 symbols at `0x0816B2E0`/`0x0816B2EC`. `src/*/*.c` is already globbed, so

@@ -4,7 +4,7 @@
  * ROM 0x085A9EEC-0x085A9F70: the AGB SDK EEPROM library's constant data
  * (the library is eeprom_timer.c, eeprom_timer_stop.c and
  * eeprom_read_write.c). Linked in ROM order between data/data.s sections by
- * ldscript.txt - see docs/data.md.
+ * games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* The library's identification string. No code reads it: flashing tools

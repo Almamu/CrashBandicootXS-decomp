@@ -4,9 +4,9 @@
  * green pad of entity type 0x3D (sprite bank 28). The event makes the
  * action controller launch Crash upward in an air spin with a full tornado
  * charge (Y motion 0x13, or 0x14 with A held). Its key method is here, so
- * g++ emits its vtable here (ldscript.txt places it).
+ * g++ emits its vtable here (games/xs/ldscript.txt places it).
  *
- * UNUSED - no `bl`/`.4byte` reference in asm/, expected/ or src/: the
+ * UNUSED - no `bl`/`.4byte` reference in asm/, games/xs/expected/ or src/: the
  * out-of-line constructor (Spawn has it inlined). Matched anyway.
  *
  * Split from menus/level_select.cpp (GitHub issue #26) in #767, with its

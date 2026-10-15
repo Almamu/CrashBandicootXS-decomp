@@ -6,7 +6,7 @@ extern "C" {
 
 /*
  * ROM 0x0817E72C-0x0817E78C. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* 16-halfword palette-cache slot contents InitLanguageSelectGraphics

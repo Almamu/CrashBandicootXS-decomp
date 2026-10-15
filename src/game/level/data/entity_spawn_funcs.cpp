@@ -26,7 +26,7 @@ using Game::Objects::Stopwatch;
 
 /*
  * ROM 0x0816C6A4-0x0816C814. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* The unified 92-slot function-pointer dispatch array (docs/rom_map.md

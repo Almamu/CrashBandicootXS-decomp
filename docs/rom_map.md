@@ -521,7 +521,7 @@ exist.
 
 A second, smaller cluster of globals shows up too: a tight run of IWRAM
 words at `0x030012B4`-`0x03001310` (24 consecutive 4-byte fields per
-`sym_iwram.txt`) gets referenced hundreds of times across the zone
+`games/xs/sym_iwram.txt`) gets referenced hundreds of times across the zone
 (`gPlayer` alone: 140 times) - one compact, extremely hot
 struct, read directly by name rather than through a passed-in pointer
 like `SettleLevelSelectPage`'s object above. Distinct from that function's own
@@ -543,7 +543,7 @@ same display-commit sequence as `SettleLevelSelectPage` (`FlushVramDmaQueue`, th
 (`IsLevelSelectPageBgSettled`, `HasLevelSelectCursorArrived`) to decide whether to keep looping. Once a
 completion condition trips, it reads the upper 16 bits of a global,
 **`gKeys`** (word-sized; only the low byte of that same word
-has a separate, already-inferred role in `sym_iwram.txt`'s neighboring
+has a separate, already-inferred role in `games/xs/sym_iwram.txt`'s neighboring
 layout), and dispatches on individual bits to one of **four** small
 handler functions, in two same-sized pairs:
 

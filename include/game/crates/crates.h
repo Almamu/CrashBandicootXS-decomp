@@ -34,7 +34,7 @@ extern const u8 gCrateKindUnbreakable[CRATE_KIND_COUNT];
 extern const s32 gCrateHitResponse[CRATE_KIND_COUNT][7];
 extern const u8 gAttackKindBreakLimited[8];
 
-/* Set when the crate list changes (sym_iwram.txt). */
+/* Set when the crate list changes (games/xs/sym_iwram.txt). */
 extern u8 gCrateListChanged;
 
 /* src/game/crates/crate.cpp */

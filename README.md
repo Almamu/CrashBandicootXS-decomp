@@ -182,9 +182,9 @@ crt0, `IntrMain` and the BIOS SWI wrappers
 ([docs/platforms.md](./docs/platforms.md)); a port to another system
 supplies its own platform there.
 
-`expected/` holds frozen copies of the original disassembly, the target
+`games/xs/expected/` holds frozen copies of the original disassembly, the target
 the progress report diffs the build against. Never edit them; see
-[expected/README.md](./expected/README.md).
+[games/xs/expected/README.md](./expected/README.md).
 
 ## Contributing
 

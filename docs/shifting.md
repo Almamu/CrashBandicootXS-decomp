@@ -14,7 +14,7 @@ checks it, and `tools/boottest.py` plays shifted ROMs in mGBA.
 
 ## What can and can't move
 
-- **ROM code and data** (`ldscript.txt`'s `ROM` section and the `iwram`
+- **ROM code and data** (`games/xs/ldscript.txt`'s `ROM` section and the `iwram`
   image's load address): anything can grow, shrink or move. crt0 copies
   the IWRAM image from `__iwram_lma`, a symbol.
 - **Alignment** comes from the objects themselves (their sections'
@@ -24,12 +24,12 @@ checks it, and `tools/boottest.py` plays shifted ROMs in mGBA.
   a `.balign 4` (`data/data.s`); `gGaxSfxData` is at 0x084C0008, where
   the set starts.
 - **The IWRAM image** runs at 0x03000000, and the IWRAM variables after
-  it are placed by `sym_iwram.txt` at fixed offsets, starting with
+  it are placed by `games/xs/sym_iwram.txt` at fixed offsets, starting with
   `gIntrTable` at 0x030009E8, right after the image. crt0 copies
   `gIntrTable - IntrMain_Buffer` bytes. So the image (IntrMain, the ARM
   routines, `src/engine/sys/iwram_data.cpp`) can't grow past 0x9E8 bytes
   without moving those variables. EWRAM is laid out the same way
-  (`sym_ewram.txt`). That is RAM, not ROM: it doesn't limit the ROM's
+  (`games/xs/sym_ewram.txt`). That is RAM, not ROM: it doesn't limit the ROM's
   data.
 - **`make report`** (docs/progress_report.md) still describes the original
   layout: `tools/report_units.py`'s `DATA_END` and `IWRAM_LMA` are the
@@ -42,7 +42,7 @@ checks it, and `tools/boottest.py` plays shifted ROMs in mGBA.
 `tools/shiftcheck.py` links the ROM again with `ld -q` (`--emit-relocs`,
 so the ELF keeps every relocation), once as it is and once for each of
 several shifts: N bytes of padding inserted in front of one object in
-a copy of `ldscript.txt`. The default shifts are in the code (0x100
+a copy of `games/xs/ldscript.txt`. The default shifts are in the code (0x100
 bytes in front of `bios_util.o`, 2 in front of `audio.o`), in front of
 the data, the rooms (0x1004), the sprite banks, the sound blocks (1 and
 2 bytes, to move them off their alignment), the level assets and the
@@ -137,7 +137,7 @@ Nothing else stores an address as a number:
   and the build-time tools (`levels.py`, `bin2c.py`, the graphics
   tools) write symbols, not addresses (their ROM addresses are for
   `extract`, which reads `baserom.gba`);
-- `expected/` is for the progress report only; the ROM's build doesn't
+- `games/xs/expected/` is for the progress report only; the ROM's build doesn't
   read it;
 - nothing depends on an alignment it doesn't ask for: the shifts by 1, 2
   and 3 bytes pass `make shiftcheck`.

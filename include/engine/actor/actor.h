@@ -166,7 +166,7 @@ extern void FillBgPictureMap(const u8 *nib, const u16 *map, s32 cols, s32 rows);
 /* src/engine/gfx/cell_anim.cpp (the rest is class CellAnim, cell_anim.hpp) */
 extern void ActorCategoryAttemptEndStub(void);
 
-/* The actor zone's globals (sym_iwram.txt). */
+/* The actor zone's globals (games/xs/sym_iwram.txt). */
 extern struct anim_table_record *gActorAnimTable;
 extern s32 gActorFarClipDepth;
 extern s32 gActorNearClipDepth;

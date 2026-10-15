@@ -3,9 +3,9 @@
  * for the input controller. It trails the player at a horizontal offset
  * that eases 2 px per frame toward a clamped target, and is gCamera's
  * follow target while alive. Its key method is here, so g++ emits its
- * vtable here (ldscript.txt places it).
+ * vtable here (games/xs/ldscript.txt places it).
  *
- * UNUSED - no `bl`/`.4byte` reference in asm/, expected/ or src/: SetUnk32,
+ * UNUSED - no `bl`/`.4byte` reference in asm/, games/xs/expected/ or src/: SetUnk32,
  * SetOffset and GetOffset. Matched anyway.
  *
  * Split from the start of menus/level_select.cpp (GitHub issue #26) in

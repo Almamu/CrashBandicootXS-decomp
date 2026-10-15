@@ -93,7 +93,7 @@ extern const u16 gLanguageSelectPalette3[16];
 /* The company logo actor (InitLogoActor): its animation record
  * (src/game/ui/data/title_screen_gfx.cpp, an anim_table_record) and the two VRAM
  * tile blocks DrawLogoActor
- * double-buffers its frames in (IWRAM, sym_iwram.txt). */
+ * double-buffers its frames in (IWRAM, games/xs/sym_iwram.txt). */
 extern const struct anim_table_record gLogoActorAnim; /* actor_anim.h */
 extern void *gLogoActorTiles[2];
 extern s32 gLogoActorTileBuffer;  /* the block on screen, 0 or 1 */

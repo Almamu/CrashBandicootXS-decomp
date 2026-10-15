@@ -3,7 +3,7 @@
 /*
  * ROM 0x080C2758-0x080FF1B0: two zero-run-compressed OBJ frame sets (the
  * old "rotation strips A and B"). Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md ("Compressed sprite frames").
+ * sections by games/xs/ldscript.txt - see docs/data.md ("Compressed sprite frames").
  *
  * Each frame is a {w, h, 0x30, 0} header and a stream of u16 run counts:
  * a zero run, then alternately a literal run (count + that many halfwords

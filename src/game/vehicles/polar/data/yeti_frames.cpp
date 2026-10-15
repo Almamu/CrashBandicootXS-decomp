@@ -8,7 +8,7 @@ extern "C" {
 
 /*
  * ROM 0x0817A880-0x0817AA6C. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 #include "vehicles/polar/yeti.h"

@@ -288,7 +288,7 @@ $(O1_OBJS): CC1FLAGS := $(filter-out -O2,$(CC1FLAGS)) -O1
 NO_INTERWORK_OBJS := $(LIBGCC2_OBJS)
 $(NO_INTERWORK_OBJS): CC1FLAGS := $(filter-out -mthumb-interwork,$(CC1FLAGS))
 
-# ARM-state code of the IWRAM image (ldscript.txt's `iwram` section),
+# ARM-state code of the IWRAM image (games/xs/ldscript.txt's `iwram` section),
 # written as C++ like the rest of the game and built with
 # agbcp_arm_patched: the ARM-targeting C++ compiler of notyourav/agbcc's
 # `cp` branch (its g++_arm tree, agbcc_arm's gcc 2.9-arm-000512 with the

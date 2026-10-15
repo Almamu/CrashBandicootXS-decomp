@@ -16,7 +16,7 @@
  * data members compile like those globals, static member functions like
  * plain functions. cxx_symbols.txt (block "#915 ActorSpawns") maps each
  * member to its C name (`_Q36Engine5Actor11ActorSpawns.table` is gActorSpawnTable, ...),
- * which sym_iwram.txt places. The functions keep their C names the same
+ * which games/xs/sym_iwram.txt places. The functions keep their C names the same
  * way (`GetX__Q36Engine5Actor11ActorSpawnsi` is GetActorSpawnX).
  *
  * In the namespace Engine::Actor (#1033, docs/cplusplus.md "Namespaces").
@@ -51,7 +51,7 @@ private:
      * walks it */
     friend class ActorCategory;
 
-    /* IWRAM (sym_iwram.txt) */
+    /* IWRAM (games/xs/sym_iwram.txt) */
     static struct actor_spawn_table *table; // gActorSpawnTable - the category's spawnTable
     static s32 index;                       // gActorSpawnIndex - the next record to spawn
     /* gActorSpawnUseBonus - ActorCategory::Select's `active` argument (the

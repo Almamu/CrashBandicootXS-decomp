@@ -14,7 +14,7 @@ extern "C" {
  * palettes, the 47-record animation table gCategoryFamily1AnimTable
  * (include/engine/actor/actor_anim.h) and its keyframe (table_A) and frame (table_B)
  * arrays. Linked in ROM order between data/data.s sections by
- * ldscript.txt - see docs/data.md, "Category families".
+ * games/xs/ldscript.txt - see docs/data.md, "Category families".
  *
  * Record 0's table_B points at compressed frames of set C
  * (jetpack_rle_sprites.cpp), the others' at frames of the framed sheet

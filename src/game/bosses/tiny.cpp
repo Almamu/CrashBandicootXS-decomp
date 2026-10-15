@@ -51,7 +51,7 @@ using Game::Objects::Pickups;
  *   Tiny's HitStub (TinyHitStub) and StartHop, destructor and constructor (issue
  *   #23, docs/matching/archive/issue-23-graphics.md).
  *
- * UNUSED - no caller anywhere in the ROM (checked the asm/ and expected/
+ * UNUSED - no caller anywhere in the ROM (checked the asm/ and games/xs/expected/
  * sources, every .c file under src/, and every word-aligned Thumb pointer
  * in baserom.gba): UnusedOneShotAnimCtrl's constructor
  * (CreateUnusedOneShotAnimCtrl). Matched anyway. */

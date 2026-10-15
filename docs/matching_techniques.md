@@ -143,7 +143,7 @@ How to tell, from the ROM's code:
 
 A file joins `OLD_AGBCC_OBJS` as a whole: every matched function in the
 object must stay byte-exact under old_agbcc. If one doesn't, split the
-file at a function boundary into a new object (and `ldscript.txt`
+file at a function boundary into a new object (and `games/xs/ldscript.txt`
 entry), as the link_handshake and title_screen splits did.
 
 Cases: [issue-24-boss-actor.md](./matching/archive/issue-24-boss-actor.md)
@@ -628,7 +628,7 @@ section to its 4-byte alignment inside the object. For code that fill is
 a Thumb NOP (`mov r8, r8`, `0xC046`), and the ROM has zeros there. The
 linker isn't involved: the pad is already part of the `.o`'s `.text`
 size, and the ROM output section's own gap fill (`} = 0` in
-`ldscript.txt`) is zero anyway. agbcc starts every function with
+`games/xs/ldscript.txt`) is zero anyway. agbcc starts every function with
 `.align 2, 0`, so a gap *between* two functions of one object is already
 zero; only the end of the last function was affected.
 

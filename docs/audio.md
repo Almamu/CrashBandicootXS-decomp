@@ -265,7 +265,7 @@ picture):
 - **`sub_803A608` isn't really a function to characterize - it's the
   disassembler's label on `GaxMixFrame`'s `GAX_CALL_ARM` return point
   (`nop; b _0803A61E`, then the function's zero-fill fallback loop; it
-  has no label in the C, see `expected/corrections.txt`'s `unlabel`
+  has no label in the C, see `games/xs/expected/corrections.txt`'s `unlabel`
   lines, and the same goes for `sub_8039E50` in `GaxChannelMix` and
   `sub_803A318` in `GaxMixerApplyFilter`), sitting in front of **~788 bytes** (revised up from
   an initial ~450-byte estimate; confirmed by tracing the raw ARM

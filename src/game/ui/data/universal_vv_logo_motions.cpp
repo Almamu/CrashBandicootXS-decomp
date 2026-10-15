@@ -10,7 +10,7 @@ using Engine::Gfx::UniversalLogoBg;
 
 /*
  * ROM 0x0817D7A4-0x0817E714. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* The BG2 picture LoadUniversalLogoBg (company_logos.cpp) loads. */

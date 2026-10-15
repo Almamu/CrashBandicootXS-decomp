@@ -3,7 +3,7 @@
 @ As in gcc's own libgcc build, this one file is assembled once per
 @ routine with `--defsym L_<name>=1` (Makefile LIB1FUNCS), one object per
 @ routine: _udivsi3.o, _divsi3.o, _dvmd_tls.o, _modsi3.o, _umodsi3.o and
-@ _call_via_rX.o. ldscript.txt places each where the ROM has it.
+@ _call_via_rX.o. games/xs/ldscript.txt places each where the ROM has it.
 @
 @ The bodies are byte-verified transcriptions of the ROM (they used to be
 @ NAKED functions in lib/libgcc/lib1funcs.s, libgcc2.c and

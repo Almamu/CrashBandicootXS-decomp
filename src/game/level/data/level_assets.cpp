@@ -12,6 +12,6 @@
  * (levels.json's "assets" list gives their ROM order, each room.json the
  * symbol and whether it's packed), the bytes by tools/bin2c.py from the
  * assets levels.mk builds. Linked in ROM order between data/data.s
- * sections by ldscript.txt, see docs/data.md.
+ * sections by games/xs/ldscript.txt, see docs/data.md.
  */
 #include "level_assets.inc"

@@ -6,7 +6,7 @@ extern "C" {
 
 /*
  * ROM 0x0816C2D8-0x0816C418. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* The 12-byte vector records SetMegaMixMotionYFromSet and its siblings

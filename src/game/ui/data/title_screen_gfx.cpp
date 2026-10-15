@@ -8,7 +8,7 @@ extern "C" {
 
 /*
  * ROM 0x0817CFF4-0x0817D6C0. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 #include "engine/actor/actor_anim.h"

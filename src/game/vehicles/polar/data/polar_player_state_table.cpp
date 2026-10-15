@@ -4,7 +4,7 @@ using Game::Vehicles::Polar::PolarPlayer;
 
 /*
  * ROM 0x0817A6B8-0x0817A728. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* The polar player's state methods, indexed by `state` (gPolarPlayerStateFuncs;

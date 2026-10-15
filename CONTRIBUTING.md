@@ -98,15 +98,15 @@ matched code - read it before starting.** In short:
 - **Renames** follow [docs/naming.md](docs/naming.md): rename only once
   the meaning is understood confidently, and go through its "What
   renaming touches" checklist, including the `rename` line in
-  `expected/corrections.txt` so the progress report still pairs the
+  `games/xs/expected/corrections.txt` so the progress report still pairs the
   symbol. An honest placeholder is better than a wrong name.
 - **Files:** a new file goes in the `src/` subsystem directory that fits
   what it holds and is named after its subject (see
   [Source layout](#source-layout) below); library code goes
   under `lib/` (see [docs/libraries.md](docs/libraries.md)), GBA hardware
   code under `platform/gba/` ([docs/platforms.md](docs/platforms.md)). Each object
-  is placed at its ROM address by its position in `ldscript.txt`, so
-  splitting or merging files means updating `ldscript.txt` and
+  is placed at its ROM address by its position in `games/xs/ldscript.txt`, so
+  splitting or merging files means updating `games/xs/ldscript.txt` and
   `tools/report_units.py` too.
 - **C++:** the game was C++. An object rewritten as C++ is a
   `src/<dir>/<name>.cpp` (the Makefile's `CXX_OBJS`), its classes go in
@@ -117,11 +117,11 @@ matched code - read it before starting.** In short:
   [README.md](README.md#data-and-assets)): edit the PNG, the level JSON,
   the `.po` file or the table in `src/*/data/`, never anything under
   `build/`.
-- **Frozen files:** `expected/` (the progress report's targets, see
-  [expected/README.md](expected/README.md)) and
+- **Frozen files:** `games/xs/expected/` (the progress report's targets, see
+  [games/xs/expected/README.md](games/xs/expected/README.md)) and
   the old matching logs ([docs/matching.md](docs/matching.md) and
   [docs/matching/archive/](docs/matching/archive/)) are never edited,
-  except to fix a reference that no longer resolves. A symbol rename goes into `expected/corrections.txt` instead.
+  except to fix a reference that no longer resolves. A symbol rename goes into `games/xs/expected/corrections.txt` instead.
 - **Matching changes** (a function that stops matching, a new compiler
   workaround) follow the full matching loop in
   [docs/workflow.md](docs/workflow.md), steps 1 to 8.
@@ -181,7 +181,7 @@ enclosing one (`game/vehicles/` for polar and jetpack).
 
 File names:
 
-- **No addresses in file names.** The ROM order is `ldscript.txt`'s, and
+- **No addresses in file names.** The ROM order is `games/xs/ldscript.txt`'s, and
   each file's header comment gives its ROM range: a name says what the
   file holds.
 - **Code:** `src/<area>/<namespace>/<subject>[_<role>].cpp`, lowercase

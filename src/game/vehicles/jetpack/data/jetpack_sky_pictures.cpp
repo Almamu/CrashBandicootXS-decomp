@@ -7,7 +7,7 @@ extern "C" {
 /*
  * ROM 0x08151AC4-0x0815A050: categories 4-6's BG1 pictures and
  * spawn tables. Linked in ROM order between data/data.s sections by
- * ldscript.txt - see docs/data.md ("Category backgrounds").
+ * games/xs/ldscript.txt - see docs/data.md ("Category backgrounds").
  */
 
 /* Category 4's BG1 picture (ActorCategory::descriptors[4].bgPicture,

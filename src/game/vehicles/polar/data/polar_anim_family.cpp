@@ -12,7 +12,7 @@ extern "C" {
  * the 41-record animation table gCategoryFamily0AnimTable
  * (include/engine/actor/actor_anim.h) and the keyframe (table_A) and frame (table_B)
  * arrays its records point at. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md, "Category families".
+ * sections by games/xs/ldscript.txt - see docs/data.md, "Category families".
  *
  * Record 0's table_B points at compressed frames of set A
  * (polar_rle_sprites.cpp), the others' at frames of the framed sheet

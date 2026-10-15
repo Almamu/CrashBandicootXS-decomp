@@ -1,4 +1,4 @@
-# expected/
+# games/xs/expected/
 
 Frozen, never-edited copies of the original hand-disassembled ROM code, kept
 purely so the objdiff progress report has a
@@ -23,7 +23,7 @@ Thumb code, and one for the ARM code of the IWRAM image:
   well before `code_3.s` ever existed as its own file). `AgbMain` was already named at
   this commit (a standard-enough GBA convention that it carried over from
   the reference project this repo started from); everything else here is
-  still `sub_XXXXXXXX`, renamed via `expected/corrections.txt` instead.
+  still `sub_XXXXXXXX`, renamed via `games/xs/expected/corrections.txt` instead.
 
 - **`iwram.s`** is different in origin: the IWRAM image's ARM code
   (IWRAM `0x03000000`-`0x030007CC`, stored in ROM at `0x087E55E4`) was
@@ -53,7 +53,7 @@ them, so a target edited to look like the current source would score
 anything as matched, and the report would stop proving the code is
 byte-exact. If one turns out to be wrong or incomplete somehow, regenerate
 it from the same commit (or, for `iwram.s`, the same ROM bytes) rather
-than hand-patching it; use `expected/corrections.txt` for the small,
+than hand-patching it; use `games/xs/expected/corrections.txt` for the small,
 known, expected discrepancies instead (see `docs/progress_report.md`).
 `corrections.txt` is the one file here that changes: every rename of a
 symbol the targets mention adds or updates its `rename` line (see

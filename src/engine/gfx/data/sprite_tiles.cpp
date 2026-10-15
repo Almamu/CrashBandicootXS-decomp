@@ -5,7 +5,7 @@ extern "C" {
 
 /*
  * ROM 0x082BF120-0x084A5600: the sprite tile pool and the 125 OBJ
- * palettes. Linked in ROM order between data/data.s sections by ldscript.txt -
+ * palettes. Linked in ROM order between data/data.s sections by games/xs/ldscript.txt -
  * see docs/data.md and docs/data_map.md ("gLanguageSelectPalette3").
  *
  * The sprite-bank table gSpriteBankTable (sprite_banks_00_09.cpp) starts

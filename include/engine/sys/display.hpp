@@ -14,7 +14,7 @@
  * like those globals, static member functions like plain functions. The
  * data members are only declared: cxx_symbols.txt (block "#915 Display")
  * maps each one to its C name (`_Q36Engine3Sys7Display.dispcnt` is gDispcnt, ...),
- * whose address is in sym_iwram.txt, and the functions keep their C names
+ * whose address is in games/xs/sym_iwram.txt, and the functions keep their C names
  * the same way (`ShowBg2__Q36Engine3Sys7Display` is ShowBg2).
  *
  * In the namespace Engine::Sys (#1033, docs/cplusplus.md "Namespaces").
@@ -52,7 +52,7 @@ public:
     static void CommitDispcnt();   // CommitDispcnt: dispcnt to REG_DISPCNT
     static void CommitBlendRegs(); // CommitBlendRegs: blendRegs to BLDCNT/BLDALPHA/BLDY
 
-    /* IWRAM (sym_iwram.txt) */
+    /* IWRAM (games/xs/sym_iwram.txt) */
     static struct blend_regs blendRegs; // gBlendRegs
     static union dispcnt dispcnt;       // gDispcnt
 };

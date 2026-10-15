@@ -48,7 +48,7 @@ extern "C" {
  * `Q44Game8Vehicles5Polar`: `Update__Q44Game8Vehicles5Polar11PolarPlayer`,
  * `_vt.Q44Game8Vehicles5Polar11PolarPlayer` (in the section
  * `.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar11PolarPlayer`, which
- * ldscript.txt names) & co. The jetpack levels' classes are in
+ * games/xs/ldscript.txt names) & co. The jetpack levels' classes are in
  * Game::Vehicles::Jetpack the same way (`Q44Game8Vehicles7Jetpack`). The
  * C-linkage functions, the globals, the data tables and `struct
  * spawn_arg` stay global. */
@@ -72,7 +72,7 @@ extern "C" u8 IsJetpackPlayerInactive(void);
 extern "C" s32 GetPolarMaskLevel(void);
 extern "C" u8 IsPolarPlayerInactive(void);
 
-/* The vehicles' globals (sym_iwram.txt). */
+/* The vehicles' globals (games/xs/sym_iwram.txt). */
 extern struct anim_table_record *gJetpackAnimTable; /* actor_anim.h */
 extern s32 gJetpackBomberCount;
 extern s32 gJetpackBomberSfxTimer;

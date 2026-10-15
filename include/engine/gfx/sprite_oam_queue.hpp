@@ -13,7 +13,7 @@
  * static member functions like plain functions. The data members are only
  * declared: cxx_symbols.txt (block "#915 SpriteOamQueue") maps each one to
  * its C name (`_Q36Engine3Gfx14SpriteOamQueue.entries` is gSpriteOamQueue, ...), whose
- * address is in sym_iwram.txt, and the functions keep their C names the
+ * address is in games/xs/sym_iwram.txt, and the functions keep their C names the
  * same way (`Add__Q36Engine3Gfx14SpriteOamQueueUiUsi` is QueueSpriteFrameOam).
  *
  * In the namespace Engine::Gfx (#1033, docs/cplusplus.md "Namespaces").
@@ -44,7 +44,7 @@ public:
     static void Init();    // InitSpriteFrameOamQueue
 
 private:
-    /* IWRAM (sym_iwram.txt). Both buffers are in EWRAM (Init). */
+    /* IWRAM (games/xs/sym_iwram.txt). Both buffers are in EWRAM (Init). */
     static struct queued_oam_entry *entries; // gSpriteOamQueue - OAM_ENTRY_COUNT at most
     static s32 *affineScales;                // gSpriteAffineQueue - x | y << 16, deduplicated
     static s32 count;                        // gSpriteOamQueueCount

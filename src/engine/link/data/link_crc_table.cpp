@@ -5,7 +5,7 @@ extern "C" {
 
 /*
  * ROM 0x0816AF10-0x0816B138. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* The CRC-16/CCITT table (polynomial 0x1021, MSB first: entry i is

@@ -12,7 +12,7 @@
  * members compile like those globals, static member functions like plain
  * functions. cxx_symbols.txt (block "#915 CollectedSpawns") maps each
  * member to its C name (`_Q36Engine5Actor15CollectedSpawns.spawns` is gCollectedSpawns,
- * ...): sym_iwram.txt places `spawns`, iwram_data.cpp defines `count` with
+ * ...): games/xs/sym_iwram.txt places `spawns`, iwram_data.cpp defines `count` with
  * the other initialised IWRAM globals. The functions keep their C names
  * the same way (`Clear__Q36Engine5Actor15CollectedSpawns` is ClearCollectedSpawns).
  *

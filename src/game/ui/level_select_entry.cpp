@@ -1,7 +1,7 @@
 /* LevelSelectEntry (gLevelSelectEntryVtable: 1 Animate, the bob;
  * 2 SetLevel; 3 SetPos; 4 Draw; 5 the destructor; include/game/ui/level_select.hpp),
  * a level-select page entry. Its key method is here, so g++ emits its
- * vtable here (ldscript.txt places it).
+ * vtable here (games/xs/ldscript.txt places it).
  *
  * GitHub issues #28 and #29 (the constructor); split from
  * level_select_widgets.cpp (#767), same flags (old_agbcc). */

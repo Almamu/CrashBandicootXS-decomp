@@ -2,7 +2,7 @@
 """ROM shiftability check (#967): does anything in the ROM hold a fixed
 address where it should hold a relocation?
 
-The ROM's layout comes from ldscript.txt and each object's definition
+The ROM's layout comes from games/xs/ldscript.txt and each object's definition
 order, and every cross-reference should be a symbol, so that editing the
 ROM's own data (a bigger room, a re-encoded picture) can shift everything
 linked after it. This links the ROM again with `ld -q` (--emit-relocs, so
@@ -25,11 +25,11 @@ unshifted one, input section by input section:
 
 Usage (the Makefile's `shiftcheck` target runs it):
 
-    tools/shiftcheck.py --ld 'arm-none-eabi-ld ...' --ldscript ldscript.txt \\
+    tools/shiftcheck.py --ld 'arm-none-eabi-ld ...' --ldscript games/xs/ldscript.txt \\
         --out build/shiftcheck [--shift NAME:OBJECT:BYTES ...] -- INPUTS...
 
 INPUTS are the link's objects and libraries, as the ROM's link gets them.
-Each --shift inserts `. += BYTES;` in front of the first ldscript.txt
+Each --shift inserts `. += BYTES;` in front of the first games/xs/ldscript.txt
 line that contains OBJECT; without any, the SHIFTS below are used. See
 docs/shifting.md.
 """
@@ -338,7 +338,7 @@ def compare(name, base, base_secs, mask, shifted, shifted_secs, limit):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--ld", required=True, help="the linker command, with its flags")
-    ap.add_argument("--ldscript", default="ldscript.txt")
+    ap.add_argument("--ldscript", default="games/xs/ldscript.txt")
     ap.add_argument("--out", default="build/shiftcheck", help="where the links go")
     ap.add_argument("--shift", action="append", default=[], metavar="NAME:OBJECT:BYTES")
     ap.add_argument("--limit", type=int, default=50, help="problems to list per check")

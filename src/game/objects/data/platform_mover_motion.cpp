@@ -6,7 +6,7 @@ extern "C" {
 
 /*
  * ROM 0x0816C460-0x0816C484. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* The motion records (`struct speed_ramp`, objects.h) of platform.c, indexed through gPlatformMoverMotionSet's entries

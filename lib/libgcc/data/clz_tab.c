@@ -2,7 +2,7 @@
 
 /*
  * ROM 0x085A4C70-0x085A4E70. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 typedef unsigned char UQItype;
