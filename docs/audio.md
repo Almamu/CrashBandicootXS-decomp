@@ -164,6 +164,16 @@ like the Japanese commercial cue that reuses sample 25); those got a real
 derived rate instead (see the "Fix preview sample rates" commit for the
 full list).
 
+## On a host
+
+The pc platform (`make PLATFORM=pc`, docs/platforms.md, "The sound")
+compiles this engine for a 64-bit host: lib/gax's C, with its ARM DSP
+routines in C and a few files replaced where they depend on the GBA (the
+ARM calls, the work RAM's carving by 4-byte pointers, the DMA asm), and
+the song data's structures with pointers converted to the host's layout
+from the .s relocations tools/gax_audio.py writes. Its mixed blocks are
+the GBA's, byte for byte.
+
 ## Engine API names
 
 The engine's entry points carry Shin'en's own GAX2 API names (an exception

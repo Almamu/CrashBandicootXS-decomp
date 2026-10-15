@@ -274,7 +274,7 @@ CLASSES = [
     ("coincidence", r"platform/pc/src/sha1\.c", r".", "SHA-1's 80 rounds"),
     (
         "hardware",
-        r"platform/pc/src/(ppu\.c|host_platform\.h)|platform/pc/tools/mgba_screens\.c",
+        r"platform/pc/src/(ppu\.c|host_platform\.h)|platform/pc/tools/mgba_(screens|gax_trace)\.c",
         r".",
         "the GBA PPU's own picture, which the pc platform's PPU draws: 240x160, the bitmap modes' "
         "frames, OAM's 8-bit Y",

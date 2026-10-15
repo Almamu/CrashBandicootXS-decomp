@@ -48,12 +48,14 @@ CXX_OBJS    := $(patsubst $(C_SUBDIR)/%.cpp,$(C_BUILDDIR)/%.o,$(filter %.cpp,$(S
 C_OBJS      := $(patsubst $(C_SUBDIR)/%.c,$(C_BUILDDIR)/%.o,$(filter $(C_SUBDIR)/%.c,$(SHARED_SRCS)))
 # lib/'s (compile.mk's lib rules, as for XS)
 LIB_C_OBJS  := $(patsubst $(LIB_SUBDIR)/%.c,$(LIB_BUILDDIR)/%.o,$(filter $(LIB_SUBDIR)/%.c,$(SHARED_SRCS)))
-LIBGCC2_OBJS   :=
-LIB1FUNCS_OBJS :=
+# libgcc's, which objects.txt names by their object (lib/libgcc/<function>.o):
+# one source each builds several (compile.mk's rules)
+LIBGCC2_OBJS   := $(patsubst %,$(LIB_BUILDDIR)/libgcc/%.o,$(filter $(LIBGCC2_FUNCS),$(patsubst $(LIB_SUBDIR)/libgcc/%.o,%,$(SHARED_SRCS))))
+LIB1FUNCS_OBJS := $(patsubst %,$(LIB_BUILDDIR)/libgcc/%.o,$(filter $(LIB1FUNCS),$(patsubst $(LIB_SUBDIR)/libgcc/%.o,%,$(SHARED_SRCS))))
 
 N2_ASM_OBJS := $(patsubst %.s,$(OBJ_DIR)/%.o,$(wildcard $(N2_DIR)/asm/*.s $(N2_DIR)/data/*.s))
-OBJS        := $(N2_ASM_OBJS) $(CXX_OBJS) $(C_OBJS) $(LIB_C_OBJS)
-DEPS        := $(CXX_OBJS:.o=.d) $(C_OBJS:.o=.d) $(LIB_C_OBJS:.o=.d)
+OBJS        := $(N2_ASM_OBJS) $(CXX_OBJS) $(C_OBJS) $(LIB_C_OBJS) $(LIBGCC2_OBJS) $(LIB1FUNCS_OBJS)
+DEPS        := $(CXX_OBJS:.o=.d) $(C_OBJS:.o=.d) $(LIB_C_OBJS:.o=.d) $(LIBGCC2_OBJS:.o=.d)
 
 .PHONY: all compare clean tidy
 

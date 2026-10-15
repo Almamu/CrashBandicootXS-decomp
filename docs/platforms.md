@@ -119,7 +119,9 @@ A port is a `platform/<name>/` with:
 4. **Audio** behind GAX2's API (`lib/gax/include/gax.h`: `GAX_irq`,
    `GAX_play`, the init and fx calls), reading the built music and sfx
    data, and `gGaxIrqEnabled`; the game's `AudioContext` stays as it is.
-   GAX2 itself (self-modifying ARM) is not ported.
+   How is the port's business: the pc platform compiles lib/gax's C
+   with its own units for the parts that can't run on a host (its ARM
+   routines, their self-modifying calls, the DMA), see "The sound" below.
 5. **Save** behind `lib/agb_eeprom`'s API, and a link session that never
    connects.
 
@@ -184,23 +186,25 @@ or it is replaced at its API, see "What a port provides"):
 - `vsprintf` (src/engine/util/printf.cpp) reads its arguments as 4-byte
   slots of the stack (`u32 *args`, `%s` as `(u8 *)*args`), not with
   `va_arg`: a host needs its own. Nothing in the game calls `sprintf`.
-- GAX2 (`lib/gax/`, its `.4byte` pointer blobs included) and AgbEeprom
-  (`lib/agb_eeprom/`, which writes the DMA registers with addresses as
-  `u32`s) are replaced at their APIs, not compiled for a host.
+- AgbEeprom (`lib/agb_eeprom/`, which writes the DMA registers with
+  addresses as `u32`s) is replaced at its API, not compiled for a host.
+  GAX2 (`lib/gax/`) is compiled, but for its ARM parts, and its song data
+  is converted ("The sound" below).
 
 The pc platform (below) is the check that this holds: every `src/`
 object compiles and links on a 64-bit host, in CI.
 
 ## `platform/pc/`
 
-The game for a 64-bit host (Linux, a stock g++/gcc). Phases 1 to 5 of
+The game for a 64-bit host (Linux, a stock g++/gcc). Phases 1 to 6 of
 #1093: it compiles, links and runs the game's own frame loop on the
 host's main thread; a software PPU draws the picture a scanline at a
 time; an SDL2 window shows it at the GBA's frame rate and reads the
-keyboard and gamepads; the EEPROM can live in a file. Headless, with
+keyboard and gamepads; the EEPROM can live in a file; GAX2 plays the
+music and the sound effects, mixed as the GBA mixes them. Headless, with
 scripted input, it hashes palette RAM, VRAM, OAM and the picture at
 checkpoints, which tools/boottest.py compares with mGBA running the ROM
-on the same input. Nothing is heard yet (audio is phase 6).
+on the same input, and it can write the sound to a WAV file.
 
 ```
 make PLATFORM=pc        # build/pc/crashbandicootxs_pc; XS only
@@ -248,17 +252,25 @@ platform/pc/src/
                                    frame count, the checkpoints
     main.c                         the command line, then AgbMain
     sha1.c, png.c                  the checkpoints' hash, the pictures' PNG files
-    gax.c, eeprom.c                GAX2's API (silent stubs) and AgbEeprom's (a RAM
-                                   buffer, --save's file), in place of lib/gax and
-                                   lib/agb_eeprom
+    eeprom.c                       AgbEeprom's API (a RAM buffer, --save's file), in
+                                   place of lib/agb_eeprom
+    audio.c                        the sound: GAX2's blocks at each VBlank to the
+                                   window's audio device, --wav's file, the hash
+    gax_dsp.c                      GAX2's ARM routines (lib/gax/asm) in C
+    gax_host.h                     what the platform's GAX2 parts share
+    gax_trace.c                    --gax-trace (GAX2 replays the GBA's calls) and
+                                   --gax-log (the game's calls, logged)
     level_pick.c                   --level and --room (boottest's level scripts)
     sprite_boxes.c                 GetSpriteAttackBox and GetSpriteBodyBox's C names
                                    (STRUCT_RETURN_VIEW, below)
-    libgcc.c                       __divsi3 & co., which the game calls by name
-    sound_data.S                   gSfxTable and gGaxMusicData, data/data.s's
-                                   blocks the game reads, as the built bytes
-platform/pc/units/                 units built in place of src/'s
+    libgcc.c                       __divsi3 & co. and __udivdi3, which the game and
+                                   GAX2 call by name
+    sound_data.S                   gSfxTable, gGaxMusicData and gGaxSfxData,
+                                   data/data.s's sound blocks, as the built bytes
+platform/pc/units/                 units built in place of src/'s and lib/'s
     engine/sys/bios_util.cpp       DivMod in C (the GBA's is an inline `svc #6`)
+    lib/gax/src/*.c                GAX2's files that can't run on a host as they are
+                                   ("The sound")
 platform/pc/libc_names.txt         the game's functions named as the C library's,
                                    and its operator new and delete
 platform/pc/tests/boot.keys        the headless boot's input (CI)
@@ -268,21 +280,30 @@ platform/pc/tests/*_mgba_screens.json
                                    the hashes of mGBA's pictures for both (boottest.py
                                    `screens`), what CI compares the PPU's with
 platform/pc/tests/screens/         some of mGBA's pictures of the boot, as PNGs
+platform/pc/tests/boot_gax.trace   mGBA's trace of GAX2 in the boot (boottest.py
+                                   `gax-trace`), what CI replays and compares with
 platform/pc/tools/host_link.py     the link's symbol assignments (below)
 platform/pc/tools/layout_check.py  checks the placed globals fit (below)
 platform/pc/tools/mgba_screens.c   the ROM in libmgba with a key file: mGBA's pictures
                                    (boottest.py `screens` builds and runs it)
+platform/pc/tools/mgba_gax_trace.c the same, logging the game's GAX2 calls and blocks
+                                   (boottest.py `gax-trace`)
+platform/pc/tools/gax_host_data.py GAX2's song data with pointers, as C (below)
 ```
 
 **Running it.** `crashbandicootxs_pc [--headless] [--scale N] [--save
-FILE] [--frames N] [--vblanks N] [--keys FILE] [--level N [--room R]]
-[--checkpoint-every N] [--dump DIR] [--screens DIR] [--screenshot-at N]
-[--ppu-stats] [--quiet]`. In a window unless `--headless` (or built
-without SDL2): `--scale N` sizes it (3 times the GBA's by default),
-`--screenshot-at N` takes F12's screenshot of the picture frame N reads
-its keys under. `--save FILE` keeps the EEPROM there. `--level N` makes
-the first level select pick level N (gLevelTable's index) and `--room R`
-start it in its room R, as boottest's level scripts do on mGBA.
+FILE] [--wav FILE] [--frames N] [--vblanks N] [--keys FILE] [--level N
+[--room R]] [--checkpoint-every N] [--dump DIR] [--screens DIR]
+[--screenshot-at N] [--ppu-stats] [--gax-log FILE] [--quiet]`, or
+`crashbandicootxs_pc --gax-trace FILE`. In a window unless `--headless`
+(or built without SDL2): `--scale N` sizes it (3 times the GBA's by
+default), `--screenshot-at N` takes F12's screenshot of the picture frame
+N reads its keys under. `--save FILE` keeps the EEPROM there. `--wav
+FILE` writes the sound there (see "The sound"), in a window or headless.
+`--level N` makes the first level select pick level N (gLevelTable's
+index) and `--room R` start it in its room R, as boottest's level scripts
+do on mGBA. At the end it prints `audio BLOCKS HASH`: how many blocks
+GAX2 mixed and a SHA-1 of them.
 
 A game frame is a read of REG_KEYINPUT (KeyInput::Update reads it once a frame; the
 platform's io_reg.h makes the read a call of HostReadKeys), as it is in
@@ -426,6 +447,122 @@ vsync: the pace is the GBA's, not the monitor's. Measured with SDL's
 dummy video driver: 1200 VBlanks in 20.3 s from start to end, loads
 included.
 
+**The sound.** The owner's decision (#1093) was that a port provides
+GAX2's API however it likes. The pc platform builds GAX2 itself: lib/gax's
+matched C, compiled by the host compiler, plays the songs and the sound
+effects with the original's own code, so the replay (patterns, the
+instruments' sequences, envelopes, vibrato, sweeps, the sound effects'
+voice stealing, the volumes) is the original's by construction. What
+can't run on a host is replaced, in units (platform/pc/units/lib/gax/src/,
+built in place of the same files, as a src/ unit is) or in the
+platform's own code:
+
+- the ARM routines (lib/gax/asm/gax_arm_dsp.s: the resampler, the downmix
+  to 8 bits, the echo, the filter) are C (gax_dsp.c) that does what the ARM
+  code does, step for step: 32-bit products, arithmetic shifts, the
+  halfword stores' wrap, the clamps' bounds (the filter's `mvn` gives
+  -limit - 1), the loops entered at their test or not, the echo's and the
+  filter's state (kept in their code, so reset by every GAX2_init), and
+  the half-rate loop's word accesses, which the ARM7TDMI makes on the
+  aligned word when the address isn't (a load rotated, a store aligned
+  down). Tested against the ARM code itself (qemu-arm, 26000 random work
+  items): the same, but for the unaligned words, where qemu doesn't do
+  the ARM7TDMI's rotation and gax_dsp.c does;
+- GaxChannelMix (gax_note_trigger.c) patches two instructions of its
+  IWRAM copy of the resampler before each call (forward or backward
+  stepping) and calls it through `GAX_CALL_ARM_R`; the unit sets which
+  way the C resampler steps and calls it with the same work item.
+  GaxMixerPlay and its neighbours (gax_sound_handler_mixer_play.c) read
+  the handlers through views with the GBA's offsets; the unit reads
+  gax_internal.h's structures and calls the C routines, and GaxMixFrame
+  hands each 8-bit block to audio.c;
+- GAX2_init (gax_playstart.c) carves the player state, the handler array
+  and the handlers by the GBA's sizes (0x18c, 4-byte pointers) out of
+  AudioContext's 0x2000-byte buffer; the unit carves them by the host's
+  (sizeof) out of a 64 KB buffer of its own and copies no ARM code.
+  GAX2_jingle (gax_channel_pool_alloc.c, which the game never calls) the
+  same;
+- the DMA settle delay (`GAX_DMA_WAIT`, ARM asm) is dropped in
+  GaxResetSoundHardware, GAX_irq and GAX_stop; their register writes are
+  host memory nothing reads. GAX2's fatal-error screen (gax_fatal_error.c,
+  with its BIOS `swi` in gax_swi.c) prints the error and ends the run;
+- the handler array's slot 2 (the layout's list of alternative layouts,
+  no handler) is read by GaxCreateHandlers' search for a handler by type:
+  on the GBA it holds whatever the work RAM did and the search finds no
+  match; the units put a handler of no type there.
+
+**The song data.** tools/gax_audio.py builds the music block, the
+sound-effect set and the default layout as the GBA's bytes, with every
+pointer a relocation in the .s next to each .bin (`.4byte gGaxMusicData
++ 0x24`, `.4byte GaxChannelInit`), and the .bin has zeros there. GAX2's
+structures that hold pointers (the handler layouts and their lists, the
+handler types, their child-type arrays, the song data, the instrument
+tables and instruments, the sample tables) can't be read in the GBA's
+layout through 8-byte pointers, so platform/pc/tools/gax_host_data.py
+writes them again as C (gax_host_data.c in the build), typed with
+gax_internal.h's declarations, so the host compiler lays them out: the
+handler types' callbacks are the host's functions, their instance sizes
+the host's sizeof. It walks from the songs (gax_songs.h's offsets), the
+sound-effect voice types at the start of the music block and the default
+layout, following the relocations, so it converts what the engine can
+reach. The envelopes are converted too: their points are 6 bytes of
+fields, which agbcc pads to 8 (an ARM struct's size is a multiple of 4)
+and a host compiler doesn't. Everything else (patterns, order lists,
+instrument sequences, the DSP parameters, the samples) is read in place
+from the built bytes, which sound_data.S links in. The game hands
+GAX2_init its song as the GBA layout's address (gSongTable's entry,
+gGaxMusicData + the offset) and gGaxMusicData as the sound-effect types;
+the unit's GAX2_init swaps in the converted structures (gHostGaxLayouts)
+and leaves the game's parameter block pointing at them.
+
+**The output.** On the GBA GAX_play (AudioContext::Update, from the
+VCount IRQ at line 0x35) mixes a frame's samples into half of its 8-bit
+buffer, and DMA1 plays the halves to Direct Sound A at the mix rate
+(Timer0), re-armed at every other VBlank by GAX_irq: the blocks are
+played in the order they are mixed, one a frame. The host's irq.c runs
+the same IRQs (so AudioContext's fades, ducking and ambient sounds run
+from the VCount IRQ as on the GBA), and at each VBlank audio.c passes
+the frame's block on, or silence of the last block's length when none
+was mixed (no song, or paused):
+
+- in a window, to SDL's default audio device (sdl.c), at its rate (48 kHz
+  asked for), by linear interpolation from the song's mix rate (15769 to
+  42049 Hz in this game), queued about three frames ahead. The blocks
+  come at the frame pacing's rate and the device takes them at its own
+  clock, so the conversion runs up to 0.5% faster or slower to keep the
+  queue at its length (an eighth of a semitone at most); if it runs dry
+  anyway a frame of silence restarts it, and while it is far too long
+  (Tab) blocks are dropped. No audio device is not an error;
+- `--wav FILE`: the samples as they are, 8-bit mono at the mix rate of
+  the first block (one of a song at another rate is resampled to it,
+  nearest sample), from the first block on;
+- the `audio BLOCKS HASH` at the end.
+
+**The sound against mGBA.** `boottest.py gax-trace ROM ELF --keys FILE
+--frames N [--level N]` plays a key file on libmgba with breakpoints on
+GAX2's API (platform/pc/tools/mgba_gax_trace.c) and writes a trace: each
+call the game makes, with its arguments (GAX2_init's parameter block,
+GAX_play's master volume and filter, which AudioContext writes into the
+block for the fades), and each block GAX2 mixed, by a hash.
+`crashbandicootxs_pc --gax-trace FILE` replays the calls through the
+host's GAX2 and checks each block against the GBA's: the engine,
+without the game's timing. With intro.keys and boot.keys into 11 levels
+(`--level` 1, 3, 6, 9, 11, 14 and 20-24: Shipwrecked, a polar stage,
+Rocket Racket, Ruined, Ace of Space, Blimp Bonanza and the five bosses),
+14 of the 19 songs, 665 sound effects and the fades and ducks: 21,984
+blocks, every one the GBA's byte for byte. `--gax-log FILE` writes the same trace of
+the game running on the host, and `boottest.py gax-calls` compares two
+traces' calls without their timing: in all 12 runs the game makes the
+same calls with the same arguments in the same order as on mGBA (the
+song starts, sound effects, their volumes, stops), and the same music
+volumes (the fades). Only when they come differs: the host's loads take
+fewer VBlanks than the GBA's (see "How far it matches mGBA"), so a sound
+effect starts a few VBlanks away from where it does on mGBA against the
+music. The whole boot's sound is mGBA's sample for sample for its first
+214 blocks (3.6 s, the boot cutscene), up to the first such sound
+effect. CI replays tests/boot_gax.trace (1634 blocks) and compares the
+host boot's calls with it.
+
 **The save** (eeprom.c). `--save FILE` reads FILE at the game's first
 EEPROMConfigure (if it exists) and writes it back whole at the VBlank
 after the game writes the EEPROM, and at the end. The buffer holds the
@@ -436,8 +573,9 @@ far as the chip goes.
 
 **DMA.** Every DMA the game starts is immediate (`DmaCopy*`, `DmaFill*`,
 DMA3, through DmaSet): none is timed to VBlank, HBlank or a FIFO (only
-GAX2 used DMA1 for its FIFO, and the platform replaces GAX2). dma.c does
-an immediate one at once; any other is only written to the registers.
+GAX2 uses DMA1 for its FIFO, which it arms by writing the registers; the
+platform's audio takes its blocks from GaxMixFrame). dma.c does an
+immediate one at once; any other is only written to the registers.
 
 **The memory** (memory.S): EWRAM, IWRAM, I/O, palette RAM, VRAM and OAM in
 the GBA's order in one block, each on a 1 MB boundary. The order matters
@@ -448,8 +586,9 @@ tile's number from the low bits of its VRAM address (company_logos.cpp,
 
 **Swapping a unit.** `platform/pc/units/<path>.cpp` is built in place of
 `src/<path>.cpp`, into the same object, so that object's dependencies and
-flags still apply. It is for a unit the host can't compile as it is; only
-bios_util.cpp so far.
+flags still apply, and `platform/pc/units/lib/gax/src/<file>.c` in place
+of `lib/gax/src/<file>.c`. It is for a unit the host can't compile or run
+as it is: bios_util.cpp, and GAX2's ("The sound").
 
 **The link.** On the GBA, games/xs/ldscript.txt places the globals that
 have no C definition (games/xs/sym_iwram.txt, sym_ewram.txt) and
@@ -469,12 +608,12 @@ as a linker script of `PROVIDE` assignments passed to the link:
 The doubling is checked: `platform/pc/tools/layout_check.py` reads each
 placed global's host size from the executable's debug information (the
 host flags include `-femit-class-debug-always` for it) and fails if one
-runs into the next. Of the 227 globals, 214 have a size: 59 are bigger
+runs into the next. Of the 227 globals, 216 have a size: 60 are bigger
 than their GBA slot (the pointers, at most 2x), none overlaps the next.
-The other 13 are arrays declared without a bound (gCollectedSpawns,
+The other 11 are arrays declared without a bound (gCollectedSpawns,
 gAirshipMapFrames, gHovercraftMapFrames: pointer-sized elements, so
-exactly 2x), GAX2's and AgbEeprom's (replaced, unused on the host), the
-stacks and the EWRAM heap.
+exactly 2x), AgbEeprom's (replaced, unused on the host), the stacks and
+the EWRAM heap.
 
 The game's strcpy, strlen, strcat, strncpy, sprintf, vsprintf, rand and
 srand (src/engine/util/) have the C library's names, and the executable's
@@ -569,6 +708,14 @@ and maps unchanged):
     gPlayer is NULL;
   - STRUCT_RETURN_VIEW in dingodile.cpp (the bosses crashed in
     GetSpriteAttackBox).
+- Phase 6 (GAX2 compiled for the host):
+  - GaxPlayerState's `mixBuf`, `echoBuf` and `echoTaps` and
+    GaxMixerHandler's `mixBuf` (gax_internal.h), addresses kept as
+    integers, are `uintptr_t`s;
+  - GaxCreateHandlers sizes a handler's children array by
+    `sizeof(struct GaxHandler *)`, not 4, and reads the echo taps' address
+    as a `uintptr_t`; GAX2_new clears `sizeof(struct GaxSongHeader)`, not
+    0x3c (the host's block is larger, and GAX_play reads its `scratch`).
 
 **How far it matches mGBA.** With platform/pc/tests/boot.keys (Start and
 A mashed through the boot cutscene, the company logos, the language
@@ -583,9 +730,8 @@ only the 9 torn frames above differ. CI plays boot.keys to frame 6000 and
 compares it with mGBA's logs (tests/boot_mgba.json, every 60 frames,
 and tests/boot_mgba_screens.json, every frame).
 
-**Not done yet** (the later phases): audio (GAX2's API is silent;
-gGaxMusicData's pointers are the GBA's, which nothing on the host reads),
-the link. The gamepad mapping is built but untested with a real pad (the tests had none).
+**Not done yet** (the later phases): the link. The gamepad mapping is
+built but untested with a real pad (the tests had none).
 `vsprintf` stays as it is (4-byte argument slots, see above; renamed
 GameVsprintf, and never called).
 Other ABI differences that a later phase may meet: the `asm("CName")`

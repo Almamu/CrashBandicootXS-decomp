@@ -14,7 +14,7 @@ void GAX2_new(void *self)
         GaxFatalError(gGaxErrNameNew, gGaxErrParamsNull);
         return;
     }
-    GaxZeroFill(params, 0x3c);
+    GaxZeroFill(params, sizeof(struct GaxSongHeader));
     params->mixRate = 0xFFFF;
     params->filter = 0;
     params->numSfx = 0xFFFF;

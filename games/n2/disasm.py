@@ -75,10 +75,13 @@ SECTIONS
 
 \tINCLUDE "games/n2/symbols.txt"
 
+\t/* What isn't placed above, as XS's script: the comments and attributes,
+\t * and the code objects' .rodata the original's linker dropped (the agb_eeprom
+\t * objects' tables, which eeprom_data.c has). A section something uses
+\t * can't go: the link fails. */
 \t/DISCARD/ :
 \t{
-\t\t*(.comment);
-\t\t*(.ARM.attributes);
+\t\t*(*);
 \t}
 }
 """

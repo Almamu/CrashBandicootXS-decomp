@@ -8,7 +8,8 @@
 #
 # The game compiles and links into a host executable, with the platform's
 # functions in plain C (platform/pc/src/): the frame loop, a software PPU,
-# and an SDL2 window with the keyboard and gamepads (docs/platforms.md).
+# an SDL2 window with the keyboard and gamepads, and GAX2's sound
+# (docs/platforms.md).
 
 HOST_CC      ?= cc
 HOST_CXX     ?= c++
@@ -70,16 +71,30 @@ PLATFORM_UNITS := $(shell find $(PLATFORM_DIR)/units -name '*.cpp')
 PLATFORM_UNIT_OBJS := $(patsubst $(PLATFORM_DIR)/units/%.cpp,$(C_BUILDDIR)/%.o,$(PLATFORM_UNITS))
 
 # The platform library (platform/pc/src/): the host memory, DMA, the BIOS
-# calls, startup and IRQ dispatch, GAX2's and AgbEeprom's APIs (which
-# replace lib/gax and lib/agb_eeprom), lib/libgcc's 32-bit division
-# helpers the game calls by name (the rest of libgcc is the host
-# compiler's), and the sound blocks of data/data.s the game reads.
+# calls, startup and IRQ dispatch, the audio output and GAX2's ARM
+# routines in C, AgbEeprom's API (which replaces lib/agb_eeprom),
+# lib/libgcc's division helpers the game and GAX2 call by name (the rest
+# of libgcc is the host compiler's), and the sound blocks of data/data.s.
 PLATFORM_SRCS := $(wildcard $(PLATFORM_DIR)/src/*.c $(PLATFORM_DIR)/src/*.S)
 PLATFORM_OBJS := $(patsubst $(PLATFORM_DIR)/src/%,$(PLATFORM_BUILDDIR)/src/%.o,$(basename $(PLATFORM_SRCS)))
 
-HOST_OBJS := $(C_OBJS) $(CXX_OBJS) $(PLATFORM_OBJS)
+# GAX2 (lib/gax, docs/audio.md): its matched C, built for the host, with
+# a unit of platform/pc/units/lib/gax/ in place of each file that can't
+# run there as it is (the ARM routines' calls and the resampler's patches,
+# the work RAM carved by the GBA's sizes, the DMA and SWI asm; gax_host.h).
+# The song data's structures with pointers are generated again as C
+# (tools/gax_host_data.py, from tools/gax_audio.py's .s files), laid out
+# by the host compiler; the rest is read in place from the built blocks.
+HOST_GAX_SRCS := $(wildcard lib/gax/src/*.c lib/gax/data/*.c)
+HOST_GAX_OBJS := $(patsubst lib/%.c,$(LIB_BUILDDIR)/%.o,$(HOST_GAX_SRCS))
+HOST_GAX_UNITS := $(shell find $(PLATFORM_DIR)/units/lib -name '*.c')
+HOST_GAX_UNIT_OBJS := $(patsubst $(PLATFORM_DIR)/units/lib/%.c,$(LIB_BUILDDIR)/%.o,$(HOST_GAX_UNITS))
+HOST_GAX_DATA := $(PLATFORM_BUILDDIR)/gax_host_data.c
+HOST_GAX_FLAGS = -iquote lib/gax/src -iquote $(PLATFORM_DIR)/src
 
-$(PLATFORM_OBJS): | $(GENERATED_HEADERS)
+HOST_OBJS := $(C_OBJS) $(CXX_OBJS) $(PLATFORM_OBJS) $(HOST_GAX_OBJS) $(HOST_GAX_DATA:.c=.o)
+
+$(PLATFORM_OBJS) $(HOST_GAX_OBJS): | $(GENERATED_HEADERS)
 
 # The link. host_link.py writes a linker script of symbol assignments,
 # the host's version of what ldscript.txt and the objcopy renames do on
@@ -111,6 +126,9 @@ $(HOST_LINK): $(HOST_OBJS) $(CXX_SYMBOLS) $(SYM_IWRAM) $(SYM_EWRAM) $(HOST_RENAM
 # the level and its room.
 comma := ,
 HOST_WRAPS := _ZN4Game2Ui11LevelSelect3RunEPi _ZN4Game5Level13LevelProgress10SelectRoomEv
+# --gax-log (src/gax_trace.c) wraps GAX2's API.
+HOST_WRAPS += GAX2_init GAX_fx_ex GAX_fx GAX_fx_note GAX_stop_fx GAX_set_music_volume GAX_set_fx_volume \
+	GAX_stop GAX_pause GAX_resume GAX_play GAX_irq GAX2_jingle
 
 $(HOST_EXE): $(HOST_OBJS) $(HOST_LINK)
 	@mkdir -p $(dir $@)
@@ -130,6 +148,23 @@ $(C_BUILDDIR)/%.o: $(C_SUBDIR)/%.c $(HOST_RENAMES)
 	@mkdir -p $(dir $@)
 	$(HOST_CC) $(HOST_CPPFLAGS) $(HOST_CFLAGS) $(DEPFLAGS) -c -o $@ $<
 	$(HOST_OBJCOPY) --redefine-syms=$(HOST_RENAMES) $@
+
+$(HOST_GAX_UNIT_OBJS): $(LIB_BUILDDIR)/%.o: $(PLATFORM_DIR)/units/lib/%.c
+	@mkdir -p $(dir $@)
+	$(HOST_CC) $(HOST_CPPFLAGS) $(HOST_GAX_FLAGS) $(HOST_CFLAGS) $(DEPFLAGS) -c -o $@ $<
+
+$(LIB_BUILDDIR)/gax/%.o: lib/gax/%.c
+	@mkdir -p $(dir $@)
+	$(HOST_CC) $(HOST_CPPFLAGS) $(HOST_GAX_FLAGS) $(HOST_CFLAGS) $(DEPFLAGS) -c -o $@ $<
+
+$(HOST_GAX_DATA): $(SOUND_BUILT) $(SOUND_BUILDDIR)/gax_songs.h $(PLATFORM_DIR)/tools/gax_host_data.py
+	@mkdir -p $(dir $@)
+	python3 $(PLATFORM_DIR)/tools/gax_host_data.py --music $(SOUND_BUILDDIR)/gax_audio_data.s \
+		--sfx $(SOUND_BUILDDIR)/gax_sfx_data.s --default $(SOUND_BUILDDIR)/gax_default_layout.s \
+		--songs $(SOUND_BUILDDIR)/gax_songs.h -o $@
+
+$(HOST_GAX_DATA:.c=.o): $(HOST_GAX_DATA) | $(GENERATED_HEADERS)
+	$(HOST_CC) $(HOST_CPPFLAGS) $(HOST_GAX_FLAGS) $(HOST_CFLAGS) $(DEPFLAGS) -c -o $@ $<
 
 $(PLATFORM_BUILDDIR)/src/%.o: $(PLATFORM_DIR)/src/%.c
 	@mkdir -p $(dir $@)
@@ -151,6 +186,11 @@ FORCE:
 
 $(PLATFORM_BUILDDIR)/src/sound_data.o: $(SOUND_BUILT)
 $(PLATFORM_BUILDDIR)/src/sound_data.o: HOST_CPPFLAGS += -D 'SFX_TABLE_BIN="$(SOUND_BUILDDIR)/sfx_table.bin"' \
-	-D 'GAX_MUSIC_BIN="$(SOUND_BUILDDIR)/gax_audio_data.bin"'
+	-D 'GAX_MUSIC_BIN="$(SOUND_BUILDDIR)/gax_audio_data.bin"' -D 'GAX_SFX_BIN="$(SOUND_BUILDDIR)/gax_sfx_data.bin"'
 
--include $(PLATFORM_OBJS:.o=.d)
+# The platform's own GAX2 objects find lib/gax's internal header and
+# gax_host.h.
+$(PLATFORM_BUILDDIR)/src/gax_dsp.o $(PLATFORM_BUILDDIR)/src/audio.o $(PLATFORM_BUILDDIR)/src/gax_trace.o: \
+	HOST_CFLAGS += $(HOST_GAX_FLAGS)
+
+-include $(PLATFORM_OBJS:.o=.d) $(HOST_GAX_OBJS:.o=.d) $(HOST_GAX_DATA:.c=.d)
