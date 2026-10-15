@@ -18,6 +18,8 @@
  * after it stays valid). */
 #undef LAYOUT_ASSERT
 #define LAYOUT_ASSERT(T, X) COMPILE_TIME_ASSERT(T, 1)
+#undef N2_LAYOUT_ASSERT
+#define N2_LAYOUT_ASSERT(T, X) COMPILE_TIME_ASSERT(T, 1)
 
 /* A NULL pointer the ROM reads through (gba/defines.h) reads the host's
  * zeroed page instead, where the GBA reads its BIOS area. */

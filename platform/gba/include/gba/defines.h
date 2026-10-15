@@ -19,7 +19,17 @@
 // defines LAYOUT_ASSERT as nothing in its own gba/defines.h (#1093,
 // docs/platforms.md). A struct without pointers keeps COMPILE_TIME_ASSERT,
 // which every platform checks.
-#define LAYOUT_ASSERT(T, X) COMPILE_TIME_ASSERT(T, X)
+// They are XS's layouts. N-Tranced's (GAME_N2) differ (its Entity is 12
+// bytes longer, ..., #1111) and aren't all known yet, so its build checks
+// only N2_LAYOUT_ASSERT, each a layout of N-Tranced's that its code shows
+// (docs/n_tranced.md, "Struct layouts").
+#ifdef GAME_N2
+#define LAYOUT_ASSERT(T, X)    COMPILE_TIME_ASSERT(T, 1)
+#define N2_LAYOUT_ASSERT(T, X) COMPILE_TIME_ASSERT(T, X)
+#else
+#define LAYOUT_ASSERT(T, X)    COMPILE_TIME_ASSERT(T, X)
+#define N2_LAYOUT_ASSERT(T, X) COMPILE_TIME_ASSERT(T, 1)
+#endif
 
 // NULL_READ(p): a struct pointer that the ROM reads through while it can
 // still be NULL (the level's first SetCheckpointAtPlayer reads the room

@@ -191,7 +191,7 @@ _0802696E:
 	adds r0, r2, r0
 	ldr r2, [r1, #0xc]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _08026984:
 	ldr r0, [r4, #0x20]
 	cmp r0, #0
@@ -208,7 +208,7 @@ _08026990:
 	adds r0, r2, r0
 	ldr r2, [r1, #0xc]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _080269A6:
 	ldr r2, [r4, #0x18]
 	cmp r2, #0
@@ -219,7 +219,7 @@ _080269A6:
 	adds r0, r2, r0
 	ldr r2, [r1, #0xc]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _080269BC:
 	ldr r2, [r4, #0x1c]
 	cmp r2, #0
@@ -230,7 +230,7 @@ _080269BC:
 	adds r0, r2, r0
 	ldr r2, [r1, #0xc]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _080269D2:
 	ldr r1, _080269F0 @ =gLevelLayersSingleton
 	movs r0, #0
@@ -339,7 +339,7 @@ ScrollLevelLayers: @ 0x08026A78
 	adds r1, r5, #0
 	adds r1, #8
 	ldr r2, [r2, #0x1c]
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r1, [r5, #0x10]
 	ldr r0, [r1]
 	str r0, [sp]
@@ -363,7 +363,7 @@ _08026A9E:
 	adds r0, r2, r0
 	ldr r2, [r1, #0x1c]
 	mov r1, sp
-	bl sub_08047970
+	bl _call_via_r2
 _08026AC2:
 	adds r4, #1
 	cmp r4, #2
@@ -386,7 +386,7 @@ ResetLevelLayers: @ 0x08026AD0
 	adds r1, r5, #0
 	adds r1, #8
 	ldr r2, [r2, #0x14]
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r1, [r5, #0x10]
 	ldr r0, [r1]
 	str r0, [sp]
@@ -410,7 +410,7 @@ _08026AF6:
 	adds r0, r2, r0
 	ldr r2, [r1, #0x14]
 	mov r1, sp
-	bl sub_08047970
+	bl _call_via_r2
 _08026B1A:
 	adds r4, #1
 	cmp r4, #2

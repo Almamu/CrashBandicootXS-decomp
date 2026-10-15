@@ -29,6 +29,14 @@ SECTIONS
 		build/ntranced/src/engine/gfx/oam_buffer.o(.text);
 		build/ntranced/src/engine/sys/vram_dma_queue.o(.text);
 		build/ntranced/games/n2/asm/code_08007620.o(.text);
+		build/ntranced/src/game/crates/crate_list_draw.o(.text);
+		build/ntranced/games/n2/asm/code_0800A3AC.o(.text);
+		build/ntranced/src/game/crates/crate_list_reset.o(.text);
+		build/ntranced/games/n2/asm/code_0800A680.o(.text);
+		build/ntranced/src/game/entities/moving_sprite_probe.o(.text);
+		build/ntranced/games/n2/asm/code_0800AB38.o(.text);
+		build/ntranced/src/game/enemies/periodic_spawner.o(.text);
+		build/ntranced/games/n2/asm/code_0800E7EC.o(.text);
 		build/ntranced/src/game/crates/collision_queue.o(.text);
 		build/ntranced/games/n2/asm/code_08012CF8.o(.text);
 		build/ntranced/src/game/level/tile_cache_cell.o(.text);
@@ -53,6 +61,8 @@ SECTIONS
 		build/ntranced/games/n2/asm/code_08046230.o(.text);
 		build/ntranced/lib/gax/src/gax_zero_fill.o(.text);
 		build/ntranced/games/n2/asm/code_080463FC.o(.text);
+		PROVIDE(_08047968 = ALIGN(4) + 0x0);
+		build/ntranced/lib/libgcc/_call_via_rX.o(.text);
 		build/ntranced/lib/libgcc/_divsi3.o(.text);
 		build/ntranced/games/n2/asm/code_08047A38.o(.text);
 		build/ntranced/lib/libgcc/_modsi3.o(.text);
@@ -97,6 +107,68 @@ SECTIONS
 	} = 0
 
 	INCLUDE "games/n2/symbols.txt"
+
+	/* names inside the shared objects */
+	PROVIDE(LoadBackgroundTileAndPalette = ((LoadTaggedAsset & ~1) + 0x4C) | 1);
+	PROVIDE(FadeBrightness = ((StepBrightnessFade & ~1) + 0x80) | 1);
+	PROVIDE(DarkenPalette = ((StepBrightnessFade & ~1) + 0x150) | 1);
+	PROVIDE(IsBrightnessFadeActive = ((FadePaletteToBlack & ~1) + 0x6C) | 1);
+	PROVIDE(AabbOverlaps = ((AabbOverlapsInclusiveX & ~1) + 0x48) | 1);
+	PROVIDE(IwramAlloc = ((IwramFree & ~1) + 0xC) | 1);
+	PROVIDE(LinkSetupSio = ((LinkStart & ~1) + 0x88) | 1);
+	PROVIDE(ResetLinkSession = ((LinkStart & ~1) + 0xB4) | 1);
+	PROVIDE(DestroyLinkSession = ((LinkStart & ~1) + 0xCC) | 1);
+	PROVIDE(InitLinkSession = ((LinkStart & ~1) + 0x104) | 1);
+	PROVIDE(LinkSerialIntr = ((LinkStart & ~1) + 0x14C) | 1);
+	PROVIDE(LinkTimer3Intr = ((LinkStart & ~1) + 0x164) | 1);
+	PROVIDE(AppendOamEntries = ((SetOamAffineScales & ~1) + 0x2C) | 1);
+	PROVIDE(HideUnusedOamEntries = ((SetOamAffineScales & ~1) + 0x60) | 1);
+	PROVIDE(RewindOamBuffer = ((SetOamAffineScales & ~1) + 0x90) | 1);
+	PROVIDE(MarkOamBufferBase = ((SetOamAffineScales & ~1) + 0x9C) | 1);
+	PROVIDE(ResetOamBuffer = ((SetOamAffineScales & ~1) + 0xA8) | 1);
+	PROVIDE(CommitOamBuffer = ((SetOamAffineScales & ~1) + 0xC4) | 1);
+	PROVIDE(AddOamEntry = ((SetOamAffineScales & ~1) + 0xE0) | 1);
+	PROVIDE(sub_080074EC = ((SetOamAffineScales & ~1) + 0x10C) | 1);
+	PROVIDE(InitOamBuffer = ((SetOamAffineScales & ~1) + 0x124) | 1);
+	PROVIDE(QueueVramDmaTransfer = ((FlushVramDmaQueue & ~1) + 0x78) | 1);
+	PROVIDE(FreeVramDmaQueue = ((FlushVramDmaQueue & ~1) + 0xC8) | 1);
+	PROVIDE(AllocVramDmaQueue = ((FlushVramDmaQueue & ~1) + 0xE4) | 1);
+	PROVIDE(ClearPartList = ((ResetCrateList & ~1) + 0x8) | 1);
+	PROVIDE(sub_0800E7A8 = ((UpdatePeriodicSpawner & ~1) + 0x54) | 1);
+	PROVIDE(sub_0800E7E4 = ((UpdatePeriodicSpawner & ~1) + 0x90) | 1);
+	PROVIDE(AddCollisionCandidate = ((ResolveCollisionCandidates & ~1) + 0x1E8) | 1);
+	PROVIDE(DestroyCollisionQueue = ((ResolveCollisionCandidates & ~1) + 0x2A8) | 1);
+	PROVIDE(ResetCollisionQueue = ((ResolveCollisionCandidates & ~1) + 0x2C0) | 1);
+	PROVIDE(SetCollisionSource = ((GetCollisionCell & ~1) + 0x38) | 1);
+	PROVIDE(AcquireTileSlot = ((ResetTileSlotPool & ~1) + 0x6C) | 1);
+	PROVIDE(ReleaseTileSlot = ((ResetTileSlotPool & ~1) + 0x114) | 1);
+	PROVIDE(UploadTileSlot = ((ResetTileSlotPool & ~1) + 0x170) | 1);
+	PROVIDE(SetTileSlotPoolSource = ((ResetTileSlotPool & ~1) + 0x18C) | 1);
+	PROVIDE(ProbeTerrainX = ((ProbeTerrainY & ~1) + 0xD0) | 1);
+	PROVIDE(OperatorNewArray = ((OperatorDeleteArray & ~1) + 0xC) | 1);
+	PROVIDE(OperatorDelete = ((OperatorDeleteArray & ~1) + 0x1C) | 1);
+	PROVIDE(OperatorNew = ((OperatorDeleteArray & ~1) + 0x28) | 1);
+	PROVIDE(AddPaletteCycle = ((TickPaletteCycles & ~1) + 0xC4) | 1);
+	PROVIDE(ClearPaletteCycles = ((TickPaletteCycles & ~1) + 0x134) | 1);
+	PROVIDE(DestroyPaletteCycles = ((TickPaletteCycles & ~1) + 0x158) | 1);
+	PROVIDE(InitPaletteCycles = ((TickPaletteCycles & ~1) + 0x170) | 1);
+	PROVIDE(MarkSpawnCollected = ((IsSpawnCollected & ~1) + 0x34) | 1);
+	PROVIDE(ClearCollectedSpawns = ((IsSpawnCollected & ~1) + 0x7C) | 1);
+	PROVIDE(_call_via_r1 = ((_call_via_r0 & ~1) + 0x4) | 1);
+	PROVIDE(_call_via_r2 = ((_call_via_r0 & ~1) + 0x8) | 1);
+	PROVIDE(_call_via_r3 = ((_call_via_r0 & ~1) + 0xC) | 1);
+	PROVIDE(_call_via_r4 = ((_call_via_r0 & ~1) + 0x10) | 1);
+	PROVIDE(_call_via_r5 = ((_call_via_r0 & ~1) + 0x14) | 1);
+	PROVIDE(_call_via_r6 = ((_call_via_r0 & ~1) + 0x18) | 1);
+	PROVIDE(_call_via_r7 = ((_call_via_r0 & ~1) + 0x1C) | 1);
+	PROVIDE(sub_08047998 = ((_call_via_r0 & ~1) + 0x30) | 1);
+	PROVIDE(_call_via_lr = ((_call_via_r0 & ~1) + 0x38) | 1);
+	PROVIDE(EepromTimerIntr = ((EEPROMConfigure & ~1) + 0x44) | 1);
+	PROVIDE(SetEepromTimerIntr = ((EEPROMConfigure & ~1) + 0x68) | 1);
+	PROVIDE(StartEepromTimer = ((EEPROMConfigure & ~1) + 0xA0) | 1);
+	PROVIDE(DMA3Transfer = ((StopEepromTimer & ~1) + 0x44) | 1);
+	PROVIDE(EEPROMWrite = ((EEPROMRead & ~1) + 0xB0) | 1);
+	PROVIDE(EEPROMWrite1_check = ((EEPROMCompare & ~1) + 0x58) | 1);
 
 	/* What isn't placed above, as XS's script: the comments and attributes,
 	 * and the code objects' .rodata the original's linker dropped (the agb_eeprom

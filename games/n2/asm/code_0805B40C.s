@@ -102,7 +102,7 @@ SetAabbPos: @ 0x0805B488
 sub_0805B490: @ 0x0805B490
 	push {lr}
 	adds r2, r0, #0
-	ldr r0, _0805B4AC @ =gUnknown_087F84B4
+	ldr r0, _0805B4AC @ =gEntityVtable
 	str r0, [r2, #0x24]
 	movs r0, #1
 	ands r0, r1
@@ -114,7 +114,7 @@ _0805B4A6:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_0805B4AC: .4byte gUnknown_087F84B4
+_0805B4AC: .4byte gEntityVtable
 
 	thumb_func_start sub_0805B4B0
 sub_0805B4B0: @ 0x0805B4B0
@@ -151,7 +151,7 @@ sub_0805B4D0: @ 0x0805B4D0
 sub_0805B4DC: @ 0x0805B4DC
 	push {lr}
 	adds r2, r0, #0
-	ldr r0, _0805B4F8 @ =gUnknown_087F84B4
+	ldr r0, _0805B4F8 @ =gEntityVtable
 	str r0, [r2, #0x24]
 	movs r0, #1
 	ands r0, r1
@@ -163,7 +163,7 @@ _0805B4F2:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_0805B4F8: .4byte gUnknown_087F84B4
+_0805B4F8: .4byte gEntityVtable
 
 	thumb_func_start sub_0805B4FC
 sub_0805B4FC: @ 0x0805B4FC
@@ -1046,7 +1046,7 @@ sub_0805BAF0: @ 0x0805BAF0
 	adds r0, r2, r0
 	ldr r2, [r1, #0xc]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 	b _0805BB1A
 _0805BB14:
 	adds r0, r2, #0
@@ -1109,7 +1109,7 @@ sub_0805BB60: @ 0x0805BB60
 	adds r0, r2, r0
 	ldr r2, [r1, #0xc]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 	b _0805BB8A
 _0805BB84:
 	adds r0, r2, #0
@@ -1238,7 +1238,7 @@ sub_0805BC48: @ 0x0805BC48
 	adds r0, r0, r1
 	ldr r2, [r2, #0x1c]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 	pop {r4, r5}
 	pop {r0}
 	bx r0
@@ -1261,7 +1261,7 @@ sub_0805BC74: @ 0x0805BC74
 	adds r0, r0, r1
 	ldr r2, [r2, #0x1c]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 	pop {r4, r5}
 	pop {r0}
 	bx r0
@@ -1388,7 +1388,7 @@ sub_0805BD34: @ 0x0805BD34
 	adds r0, r2, r0
 	ldr r2, [r1, #0xc]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _0805BD54:
 	ldr r0, _0805BD6C @ =gUnknown_087FB794
 	str r0, [r4, #4]
@@ -1418,7 +1418,7 @@ sub_0805BD70: @ 0x0805BD70
 	adds r0, r2, r0
 	ldr r2, [r1, #0xc]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _0805BD90:
 	ldr r0, _0805BDA8 @ =gUnknown_087FB794
 	str r0, [r4, #4]

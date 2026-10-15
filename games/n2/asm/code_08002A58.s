@@ -1780,7 +1780,7 @@ _0800374E:
 	adds r0, r2, r0
 	ldr r2, [r1, #4]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _0800376A:
 	ldr r2, [r6]
 	cmp r2, #0
@@ -1792,7 +1792,7 @@ _0800376A:
 	adds r0, r2, r0
 	ldr r2, [r1, #4]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _08003782:
 	movs r1, #0x86
 	lsls r1, r1, #1
@@ -1808,7 +1808,7 @@ _08003782:
 	adds r0, r2, r0
 	ldr r2, [r1, #4]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _080037A2:
 	adds r6, #4
 	adds r4, #4
@@ -1862,7 +1862,7 @@ _080037F0:
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x24]
-	bl sub_0804796C
+	bl _call_via_r1
 	adds r0, r5, #0
 	adds r0, #0xf8
 	adds r0, r0, r4
@@ -1872,7 +1872,7 @@ _080037F0:
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x24]
-	bl sub_0804796C
+	bl _call_via_r1
 	movs r1, #0x86
 	lsls r1, r1, #1
 	adds r0, r5, r1
@@ -1883,7 +1883,7 @@ _080037F0:
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x24]
-	bl sub_0804796C
+	bl _call_via_r1
 	adds r7, #1
 	cmp r7, #4
 	ble _080037F0
@@ -3263,7 +3263,7 @@ sub_080042B8: @ 0x080042B8
 	adds r0, r0, r1
 	ldr r1, _0800431C @ =gUnknown_081CDE80
 	ldr r2, [r2, #0x24]
-	bl sub_08047970
+	bl _call_via_r2
 	adds r0, #1
 	ldr r2, [r7, #0x54]
 	adds r1, r2, #0
@@ -3320,7 +3320,7 @@ _0800432A:
 	adds r1, r0, #0
 	ldr r2, [r6, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	movs r1, #0xf0
 	subs r1, r1, r0
 	asrs r1, r1, #1
@@ -3348,7 +3348,7 @@ _0800432A:
 	adds r1, r0, #0
 	ldr r2, [r6, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	mov r1, sb
 	ldr r0, [r1]
 	movs r2, #0x9c
@@ -3360,7 +3360,7 @@ _0800432A:
 	adds r0, r0, r1
 	ldr r2, [r2, #0x24]
 	ldr r1, _080043EC @ =gUnknown_081CDE80
-	bl sub_08047970
+	bl _call_via_r2
 	mov r1, sl
 	adds r1, #1
 	adds r1, r1, r0
@@ -3498,7 +3498,7 @@ sub_0800448C: @ 0x0800448C
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	movs r2, #0xf0
 	subs r0, r2, r0
 	asrs r3, r0, #1
@@ -3523,7 +3523,7 @@ sub_0800448C: @ 0x0800448C
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r0, [r6]
 	mov r2, r8
 	adds r1, r0, r2
@@ -3533,7 +3533,7 @@ sub_0800448C: @ 0x0800448C
 	adds r0, r0, r1
 	ldr r2, [r2, #0x24]
 	ldr r1, _080047A0 @ =gUnknown_081CDE80
-	bl sub_08047970
+	bl _call_via_r2
 	mov sl, r0
 	mov r7, sl
 	adds r7, #0x29
@@ -3561,7 +3561,7 @@ sub_0800448C: @ 0x0800448C
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	movs r3, #0xf0
 	subs r0, r3, r0
 	asrs r3, r0, #1
@@ -3588,7 +3588,7 @@ sub_0800448C: @ 0x0800448C
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r0, [r6]
 	movs r3, #0x9c
 	lsls r3, r3, #1
@@ -3599,7 +3599,7 @@ sub_0800448C: @ 0x0800448C
 	adds r0, r0, r1
 	ldr r2, [r2, #0x24]
 	ldr r1, _080047A0 @ =gUnknown_081CDE80
-	bl sub_08047970
+	bl _call_via_r2
 	mov r1, sl
 	adds r1, #0x2a
 	adds r7, r1, r0
@@ -3625,7 +3625,7 @@ _080045B4:
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	movs r4, #0xf0
 	subs r0, r4, r0
 	asrs r3, r0, #1
@@ -3651,7 +3651,7 @@ _080045B4:
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r0, [r6]
 	mov r2, r8
 	adds r1, r0, r2
@@ -3661,7 +3661,7 @@ _080045B4:
 	adds r0, r0, r1
 	ldr r2, [r2, #0x24]
 	ldr r1, _080047A0 @ =gUnknown_081CDE80
-	bl sub_08047970
+	bl _call_via_r2
 	adds r1, r7, #1
 	adds r7, r1, r0
 _08004638:
@@ -3686,7 +3686,7 @@ _08004638:
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	movs r3, #0xf0
 	subs r0, r3, r0
 	asrs r3, r0, #1
@@ -3712,7 +3712,7 @@ _08004638:
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r0, [r6]
 	mov r2, r8
 	adds r1, r0, r2
@@ -3722,7 +3722,7 @@ _08004638:
 	adds r0, r0, r1
 	ldr r2, [r2, #0x24]
 	ldr r1, _080047A0 @ =gUnknown_081CDE80
-	bl sub_08047970
+	bl _call_via_r2
 	adds r1, r7, #1
 	adds r7, r1, r0
 _080046BC:
@@ -3747,7 +3747,7 @@ _080046BC:
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	movs r3, #0xf0
 	subs r0, r3, r0
 	asrs r3, r0, #1
@@ -3773,7 +3773,7 @@ _080046BC:
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r0, [r6]
 	mov r2, r8
 	adds r1, r0, r2
@@ -3783,7 +3783,7 @@ _080046BC:
 	adds r0, r0, r1
 	ldr r2, [r2, #0x24]
 	ldr r1, _080047A0 @ =gUnknown_081CDE80
-	bl sub_08047970
+	bl _call_via_r2
 _0800473C:
 	ldr r4, [sp]
 	ldr r3, [r4, #0x20]
@@ -3798,7 +3798,7 @@ _0800473C:
 	adds r0, r0, r1
 	ldr r2, [r2, #0x1c]
 	adds r1, r3, #0
-	bl sub_08047970
+	bl _call_via_r2
 	movs r1, #0xf0
 	subs r0, r1, r0
 	asrs r3, r0, #1
@@ -3821,7 +3821,7 @@ _0800473C:
 	ldr r4, [sp]
 	ldr r1, [r4, #0x20]
 	ldr r2, [r2, #0x14]
-	bl sub_08047970
+	bl _call_via_r2
 _0800478A:
 	add sp, #4
 	pop {r3, r4, r5}
@@ -3856,7 +3856,7 @@ DrawSaveMenuMessageLines: @ 0x080047A4
 	adds r0, r0, r1
 	ldr r2, [r2, #0x1c]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 	adds r1, r0, #0
 	movs r0, #0xf0
 	subs r0, r0, r1
@@ -3880,7 +3880,7 @@ DrawSaveMenuMessageLines: @ 0x080047A4
 	adds r0, r0, r1
 	ldr r2, [r2, #0x14]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 _08004802:
 	cmp r6, #0
 	beq _0800484C
@@ -3894,7 +3894,7 @@ _08004802:
 	adds r0, r0, r1
 	ldr r2, [r2, #0x1c]
 	adds r1, r6, #0
-	bl sub_08047970
+	bl _call_via_r2
 	adds r1, r0, #0
 	movs r0, #0xf0
 	subs r0, r0, r1
@@ -3916,7 +3916,7 @@ _08004802:
 	adds r0, r0, r1
 	ldr r2, [r2, #0x14]
 	adds r1, r6, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0800484C:
 	pop {r4, r5, r6, r7}
 	pop {r0}
@@ -3971,7 +3971,7 @@ _0800488E:
 	adds r1, r0, #0
 	ldr r2, [r6, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	movs r1, #0xf0
 	subs r1, r1, r0
 	asrs r1, r1, #1
@@ -3998,7 +3998,7 @@ _0800488E:
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	pop {r3}
 	mov r8, r3
 	pop {r4, r5, r6}
@@ -4036,7 +4036,7 @@ DrawYesNoPrompt: @ 0x08004900
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	movs r1, #0xa0
 	subs r1, r1, r0
 	ldr r4, [r7]
@@ -4063,7 +4063,7 @@ DrawYesNoPrompt: @ 0x08004900
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r7]
 	mov r4, sl
 	ldr r0, [r4, #4]
@@ -4099,7 +4099,7 @@ _0800498A:
 	adds r0, r0, r1
 	ldr r1, _08004A00 @ =gMenuCursorText
 	ldr r2, [r2, #0x14]
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r4, [r7]
 	movs r1, #0xb0
 	movs r2, #0x8a
@@ -4124,7 +4124,7 @@ _0800498A:
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	b _08004A60
 	.align 2, 0
 _080049FC: .4byte 0x02000E90
@@ -4148,7 +4148,7 @@ _08004A04:
 	adds r0, r0, r1
 	ldr r1, _08004AA8 @ =gMenuCursorText
 	ldr r2, [r2, #0x14]
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r4, [r7]
 	movs r1, #0xb0
 	movs r2, #0x8a
@@ -4172,7 +4172,7 @@ _08004A04:
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 _08004A60:
 	ldr r4, _08004AAC @ =0x02000E90
 	ldr r0, [r4]
@@ -4205,7 +4205,7 @@ _08004A60:
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	b _08004AE4
 	.align 2, 0
 _08004AA8: .4byte gMenuCursorText
@@ -4234,7 +4234,7 @@ _08004AB0:
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 _08004AE4:
 	pop {r3, r4, r5}
 	mov r8, r3
@@ -4283,7 +4283,7 @@ DrawSaveSlotStats: @ 0x08004AF4
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 	adds r5, #0xd
 	mov r6, sl
 	ldr r1, [sp, #0xc]
@@ -4334,7 +4334,7 @@ _08004B7E:
 	adds r0, r2, r0
 	ldr r2, [r1, #0x14]
 	mov r1, sp
-	bl sub_08047970
+	bl _call_via_r2
 	mov r5, r8
 	adds r5, #7
 	mov r6, sl
@@ -4354,7 +4354,7 @@ _08004B7E:
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 	adds r5, #9
 	subs r6, #7
 	ldr r1, [sp, #0xc]
@@ -4409,7 +4409,7 @@ _08004C1A:
 	adds r0, r2, r0
 	ldr r2, [r1, #0x14]
 	mov r1, sp
-	bl sub_08047970
+	bl _call_via_r2
 	mov r5, r8
 	adds r5, #0x2b
 	adds r0, r7, #0
@@ -4427,7 +4427,7 @@ _08004C1A:
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 	adds r5, #0xd
 	ldr r6, [sp, #0x14]
 	ldr r1, [sp, #0xc]
@@ -4482,7 +4482,7 @@ _08004CB0:
 	adds r0, r2, r0
 	ldr r2, [r1, #0x14]
 	mov r1, sp
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r1, [sp, #0xc]
 	ldr r0, [r1]
 	mov r1, sp
@@ -4512,7 +4512,7 @@ _08004CFA:
 	adds r0, r0, r1
 	ldr r2, [r2, #0x1c]
 	mov r1, sp
-	bl sub_08047970
+	bl _call_via_r2
 	adds r5, r0, #0
 	ldr r0, [sp, #8]
 	cmp r0, #0
@@ -4558,7 +4558,7 @@ _08004D44:
 	adds r0, r2, r0
 	ldr r2, [r1, #0x14]
 	mov r1, sp
-	bl sub_08047970
+	bl _call_via_r2
 	add sp, #0x1c
 	pop {r3, r4, r5}
 	mov r8, r3
@@ -4631,7 +4631,7 @@ _08004DDE:
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	lsrs r1, r0, #0x1f
 	adds r0, r0, r1
 	asrs r0, r0, #1
@@ -4661,7 +4661,7 @@ _08004DDE:
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	b _08004E64
 	.align 2, 0
 _08004E48: .4byte 0x02000E90
@@ -4730,7 +4730,7 @@ _08004EAA:
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	lsrs r1, r0, #0x1f
 	adds r0, r0, r1
 	asrs r0, r0, #1
@@ -4760,7 +4760,7 @@ _08004EAA:
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	b _08004F30
 	.align 2, 0
 _08004F14: .4byte 0x02000E90
@@ -4829,7 +4829,7 @@ _08004F76:
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	lsrs r1, r0, #0x1f
 	adds r0, r0, r1
 	asrs r0, r0, #1
@@ -4859,7 +4859,7 @@ _08004F76:
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	b _08004FFC
 	.align 2, 0
 _08004FE0: .4byte 0x02000E90
@@ -4928,7 +4928,7 @@ _08005042:
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	lsrs r1, r0, #0x1f
 	adds r0, r0, r1
 	asrs r0, r0, #1
@@ -4958,7 +4958,7 @@ _08005042:
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	b _080050C8
 	.align 2, 0
 _080050AC: .4byte 0x02000E90
@@ -5368,7 +5368,7 @@ _080053F2:
 	adds r1, r0, #0
 	ldr r2, [r6, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	lsrs r1, r0, #0x1f
 	adds r0, r0, r1
 	asrs r0, r0, #1
@@ -5396,7 +5396,7 @@ _080053F2:
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	pop {r3, r4}
 	mov r8, r3
 	mov sb, r4
@@ -5434,7 +5434,7 @@ DrawSaveMenuTitle: @ 0x08005468
 	mov r0, r8
 	ldr r2, [r0, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	movs r1, #0xf0
 	subs r1, r1, r0
 	asrs r1, r1, #1
@@ -5460,7 +5460,7 @@ DrawSaveMenuTitle: @ 0x08005468
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	pop {r3, r4}
 	mov r8, r3
 	mov sb, r4
@@ -6197,7 +6197,7 @@ sub_08005A90: @ 0x08005A90
 	adds r0, r2, r0
 	ldr r2, [r1, #4]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _08005ABA:
 	adds r7, r6, #0
 	adds r7, #0xa4
@@ -6233,7 +6233,7 @@ _08005AE8:
 	adds r0, r2, r0
 	ldr r2, [r1, #4]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _08005B00:
 	adds r4, #4
 	subs r5, #1
@@ -6252,7 +6252,7 @@ _08005B0C:
 	adds r0, r2, r0
 	ldr r2, [r1, #4]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _08005B24:
 	adds r4, #4
 	subs r5, #1
@@ -6271,7 +6271,7 @@ _08005B30:
 	adds r0, r2, r0
 	ldr r2, [r1, #4]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _08005B48:
 	adds r4, #4
 	subs r5, #1
@@ -6290,7 +6290,7 @@ _08005B54:
 	adds r0, r2, r0
 	ldr r2, [r1, #4]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _08005B6C:
 	adds r4, #4
 	subs r5, #1
@@ -6307,7 +6307,7 @@ _08005B6C:
 	adds r0, r2, r0
 	ldr r2, [r1, #4]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _08005B8E:
 	ldr r0, [sp, #4]
 	ldr r2, [r0]
@@ -6320,7 +6320,7 @@ _08005B8E:
 	adds r0, r2, r0
 	ldr r2, [r1, #4]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _08005BA8:
 	ldr r0, [sp, #8]
 	ldr r2, [r0]
@@ -6333,7 +6333,7 @@ _08005BA8:
 	adds r0, r2, r0
 	ldr r2, [r1, #4]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _08005BC2:
 	ldr r0, [sp, #0xc]
 	ldr r2, [r0]
@@ -6346,7 +6346,7 @@ _08005BC2:
 	adds r0, r2, r0
 	ldr r2, [r1, #4]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _08005BDC:
 	movs r0, #1
 	ldr r1, [sp]
@@ -6800,7 +6800,7 @@ DrawPauseMenu: @ 0x08005F3C
 	adds r0, r0, r1
 	ldr r1, [r5, #0x78]
 	ldr r2, [r2, #0x1c]
-	bl sub_08047970
+	bl _call_via_r2
 	movs r1, #0xf0
 	subs r1, r1, r0
 	lsrs r3, r1, #1
@@ -6821,7 +6821,7 @@ DrawPauseMenu: @ 0x08005F3C
 	adds r0, r0, r1
 	ldr r1, [r5, #0x78]
 	ldr r2, [r2, #0x14]
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r4, [r5, #0x7c]
 	cmp r4, #0
 	beq _08005FE0
@@ -6845,7 +6845,7 @@ DrawPauseMenu: @ 0x08005F3C
 	adds r0, r3, r0
 	ldr r2, [r1, #0x14]
 	adds r1, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r0, [r6]
 	adds r3, r7, #0
 	adds r1, r0, r3
@@ -6856,7 +6856,7 @@ DrawPauseMenu: @ 0x08005F3C
 	adds r1, r5, #0
 	adds r1, #0x80
 	ldr r2, [r2, #0x14]
-	bl sub_08047970
+	bl _call_via_r2
 _08005FE0:
 	ldr r0, [r6]
 	adds r1, r0, r7
@@ -6868,7 +6868,7 @@ _08005FE0:
 	adds r4, #0x4a
 	ldr r2, [r2, #0x1c]
 	adds r1, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	movs r1, #0x8c
 	subs r3, r1, r0
 	ldr r0, [r6]
@@ -6888,7 +6888,7 @@ _08005FE0:
 	adds r0, r0, r1
 	ldr r2, [r2, #0x14]
 	adds r1, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	adds r0, r5, #0
 	bl DrawPauseMenuRows
 	adds r0, r5, #0
@@ -7040,7 +7040,7 @@ _0800612A:
 	adds r0, r0, r1
 	ldr r2, [r2, #0x1c]
 	mov r1, r8
-	bl sub_08047970
+	bl _call_via_r2
 	lsrs r0, r0, #1
 	movs r1, #0x32
 	subs r5, r1, r0
@@ -7083,7 +7083,7 @@ _08006194:
 	adds r0, r0, r1
 	ldr r2, [r2, #0x1c]
 	ldr r1, [sp, #4]
-	bl sub_08047970
+	bl _call_via_r2
 	lsrs r0, r0, #1
 	subs r5, r5, r0
 	ldr r2, [r6]
@@ -7104,7 +7104,7 @@ _08006194:
 	adds r0, r2, r0
 	ldr r2, [r1, #0x14]
 	mov r1, r8
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r0, [r6]
 	movs r2, #0x9c
 	lsls r2, r2, #1
@@ -7126,7 +7126,7 @@ _080061EE:
 	adds r0, r0, r1
 	ldr r2, [r2, #0x1c]
 	ldr r1, [sp, #8]
-	bl sub_08047970
+	bl _call_via_r2
 	lsrs r0, r0, #1
 	subs r5, r5, r0
 	ldr r0, [r6]
@@ -7147,7 +7147,7 @@ _080061EE:
 	adds r0, r0, r1
 	ldr r2, [r2, #0x14]
 	mov r1, r8
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r0, [r6]
 	mov r2, sb
 	adds r1, r0, r2
@@ -7158,7 +7158,7 @@ _080061EE:
 	ldr r2, [r2, #0x14]
 	ldr r1, [sp, #8]
 _08006242:
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r0, [r7, #0x20]
 	ldr r1, [sp]
 	adds r1, r1, r0
@@ -7199,7 +7199,7 @@ sub_08006278: @ 0x08006278
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 	ldr r7, _080063B4 @ =0x02000E70
 	ldr r0, [r7]
 	bl HasSuperBodySlam
@@ -7216,7 +7216,7 @@ sub_08006278: @ 0x08006278
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 _080062BE:
 	ldr r0, [r7]
 	bl HasTurboRun
@@ -7233,7 +7233,7 @@ _080062BE:
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 _080062E4:
 	ldr r0, [r5]
 	adds r0, #0x4c
@@ -7350,7 +7350,7 @@ sub_080063BC: @ 0x080063BC
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 	movs r4, #0
 _080063E6:
 	ldr r0, [r6]
@@ -7366,7 +7366,7 @@ _080063E6:
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 	movs r4, #0
 _08006408:
 	ldr r0, [r6]
@@ -7382,7 +7382,7 @@ _08006408:
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 	movs r4, #0
 _0800642A:
 	ldr r0, [r6]
@@ -7398,7 +7398,7 @@ _0800642A:
 	ldrsh r1, [r2, r5]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 	movs r4, #0
 _0800644C:
 	cmp r4, #0
@@ -7417,7 +7417,7 @@ _0800644C:
 	adds r0, r0, r1
 	ldr r2, [r2, #0x1c]
 	adds r1, r6, #0
-	bl sub_08047970
+	bl _call_via_r2
 	lsrs r0, r0, #1
 	movs r2, #0xc2
 	subs r2, r2, r0
@@ -7438,7 +7438,7 @@ _0800644C:
 	adds r0, r0, r1
 	ldr r2, [r2, #0x14]
 	adds r1, r6, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0800649E:
 	pop {r4, r5, r6}
 	pop {r0}
@@ -7465,7 +7465,7 @@ sub_080064AC: @ 0x080064AC
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 _080064D0:
 	ldr r0, [r5, #0x10]
 	ldrb r1, [r0, #2]
@@ -7481,7 +7481,7 @@ _080064D0:
 	ldrsh r1, [r2, r4]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 _080064F0:
 	ldr r0, [r5, #0x10]
 	ldrh r1, [r0, #2]
@@ -7500,7 +7500,7 @@ _080064F0:
 	ldrsh r1, [r2, r6]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 _08006516:
 	adds r0, r5, #0
 	adds r0, #0xa4
@@ -7510,7 +7510,7 @@ _08006516:
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 	ldr r0, _08006588 @ =gUnknown_081CDF10
 	ldr r4, _0800658C @ =0x02000E90
 	ldr r3, [r4]
@@ -7535,7 +7535,7 @@ _08006516:
 	adds r1, r5, #0
 	adds r1, #0x2f
 	ldr r2, [r2, #0x14]
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r3, [r4]
 	movs r1, #0xbe
 	movs r2, #0x80
@@ -7570,7 +7570,7 @@ sub_08006590: @ 0x08006590
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 	adds r0, r7, #0
 	adds r0, #0xb8
 	ldr r0, [r0]
@@ -7579,7 +7579,7 @@ sub_08006590: @ 0x08006590
 	ldrsh r1, [r2, r4]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 	adds r0, r7, #0
 	adds r0, #0xbc
 	ldr r0, [r0]
@@ -7588,7 +7588,7 @@ sub_08006590: @ 0x08006590
 	ldrsh r1, [r2, r5]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 	ldr r4, _08006668 @ =gUnknown_081CDF40
 	ldr r6, _0800666C @ =0x02000E90
 	ldr r0, [r6]
@@ -7613,7 +7613,7 @@ sub_08006590: @ 0x08006590
 	adds r1, r7, #0
 	adds r1, #0x35
 	ldr r2, [r2, #0x14]
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r0, [r6]
 	ldr r2, [r4, #8]
 	subs r2, #0x14
@@ -7637,7 +7637,7 @@ sub_08006590: @ 0x08006590
 	adds r1, r7, #0
 	adds r1, #0x38
 	ldr r2, [r2, #0x14]
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r0, [r6]
 	ldr r2, [r4, #0x10]
 	subs r2, #0x14
@@ -7659,7 +7659,7 @@ sub_08006590: @ 0x08006590
 	adds r1, r7, #0
 	adds r1, #0x3b
 	ldr r2, [r2, #0x14]
-	bl sub_08047970
+	bl _call_via_r2
 	pop {r4, r5, r6, r7}
 	pop {r0}
 	bx r0
@@ -7683,7 +7683,7 @@ _08006676:
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 	adds r4, #1
 	cmp r4, #2
 	ble _08006676
@@ -7711,7 +7711,7 @@ _08006676:
 	adds r1, r7, #0
 	adds r1, #0x41
 	ldr r2, [r2, #0x14]
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r0, [r6]
 	ldr r2, [r4, #8]
 	subs r2, #4
@@ -7735,7 +7735,7 @@ _08006676:
 	adds r1, r7, #0
 	adds r1, #0x44
 	ldr r2, [r2, #0x14]
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r0, [r6]
 	ldr r2, [r4]
 	subs r2, #4
@@ -7757,7 +7757,7 @@ _08006676:
 	adds r1, r7, #0
 	adds r1, #0x47
 	ldr r2, [r2, #0x14]
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r3, [r6]
 	movs r1, #0xb4
 	movs r2, #0x80
@@ -7795,7 +7795,7 @@ sub_08006754: @ 0x08006754
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 _08006774:
 	ldr r5, _080067C8 @ =0x02000E90
 	ldr r0, [r5]
@@ -7809,7 +7809,7 @@ _08006774:
 	adds r6, #0x84
 	ldr r2, [r2, #0x1c]
 	adds r1, r6, #0
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r1, _080067CC @ =gPauseTimeTrialIconPos
 	lsrs r0, r0, #1
 	ldr r2, [r1]
@@ -7833,7 +7833,7 @@ _08006774:
 	adds r0, r0, r1
 	ldr r2, [r2, #0x14]
 	adds r1, r6, #0
-	bl sub_08047970
+	bl _call_via_r2
 	pop {r4, r5, r6}
 	pop {r0}
 	bx r0
@@ -8523,7 +8523,7 @@ DrawPauseFraction: @ 0x08006DA8
 	ldrsh r2, [r3, r4]
 	adds r0, r0, r2
 	ldr r2, [r3, #0x14]
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r1, [r6]
 	movs r7, #0x8a
 	lsls r7, r7, #1
@@ -8566,7 +8566,7 @@ DrawPauseFraction: @ 0x08006DA8
 	adds r0, r0, r1
 	ldr r2, [r2, #0x14]
 	mov r1, r8
-	bl sub_08047970
+	bl _call_via_r2
 	pop {r3}
 	mov r8, r3
 	pop {r4, r5, r6, r7}
@@ -8911,7 +8911,7 @@ DrawPauseCrystalsPage: @ 0x080070BC
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 	ldr r2, _08007104 @ =gUnknown_081CDED8
 	ldr r0, _08007108 @ =0x02000E90
 	ldr r3, [r0]
@@ -8961,7 +8961,7 @@ DrawPauseMenuPageTitle: @ 0x0800710C
 	adds r0, r0, r1
 	ldr r2, [r2, #0x1c]
 	adds r1, r6, #0
-	bl sub_08047970
+	bl _call_via_r2
 	lsrs r0, r0, #1
 	movs r2, #0xc2
 	subs r2, r2, r0
@@ -8982,7 +8982,7 @@ DrawPauseMenuPageTitle: @ 0x0800710C
 	adds r0, r0, r1
 	ldr r2, [r2, #0x14]
 	adds r1, r6, #0
-	bl sub_08047970
+	bl _call_via_r2
 	pop {r4, r5, r6}
 	pop {r0}
 	bx r0

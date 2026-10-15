@@ -74,6 +74,7 @@ SECTIONS
 \t} = 0
 
 \tINCLUDE "games/n2/symbols.txt"
+%s
 
 \t/* What isn't placed above, as XS's script: the comments and attributes,
 \t * and the code objects' .rodata the original's linker dropped (the agb_eeprom
@@ -198,9 +199,10 @@ def main():
              if LABEL.match(l) and int(LABEL.match(l).group(2), 16) in aliases else l for l in lines]
 
     # where each function starts: the line of its `*_func_start`
+    # (a label's first line: an alias label may follow it on the same entry)
     starts = {}
     for i, line in enumerate(lines):
-        m = LABEL.match(line)
+        m = LABEL.match(line.split('\n')[0])
         if m and i and '_func_start' in lines[i - 1]:
             starts[int(m.group(2), 16)] = i - 1
     starts[CODE_END] = len(lines)
@@ -227,6 +229,12 @@ def main():
             (asm / (name + '.s')).write_text(HEADER % (at, o[0] if o else CODE_END) + body + '\n\t.align 2, 0\n')
             script.append('\t\t%s/games/n2/asm/%s.o(.text);' % (BUILD, name))
         if o:
+            # the plain label of an address in it the data points at without
+            # the Thumb bit (an alias): from the location counter, a symbol
+            # with no type (one from the function's name would get its Thumb
+            # bit when the data points at it)
+            script += ['\t\tPROVIDE(_%08X = ALIGN(4) + 0x%X);' % (a, a - o[0])
+                       for a in sorted(aliases) if o[0] <= a < o[0] + o[1]]
             script.append('\t\t%s/%s.o(.text);' % (BUILD, object_path(o[2])))
             at = o[0] + o[1]
         pos = ce
@@ -265,7 +273,19 @@ def main():
         if src:
             data_script.append('\t\t%s/%s.o(.rodata);' % (BUILD, object_path(src)))
         pos = end
-    (HERE / 'ldscript.txt').write_text(LDSCRIPT % ('\n'.join(script + data_script)))
+    # The names of the functions the disassembly calls inside a code object,
+    # at the object's first function plus their offset, for those the
+    # object doesn't define itself (PROVIDE): a function it has no global
+    # name for (a lib1funcs stub). With the Thumb bit, as a function's.
+    provides = []
+    for addr, size, src in objs:
+        start = funcs[addr]
+        for a in sorted(funcs):
+            if addr < a < addr + size:
+                provides.append('\tPROVIDE(%s = ((%s & ~1) + 0x%X) | 1);' % (funcs[a], start, a - addr))
+    (HERE / 'ldscript.txt').write_text(LDSCRIPT % ('\n'.join(script + data_script),
+                                                   '\n\t/* names inside the shared objects */\n' + '\n'.join(provides)
+                                                   if provides else ''))
 
     # labels cut out with an object but still used by the disassembly
     kept = '\n'.join(l for k, l in enumerate(lines) if not any(cs <= k < ce for cs, ce in cuts))

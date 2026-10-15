@@ -604,7 +604,7 @@ sub_0801317C: @ 0x0801317C
 	ldrsh r0, [r1, r3]
 	adds r0, r2, r0
 	ldr r1, [r1, #4]
-	bl sub_0804796C
+	bl _call_via_r1
 _080131A4:
 	movs r0, #0
 	pop {r1}
@@ -1407,7 +1407,7 @@ sub_0801380C: @ 0x0801380C
 	ldrsh r0, [r1, r2]
 	adds r0, r4, r0
 	ldr r1, [r1, #0x34]
-	bl sub_0804796C
+	bl _call_via_r1
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _0801384A
@@ -1428,7 +1428,7 @@ sub_0801380C: @ 0x0801380C
 	ldrsh r0, [r1, r2]
 	adds r0, r4, r0
 	ldr r1, [r1, #4]
-	bl sub_0804796C
+	bl _call_via_r1
 _0801384A:
 	movs r0, #0
 	pop {r4}
@@ -1600,7 +1600,7 @@ _08013982:
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x34]
-	bl sub_0804796C
+	bl _call_via_r1
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _080139BC
@@ -1719,7 +1719,7 @@ _08013A72:
 	movs r1, #0
 	movs r2, #0xa
 	movs r3, #8
-	bl sub_08047978
+	bl _call_via_r4
 	ldr r0, _08013B94 @ =gPlayer
 	ldr r6, [r0]
 	ldr r0, [r6, #0x64]
@@ -2159,7 +2159,7 @@ _08013DBE:
 	ldrsh r0, [r1, r3]
 	adds r0, r2, r0
 	ldr r1, [r1, #0x34]
-	bl sub_0804796C
+	bl _call_via_r1
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _08013E1A
@@ -2221,7 +2221,7 @@ _08013E40:
 	movs r1, #0
 	movs r2, #0xa
 	movs r3, #8
-	bl sub_08047978
+	bl _call_via_r4
 _08013E82:
 	ldr r0, [r7]
 	ldr r1, [r0, #4]
@@ -2337,7 +2337,7 @@ _08013F60:
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x34]
-	bl sub_0804796C
+	bl _call_via_r1
 	lsls r0, r0, #0x18
 	lsrs r3, r0, #0x18
 	cmp r3, #0
@@ -2381,7 +2381,7 @@ _08013FBC:
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x34]
-	bl sub_0804796C
+	bl _call_via_r1
 	lsls r0, r0, #0x18
 	lsrs r3, r0, #0x18
 	cmp r3, #0
@@ -2524,7 +2524,7 @@ sub_080140C4: @ 0x080140C4
 	ldrsh r0, [r1, r2]
 	adds r0, r7, r0
 	ldr r1, [r1, #0x1c]
-	bl sub_0804796C
+	bl _call_via_r1
 	adds r4, r0, #0
 	ldr r0, _080141C4 @ =0x02000E70
 	ldr r0, [r0]
@@ -2630,7 +2630,7 @@ _0801418C:
 	str r1, [sp]
 	ldr r4, [r3, #4]
 	movs r3, #0
-	bl sub_08047978
+	bl _call_via_r4
 _080141B6:
 	movs r0, #0
 	add sp, #0x24
@@ -2661,7 +2661,7 @@ sub_080141CC: @ 0x080141CC
 	movs r0, #0x28
 	bl OperatorNew
 	adds r5, r0, #0
-	bl sub_0800808C
+	bl InitEntity
 	ldr r0, _08014210 @ =gUnknown_087F8E44
 	str r0, [r5, #0x24]
 	mov r0, r8
@@ -3637,7 +3637,7 @@ _08014980:
 	adds r0, r6, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x2a
-	bl sub_08047970
+	bl _call_via_r2
 	b _080149C0
 	.global _08014992
 _08014992:
@@ -3841,7 +3841,7 @@ _08014AF4:
 	movs r1, #0
 	movs r2, #0xf
 	movs r3, #0
-	bl sub_08047978
+	bl _call_via_r4
 	b _08014BA0
 _08014B1E:
 	ldr r0, _08014B54 @ =gPlayer
@@ -3936,14 +3936,14 @@ sub_08014BA8: @ 0x08014BA8
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	adds r2, r4, #0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r1, [r6, #0xc]
 	movs r2, #0x28
 	ldrsh r0, [r1, r2]
 	adds r0, r6, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x1d
-	bl sub_08047970
+	bl _call_via_r2
 	movs r4, #0
 	adds r0, r6, #0
 	adds r0, #0x31
@@ -4344,7 +4344,7 @@ _08014EF8:
 	movs r1, #0
 	movs r2, #0xc
 	movs r3, #0
-	bl sub_08047978
+	bl _call_via_r4
 _08014F3C:
 	adds r1, r5, #0
 	adds r1, #0x26
@@ -4446,7 +4446,7 @@ _08014FFE:
 	adds r0, r1, #0
 _08015000:
 	adds r0, r5, r0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r2, [r5, #0x10]
 	adds r2, #0x88
 	ldrb r0, [r2]
@@ -4639,14 +4639,14 @@ _08015178:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x12
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r1, [r4, #0xc]
 	movs r2, #0x28
 	ldrsh r0, [r1, r2]
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #9
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -4655,7 +4655,7 @@ _08015178:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #6
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	movs r1, #0xd
 	adds r0, r4, #0
 	adds r0, #0x31
@@ -4693,7 +4693,7 @@ _080151FC:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0xb
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -4702,7 +4702,7 @@ _080151FC:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xa
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	movs r2, #0xe
 	adds r1, r4, #0
 	adds r1, #0x31
@@ -4742,7 +4742,7 @@ _08015268:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0xb
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -4751,7 +4751,7 @@ _08015268:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xa
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	adds r1, r4, #0
 	adds r1, #0x31
 	movs r0, #0
@@ -4880,7 +4880,7 @@ _08015382:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x1a
-	bl sub_08047970
+	bl _call_via_r2
 	b _080153C2
 _08015394:
 	cmp r0, #0xe
@@ -4948,7 +4948,7 @@ _08015404:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0xa
-	bl sub_08047970
+	bl _call_via_r2
 	adds r0, r4, #0
 	adds r0, #0x31
 	strb r5, [r0]
@@ -4979,7 +4979,7 @@ _08015440:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #8
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -4988,7 +4988,7 @@ _08015440:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x19
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	adds r0, r4, #0
 	adds r0, #0x31
 	strb r5, [r0]
@@ -5139,7 +5139,7 @@ CheckActionCtrlLeftGround: @ 0x08015550
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x1a
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -5148,7 +5148,7 @@ CheckActionCtrlLeftGround: @ 0x08015550
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x1a
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	b _080155A4
 _08015594:
 	ldr r1, [r4, #0xc]
@@ -5157,7 +5157,7 @@ _08015594:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x1c
-	bl sub_08047970
+	bl _call_via_r2
 _080155A4:
 	movs r2, #4
 	adds r1, r4, #0
@@ -5262,7 +5262,7 @@ _0801562E:
 	ldr r3, [r1, #4]
 	adds r1, r2, #0
 	movs r2, #0x12
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 _08015668:
 	ldr r0, [r4, #8]
 	cmp r0, #0
@@ -5395,7 +5395,7 @@ _08015752:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	mov r2, sp
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	b _0801578A
 	.align 2, 0
 _08015770: .4byte gPlayer
@@ -5408,7 +5408,7 @@ _08015778:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #0x34]
 	mov r2, sp
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 _0801578A:
 	movs r0, #0
 	strb r0, [r6]
@@ -5447,7 +5447,7 @@ _0801578E:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	mov r2, sp
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	b _080157EE
 	.align 2, 0
 _080157D8: .4byte gUnknown_081CE010
@@ -5459,7 +5459,7 @@ _080157DC:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #0x3c]
 	mov r2, sp
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 _080157EE:
 	movs r0, #0
 	strb r0, [r5]
@@ -5515,7 +5515,7 @@ _08015836:
 	ldr r3, [r1, #4]
 	adds r1, r2, #0
 	movs r2, #0x12
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	adds r1, r6, #0
 	adds r1, #0x33
 	movs r0, #0
@@ -5545,7 +5545,7 @@ _0801585E:
 	ldr r3, [r1, #4]
 	adds r1, r2, #0
 	movs r2, #5
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r0, _080158A4 @ =0x000004C4
 	b _080158C8
 	.align 2, 0
@@ -5566,7 +5566,7 @@ _080158A8:
 	ldr r3, [r1, #4]
 	adds r1, r2, #0
 	movs r2, #0xe
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	movs r0, #0x82
 	lsls r0, r0, #2
 _080158C8:
@@ -5617,7 +5617,7 @@ _080158E2:
 	adds r0, r6, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x2e
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r6, #0xc]
 	adds r2, #0x60
 	movs r3, #0
@@ -5626,7 +5626,7 @@ _080158E2:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x13
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r4, [r6, #0x18]
 	movs r1, #0x15
 	adds r0, r6, #0
@@ -5650,7 +5650,7 @@ _08015964:
 	adds r0, r6, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #5
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r6, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -5659,7 +5659,7 @@ _08015964:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x13
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r4, [r6, #0x18]
 	movs r2, #7
 	adds r0, r6, #0
@@ -5711,7 +5711,7 @@ _080159B8:
 	adds r0, r6, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x31
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r6, #0xc]
 	adds r2, #0x60
 	movs r3, #0
@@ -5720,7 +5720,7 @@ _080159B8:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xf
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r7, [r6, #0x18]
 	str r4, [r6, #0x1c]
 	adds r0, r6, #0
@@ -5783,7 +5783,7 @@ _08015A70:
 	adds r0, r6, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x10
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r6, #0xc]
 	adds r2, #0x60
 	movs r3, #0
@@ -5792,7 +5792,7 @@ _08015A70:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #3
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r4, [r6, #0x1c]
 _08015AA6:
 	adds r0, r6, #0
@@ -5865,7 +5865,7 @@ _08015AEE:
 	adds r0, r6, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #4
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r6, #0xc]
 	adds r2, #0x60
 	movs r3, #0
@@ -5874,7 +5874,7 @@ _08015AEE:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x18
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	movs r0, #0x1c
 	adds r1, r6, #0
 	adds r1, #0x31
@@ -5897,7 +5897,7 @@ _08015B68:
 	adds r0, r6, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x10
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r6, #0xc]
 	adds r2, #0x60
 	movs r3, #0
@@ -5906,7 +5906,7 @@ _08015B68:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #3
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r5, [r6, #0x1c]
 _08015B8E:
 	adds r0, r6, #0
@@ -5956,7 +5956,7 @@ _08015BC0:
 	adds r0, r6, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #5
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r6, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -5965,7 +5965,7 @@ _08015BC0:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x13
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r4, [r6, #0x18]
 	movs r1, #7
 	adds r0, r6, #0
@@ -6030,7 +6030,7 @@ _08015C4C:
 	adds r0, r6, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x31
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r6, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -6039,7 +6039,7 @@ _08015C4C:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xf
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r5, [r6, #0x18]
 	str r4, [r6, #0x1c]
 	adds r0, r6, #0
@@ -6062,7 +6062,7 @@ _08015CB8:
 	adds r0, r6, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0xc
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r6, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -6071,7 +6071,7 @@ _08015CB8:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xf
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r4, [r6, #0x18]
 	str r5, [r6, #0x1c]
 	movs r1, #0x1f
@@ -6153,7 +6153,7 @@ _08015D76:
 	adds r0, r6, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x10
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r6, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -6162,7 +6162,7 @@ _08015D76:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #3
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r4, [r6, #0x1c]
 _08015D9E:
 	movs r1, #0x1e
@@ -6206,7 +6206,7 @@ _08015DB4:
 	adds r0, r6, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #4
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r6, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -6215,7 +6215,7 @@ _08015DB4:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x18
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	movs r0, #0x1c
 	adds r1, r6, #0
 	adds r1, #0x31
@@ -6282,7 +6282,7 @@ ActionCtrlStateJump: @ 0x08015E4C
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x1a
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -6291,7 +6291,7 @@ ActionCtrlStateJump: @ 0x08015E4C
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x15
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r3, [r5, #0x10]
 	movs r4, #2
 	ldr r2, [r3, #0x2c]
@@ -6345,7 +6345,7 @@ _08015ECC:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0xe
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -6354,7 +6354,7 @@ _08015ECC:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x10
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r6, [r5, #0x18]
 	str r4, [r5, #0x1c]
 	adds r0, r5, #0
@@ -6404,7 +6404,7 @@ _08015F50:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #9
-	bl sub_08047970
+	bl _call_via_r2
 	b _08015FAE
 _08015F8A:
 	ldr r1, [r5, #0xc]
@@ -6413,7 +6413,7 @@ _08015F8A:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #9
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -6422,7 +6422,7 @@ _08015F8A:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #6
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 _08015FAE:
 	adds r3, r5, #0
 	adds r3, #0x28
@@ -6446,7 +6446,7 @@ _08015FCC:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #7
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -6455,7 +6455,7 @@ _08015FCC:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xc
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	adds r3, r5, #0
 	adds r3, #0x28
 	ldrb r0, [r3]
@@ -6627,7 +6627,7 @@ ActionCtrlStateAirborne: @ 0x080160D4
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0xe
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -6636,7 +6636,7 @@ ActionCtrlStateAirborne: @ 0x080160D4
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x10
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r6, [r5, #0x18]
 	str r4, [r5, #0x1c]
 	adds r0, r5, #0
@@ -6731,7 +6731,7 @@ _080161DA:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x1a
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -6740,7 +6740,7 @@ _080161DA:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x15
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r3, [r5, #0x10]
 	movs r4, #2
 	ldr r2, [r3, #0x2c]
@@ -6950,7 +6950,7 @@ _080163AA:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x16
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -6959,7 +6959,7 @@ _080163AA:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x11
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	adds r0, r5, #0
 	adds r0, #0x32
 	strb r6, [r0]
@@ -7024,7 +7024,7 @@ _08016432:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0xf
-	bl sub_08047970
+	bl _call_via_r2
 	b _08016506
 _08016462:
 	ldr r1, [r5, #0xc]
@@ -7033,7 +7033,7 @@ _08016462:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0xd
-	bl sub_08047970
+	bl _call_via_r2
 	b _08016506
 _08016474:
 	ldr r0, _080164A8 @ =gPlayer
@@ -7048,7 +7048,7 @@ _08016474:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x17
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -7057,7 +7057,7 @@ _08016474:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x16
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	b _080164D0
 	.align 2, 0
 _080164A8: .4byte gPlayer
@@ -7068,7 +7068,7 @@ _080164AC:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x17
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -7077,7 +7077,7 @@ _080164AC:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x16
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 _080164D0:
 	movs r1, #0
 	adds r0, r5, #0
@@ -7139,7 +7139,7 @@ ActionCtrlStateFlipBodySlamStart: @ 0x08016518
 	ldr r3, [r1, #4]
 	adds r1, r2, #0
 	movs r2, #9
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	b _080165BC
 _08016544:
 	cmp r0, #3
@@ -7158,7 +7158,7 @@ _08016552:
 	ldr r3, [r1, #4]
 	adds r1, r2, #0
 	movs r2, #8
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	b _080165BC
 _08016568:
 	adds r0, r2, #0
@@ -7178,7 +7178,7 @@ _08016568:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x19
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r3, #0
@@ -7187,7 +7187,7 @@ _08016568:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #7
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	b _080165BC
 	.align 2, 0
 _080165A8: .4byte 0x02000E70
@@ -7198,7 +7198,7 @@ _080165AC:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x18
-	bl sub_08047970
+	bl _call_via_r2
 _080165BC:
 	pop {r4}
 	pop {r0}
@@ -7340,7 +7340,7 @@ _080166B6:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x1a
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -7349,7 +7349,7 @@ _080166B6:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x1a
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	movs r2, #4
 	adds r0, r5, #0
 	adds r0, #0x32
@@ -7379,7 +7379,7 @@ _080166FC:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x14
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -7388,7 +7388,7 @@ _080166FC:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r4, [r5, #0x1c]
 	movs r1, #3
 	adds r0, r5, #0
@@ -7445,7 +7445,7 @@ _08016754:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #4
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -7454,7 +7454,7 @@ _08016754:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x18
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	movs r1, #0x1c
 	adds r0, r5, #0
 	adds r0, #0x31
@@ -7477,7 +7477,7 @@ _080167E4:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x12
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -7501,7 +7501,7 @@ _08016806:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x12
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -7510,7 +7510,7 @@ _08016806:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #2
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	movs r1, #0
 	adds r0, r5, #0
 	adds r0, #0x31
@@ -7526,7 +7526,7 @@ _0801684A:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x11
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -7536,7 +7536,7 @@ _0801684A:
 	ldr r3, [r2, #4]
 	movs r2, #4
 _0801686A:
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	movs r1, #0
 	adds r0, r5, #0
 	adds r0, #0x31
@@ -7616,7 +7616,7 @@ _080168C4:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0xe
-	bl sub_08047970
+	bl _call_via_r2
 	movs r3, #7
 	adds r0, r4, #0
 	adds r0, #0x32
@@ -7744,7 +7744,7 @@ ActionCtrlStateAirSpin: @ 0x080169C0
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0xd
-	bl sub_08047970
+	bl _call_via_r2
 	adds r0, r5, #0
 	adds r0, #0x32
 	strb r4, [r0]
@@ -7830,7 +7830,7 @@ _08016A9C:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x1a
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -7839,7 +7839,7 @@ _08016A9C:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x15
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r4, [r5, #0x18]
 	str r4, [r5, #0x1c]
 _08016ACC:
@@ -7953,7 +7953,7 @@ _08016B62:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0xe
-	bl sub_08047970
+	bl _call_via_r2
 	movs r3, #7
 	adds r0, r4, #0
 	adds r0, #0x32
@@ -8101,7 +8101,7 @@ _08016CB2:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x11
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -8110,7 +8110,7 @@ _08016CB2:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #4
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 _08016CE0:
 	add sp, #4
 	pop {r4}
@@ -8258,7 +8258,7 @@ _08016DF4:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x13
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -8267,7 +8267,7 @@ _08016DF4:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x14
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	movs r1, #3
 	adds r0, r4, #0
 	adds r0, #0x31
@@ -8301,7 +8301,7 @@ _08016E30:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x12
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -8310,7 +8310,7 @@ _08016E30:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #2
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	adds r0, r4, #0
 	adds r0, #0x31
 	strb r5, [r0]
@@ -8330,7 +8330,7 @@ _08016E88:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x11
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -8339,7 +8339,7 @@ _08016E88:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #4
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	adds r0, r4, #0
 	adds r0, #0x31
 	strb r6, [r0]
@@ -8417,7 +8417,7 @@ _08016F34:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x14
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -8426,7 +8426,7 @@ _08016F34:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	adds r0, r4, #0
 	bl ActionCtrlStateCrawl
 _08016F68:
@@ -8513,7 +8513,7 @@ _08017004:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x1b
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -8522,7 +8522,7 @@ _08017004:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #1
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	movs r1, #0
 	adds r0, r4, #0
 	adds r0, #0x31
@@ -8549,7 +8549,7 @@ _08017040:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x15
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -8566,7 +8566,7 @@ _08017072:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x11
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -8576,7 +8576,7 @@ _08017072:
 	ldr r3, [r2, #4]
 	movs r2, #4
 _08017092:
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	adds r0, r4, #0
 	adds r0, #0x31
 	strb r6, [r0]
@@ -8605,7 +8605,7 @@ _080170A4:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x12
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -8614,7 +8614,7 @@ _080170A4:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #2
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	adds r0, r4, #0
 	adds r0, #0x31
 	strb r5, [r0]
@@ -8681,7 +8681,7 @@ _08017158:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x10
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -8690,7 +8690,7 @@ _08017158:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #3
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	movs r1, #0
 	adds r0, r4, #0
 	adds r0, #0x31
@@ -8751,7 +8751,7 @@ _080171BC:
 	adds r0, r6, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x31
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r6, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -8760,7 +8760,7 @@ _080171BC:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xf
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r5, [r6, #0x18]
 	str r4, [r6, #0x1c]
 	adds r0, r6, #0
@@ -8787,7 +8787,7 @@ _0801722C:
 	adds r0, r6, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0xc
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r6, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -8796,7 +8796,7 @@ _0801722C:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xf
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r4, [r6, #0x18]
 	str r5, [r6, #0x1c]
 	movs r1, #0x1f
@@ -8915,14 +8915,14 @@ _0801731C:
 	ldr r3, [r1, #4]
 	adds r1, r2, #0
 	movs r2, #0x18
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r1, [r4, #0xc]
 	movs r2, #0x28
 	ldrsh r0, [r1, r2]
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #4
-	bl sub_08047970
+	bl _call_via_r2
 	movs r1, #0x1c
 	adds r0, r4, #0
 	adds r0, #0x31
@@ -8943,7 +8943,7 @@ _08017364:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 	adds r2, r4, #0
 	adds r2, #0x27
 	ldrb r0, [r2]
@@ -8980,7 +8980,7 @@ _080173AC:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #4
-	bl sub_08047970
+	bl _call_via_r2
 	adds r0, r4, #0
 	adds r0, #0x32
 	strb r5, [r0]
@@ -9049,7 +9049,7 @@ _0801741C:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0xd
-	bl sub_08047970
+	bl _call_via_r2
 	b _0801759C
 _08017444:
 	ldr r1, [r4, #0xc]
@@ -9058,7 +9058,7 @@ _08017444:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0
-	bl sub_08047970
+	bl _call_via_r2
 	adds r0, r4, #0
 	adds r0, #0x32
 	strb r5, [r0]
@@ -9091,7 +9091,7 @@ _08017472:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #5
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -9100,7 +9100,7 @@ _08017472:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x13
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r5, [r4, #0x18]
 	movs r1, #7
 	adds r0, r4, #0
@@ -9163,7 +9163,7 @@ _08017516:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0xd
-	bl sub_08047970
+	bl _call_via_r2
 	b _08017578
 _08017528:
 	mov r0, sp
@@ -9186,7 +9186,7 @@ _08017528:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x10
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -9195,7 +9195,7 @@ _08017528:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #3
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r5, [r4, #0x1c]
 	adds r0, r4, #0
 	adds r0, #0x31
@@ -9533,7 +9533,7 @@ _080177C6:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x25
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r5, #0
@@ -9542,7 +9542,7 @@ _080177C6:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x1f
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 _0801780C:
 	mov r0, sp
 	ldrh r1, [r0, #2]
@@ -9722,7 +9722,7 @@ ActionCtrlReleaseHang: @ 0x0801794C
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x1a
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r3, #0
@@ -9731,7 +9731,7 @@ ActionCtrlReleaseHang: @ 0x0801794C
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x1a
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r2, [r4, #0x10]
 	ldr r3, [r2, #0x2c]
 	adds r0, r2, #0
@@ -9827,7 +9827,7 @@ _08017A30:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x28
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r5, #0
@@ -9836,7 +9836,7 @@ _08017A30:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x21
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	adds r0, r4, #0
 	adds r0, #0x31
 	strb r6, [r0]
@@ -9908,7 +9908,7 @@ _08017ADA:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x28
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r5, #0
@@ -9917,7 +9917,7 @@ _08017ADA:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x21
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	adds r0, r4, #0
 	adds r0, #0x31
 	strb r6, [r0]
@@ -9954,7 +9954,7 @@ _08017B1E:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x28
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r5, #0
@@ -9963,7 +9963,7 @@ _08017B1E:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x21
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	b _08017C48
 _08017B62:
 	ldr r0, [r4, #0x10]
@@ -9978,7 +9978,7 @@ _08017B62:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x26
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r5, #0
@@ -9987,7 +9987,7 @@ _08017B62:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x20
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r6, [r4, #0x18]
 	ldr r3, [r4, #0x10]
 	movs r5, #5
@@ -10250,7 +10250,7 @@ _08017D7A:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x28
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r5, #0
@@ -10259,7 +10259,7 @@ _08017D7A:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x21
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	b _08017EB0
 _08017DB4:
 	cmp r6, #0
@@ -10282,7 +10282,7 @@ _08017DB4:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x28
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r5, #0
@@ -10302,7 +10302,7 @@ _08017DF6:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x28
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r5, #0
@@ -10312,7 +10312,7 @@ _08017DF6:
 	ldr r3, [r2, #4]
 	movs r2, #0x21
 _08017E16:
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 _08017E1A:
 	adds r0, r4, #0
 	adds r0, #0x31
@@ -10462,7 +10462,7 @@ _08017F28:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x20
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -10471,7 +10471,7 @@ _08017F28:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x1e
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r6, [r4, #0x18]
 	str r6, [r4, #0x1c]
 _08017F5A:
@@ -10520,7 +10520,7 @@ _08017F96:
 	ldrsh r0, [r1, r2]
 	adds r0, r4, r0
 	ldr r1, [r1, #4]
-	bl sub_0804796C
+	bl _call_via_r1
 	cmp r0, #5
 	ble _08018000
 	ldr r1, [r4]
@@ -10558,7 +10558,7 @@ _08017F96:
 	movs r1, #0
 	movs r2, #0x19
 	movs r3, #0
-	bl sub_08047978
+	bl _call_via_r4
 _08018000:
 	adds r5, #1
 _08018002:
@@ -10622,7 +10622,7 @@ _0801805E:
 	adds r0, r6, r0
 	ldr r2, [r1, #0x2c]
 	mov r1, ip
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r6, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -10631,7 +10631,7 @@ _0801805E:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	mov r2, r8
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	mov r2, sb
 	str r2, [r6, #0x18]
 	str r4, [r6, #0x1c]
@@ -10703,7 +10703,7 @@ _080180FC:
 	adds r0, r6, r0
 	ldr r2, [r1, #0x2c]
 	mov r1, ip
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r6, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -10712,7 +10712,7 @@ _080180FC:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	mov r2, r8
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r4, [r6, #0x18]
 	mov r2, sb
 	str r2, [r6, #0x1c]
@@ -10740,7 +10740,7 @@ _08018144:
 	adds r0, r6, r0
 	ldr r2, [r1, #0x2c]
 	adds r1, r3, #0
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r6, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -10749,7 +10749,7 @@ _08018144:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x10
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r4, [r6, #0x18]
 	str r7, [r6, #0x1c]
 	ldr r0, _080181AC @ =0x02000E6C
@@ -10883,7 +10883,7 @@ sub_08018224: @ 0x08018224
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #4
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -10892,7 +10892,7 @@ sub_08018224: @ 0x08018224
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x18
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	movs r1, #0x1c
 	adds r2, r5, #0
 	adds r2, #0x31
@@ -11038,14 +11038,14 @@ StartActionCtrlSpin: @ 0x08018360
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x10
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r1, [r4, #0xc]
 	movs r2, #0x28
 	ldrsh r0, [r1, r2]
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0xd
-	bl sub_08047970
+	bl _call_via_r2
 	adds r0, r4, #0
 	adds r0, #0x21
 	strb r5, [r0]
@@ -11100,14 +11100,14 @@ StartActionCtrlHangSpin: @ 0x080183C4
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x1d
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r1, [r5, #0xc]
 	movs r2, #0x28
 	ldrsh r0, [r1, r2]
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x21
-	bl sub_08047970
+	bl _call_via_r2
 _0801841E:
 	pop {r4, r5}
 	pop {r0}
@@ -11133,14 +11133,14 @@ StartActionCtrlRun: @ 0x08018428
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x18
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r1, [r5, #0xc]
 	movs r2, #0x28
 	ldrsh r0, [r1, r2]
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #4
-	bl sub_08047970
+	bl _call_via_r2
 	movs r0, #0x1c
 	adds r2, r5, #0
 	adds r2, #0x31
@@ -11167,7 +11167,7 @@ _0801847E:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xd
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r4, [r5, #0x18]
 	ldr r1, [r5, #0xc]
 	movs r2, #0x28
@@ -11175,7 +11175,7 @@ _0801847E:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 	movs r1, #1
 	adds r2, r5, #0
 	adds r2, #0x31
@@ -11207,7 +11207,7 @@ StartActionCtrlHighJump: @ 0x080184C8
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0xb
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -11216,7 +11216,7 @@ StartActionCtrlHighJump: @ 0x080184C8
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xb
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r5, [r4, #0x18]
 	movs r2, #0xb
 	adds r0, r4, #0
@@ -11248,7 +11248,7 @@ StartActionCtrlMaskHitJump: @ 0x08018518
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0xb
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -11257,7 +11257,7 @@ StartActionCtrlMaskHitJump: @ 0x08018518
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xb
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r5, [r4, #0x18]
 	movs r2, #7
 	adds r0, r4, #0
@@ -11327,7 +11327,7 @@ _080185AA:
 	adds r0, r6, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #7
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r6, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -11336,7 +11336,7 @@ _080185AA:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xa
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r4, [r6, #0x18]
 	str r4, [r6, #0x1c]
 	movs r1, #7
@@ -11374,7 +11374,7 @@ _0801860C:
 	adds r0, r6, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x2d
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r6, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -11383,7 +11383,7 @@ _0801860C:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x10
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r5, [r6, #0x18]
 	str r4, [r6, #0x1c]
 	adds r0, r6, #0
@@ -11454,7 +11454,7 @@ _080186CA:
 	adds r0, r6, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x1a
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r6, #0xc]
 	adds r2, #0x60
 	movs r3, #0
@@ -11463,7 +11463,7 @@ _080186CA:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x15
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	mov r0, r8
 	str r0, [r6, #0x18]
 	str r0, [r6, #0x1c]
@@ -11590,7 +11590,7 @@ sub_08018798: @ 0x08018798
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0xd
-	bl sub_08047970
+	bl _call_via_r2
 	adds r0, r4, #0
 	adds r0, #0x32
 	strb r6, [r0]
@@ -11682,7 +11682,7 @@ _08018878:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x1a
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -11691,7 +11691,7 @@ _08018878:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x15
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r5, [r4, #0x18]
 	str r5, [r4, #0x1c]
 	movs r2, #4
@@ -11771,7 +11771,7 @@ _08018930:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0xe
-	bl sub_08047970
+	bl _call_via_r2
 	movs r3, #4
 	adds r0, r4, #0
 	adds r0, #0x32
@@ -11824,7 +11824,7 @@ sub_0801896C: @ 0x0801896C
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x1a
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -11833,7 +11833,7 @@ sub_0801896C: @ 0x0801896C
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x15
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r3, [r4, #0x10]
 	movs r5, #2
 	ldr r2, [r3, #0x2c]
@@ -11870,7 +11870,7 @@ _080189EC:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x2f
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -11879,7 +11879,7 @@ _080189EC:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x2f
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 _08018A1A:
 	ldr r0, _08018A4C @ =0x02000EA0
 	ldr r0, [r0]
@@ -12066,7 +12066,7 @@ _08018B6A:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x1a
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -12075,7 +12075,7 @@ _08018B6A:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xc
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r3, [r4, #0x10]
 	movs r5, #2
 	ldr r2, [r3, #0x2c]
@@ -12144,7 +12144,7 @@ _08018C08:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x17
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -12153,7 +12153,7 @@ _08018C08:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x16
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	b _08018C7C
 	.align 2, 0
 _08018C54: .4byte gPlayer
@@ -12164,7 +12164,7 @@ _08018C58:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x17
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -12173,7 +12173,7 @@ _08018C58:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x16
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 _08018C7C:
 	movs r1, #0
 	adds r0, r4, #0
@@ -12229,7 +12229,7 @@ sub_08018CA0: @ 0x08018CA0
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x17
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -12238,7 +12238,7 @@ sub_08018CA0: @ 0x08018CA0
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x16
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	b _08018D20
 	.align 2, 0
 _08018CF8: .4byte gPlayer
@@ -12249,7 +12249,7 @@ _08018CFC:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x17
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -12258,7 +12258,7 @@ _08018CFC:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x16
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 _08018D20:
 	movs r1, #0
 	adds r0, r4, #0
@@ -12447,7 +12447,7 @@ _08018E72:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x1a
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -12456,7 +12456,7 @@ _08018E72:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x1a
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	movs r2, #4
 	adds r0, r5, #0
 	adds r0, #0x32
@@ -12486,7 +12486,7 @@ _08018EB8:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x14
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -12495,7 +12495,7 @@ _08018EB8:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r4, [r5, #0x1c]
 	movs r1, #3
 	adds r0, r5, #0
@@ -12552,7 +12552,7 @@ _08018F10:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #4
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -12561,7 +12561,7 @@ _08018F10:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x18
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	movs r1, #0x1c
 	adds r0, r5, #0
 	adds r0, #0x31
@@ -12584,7 +12584,7 @@ _08018FA0:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x12
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -12608,7 +12608,7 @@ _08018FC2:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x12
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -12617,7 +12617,7 @@ _08018FC2:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #2
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	movs r1, #0
 	adds r0, r5, #0
 	adds r0, #0x31
@@ -12633,7 +12633,7 @@ _08019006:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x11
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -12643,7 +12643,7 @@ _08019006:
 	ldr r3, [r2, #4]
 	movs r2, #4
 _08019026:
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	movs r1, #0
 	adds r0, r5, #0
 	adds r0, #0x31
@@ -12727,7 +12727,7 @@ _080190A8:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x33
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -12736,7 +12736,7 @@ _080190A8:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x30
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r4, [r5, #0x18]
 	str r4, [r5, #0x1c]
 	ldr r0, [r5, #0x10]
@@ -12900,7 +12900,7 @@ _080191E6:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #5
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -12909,7 +12909,7 @@ _080191E6:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x13
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r0, [r5, #0x10]
 	adds r0, #0x84
 	str r4, [r0]
@@ -12932,7 +12932,7 @@ _08019248:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x1a
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -12941,7 +12941,7 @@ _08019248:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x10
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	movs r1, #4
 	adds r0, r5, #0
 	adds r0, #0x32
@@ -12974,7 +12974,7 @@ sub_08019298: @ 0x08019298
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x1a
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -12983,7 +12983,7 @@ sub_08019298: @ 0x08019298
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xc
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r4, [r5, #0x18]
 	str r4, [r5, #0x1c]
 	movs r2, #4
@@ -13013,7 +13013,7 @@ sub_080192EC: @ 0x080192EC
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x35
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -13022,7 +13022,7 @@ sub_080192EC: @ 0x080192EC
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x35
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r5, [r4, #0x18]
 	str r5, [r4, #0x1c]
 	pop {r4, r5}
@@ -13039,7 +13039,7 @@ sub_08019320: @ 0x08019320
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x2c
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r0, _08019348 @ =gRoomFrameCount
 	ldr r0, [r0]
 	adds r0, #0x5a
@@ -13084,7 +13084,7 @@ sub_0801935C: @ 0x0801935C
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x20
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -13093,7 +13093,7 @@ sub_0801935C: @ 0x0801935C
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x1e
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r4, [r5, #0x18]
 	str r4, [r5, #0x1c]
 _08019394:
@@ -13129,7 +13129,7 @@ _080193B6:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x20
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -13138,7 +13138,7 @@ _080193B6:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x1e
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	str r4, [r5, #0x18]
 	str r4, [r5, #0x1c]
 _080193E8:
@@ -13165,7 +13165,7 @@ sub_080193F4: @ 0x080193F4
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x20
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -13174,7 +13174,7 @@ sub_080193F4: @ 0x080193F4
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x1e
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r0, _08019440 @ =0x7FFFFFFF
 	cmp r5, r0
 	beq _08019432
@@ -13249,7 +13249,7 @@ ActionCtrlStateCrawlStop: @ 0x08019490
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x11
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -13258,7 +13258,7 @@ ActionCtrlStateCrawlStop: @ 0x08019490
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #4
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 _080194C2:
 	pop {r4}
 	pop {r0}
@@ -13315,7 +13315,7 @@ ActionCtrlStateBodySlamStart: @ 0x080194F8
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x19
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r4, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -13324,7 +13324,7 @@ ActionCtrlStateBodySlamStart: @ 0x080194F8
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #7
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	b _08019550
 	.align 2, 0
 _0801953C: .4byte 0x02000E70
@@ -13335,7 +13335,7 @@ _08019540:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0x18
-	bl sub_08047970
+	bl _call_via_r2
 _08019550:
 	pop {r4}
 	pop {r0}
@@ -13387,7 +13387,7 @@ SetActionCtrlModeAnim: @ 0x0801958C
 	ldrsh r0, [r2, r3]
 	adds r0, r5, r0
 	ldr r2, [r2, #0x2c]
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -13396,7 +13396,7 @@ SetActionCtrlModeAnim: @ 0x0801958C
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	adds r2, r4, #0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r0, _080195CC @ =0x7FFFFFFF
 	cmp r6, r0
 	beq _080195C0
@@ -13626,7 +13626,7 @@ sub_080196F8: @ 0x080196F8
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #2
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r1, [r4, #0x10]
 	movs r3, #0
 	adds r0, r1, #0
@@ -13664,7 +13664,7 @@ _08019730:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	adds r2, r5, #0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r2, [r4, #0x10]
 	ldrb r1, [r2, #0x18]
 	movs r0, #0x7f
@@ -14066,7 +14066,7 @@ _08019A88:
 	movs r1, #0
 	movs r2, #1
 	movs r3, #0
-	bl sub_08047978
+	bl _call_via_r4
 _08019A9E:
 	ldr r1, _08019ACC @ =gUnknown_081D0144
 	ldr r0, [r5, #8]
@@ -14113,7 +14113,7 @@ _08019AEC:
 	adds r0, r1, #0
 _08019AEE:
 	adds r0, r5, r0
-	bl sub_08047970
+	bl _call_via_r2
 	adds r0, r5, #0
 	bl ApplyInputCtrlMotion
 	add sp, #0xc
@@ -14151,7 +14151,7 @@ ApplyInputCtrlMotion: @ 0x08019B04
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	adds r2, r5, #0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	b _08019B56
 	.align 2, 0
 _08019B40: .4byte gUnknown_081CE3E0
@@ -14163,7 +14163,7 @@ _08019B44:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #0x34]
 	adds r2, r5, #0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 _08019B56:
 	movs r0, #0
 	strb r0, [r4, #0x17]
@@ -14194,7 +14194,7 @@ _08019B5C:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	adds r2, r5, #0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	b _08019BAA
 	.align 2, 0
 _08019B94: .4byte gUnknown_081CE3E0
@@ -14206,7 +14206,7 @@ _08019B98:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #0x3c]
 	adds r2, r5, #0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 _08019BAA:
 	movs r0, #0
 	strb r0, [r4, #0x18]
@@ -14229,7 +14229,7 @@ sub_08019BB8: @ 0x08019BB8
 	ldrsh r0, [r2, r3]
 	adds r0, r5, r0
 	ldr r2, [r2, #0x2c]
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0xc]
 	adds r2, #0x60
 	movs r1, #0
@@ -14238,7 +14238,7 @@ sub_08019BB8: @ 0x08019BB8
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	adds r2, r4, #0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r0, _08019BF8 @ =0x7FFFFFFF
 	cmp r6, r0
 	beq _08019BEC
@@ -14617,7 +14617,7 @@ sub_08019E8C: @ 0x08019E8C
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #2
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r1, [r4, #0x10]
 	movs r3, #0
 	adds r0, r1, #0
@@ -14655,7 +14655,7 @@ _08019EC4:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	adds r2, r5, #0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r2, [r4, #0x10]
 	ldrb r1, [r2, #0x18]
 	movs r0, #0x7f
@@ -15182,7 +15182,7 @@ sub_0801A2D0: @ 0x0801A2D0
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	adds r2, r5, #0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	b _0801A322
 	.align 2, 0
 _0801A30C: .4byte gUnknown_081CE3E0
@@ -15194,7 +15194,7 @@ _0801A310:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #0x34]
 	adds r2, r5, #0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 _0801A322:
 	movs r0, #0
 	strb r0, [r4, #0x16]
@@ -15225,7 +15225,7 @@ _0801A328:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	adds r2, r5, #0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	b _0801A376
 	.align 2, 0
 _0801A360: .4byte gUnknown_081CE3E0
@@ -15237,7 +15237,7 @@ _0801A364:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #0x3c]
 	adds r2, r5, #0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 _0801A376:
 	movs r0, #0
 	strb r0, [r4, #0x17]
@@ -15651,7 +15651,7 @@ sub_0801A660: @ 0x0801A660
 	ldrsh r0, [r2, r3]
 	adds r0, r5, r0
 	ldr r2, [r2, #0x2c]
-	bl sub_08047970
+	bl _call_via_r2
 	adds r0, r5, #0
 	adds r1, r4, #0
 	movs r2, #1
@@ -15717,7 +15717,7 @@ _0801A6E8:
 	adds r0, r1, #0
 _0801A6EA:
 	adds r0, r4, r0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	adds r0, r4, #0
 	bl sub_0801A2D0
 	pop {r4, r5, r6, r7}
@@ -15953,7 +15953,7 @@ sub_0801A884: @ 0x0801A884
 	movs r1, #0
 	movs r2, #0x10
 	movs r3, #4
-	bl sub_08047978
+	bl _call_via_r4
 _0801A8FC:
 	movs r0, #0
 	add sp, #0x24
@@ -16260,7 +16260,7 @@ _0801AB64:
 	ldrsh r0, [r1, r2]
 	adds r0, r5, r0
 	ldr r1, [r1, #0xc]
-	bl sub_0804796C
+	bl _call_via_r1
 	ldr r6, _0801ABA8 @ =0x02000044
 	ldr r4, [r6]
 	adds r0, r4, #0
@@ -16422,7 +16422,7 @@ _0801ACA2:
 	adds r0, r0, r1
 	ldr r2, [r2, #0x1c]
 	adds r1, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	movs r2, #0xf0
 	subs r2, r2, r0
 	lsrs r2, r2, #1
@@ -16445,7 +16445,7 @@ _0801ACA2:
 	adds r0, r0, r1
 	ldr r2, [r2, #0x14]
 	adds r1, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r0, _0801AD1C @ =0x02000E70
 	ldr r0, [r0]
 	bl sub_08022954
@@ -17158,7 +17158,7 @@ _0801B25C:
 	adds r0, r0, r1
 	ldr r2, [r2, #0x2c]
 	movs r1, #0x34
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r4, [r7]
 	adds r0, r4, #0
 	adds r0, #0x40
@@ -17363,7 +17363,7 @@ _0801B3FE:
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x34]
-	bl sub_0804796C
+	bl _call_via_r1
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _0801B454
@@ -17393,7 +17393,7 @@ _0801B3FE:
 	ldr r4, [r1, #4]
 	movs r1, #0
 	movs r3, #0
-	bl sub_08047978
+	bl _call_via_r4
 _0801B454:
 	add sp, #0x24
 	pop {r4, r5, r6}
@@ -17646,7 +17646,7 @@ _0801B598:
 	adds r0, r4, r0
 	ldr r2, [r1, #4]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _0801B63E:
 	ldr r0, [r7]
 	adds r0, #0x78
@@ -17811,7 +17811,7 @@ _0801B786:
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x34]
-	bl sub_0804796C
+	bl _call_via_r1
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	bne _0801B7EA
@@ -17974,7 +17974,7 @@ _0801B8E8:
 	str r1, [sp]
 	ldr r4, [r3, #4]
 	movs r3, #0
-	bl sub_08047978
+	bl _call_via_r4
 	ldr r0, [r5]
 	bl sub_08007F24
 _0801B90C:
@@ -18389,7 +18389,7 @@ sub_0801BC14: @ 0x0801BC14
 	ldrsh r0, [r1, r3]
 	adds r0, r2, r0
 	ldr r1, [r1, #0xc]
-	bl sub_0804796C
+	bl _call_via_r1
 _0801BC3A:
 	adds r0, r4, #0
 	adds r0, #0xac
@@ -18737,7 +18737,7 @@ sub_0801C014: @ 0x0801C014
 	movs r1, #0
 	movs r2, #0x1c
 	movs r3, #0
-	bl sub_08047978
+	bl _call_via_r4
 _0801C05C:
 	add sp, #0x14
 	pop {r4, r5}
@@ -18949,7 +18949,7 @@ _0801C30A:
 	ldr r2, [sp, #0x14]
 	ldr r4, [r3, #4]
 	mov r3, sl
-	bl sub_08047978
+	bl _call_via_r4
 _0801C32E:
 	mov r0, r8
 	adds r0, #0x98
@@ -18999,7 +18999,7 @@ sub_0801C354: @ 0x0801C354
 	ldrsh r0, [r1, r2]
 	adds r0, r5, r0
 	ldr r1, [r1, #0x34]
-	bl sub_0804796C
+	bl _call_via_r1
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	bne _0801C394
@@ -19064,7 +19064,7 @@ sub_0801C3E0: @ 0x0801C3E0
 	ldr r4, [r1, #4]
 	movs r1, #0
 	movs r2, #0xe
-	bl sub_08047978
+	bl _call_via_r4
 _0801C408:
 	ldr r0, _0801C41C @ =gPlayer
 	ldr r0, [r0]
@@ -19202,7 +19202,7 @@ sub_0801C4F8: @ 0x0801C4F8
 	ldrsh r0, [r1, r2]
 	adds r0, r5, r0
 	ldr r1, [r1, #0x34]
-	bl sub_0804796C
+	bl _call_via_r1
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _0801C59A
@@ -19276,7 +19276,7 @@ _0801C59A:
 	ldr r4, [r1, #4]
 	movs r1, #0
 	movs r2, #0x1e
-	bl sub_08047978
+	bl _call_via_r4
 	movs r0, #1
 	b _0801C5DE
 	.align 2, 0
@@ -19310,7 +19310,7 @@ sub_0801C5E8: @ 0x0801C5E8
 	ldrsh r0, [r1, r3]
 	adds r0, r2, r0
 	ldr r1, [r1, #0xc]
-	bl sub_0804796C
+	bl _call_via_r1
 _0801C610:
 	ldr r0, _0801C630 @ =0x02000E70
 	ldr r0, [r0]
@@ -19966,7 +19966,7 @@ _0801CB1C:
 	movs r1, #0
 	movs r2, #0x22
 	movs r3, #0
-	bl sub_08047978
+	bl _call_via_r4
 	ldr r0, _0801CBC0 @ =0x02000E6C
 	ldr r0, [r0]
 	movs r2, #0x80
@@ -20110,7 +20110,7 @@ sub_0801CBCC: @ 0x0801CBCC
 	adds r0, r3, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801CC78:
 	ldr r0, _0801CC98 @ =0x02000EC4
 	ldr r0, [r0]
@@ -20207,7 +20207,7 @@ SpawnCrateGem: @ 0x0801CC9C
 	adds r0, r2, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801CD4A:
 	ldr r0, _0801CDA0 @ =0x02000EC4
 	ldr r0, [r0]
@@ -20310,7 +20310,7 @@ sub_0801CDA8: @ 0x0801CDA8
 	adds r0, r4, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r7, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801CE20:
 	mov r5, r8
 	movs r0, #0x10
@@ -20512,7 +20512,7 @@ _0801CF6C:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801CFDA:
 	ldr r0, _0801D008 @ =gTouchableList
 	ldr r0, [r0]
@@ -20642,7 +20642,7 @@ _0801D0B8:
 	adds r0, r2, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801D0FC:
 	ldr r0, _0801D118 @ =0x02000E70
 	ldr r0, [r0]
@@ -20713,7 +20713,7 @@ sub_0801D120: @ 0x0801D120
 	adds r0, r4, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r7, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801D192:
 	mov r0, r8
 	ldr r1, [r0, #0x14]
@@ -20794,7 +20794,7 @@ sub_0801D1EC: @ 0x0801D1EC
 	adds r0, r7, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r6, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801D248:
 	movs r0, #1
 	movs r5, #1
@@ -20930,7 +20930,7 @@ sub_0801D418: @ 0x0801D418
 	adds r0, r5, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r7, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801D47C:
 	movs r0, #1
 	mov r8, r0
@@ -21088,7 +21088,7 @@ sub_0801D56C: @ 0x0801D56C
 	adds r0, r5, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r7, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801D5CE:
 	movs r0, #1
 	movs r1, #0
@@ -21231,7 +21231,7 @@ sub_0801D6A0: @ 0x0801D6A0
 	adds r0, r5, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r7, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801D702:
 	movs r0, #1
 	movs r1, #0
@@ -21371,7 +21371,7 @@ sub_0801D7D0: @ 0x0801D7D0
 	adds r0, r6, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r7, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801D830:
 	movs r0, #1
 	movs r1, #0
@@ -21485,7 +21485,7 @@ sub_0801D8CC: @ 0x0801D8CC
 	adds r0, r7, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r6, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801D928:
 	movs r0, #1
 	movs r5, #1
@@ -21612,7 +21612,7 @@ sub_0801D9C8: @ 0x0801D9C8
 	add r0, sl
 	ldr r2, [r1, #0x24]
 	adds r1, r7, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801DA3A:
 	movs r0, #1
 	mov r8, r0
@@ -21775,7 +21775,7 @@ sub_0801DB34: @ 0x0801DB34
 	adds r0, r6, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r7, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801DB94:
 	movs r0, #1
 	movs r1, #0
@@ -21947,7 +21947,7 @@ sub_0801DC74: @ 0x0801DC74
 	adds r0, r5, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r7, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801DCFE:
 	movs r0, #1
 	movs r6, #0
@@ -22060,7 +22060,7 @@ _0801DDA8:
 	adds r0, r7, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r6, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801DDF8:
 	movs r0, #1
 	movs r1, #1
@@ -22179,7 +22179,7 @@ sub_0801DE98: @ 0x0801DE98
 	adds r0, r5, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r7, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801DEF8:
 	movs r0, #1
 	movs r1, #1
@@ -22315,7 +22315,7 @@ sub_0801DFB4: @ 0x0801DFB4
 	adds r0, r7, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801E016:
 	movs r0, #1
 	movs r1, #0
@@ -22444,7 +22444,7 @@ sub_0801E0C8: @ 0x0801E0C8
 	adds r0, r7, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r6, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801E128:
 	movs r0, #1
 	mov r8, r0
@@ -22574,7 +22574,7 @@ sub_0801E1D4: @ 0x0801E1D4
 	adds r0, r6, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r7, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801E238:
 	movs r0, #1
 	strb r0, [r7, #0xa]
@@ -22709,7 +22709,7 @@ sub_0801E2F4: @ 0x0801E2F4
 	adds r0, r7, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801E356:
 	movs r0, #1
 	movs r1, #0
@@ -22838,7 +22838,7 @@ sub_0801E408: @ 0x0801E408
 	adds r0, r7, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r6, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801E468:
 	movs r0, #1
 	movs r1, #0
@@ -22951,7 +22951,7 @@ sub_0801E4FC: @ 0x0801E4FC
 	adds r0, r6, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r7, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801E558:
 	movs r0, #1
 	movs r5, #1
@@ -23087,7 +23087,7 @@ sub_0801E5DC: @ 0x0801E5DC
 	add r0, r8
 	ldr r2, [r1, #0x24]
 	adds r1, r7, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801E678:
 	movs r0, #1
 	movs r6, #1
@@ -23232,7 +23232,7 @@ _0801E78A:
 	movs r1, #0
 	movs r2, #0xe
 	adds r3, r5, #0
-	bl sub_08047978
+	bl _call_via_r4
 	add sp, #0x10
 	pop {r3, r4, r5}
 	mov r8, r3
@@ -23290,7 +23290,7 @@ sub_0801E7C4: @ 0x0801E7C4
 	adds r0, r7, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801E826:
 	movs r0, #1
 	movs r1, #0
@@ -23442,7 +23442,7 @@ sub_0801E8E4: @ 0x0801E8E4
 	adds r0, r5, r0
 	ldr r2, [r3, #0x24]
 	adds r1, r6, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801E96C:
 	ldr r1, [r6]
 	ldr r0, [r6, #4]
@@ -23480,7 +23480,7 @@ _0801E9B0:
 	ldr r3, [r1, #4]
 	movs r1, #4
 	movs r2, #0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 _0801E9C4:
 	pop {r4, r5, r6}
 	pop {r0}
@@ -23545,7 +23545,7 @@ sub_0801E9CC: @ 0x0801E9CC
 	adds r0, r6, r0
 	ldr r2, [r3, #0x24]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801EA4E:
 	adds r0, r5, #0
 	adds r0, #0x38
@@ -23627,7 +23627,7 @@ sub_0801EA88: @ 0x0801EA88
 	adds r0, r4, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r7, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801EB00:
 	mov r5, r8
 	movs r0, #0x10
@@ -23778,7 +23778,7 @@ sub_0801EBC8: @ 0x0801EBC8
 	adds r0, r4, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r7, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801EC40:
 	mov r5, r8
 	movs r0, #0x10
@@ -23934,7 +23934,7 @@ sub_0801ED08: @ 0x0801ED08
 	adds r0, r6, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801ED92:
 	ldr r0, [r5]
 	ldr r1, [r5, #4]
@@ -23961,7 +23961,7 @@ _0801EDAC:
 	ldr r3, [r1, #4]
 	movs r1, #4
 	adds r2, r5, #0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldrb r0, [r7]
 	ands r4, r0
 	cmp r4, #0
@@ -24058,7 +24058,7 @@ sub_0801EE10: @ 0x0801EE10
 	adds r0, r7, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r6, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801EE96:
 	movs r0, #1
 	movs r5, #1
@@ -24157,7 +24157,7 @@ _0801EF24:
 	adds r0, r7, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r6, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801EF74:
 	movs r0, #1
 	movs r5, #1
@@ -24271,7 +24271,7 @@ sub_0801F008: @ 0x0801F008
 	adds r0, r6, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r7, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801F068:
 	movs r0, #1
 	mov r8, r0
@@ -24392,7 +24392,7 @@ sub_0801F108: @ 0x0801F108
 	adds r0, r6, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r7, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801F16E:
 	movs r0, #1
 	mov r8, r0
@@ -24552,7 +24552,7 @@ sub_0801F264: @ 0x0801F264
 	adds r0, r6, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r7, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801F2C4:
 	movs r0, #1
 	mov r8, r0
@@ -24671,7 +24671,7 @@ sub_0801F364: @ 0x0801F364
 	adds r0, r7, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r6, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801F3C6:
 	movs r0, #1
 	mov sb, r0
@@ -24795,7 +24795,7 @@ sub_0801F470: @ 0x0801F470
 	adds r0, r3, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801F4CE:
 	ldr r0, _0801F518 @ =gSpriteBankSet
 	ldr r0, [r0]
@@ -24873,7 +24873,7 @@ sub_0801F520: @ 0x0801F520
 	adds r0, r5, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801F580:
 	movs r0, #1
 	strb r0, [r4, #0xa]
@@ -24970,7 +24970,7 @@ sub_0801F5D8: @ 0x0801F5D8
 	adds r0, r4, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r7, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801F650:
 	mov r5, r8
 	movs r0, #0x10
@@ -25108,7 +25108,7 @@ sub_0801F718: @ 0x0801F718
 	adds r0, r6, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r7, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801F778:
 	movs r0, #1
 	movs r1, #0
@@ -25236,14 +25236,14 @@ sub_0801F808: @ 0x0801F808
 	adds r0, r6, r0
 	ldr r2, [r3, #0x24]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801F88E:
 	ldr r1, [r5, #0x24]
 	movs r2, #0x18
 	ldrsh r0, [r1, r2]
 	adds r0, r5, r0
 	ldr r1, [r1, #0x1c]
-	bl sub_0804796C
+	bl _call_via_r1
 	ldrh r1, [r0, #6]
 	lsls r1, r1, #8
 	ldr r2, [r5]
@@ -25342,7 +25342,7 @@ sub_0801F8E0: @ 0x0801F8E0
 	adds r0, r2, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r6, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801F97A:
 	ldr r0, _0801F998 @ =0x02000EB8
 	ldr r0, [r0]
@@ -25407,7 +25407,7 @@ sub_0801F99C: @ 0x0801F99C
 	adds r0, r4, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801FA12:
 	movs r0, #1
 	b _0801FA68
@@ -25442,7 +25442,7 @@ _0801FA20:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801FA66:
 	movs r0, #0
 _0801FA68:
@@ -25559,7 +25559,7 @@ _0801FB2A:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801FB62:
 	ldr r0, _0801FB80 @ =gTouchableList
 	ldr r0, [r0]
@@ -25664,7 +25664,7 @@ _0801FC12:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801FC4A:
 	ldr r0, _0801FC68 @ =gTouchableList
 	ldr r0, [r0]
@@ -25767,7 +25767,7 @@ _0801FCFA:
 	adds r0, r3, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801FD30:
 	ldr r0, _0801FD4C @ =gTouchableList
 	ldr r0, [r0]
@@ -25879,7 +25879,7 @@ sub_0801FD50: @ 0x0801FD50
 	adds r0, r5, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r7, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801FE28:
 	movs r0, #1
 	strb r0, [r7, #0xa]
@@ -25951,7 +25951,7 @@ sub_0801FE68: @ 0x0801FE68
 	adds r0, r3, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0801FEC2:
 	ldr r2, [r4, #0x18]
 	cmp r2, #0
@@ -26102,7 +26102,7 @@ _0801FFDA:
 	adds r0, r2, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0802000A:
 	ldr r0, _08020030 @ =0x02000EB8
 	ldr r0, [r0]
@@ -26166,7 +26166,7 @@ sub_08020034: @ 0x08020034
 	adds r0, r6, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r7, #0
-	bl sub_08047970
+	bl _call_via_r2
 _08020094:
 	movs r0, #1
 	movs r1, #0
@@ -26286,7 +26286,7 @@ sub_08020130: @ 0x08020130
 	adds r0, r5, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r7, #0
-	bl sub_08047970
+	bl _call_via_r2
 _08020194:
 	movs r0, #1
 	mov sb, r0
@@ -26442,7 +26442,7 @@ sub_08020268: @ 0x08020268
 	adds r0, r4, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 _080202E8:
 	ldr r0, _08020300 @ =gCollidableList
 	ldr r0, [r0]
@@ -26523,7 +26523,7 @@ sub_08020304: @ 0x08020304
 	adds r0, r4, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0802039C:
 	ldr r0, _080203B8 @ =gCollidableList
 	ldr r0, [r0]
@@ -26577,7 +26577,7 @@ sub_080203BC: @ 0x080203BC
 	adds r0, r4, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 _08020414:
 	movs r0, #1
 	strb r0, [r5, #0xa]
@@ -26651,7 +26651,7 @@ sub_08020450: @ 0x08020450
 	adds r0, r4, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 _080204BC:
 	adds r0, r4, #0
 	bl sub_0803E520
@@ -26728,7 +26728,7 @@ sub_08020504: @ 0x08020504
 	adds r0, r3, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0802055C:
 	ldr r0, _080205A4 @ =gSpriteBankSet
 	ldr r0, [r0]
@@ -26792,7 +26792,7 @@ sub_080205B4: @ 0x080205B4
 	adds r0, r2, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 _080205EE:
 	ldr r0, _08020630 @ =gSpriteBankSet
 	ldr r0, [r0]
@@ -26955,7 +26955,7 @@ sub_080206DC: @ 0x080206DC
 	adds r0, r2, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 _08020746:
 	ldrb r1, [r4, #0x18]
 	movs r0, #5
@@ -27081,7 +27081,7 @@ sub_080207D4: @ 0x080207D4
 	adds r0, r6, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 _08020850:
 	adds r0, r6, #0
 	bl sub_08027684
@@ -27124,7 +27124,7 @@ sub_08020874: @ 0x08020874
 	adds r0, r2, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 _080208AE:
 	ldr r0, _080208F0 @ =gSpriteBankSet
 	ldr r0, [r0]
@@ -27183,7 +27183,7 @@ sub_080208F8: @ 0x080208F8
 	adds r0, r2, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 _08020932:
 	ldr r0, _08020974 @ =gSpriteBankSet
 	ldr r0, [r0]
@@ -27242,7 +27242,7 @@ sub_0802097C: @ 0x0802097C
 	adds r0, r2, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r5, #0
-	bl sub_08047970
+	bl _call_via_r2
 _080209B6:
 	ldr r0, _080209F8 @ =gSpriteBankSet
 	ldr r0, [r0]
@@ -29433,7 +29433,7 @@ _08021CB0:
 	ldrsh r0, [r1, r2]
 	adds r0, r4, r0
 	ldr r1, [r1, #4]
-	bl sub_0804796C
+	bl _call_via_r1
 	cmp r0, #2
 	bne _08021CF6
 	ldr r1, [r4, #0x24]
@@ -29441,7 +29441,7 @@ _08021CB0:
 	ldrsh r0, [r1, r2]
 	adds r0, r4, r0
 	ldr r1, [r1, #0x34]
-	bl sub_0804796C
+	bl _call_via_r1
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _08021CF0
@@ -29480,7 +29480,7 @@ _08021D0E:
 	ldrsh r0, [r1, r2]
 	adds r0, r4, r0
 	ldr r1, [r1, #4]
-	bl sub_0804796C
+	bl _call_via_r1
 	cmp r0, #2
 	bne _08021D32
 	adds r0, r4, #0
@@ -32435,7 +32435,7 @@ _0802331C:
 	adds r0, r2, r0
 	ldr r2, [r1, #0x1c]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _08023334:
 	ldr r0, _080233E4 @ =gCamera
 	ldr r0, [r0]
@@ -32451,7 +32451,7 @@ _08023334:
 	adds r0, r2, r0
 	ldr r2, [r1, #4]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _08023356:
 	movs r5, #0
 	str r5, [r4]
@@ -32729,7 +32729,7 @@ _0802359A:
 	ldrsh r1, [r2, r4]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x14]
-	bl sub_0804796C
+	bl _call_via_r1
 	ldr r0, [r7, #0x18]
 	ldr r0, [r0, #8]
 	cmp r0, #0
@@ -32779,7 +32779,7 @@ _080235FA:
 	adds r0, r0, r1
 	ldr r2, [r2, #0x2c]
 	movs r1, #0x2a
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r0, _08023678 @ =0x0000FFFF
 	movs r1, #0
 	movs r2, #0
@@ -32799,7 +32799,7 @@ _080235FA:
 	ldrsh r1, [r2, r4]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x14]
-	bl sub_0804796C
+	bl _call_via_r1
 	b _080236DA
 	.align 2, 0
 _08023660: .4byte 0x02000E78
@@ -32854,7 +32854,7 @@ _0802368E:
 	adds r0, r0, r1
 	ldr r2, [r2, #0x2c]
 	movs r1, #0x29
-	bl sub_08047970
+	bl _call_via_r2
 _080236DA:
 	ldr r0, _08023728 @ =gHud
 	ldr r0, [r0]
@@ -32952,7 +32952,7 @@ _080237A0:
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #4]
-	bl sub_0804796C
+	bl _call_via_r1
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _080237DA
@@ -32962,7 +32962,7 @@ _080237A0:
 	ldrsh r1, [r2, r4]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x24]
-	bl sub_0804796C
+	bl _call_via_r1
 _080237DA:
 	ldr r0, _080238BC @ =gCrateList
 	ldr r0, [r0]
@@ -33114,7 +33114,7 @@ _08023928:
 	ldrsh r0, [r1, r3]
 	adds r0, r4, r0
 	ldr r1, [r1, #4]
-	bl sub_0804796C
+	bl _call_via_r1
 	cmp r0, #3
 	bne _08023952
 	adds r0, r4, #0
@@ -33221,7 +33221,7 @@ sub_08023A24: @ 0x08023A24
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0xc]
-	bl sub_0804796C
+	bl _call_via_r1
 	ldr r0, _08023AB4 @ =0x02000E78
 	ldr r0, [r0]
 	bl TickPaletteCycles
@@ -33246,7 +33246,7 @@ sub_08023A24: @ 0x08023A24
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x34]
-	bl sub_0804796C
+	bl _call_via_r1
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _08023AD2
@@ -33261,7 +33261,7 @@ sub_08023A24: @ 0x08023A24
 	ldrsh r0, [r1, r3]
 	adds r0, r2, r0
 	ldr r1, [r1, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 	b _08023AD2
 	.align 2, 0
 _08023AA8: .4byte 0x02000E68
@@ -33488,7 +33488,7 @@ ResumeRoomAfterPause: @ 0x08023C3C
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x14]
-	bl sub_0804796C
+	bl _call_via_r1
 	adds r0, r4, #0
 	bl sub_08023A24
 	movs r0, #0
@@ -35037,7 +35037,7 @@ DestroyBgLayerBase: @ 0x080248AC
 	adds r0, r2, r0
 	ldr r2, [r1, #0xc]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _080248CC:
 	movs r0, #1
 	ands r0, r5
@@ -35147,7 +35147,7 @@ StepBgLayerScroll: @ 0x08024968
 	ldr r2, [r4]
 	subs r1, r1, r2
 	ldr r2, [r3, #0x24]
-	bl sub_08047970
+	bl _call_via_r2
 	adds r6, r0, #0
 	ldr r3, [r4, #0x30]
 	movs r1, #0x20
@@ -35157,7 +35157,7 @@ StepBgLayerScroll: @ 0x08024968
 	ldr r2, [r4, #4]
 	subs r1, r1, r2
 	ldr r2, [r3, #0x24]
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r1, [r4]
 	adds r1, r1, r6
 	str r1, [r4]

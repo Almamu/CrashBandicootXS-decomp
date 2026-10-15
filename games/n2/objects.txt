@@ -19,6 +19,10 @@
 0x080028D4 0x184 src/engine/link/link_sio.cpp
 0x080073E0 0x134 src/engine/gfx/oam_buffer.cpp
 0x08007514 0x10C src/engine/sys/vram_dma_queue.cpp
+0x0800A2D0 0x0DC src/game/crates/crate_list_draw.cpp
+0x0800A5A4 0x0DC src/game/crates/crate_list_reset.cpp
+0x0800AA78 0x0C0 src/game/entities/moving_sprite_probe.cpp
+0x0800E754 0x098 src/game/enemies/periodic_spawner.cpp
 0x08012A30 0x2C8 src/game/crates/collision_queue.cpp
 0x080250DC 0x094 src/game/level/tile_cache_cell.cpp
 0x080265C8 0x19C src/game/level/tile_slot_pool.cpp
@@ -33,6 +37,7 @@
 0x080448F0 0x070 lib/libgcc/_muldi3.o
 0x08046180 0x0B0 lib/gax/src/gax_text_render.c
 0x08046398 0x064 lib/gax/src/gax_zero_fill.c
+0x08047968 0x03C lib/libgcc/_call_via_rX.o
 0x080479A4 0x094 lib/libgcc/_divsi3.o
 0x08047A3C 0x0D0 lib/libgcc/_modsi3.o
 0x08047B0C 0x0C0 lib/libgcc/_umodsi3.o

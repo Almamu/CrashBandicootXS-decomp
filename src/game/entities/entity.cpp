@@ -213,4 +213,20 @@ void Entity::Reset()
     halfH = 0;
     rawW = 1;
     rawH = 1;
+#ifdef GAME_N2
+    unk_0C = 1;
+    unk_14 = 0;
+    unk_10 = 0;
+#endif
 }
+
+#ifdef GAME_N2
+/* N-Tranced's two more virtual methods (entity.hpp), empty in Entity. */
+void Entity::UnkVirtual2()
+{
+}
+
+void Entity::UnkVirtual12()
+{
+}
+#endif
