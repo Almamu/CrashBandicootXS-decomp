@@ -99,7 +99,7 @@ void LevelState::EndBonusRound(u8 cleared)
  * LevelState::SetCheckpoint (level_state.cpp) has the same helper. */
 static inline void CopyBitmapSpan(void *dst, void *src)
 {
-    CpuSet(dst, src, CPU_SET_32BIT | 0x40);
+    CpuSet(dst, src, CPU_SET_32BIT | sizeof(gEntityFlags->bits0Copy) / sizeof(u32));
 }
 
 /* `checkpointFlags` (CHECKPOINT_FLAG_*, kept in

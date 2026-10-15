@@ -36,7 +36,7 @@ void PauseMenu::Animate()
         {
             UiSprite **p = powerIcons;
             s32 i;
-            for (i = 3; i >= 0; i--) {
+            for (i = ARRAY_COUNT(powerIcons) - 1; i >= 0; i--) {
                 (*p)->AdvanceAnim();
                 p++;
             }
@@ -46,7 +46,7 @@ void PauseMenu::Animate()
         {
             UiSprite **p = gemIcons;
             s32 i;
-            for (i = 4; i >= 0; i--) {
+            for (i = ARRAY_COUNT(gemIcons) - 1; i >= 0; i--) {
                 (*p)->AdvanceAnim();
                 p++;
             }
@@ -56,7 +56,7 @@ void PauseMenu::Animate()
         {
             UiSprite **p = relicIcons;
             s32 i;
-            for (i = 2; i >= 0; i--) {
+            for (i = ARRAY_COUNT(relicIcons) - 1; i >= 0; i--) {
                 (*p)->AdvanceAnim();
                 p++;
             }

@@ -155,7 +155,7 @@ void LevelLayers::CommitScroll()
     s32 i;
 
     layer0->CommitScroll();
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(layers); i++) {
         BgLayer *layer = layers[i];
         if (layer->enabled)
             layer->CommitScroll();
@@ -170,7 +170,7 @@ void LevelLayers::Scroll()
     layer0->Scroll(&scrollX);
     pos[0] = layer0->x;
     pos[1] = layer0->y;
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(layers); i++) {
         BgLayer *layer = layers[i];
         if (layer->enabled)
             layer->Scroll(pos);
@@ -185,7 +185,7 @@ void LevelLayers::Reset()
     layer0->Reset(&scrollX);
     pos[0] = layer0->x;
     pos[1] = layer0->y;
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(layers); i++) {
         BgLayer *layer = layers[i];
         if (layer->enabled)
             layer->Reset(pos);

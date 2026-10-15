@@ -237,7 +237,7 @@ void CompanyLogos::InitVvLogoPieces()
 {
     s32 i;
 
-    for (i = 0; i <= 0x13; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(slots); i++) {
         slots[i].active = 0;
         slots[i].countdown = gVvLogoPieceSeeds[i].hold + 1;
         slots[i].record = gVvLogoPieceSeeds[i].record;
@@ -265,7 +265,7 @@ void CompanyLogos::UpdateVvLogoPieces()
     s32 i;
 
     if (timer == -1) {
-        for (i = 0; i <= 0x13; i++) {
+        for (i = 0; i < (s32)ARRAY_COUNT(slots); i++) {
             if (slots[i].countdown != 0) {
                 s32 countdown = slots[i].countdown - 1;
 
@@ -323,7 +323,7 @@ void CompanyLogos::UpdateVvLogoPieces()
         LogoPiece *end;
 
         slot = slots;
-        end = &slots[19];
+        end = &slots[ARRAY_COUNT(slots) - 1];
         do {
             if (slot->active != 0) {
                 s32 y;

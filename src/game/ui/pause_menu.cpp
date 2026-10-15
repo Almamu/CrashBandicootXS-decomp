@@ -140,11 +140,11 @@ PauseMenu::~PauseMenu()
 {
     delete blinkEyes;
     delete trialIcon;
-    for (s32 i = 0; i < 3; i++)
+    for (s32 i = 0; i < (s32)ARRAY_COUNT(relicIcons); i++)
         delete relicIcons[i];
-    for (s32 j = 0; j < 5; j++)
+    for (s32 j = 0; j < (s32)ARRAY_COUNT(gemIcons); j++)
         delete gemIcons[j];
-    for (s32 k = 0; k < 4; k++)
+    for (s32 k = 0; k < (s32)ARRAY_COUNT(powerIcons); k++)
         delete powerIcons[k];
     delete crystalIcon;
 }

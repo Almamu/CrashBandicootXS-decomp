@@ -61,7 +61,7 @@ SmallFont::SmallFont()
     tiles = SmallFontSheet::tiles;
     glyphTileStride = 2;
     glyphRecords = gSmallFontGlyphs;
-    for (i = 0; i <= 0xff; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(charLookup); i++) {
         charLookup[i] = 0;
         for (j = 0; j <= 0x4f; j++) {
             if (gSmallFontChars[j] == i) {
@@ -85,7 +85,7 @@ LargeFont::LargeFont()
     glyphRecords = gLargeFontGlyphs;
     tiles = LargeFontSheet::tiles;
     oam_scratch.size = 1;
-    for (i = 0; i <= 0xff; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(charLookup); i++) {
         charLookup[i] = 0;
         for (j = 0; j <= 0x4b; j++) {
             if (gLargeFontChars[j] == i) {

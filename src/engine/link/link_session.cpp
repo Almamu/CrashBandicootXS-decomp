@@ -239,7 +239,7 @@ void LinkSession::HandleSerial(u16 *data)
          * the test's constant in a MATCH_CONST). */
         vu16 *multi = data;
 
-        for (i = 0; i <= 3; i++) {
+        for (i = 0; i < (s32)ARRAY_COUNT(w); i++) {
             w[i] = *(struct link_rx_word *)&multi[i];
             if (w[i].hi == 0xF0B)
                 nId++;

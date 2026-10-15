@@ -14,7 +14,7 @@
 void CpuSet(const void *src, void *dst, u32 control)
 {
     u32 count = control & CPU_SET_COUNT_MASK;
-    u32 unit = (control & CPU_SET_32BIT) ? 4 : 2;
+    u32 unit = (control & CPU_SET_32BIT) ? sizeof(u32) : sizeof(u16);
     const u8 *s = (const u8 *)src;
     u8 *d = (u8 *)dst;
     u32 i;
@@ -37,11 +37,11 @@ void CpuFastSet(const void *src, void *dst, u32 control)
     u32 i;
 
     for (i = 0; i < count; i++) {
-        memcpy(d, s, 4);
+        memcpy(d, s, sizeof(u32));
         if (!(control & CPU_SET_SRC_FIXED)) {
-            s += 4;
+            s += sizeof(u32);
         }
-        d += 4;
+        d += sizeof(u32);
     }
 }
 
@@ -166,7 +166,7 @@ void ObjAffineSet(void *src, void *dst, s32 count, s32 offset)
         params[1] = (s16)-((s->sx * sn) >> 14);
         params[2] = (s16)((s->sy * sn) >> 14);
         params[3] = (s16)((s->sy * cs) >> 14);
-        for (i = 0; i < 4; i++) {
+        for (i = 0; i < (s32)(sizeof(params) / sizeof(params[0])); i++) {
             memcpy(d, &params[i], sizeof(s16));
             d += offset;
         }

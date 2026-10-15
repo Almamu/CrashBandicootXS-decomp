@@ -77,7 +77,7 @@ u8 PaletteCache::GetSlot(s32 id)
     if (slotOf[id] != 0xFF)
         return slotOf[id];
     dirty = 1;
-    for (i = 0; i <= 15; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(isFree); i++) {
         if (isFree[i] != 0) {
             const u8 *src;
             u16 *dst;
@@ -119,7 +119,7 @@ void PaletteCache::FreeUnlockedSlots()
     s32 slot;
     s32 i;
 
-    for (slot = 0; slot <= 15; slot++) {
+    for (slot = 0; slot < (s32)ARRAY_COUNT(isFree); slot++) {
         if (locked[slot] == 0) {
             isFree[slot] = 1;
             for (i = 0; i < count; i++) {
@@ -140,7 +140,7 @@ void PaletteCache::SetSource(u16 n, const u8 *records)
     slotOf = 0;
     count = 0;
     palettes = 0;
-    for (i = 0; i <= 15; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(isFree); i++) {
         isFree[i] = 1;
         locked[i] = 0;
     }
@@ -160,7 +160,7 @@ void PaletteCache::Clear()
     slotOf = 0;
     count = 0;
     palettes = 0;
-    for (i = 0; i <= 15; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(isFree); i++) {
         isFree[i] = 1;
         locked[i] = 0;
     }

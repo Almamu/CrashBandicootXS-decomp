@@ -902,7 +902,7 @@ void LevelState::RestoreCheckpoint()
  * in the ROM (the C needed an r2 pin). */
 static inline void CopyBitmapSpan(void *dst, void *src)
 {
-    CpuSet(dst, src, CPU_SET_32BIT | 0x40);
+    CpuSet(dst, src, CPU_SET_32BIT | sizeof(gEntityFlags->bits0Copy) / sizeof(u32));
 }
 
 /* Re-arms a level/checkpoint transition: stores `flag` at `+0xe0`,

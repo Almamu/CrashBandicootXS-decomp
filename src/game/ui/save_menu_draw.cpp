@@ -490,7 +490,7 @@ void SaveMenu::InitIcons()
     a = rowObjA;
     b = rowObjB;
     c = rowObjC;
-    for (i = 0; i < 5; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(rowObjA); i++) {
         new_row_icon(&a[i], 32, 1);
         new_row_icon(&b[i], 33, 2);
         new_row_icon(&c[i], 37, 0);
@@ -551,7 +551,7 @@ void SaveMenu::RefreshSlotSummaries(SaveData *handle)
         }
         row++;
         i++;
-    } while (i <= 3);
+    } while (i < (s32)ARRAY_COUNT(rowStats));
 }
 
 void SaveMenu::LoadData()

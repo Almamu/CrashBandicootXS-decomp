@@ -123,7 +123,7 @@ void TitleScreen::LoadObjTiles()
     u8 *paletteDest = (u8 *)OBJ_PLTT;
     s32 pass;
 
-    for (pass = 0; pass <= 3; pass++) {
+    for (pass = 0; pass < (s32)ARRAY_COUNT(gTitleObjPackages); pass++) {
         u8 *palette;
         u8 *tiles;
         u16 *map;
@@ -163,7 +163,7 @@ void TitleScreen::UpdateLogoPieces()
 {
     s32 i;
 
-    for (i = 0; i <= 8; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(pieces); i++) {
         if (pieces[i].countdown != 0) {
             s32 countdown = pieces[i].countdown - 1;
 
@@ -469,7 +469,7 @@ inline void TitleScreen::SeedLogoPieces()
 {
     s32 i;
 
-    for (i = 0; i <= 8; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(pieces); i++) {
         pieces[i].active = 0;
         pieces[i].countdown = gTitleLogoPieceSeeds[i].hold + 1;
         pieces[i].record = gTitleLogoPieceSeeds[i].record;
@@ -628,7 +628,7 @@ void TitleScreen::ResetLogoPieces()
 {
     s32 i;
 
-    for (i = 0; i <= 8; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(pieces); i++) {
         pieces[i].active = 0;
         pieces[i].countdown = gTitleLogoPieceSeeds[i].hold + 1;
         pieces[i].record = gTitleLogoPieceSeeds[i].record;

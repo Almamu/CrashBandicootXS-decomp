@@ -78,7 +78,7 @@ void PaletteCycles::Clear()
     s32 i;
 
     active = 0;
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(targets); i++) {
         targets[i] = 0;
         lists[i] = 0;
     }
@@ -94,7 +94,7 @@ PaletteCycles::PaletteCycles()
     s32 i;
 
     active = 0;
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(targets); i++) {
         targets[i] = 0;
         lists[i] = 0;
     }

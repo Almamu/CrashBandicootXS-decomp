@@ -46,7 +46,7 @@ void PauseMenu::InitPowersPage()
 {
     s32 i;
 
-    for (i = 0; i <= 3; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(powerIcons); i++) {
         UiSprite *icon;
 
         powerIcons[i] = icon = new UiSprite;
@@ -64,7 +64,7 @@ void PauseMenu::InitGemsPage()
     s32 i;
     s32 a, b;
 
-    for (i = 0; i <= 4; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(gemIcons); i++) {
         UiSprite *icon;
 
         gemIcons[i] = icon = new UiSprite;
@@ -90,7 +90,7 @@ void PauseMenu::InitRelicsPage()
 {
     s32 i;
 
-    for (i = 0; i <= 2; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(relicIcons); i++) {
         UiSprite *icon;
 
         relicIcons[i] = icon = new UiSprite;

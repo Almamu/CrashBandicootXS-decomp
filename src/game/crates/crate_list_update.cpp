@@ -96,7 +96,7 @@ void CrateList::Unlink(Crate *sprite)
             return;
     }
 
-    for (i = 0xFF; i >= 0; i--) {
+    for (i = ARRAY_COUNT(heads) - 1; i >= 0; i--) {
         prev = 0;
         for (node = heads[i]; node != 0; prev = node, node = node->next) {
             if (node->data == sprite) {

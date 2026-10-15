@@ -220,10 +220,10 @@ u8 GAX2_init(struct GaxSongHeader *p)
          * strength-reduces each index into the `ldmia` pointer. */
         const u32 *src;
 
-        for (k = 0; k <= 20; k++)
+        for (k = 0; k < (s32)(sizeof(gGaxPlayerState->downmixCode) / sizeof(u32)); k++)
             gGaxPlayerState->downmixCode[k] = gGaxArmDownmix[k];
         src = gGaxArmEcho;
-        for (k = 0; k <= 55; k++)
+        for (k = 0; k < (s32)(sizeof(gGaxPlayerState->echoCode) / sizeof(u32)); k++)
             gGaxPlayerState->echoCode[k] = src[k];
         src = gGaxArmResample;
         {

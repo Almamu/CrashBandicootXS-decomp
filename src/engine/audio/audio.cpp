@@ -190,7 +190,7 @@ void AudioContext::StopSfx(u32 id)
 {
     s32 i;
 
-    for (i = 0; i <= 1; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(lastSfxId); i++) {
         if (lastSfxId[i] == id) {
             GAX_stop_fx(i);
         }

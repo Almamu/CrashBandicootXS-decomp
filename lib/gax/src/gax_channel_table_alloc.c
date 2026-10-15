@@ -125,7 +125,7 @@ done:
             struct GaxDspRate *r;
             uintptr_t base = gGaxPlayerState->echoTaps;
 
-            r = (struct GaxDspRate *)(i * 8 + base);
+            r = (struct GaxDspRate *)(i * sizeof(struct GaxDspRate) + base);
             r->step = (i + t->data.dsp->taps)->rate * gGaxPlayerState->format->mixRate / 1000 * 2;
             /* taps[i + 1].value, addressed off taps[i] like the ROM */
             r->value = ((u32 *)t->data.dsp)[i * 2 + 2];

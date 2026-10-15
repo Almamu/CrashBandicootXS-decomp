@@ -70,9 +70,9 @@ static inline s32 HitResponse(s32 row, s32 k)
  * before the body), and the offset sum is written in that order. The
  * byte-offset cast stays: `t[*row][k]` adds the row to the table before
  * it adds `k * 4`. */
-static inline s32 HitResponseAt(const s32 (*t)[7], u8 *row, s32 k)
+static inline s32 HitResponseAt(const s32 (*t)[ATTACK_KIND_COUNT], u8 *row, s32 k)
 {
-    return *(const s32 *)((const u8 *)t + (*row * 28 + k * 4));
+    return *(const s32 *)((const u8 *)t + (*row * sizeof(*t) + k * sizeof(**t)));
 }
 
 /* The player's `ctrlMode` as an int, for the first test in RingPush.

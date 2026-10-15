@@ -57,7 +57,7 @@ void TileCache::SetSource(const struct level_layer_desc *source)
     width = source->gridWidth;
     height = source->gridHeight;
 
-    for (i = 0; i < 16; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(id); i++) {
         id[i] = -1;
     }
     nextSlot = 0;

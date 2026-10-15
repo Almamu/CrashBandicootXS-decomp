@@ -148,7 +148,8 @@ public:
         marginX = 0;
         tileCount = 0;
         zero = 0;
-        CpuSet(&zero, this, CPU_SET_32BIT | CPU_SET_SRC_FIXED | 2);
+        CpuSet(&zero, &oam_scratch,
+               CPU_SET_32BIT | CPU_SET_SRC_FIXED | sizeof(oam_scratch) / sizeof(u32));
     }
 };
 

@@ -67,11 +67,11 @@ void TileSlotPool::Reset()
     s32 i;
 
     freeTop = TILE_SLOT_NONE;
-    for (i = 0; i < 0x200; i++)
+    for (i = 0; i < (s32)ARRAY_COUNT(refCount); i++)
         PushFreeSlot(i);
-    for (i = 0; i < 0x2000; i++)
+    for (i = 0; i < (s32)ARRAY_COUNT(slotForTile); i++)
         slotForTile[i] = TILE_SLOT_NONE;
-    for (i = 0; i < 0x200; i++)
+    for (i = 0; i < (s32)ARRAY_COUNT(refCount); i++)
         refCount[i] = 0;
 }
 
