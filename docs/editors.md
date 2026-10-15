@@ -15,10 +15,11 @@ on (#1167 stage 3, #1093 part 1):
 - **named room parameters** in room.json ("Named room parameters");
 - **a preview**: the PC port started at a level's room ("Preview").
 
-The second half is the editor itself (#1167 stages 4 and 5): a web app in
+The second half is the editor itself (#1167 stages 4 to 6): a web app in
 `apps/` ("Running the editor", "The TypeScript workspace") on a small
-local server, crashdata over HTTP ("The editor's backend"), and the same
-app as a desktop program, no browser needed ("The desktop app").
+local server, crashdata over HTTP ("The editor's backend"), the same
+app as a desktop program, no browser needed ("The desktop app"), and in
+it the level editor ("The level editor").
 
 Nothing here changes what the build makes: both ROMs and both .map files
 are the same with or without it.
@@ -240,7 +241,8 @@ Working on the editor itself:
     pnpm typecheck && pnpm lint && pnpm test # what CI runs (apps.yml), with pnpm gen:check
     make editor-test                         # all of it, and the backend's Python tests
 
-What the editor (stage 4's shell) does:
+What the editor does (its header's tabs: "Level editor", below, and
+"Data files", stage 4's forms):
 
 - **Projects**: XS, N-Tranced, or a mod. A mod is a script
   ([modding.md](./modding.md), "Writing a mod"), so the editor edits the
@@ -267,8 +269,92 @@ What the editor (stage 4's shell) does:
   a level from levels.json and one of its rooms, headless (a picture
   after N frames) or in the PC port's window.
 
-The real level, cutscene and music editors are stage 6; the backend
-already serves the level editor's rooms ("The editor's backend").
+The level editor is stage 6's first part; the cutscene and music editors
+are next.
+
+## The level editor
+
+The editor's first tab (#1167 stage 6) opens a room, draws it as the game
+does and edits its entities and their parameter records and links. It
+saves them back to the room's folder ([levels.md, "Room
+folders"](./levels.md#room-folders)) through the backend, which checks a
+room's save like any other and keeps all of it or none.
+
+**Opening a room.** The left column is the project's levels.json: each
+level's rooms in play order, its bonus and gem-path rooms, and the stages
+played in an actor category (which have no room to open). XS's rooms,
+N-Tranced's (whose entity types are partly named and whose parameter
+records stay raw words) and a mod's tree's open the same way.
+
+**The view** draws the room the way the game does:
+
+- the BG layers back to front by priority (room.json's `cnt`, BGnCNT's
+  priority bits; at one priority the lower BG is in front), from their
+  pictures: BG0's index 0 and BG1-3's colour 0 of every bank are
+  transparent, palette entry 0 is the backdrop;
+- each layer scrolled by its parallax factor for the camera, the 240x160
+  screen at the view's centre kept inside the room's scrollable size
+  (`size_tiles`): a layer is shifted by `camera - camera * scale / 256`
+  (`BgLayerBase::ScaleScroll`'s, rounded toward zero), so inside the
+  screen the room looks as it does in the game at that camera. Without
+  "parallax" every layer is drawn at its own (0, 0);
+- the collision layer over them, in its legend's colours
+  (collision_legend.json; 0 is clear), at the overlay's opacity;
+- the entities, each a frame of its sprite bank at its position
+  (`games/<game>/graphics/sprites/`: the frame `crashdata.levels.room_edit.SPRITES`
+  names, else the bank of its enemy kind, else the bank named after its
+  type, frame 0), or a labelled box where none is known; their links, an
+  arrow from the lower crate to the one on top;
+- the entity groups (256-pixel columns), the 240x160 screens and the
+  camera's screen, as asked.
+
+The wheel zooms at the cursor; the middle or right button, space and drag,
+or a drag on an empty spot with the Select tool pans. The status bar gives
+the camera and the world point under the cursor.
+
+**Tools** (their keys): **Select** (V) selects an entity and drags it
+(Shift: in steps of 8); **Add** (A) places an entity of the type chosen;
+**Link** (L) links two crates, the lower one first. Delete deletes the
+entity selected, Escape deselects, Ctrl+Z undoes, Ctrl+Shift+Z or Ctrl+Y
+redoes, Ctrl+S saves. Every change is a step of the undo stack (a drag,
+a field; 500 of them), which also says whether the room is as saved.
+
+**Entities.** The right column's Entities tab lists them, or edits the one
+selected: its type (any of entity_types.json's, an unnamed one by number),
+x, y, its parameter record and its links. room.json keeps the entities in
+id order, the last group (256-pixel column) first (docs/levels.md,
+"Entities"): an entity moved to another group goes to the end of that
+group's entities, an added one too, and the ids after it change; the
+links follow every renumbering, and a deleted entity's links go with it.
+The record is a form of its view (docs/levels.md, "Parameter records"):
+the flags and a crate's options as their bits, `trial_kind` and
+`solid_kind` as entity types, the numbers in their ranges, or a raw
+record's words; changing the view starts a record of zeros, and a view
+other than the one its entities' type reads is marked (data-check refuses
+it). A record several entities share is edited for all of them, unless
+"Give this one its own copy" gives the entity a copy first. A new entity
+gets its own record: a copy of one its type already uses in the room, or
+every field of its type's view at zero. A deleted entity's record stays
+(another may use it).
+
+**Saving** sends room.json's value when it changed since the room was
+opened or last saved (`POST .../room/save`, "The editor's backend"), which
+writes it in `tools/levels.py`'s layout: a room saved unchanged writes
+nothing, a change shows in git as its lines.
+
+**Play this room** runs `tools/preview.py` at the room ("Preview"): in
+the desktop app the PC port's window opens, in the browser it runs
+headless and shows the room after 700 frames. It builds the saved data;
+a bonus or gem-path room can't be started on its own.
+
+**Not yet:** painting the BG layers' tiles and the collision layer and
+editing the palette (next: the backend already takes them), making a new
+room (a copy of a room's folder with its own symbols, listed in
+levels.json: [levels.md, "Adding a room"](./levels.md#adding-a-room); the
+backend writes only files that exist), resizing a room, the room record's
+`kind` and `blend` (in the "Data files" tab's form of room.json), and
+naming N-Tranced's records (their views aren't known yet: they are edited
+as words).
 
 ## The editor's backend
 
@@ -381,9 +467,11 @@ typechecks the templates.
 CI (`.github/workflows/apps.yml`) runs `pnpm gen:check`, `pnpm typecheck`
 (tsc, svelte-check), `pnpm lint` (ESLint), `pnpm test` (vitest: the
 generation, the client, the globs and pointers, the editor's schema
-helpers), `pnpm build`, the backend's Python tests (every data file of
-both games written back unchanged, a change in the tool's layout, the
-refusals, the token; every room of both games opened and saved back unchanged through
+helpers, the level editor's coordinates and parallax, undo stack,
+entity order and links, palette rule and record views),
+`pnpm build`, the backend's Python tests (every data file of both games
+written back unchanged, a change in the tool's layout, the refusals, the
+token; every room of both games opened and saved back unchanged through
 the room API, a room edit saved and put back, the tile set drawing the
 layer's picture, the room save's refusals), and a smoke test of
 `tools/editor_server.py` as `make editor` runs it, through the typed

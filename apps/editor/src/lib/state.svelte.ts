@@ -1,7 +1,7 @@
 // The editor's state: the project, the files, the open file, the diagnostics.
 import { ApiError, type Diagnostic, type FileEntry, type Project, type SchemaIndex, type SchemaName } from "@crash/schema-types";
 import { getAt, parsePointer } from "@crash/schema-types";
-import { client } from "./api.ts";
+import { client, hashWith } from "./api.ts";
 import type { Json, Schema } from "./schema.ts";
 
 export interface OpenFile {
@@ -35,6 +35,8 @@ class EditorState {
   diagnostics = $state.raw<DiagnosticSet | null>(null);
   busy = $state<string | null>(null);
   error = $state<string | null>(null);
+  /** what else asks before the project changes (the level editor's unsaved room) */
+  projectGuards: (() => boolean)[] = [];
 
   get project(): Project | undefined {
     return this.projects.find((p) => p.id === this.projectId);
@@ -78,13 +80,13 @@ class EditorState {
   }
 
   async selectProject(id: string): Promise<void> {
-    if (!this.confirmDiscard()) return;
+    if (!this.confirmDiscard() || !this.projectGuards.every((g) => g())) return;
     this.projectId = id;
     this.open = null;
     this.doc = null;
     this.files = [];
     this.diagnostics = null;
-    history.replaceState(null, "", `#project=${encodeURIComponent(id)}`);
+    history.replaceState(null, "", hashWith("project", id));
     const p = this.project;
     if (!p || !p.ready) return;
     await this.run("Listing the files", async () => {
