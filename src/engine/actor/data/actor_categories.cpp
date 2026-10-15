@@ -3,6 +3,7 @@
 #include "game/bosses/hovercraft.hpp"
 #include "game/vehicles/vehicle.hpp"
 #include "engine/actor/actor_category.hpp"
+#include "engine/actor/actor_palette_cycle.hpp"
 
 extern "C" {
 #include "core.h"
@@ -12,6 +13,7 @@ extern "C" {
 }
 
 using Engine::Actor::ActorCategory;
+using Engine::Actor::ActorPaletteCycle;
 using Game::Bosses::Hovercraft;
 using Game::Vehicles::Polar::PolarPlayer;
 using Game::Vehicles::Polar::Yeti;

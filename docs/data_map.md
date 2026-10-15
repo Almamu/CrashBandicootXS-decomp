@@ -646,6 +646,7 @@ BG tile sets are in [levels.md](./levels.md).
 | `08167CD4` | `gAirshipPicture` | boss_picture | `vehicles/jetpack/airship/frame0.png`, `vehicles/jetpack/airship/frame1.png` ... (4 files) |
 | `08169AE8` | `gHovercraftPalette` | palette | `bosses/hovercraft.png` (its palette) |
 | `08169CE8` | `gHovercraftPicture` | boss_picture | `bosses/hovercraft.png` |
+| `08175760` | `gActorPaletteCycleFrames` | palette_cycle | `vehicles/polar/palette_cycle/` |
 | `08178F80` | `gPolarCategoryPalette` | palette | `vehicles/polar/player.png` (its palette) |
 | `0817AA6C` | `gYetiPalette` | palette | `vehicles/polar/yeti.png` (its palette) |
 | `0817AAA4` | `gAirshipCategoryPalette` | palette | `vehicles/jetpack/player.png` (its palette) |

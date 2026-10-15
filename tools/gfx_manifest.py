@@ -70,6 +70,9 @@ everything under it not claimed by a longer entry) or its `paths`, its
                   a category's 256-colour OBJ palette, a JASC .pal (`colors`:
                   256). Only new ones: the ROM's three are C arrays with other
                   data
+    palette_cycle a polar category's BG palette cycle: `path` is a directory
+                  of `frames` (32) JASC .pal files, 00.pal to 31.pal, each of
+                  BG palettes 0-13 (224 colours), back to back in the ROM
     obj_palettes  the OBJ palettes of gObjPalettes, one JASC .pal per
                   paletteId, named by `names` (NNN_<owner>: the paletteId and
                   what uses it)
@@ -102,12 +105,13 @@ manifest order, so the linker places them and moves what follows
 table leave it out: the ROM has nothing to extract.
 
 A new category graphic (CATEGORY_KINDS: a cell_anim, bg_picture,
-category_palette or framed_sheet with no `rom`) is no class and names no
-object: an actor category of levels.json that names it (its "cell_anim",
-"sky", "palette" or "sprite_sheet") has it defined by tools/levels.py
-categories, before ActorCategory::descriptors (docs/levels.md, "Category
-graphics"). graphics_manifest.mk gives its build rules (CELL_ANIMS,
-BG_PICTURES, CATEGORY_PALETTES, FRAMED_SHEETS) as for the ROM's.
+category_palette, framed_sheet or palette_cycle with no `rom`) is no
+class and names no object: an actor category of levels.json that names it
+(its "cell_anim", "sky", "palette", "sprite_sheet" or "palette_cycle") has
+it defined by tools/levels.py categories, before ActorCategory::descriptors
+(docs/levels.md, "Category graphics"). graphics_manifest.mk gives its build
+rules (CELL_ANIMS, BG_PICTURES, CATEGORY_PALETTES, FRAMED_SHEETS,
+PALETTE_CYCLES) as for the ROM's.
 """
 import argparse
 import json
@@ -167,7 +171,13 @@ NEW_KINDS = ("tiles", "bg_package", "bitmap")
 NEW_BITMAP_DIR, NEW_BITMAP_OBJECT = "cutscenes/", "cutscene_pictures"
 # The kinds a new category graphic can be: an actor category names it, and
 # tools/levels.py categories defines it (no class, no object).
-CATEGORY_KINDS = ("cell_anim", "bg_picture", "category_palette", "framed_sheet")
+CATEGORY_KINDS = ("cell_anim", "bg_picture", "category_palette", "framed_sheet",
+                  "palette_cycle")
+# A palette cycle (ActorPaletteCycle::frames): its frame count (the cycles'
+# ends, startFrames/targetFrames, reach frame 31) and the colours of a frame
+# (BG palettes 0-13).
+PALETTE_CYCLE_FRAMES = 32
+PALETTE_CYCLE_COLORS = 14 * 16
 
 
 def is_new(e):
@@ -228,8 +238,34 @@ def category_entry_errors(e, what):
         if len(paths) != 1 or not paths[0].endswith("/"):
             errors.append("%s: a framed_sheet is a directory (its path ends in /) of frame folders and its "
                           "sheet.json" % what)
+    elif e["kind"] == "palette_cycle":
+        errors += palette_cycle_errors(e, what)
     elif len(paths) != 1 or not paths[0].endswith(".pal") or e.get("colors") != 256:
         errors.append("%s: a category_palette is a JASC .pal of `colors` 256" % what)
+    return errors
+
+
+def palette_cycle_frames(e):
+    """A palette_cycle's frame files, under graphics/: 00.pal, 01.pal, ..."""
+    return [e["path"] + "%02d.pal" % k for k in range(e.get("frames", 0))]
+
+
+def palette_cycle_errors(e, what, root=Path(".")):
+    """What's wrong with a palette_cycle entry: a directory, `frames` 32,
+    and each frame a JASC .pal of 224 colours."""
+    if len(entry_paths(e)) != 1 or not e["path"].endswith("/") or e.get("frames") != PALETTE_CYCLE_FRAMES:
+        return ["%s: a palette_cycle is a directory (`path` ending in /) of `frames` %d JASC .pal files"
+                % (what, PALETTE_CYCLE_FRAMES)]
+    errors = []
+    for p in palette_cycle_frames(e):
+        f = root / "graphics" / p
+        if not f.exists():
+            errors.append("%s: graphics/%s doesn't exist" % (what, p))
+        elif len(jasc_pal.read_jasc(f)) != PALETTE_CYCLE_COLORS:
+            errors.append("%s: graphics/%s has %d colours, a frame %d (BG palettes 0-13)"
+                          % (what, p, len(jasc_pal.read_jasc(f)), PALETTE_CYCLE_COLORS))
+        if errors:
+            break  # the first frame that's wrong
     return errors
 
 
@@ -241,9 +277,12 @@ def category_graphics():
 
 def category_stem(e):
     """A category graphic's built name: its (first) path without the
-    extension, or a framed sheet's directory without the /."""
+    extension, or a framed sheet's or palette cycle's directory without
+    the /."""
     if e["kind"] == "framed_sheet":
         return entry_paths(e)[0].rstrip("/")
+    if e["kind"] == "palette_cycle":
+        return e["path"].rstrip("/")
     return entry_paths(e)[0].rsplit(".", 1)[0]
 
 
@@ -256,6 +295,8 @@ def category_incs(e):
         return [stem + ".pal.inc", stem + "_map.inc", stem + "_tiles.img.inc", stem + "_banks.inc"]
     if e["kind"] == "framed_sheet":
         return [stem + ".bin.lz.inc", stem + "_frames.h"]
+    if e["kind"] == "palette_cycle":
+        return [stem + ".bin.inc"]
     return [stem + ".gbapal.inc"]
 
 
@@ -300,6 +341,8 @@ def check(root=Path(".")):
     for e in entries:
         if is_new(e):
             errors += new_entry_errors(e, objects)
+        elif e["kind"] == "palette_cycle":
+            errors += palette_cycle_errors(e, e["symbol"], root)
         elif "object" in e:
             errors.append("%s: has a `rom`, so its object is the one whose range holds it, not `object`"
                           % e["symbol"])
@@ -504,6 +547,13 @@ def extract_bg_picture(rom, e, out, by_symbol):
         save(img, out / p)
 
 
+def extract_palette_cycle(rom, e, out, by_symbol):
+    d = out / e["path"]
+    d.mkdir(parents=True, exist_ok=True)
+    for k, p in enumerate(palette_cycle_frames(e)):
+        jasc_pal.write_jasc(out / p, rom.u16s(addr(e["rom"]) + 2 * PALETTE_CYCLE_COLORS * k, PALETTE_CYCLE_COLORS))
+
+
 def extract_obj_palettes(rom, e, out, by_symbol):
     d = out / e["path"]
     d.mkdir(parents=True, exist_ok=True)
@@ -520,6 +570,7 @@ EXTRACT = {
     "cell_anim": extract_cell_anim,
     "bg_picture": extract_bg_picture,
     "obj_palettes": extract_obj_palettes,
+    "palette_cycle": extract_palette_cycle,
 }
 
 
@@ -830,7 +881,8 @@ def make_fragment():
     the PNG palettes of 16 colours (PALETTE_COLORS_16), the category
     graphics (CELL_ANIMS, CELL_ANIM_FRAMES_<anim>, CELL_ANIM_BANKS_<anim>,
     BG_PICTURES, CATEGORY_PALETTES, FRAMED_SHEETS with FRAMED_NAME_<sheet>,
-    and the new ones' sources and .inc files, CATEGORY_GRAPHICS_NEW,
+    PALETTE_CYCLES with PALETTE_CYCLE_FRAMES_<cycle>, and the new ones'
+    sources and .inc files, CATEGORY_GRAPHICS_NEW,
     CATEGORY_GRAPHICS_NEW_INCS), the class objects
     (GRAPHICS_CLASS_OBJECTS) and each object's prerequisites: the .inc
     files its members' definitions #include."""
@@ -866,10 +918,20 @@ def make_fragment():
     sheets = [e for e in entries if e["kind"] == "framed_sheet"]
     var("FRAMED_SHEETS", [category_stem(e) for e in sheets])
     out += ["FRAMED_NAME_%s := %s" % (category_stem(e), e["prefix"]) for e in sheets]
+    # the palette cycles with their frames' sources
+    cycles = [e for e in entries if e["kind"] == "palette_cycle"]
+    var("PALETTE_CYCLES", [category_stem(e) for e in cycles])
+    for e in cycles:
+        out.append("PALETTE_CYCLE_FRAMES_%s := %s" % (category_stem(e), " ".join(
+            "graphics/" + p for p in palette_cycle_frames(e))))
     new = [e for e in entries if e["kind"] in CATEGORY_KINDS and is_new(e)]
-    var("CATEGORY_GRAPHICS_NEW", ["graphics/" + p if not p.endswith("/") else
-                                  "graphics/%ssheet.json $(wildcard graphics/%s*/*.png)" % (p, p)
-                                  for e in new for p in entry_paths(e)])
+
+    def new_sources(e):
+        if e["kind"] == "palette_cycle":
+            return ["graphics/" + p for p in palette_cycle_frames(e)]
+        return ["graphics/" + p if not p.endswith("/") else
+                "graphics/%ssheet.json $(wildcard graphics/%s*/*.png)" % (p, p) for p in entry_paths(e)]
+    var("CATEGORY_GRAPHICS_NEW", [s for e in new for s in new_sources(e)])
     var("CATEGORY_GRAPHICS_NEW_INCS", ["$(GRAPHICS_BUILDDIR)/" + i for e in new for i in category_incs(e)])
     objects = [o["name"] for o in load_objects()]
     var("GRAPHICS_CLASS_OBJECTS", objects)

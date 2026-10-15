@@ -62,6 +62,7 @@ public:
 
 private:
     friend class ActorCategoryStats; // IsMaskAssistDue reads the selected descriptor
+    friend class ActorPaletteCycle;  // Update reads `current` when a category has its own cycle
 
     static void SetupVramPool(); // SetupActorVramPool
     /* SelectActorCategory: the vtable, the spawn table, the player, what
