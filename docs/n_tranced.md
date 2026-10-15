@@ -199,7 +199,7 @@ A source that includes a generated header (`constants/levels.h`, ...)
 gets N-Tranced's placeholder for it (`games/n2/levels.mk`): only the
 counts the shared headers' declarations need (`LEVEL_COUNT` 29,
 `UI_TEXT_COUNT` 196, `THEME_COUNT` 12, `ENTITY_COUNT` 110,
-`CRATE_KIND_COUNT` 26), N-Tranced's
+`CRATE_KIND_COUNT` 26, `SFX_COUNT` 64, `SONG_COUNT` 21), N-Tranced's
 own, until #1113
 generates the headers from its data. A source that needs another of
 their constants doesn't build for N-Tranced yet.

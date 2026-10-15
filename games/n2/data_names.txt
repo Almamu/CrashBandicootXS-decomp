@@ -42,3 +42,5 @@
 0x087F845C gEepromLibraryAddresses
 0x087F84B4 gEntityVtable
 0x087F894C gPeriodicSpawnerVtable
+0x087F98B4 gBgLayerVtable
+0x087F9904 gPooledBgLayerVtable

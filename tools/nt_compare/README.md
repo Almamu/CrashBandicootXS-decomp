@@ -76,7 +76,9 @@ build sometimes used the other compiler for a file (docs/n_tranced.md,
   `match` (it links as it is; with the `symbols.txt` lines its pointers
   need), `differs` (how many bytes), or why it doesn't build. A "near"
   function whose difference `GAME_N2` already covers (a struct's layout)
-  matches here.
+  matches here. `--agbcp` builds them with agbcp without
+  `-fprologue-bugfix`, which N-Tranced's build used for many objects XS's
+  built with old_agbcp (`games/n2/game.mk`'s `N2_AGBCP_NO_BUGFIX_OBJS`).
 - `xs_data_objects.py`: XS's data objects N-Tranced has whole, each one's
   `.rodata` found as one run with every pointer checked (the N-Tranced
   address of the symbol its relocation names, from `ntranced.map`, or
