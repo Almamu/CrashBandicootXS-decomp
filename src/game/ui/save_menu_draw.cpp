@@ -21,6 +21,7 @@ extern "C" {
 
 using Engine::Gfx::BgSetup;
 using Engine::Link::LinkSession;
+using Engine::Save::LinkRecord;
 using Engine::Save::SaveData;
 using Engine::Save::SaveTransfer;
 using Engine::Sys::FrameLimiter;
@@ -51,6 +52,11 @@ using Game::Ui::SaveMenu;
  * state (SaveTransfer::Poll) settles. Returns that state; on 0 (done) it
  * copies the received save into linkSave.
  *
+ * A 64 Kbit build (SAVE_LINK_VIEW, a constant condition: not the ROM's)
+ * sends a LinkRecord packed from cartSave, made in linkSave, and unpacks
+ * the received one into linkSave, returning 2 ("connection failed") if
+ * its checksum fails (save_data.hpp; docs/levels.md, "The link cable").
+ *
  * Once a NAKED transcription; it matches as plain C under both
  * compilers. The cancel test is `(u16)(keys & 2)`, whose known-zero
  * value the ROM reuses to clear `gLinkSessionReset`, and the
@@ -60,7 +66,15 @@ s32 SaveMenu::LinkExchange()
     SaveTransfer *spinner = new SaveTransfer;
     s32 result;
 
-    spinner->SetRecord(cartSave);
+    if (SAVE_LINK_VIEW) {
+        /* linkSave is free until the exchange is over */
+        LinkRecord *sent = (LinkRecord *)linkSave;
+
+        sent->Pack(cartSave);
+        spinner->SetRecord((SaveData *)sent);
+    } else {
+        spinner->SetRecord(cartSave);
+    }
     spinner->Reset();
     do {
         FrameLimiter::WaitForVBlank();
@@ -80,7 +94,11 @@ s32 SaveMenu::LinkExchange()
         /* `data` is needed: inlined, the code is 1 instruction longer */
         s32 data = (s32)spinner->GetData();
 
-        MemCopy32(linkSave, (void *)data, SAVE_LINK_SIZE);
+        if (!SAVE_LINK_VIEW) {
+            MemCopy32(linkSave, (void *)data, SAVE_LINK_SIZE);
+        } else if (!((LinkRecord *)data)->Unpack(linkSave)) {
+            result = 2;
+        }
     }
     delete spinner;
     return result;

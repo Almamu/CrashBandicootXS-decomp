@@ -153,12 +153,177 @@ COMPILE_TIME_ASSERT(save_data_hpp, sizeof(Engine::Save::SaveData) == SAVE_DATA_S
 COMPILE_TIME_ASSERT(save_data_hpp, SAVE_DATA_SIZE % 8 == 0);
 
 /* The record the link cable carries (SaveTransfer::data): 0x200 bytes,
- * the ROM's SaveData, which Crash 2 and 3 send too. A larger record (the
- * 64 Kbit save's) doesn't go whole: a receiver that takes 0x200 bytes (the
- * ROM, Crash 2/3) would write the rest past its buffer. Only its first
- * 0x200 bytes go, so neither side's checksum holds ("connection failed";
- * docs/levels.md, "The save"). */
+ * the ROM's SaveData, which Crash 2 and 3 send too. A receiver (the ROM,
+ * Crash 2/3) takes exactly 0x200 bytes, so a larger record (the 64 Kbit
+ * save's) doesn't go whole: it goes as a LinkRecord, below
+ * (SAVE_LINK_VIEW; docs/levels.md, "The link cable"). */
 #define SAVE_LINK_SIZE 0x200
+
+/* Whether the save goes over the link cable as a LinkRecord: when the
+ * record isn't the link's 0x200 bytes, the 64 Kbit save's. A constant
+ * condition (constants/save.h): 0 in the ROM, whose record goes as it
+ * is, and SaveMenu::LinkExchange keeps only one side. */
+#define SAVE_LINK_VIEW (SAVE_DATA_SIZE != SAVE_LINK_SIZE)
+
+/* The level words a link slot holds: the ROM's 25. */
+#define SAVE_LINK_LEVELS 25
+
+/* The link record's checksum seed: the ROM's SAVE_CHECKSUM_SEED, which
+ * Crash 2 and 3 check against. */
+#define SAVE_LINK_CHECKSUM_SEED 0
+
+/* A save slot as the link record holds it: the ROM's 0x70-byte
+ * save_slot, the progress block with SAVE_LINK_LEVELS level words and
+ * no extra flags. */
+struct save_link_slot {
+    u16 lives:7; // 0x00 - GameProgress's halfword
+    u16 maskLevel:2;
+    u16 wumpa:7;
+    u8 flags;                                    // 0x02 - GameProgress::flags
+    union level_record levels[SAVE_LINK_LEVELS]; // 0x04 - the first level words
+    u8 level;                                    // 0x68
+    u16 sfxVolume;                               // 0x6a
+    u16 musicVolume;                             // 0x6c
+};
+COMPILE_TIME_ASSERT(save_data_hpp, sizeof(struct save_link_slot) == 0x70);
+
+namespace Engine
+{
+namespace Save
+{
+
+/* The 0x200-byte view of a larger record that a 64 Kbit build sends and
+ * receives over the link cable (SAVE_LINK_VIEW; SaveMenu::LinkExchange):
+ * the ROM's SaveData layout, with the ROM's trailer at 0x1f4 and its
+ * checksum (SAVE_LINK_CHECKSUM_SEED), so the ROM and Crash 2/3 read it
+ * as an XS record (game id 1) and give the link bonus.
+ *
+ * Its slots hold the first SAVE_LINK_LEVELS level words of the
+ * sender's, but `slotEmpty` marks them all empty: they mean something
+ * only with the sender's level data, so the ROM and other builds show
+ * four empty slots and load none. The real empty flags are in the ROM
+ * record's unused gap, after the sender's SAVE_CHECKSUM_SEED (0 in a
+ * record of the ROM, whose gap Reset clears; never 0 in a build of other
+ * levels), and only a build of the same level data, so of the same seed,
+ * takes the slots back (Unpack). They carry no level past the first
+ * SAVE_LINK_LEVELS and no extra progress flags. */
+class LinkRecord
+{
+public:
+    struct save_link_slot slots[4]; // 0x000
+    /* 0x1c0 - the ROM's unused gap: the sender's SAVE_CHECKSUM_SEED (its
+     * level data's), 0 in a ROM record */
+    u32 senderSeed;
+    u8 senderSlotEmpty[4]; // 0x1c4 - the sender's slotEmpty
+    u8 unused_1c8[0x2c];
+    /* the ROM's trailer */
+    u8 slotEmpty[4];  // 0x1f4 - all 1 (Pack)
+    u8 magic;         // 0x1f8 - 'C'
+    u8 versionNibble; // 0x1f9 - the sender's SAVE_VERSION (the game id is the high nibble)
+    u8 flags;         // 0x1fa - the sender's flags (the Crash 2/3 bonus bits)
+    u8 field_1fb;     // 0x1fb
+    u32 checksum;     // 0x1fc - from SAVE_LINK_CHECKSUM_SEED
+
+    /* The additive word sum of the words before `checksum`, from
+     * SAVE_LINK_CHECKSUM_SEED, as SaveData::UpdateChecksum's. */
+    u32 Sum()
+    {
+        u32 *p = (u32 *)this;
+        u32 sum = SAVE_LINK_CHECKSUM_SEED;
+        s32 i;
+
+        for (i = SAVE_LINK_SIZE / 4 - 2; i >= 0; i--) {
+            sum += *p++;
+        }
+        return sum;
+    }
+
+    /* Makes the view of `save` to send. (The record is cleared a word at
+     * a time: DmaFill16's volatile would take a stack slot in
+     * SaveMenu::LinkExchange even in the ROM, where this isn't called.) */
+    void Pack(SaveData *save)
+    {
+        u32 *p = (u32 *)this;
+        s32 i;
+        s32 j;
+
+        for (i = SAVE_LINK_SIZE / 4 - 1; i >= 0; i--) {
+            *p++ = 0;
+        }
+        for (i = 0; i <= 3; i++) {
+            struct save_slot *src = &save->slots[i];
+            struct save_link_slot *dst = &slots[i];
+
+            dst->lives = src->progress.lives;
+            dst->maskLevel = src->progress.maskLevel;
+            dst->wumpa = src->progress.wumpa;
+            dst->flags = src->progress.flags;
+            for (j = 0; j < SAVE_LINK_LEVELS; j++) {
+                dst->levels[j] = src->progress.levels[j];
+            }
+            dst->level = src->level;
+            dst->sfxVolume = src->sfxVolume;
+            dst->musicVolume = src->musicVolume;
+            senderSlotEmpty[i] = save->slotEmpty[i];
+            slotEmpty[i] = 1;
+        }
+        senderSeed = SAVE_CHECKSUM_SEED;
+        magic = 0x43;
+        versionNibble = SAVE_VERSION;
+        flags = save->flags;
+        checksum = Sum();
+    }
+
+    /* Turns the received view into `save`, or returns false if its
+     * checksum fails. `save` gets the sender's version (LinkInput reads
+     * the game id from it) and flags, and the sender's slots if it has
+     * this build's level data (its version and seed): the levels past
+     * SAVE_LINK_LEVELS and the extra progress flags are 0. Then `save`'s
+     * own checksum. */
+    bool Unpack(SaveData *save)
+    {
+        s32 i;
+        s32 j;
+
+        if (Sum() != checksum) {
+            return false;
+        }
+        save->Reset();
+        save->versionNibble = versionNibble;
+        save->flags = flags;
+        if (versionNibble == SAVE_VERSION && senderSeed == SAVE_CHECKSUM_SEED) {
+            for (i = 0; i <= 3; i++) {
+                struct save_link_slot *src = &slots[i];
+                struct save_slot *dst = &save->slots[i];
+
+                if (senderSlotEmpty[i]) {
+                    continue;
+                }
+                dst->progress.lives = src->lives;
+                dst->progress.maskLevel = src->maskLevel;
+                dst->progress.wumpa = src->wumpa;
+                dst->progress.flags = src->flags;
+                for (j = 0; j < SAVE_LINK_LEVELS; j++) {
+                    dst->progress.levels[j] = src->levels[j];
+                }
+                dst->level = src->level;
+                dst->sfxVolume = src->sfxVolume;
+                dst->musicVolume = src->musicVolume;
+                save->slotEmpty[i] = 0;
+            }
+        }
+        save->UpdateChecksum();
+        return true;
+    }
+};
+
+} // namespace Save
+} // namespace Engine
+
+COMPILE_TIME_ASSERT(save_data_hpp, sizeof(Engine::Save::LinkRecord) == SAVE_LINK_SIZE);
+COMPILE_TIME_ASSERT(save_data_hpp, offsetof(Engine::Save::LinkRecord, slotEmpty) == 0x1f4);
+/* A larger record has more levels than a link slot holds. */
+COMPILE_TIME_ASSERT(save_data_hpp, !SAVE_LINK_VIEW || LEVEL_COUNT >= SAVE_LINK_LEVELS);
 
 /* The stack the save needs past the ROM's, which main's mem_heap_init
  * reserve adds: Read and Write's record buffer, and SaveMenu::SaveToSlot's
