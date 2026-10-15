@@ -2,14 +2,14 @@
 """`tools/magic_numbers.py --sizes`: raw sizes, strides, offsets and
 hardware values that have a `sizeof`, a member or a named constant (#820).
 
-Scans the game code under src/ (not src/.../data/, not lib/) for integer
+Scans the game code under engine/src/ (not engine/src/.../data/, not lib/) for integer
 literals in six kinds of places:
 
   alloc    the size argument of mem_alloc, IwramAlloc, OperatorNew,
            OperatorNewArray and `operator new` (and mem_alloc's heap flag,
            MEM_HEAP_*), plus the `OperatorNew(0xNN)` sizes comments
            still quote for code that is now `new X`;
-  copy     the length argument of DmaCopy*/DmaFill*/DmaClear* (include/
+  copy     the length argument of DmaCopy*/DmaFill*/DmaClear* (engine/include/
            gba/dma_macros.h), CpuSet/CpuFastSet (the unit count in the
            control word), MemCopy32, memcpy and memset;
   stride   `i * K` / `K * i` where K is the size of a struct or class;
@@ -67,7 +67,7 @@ Usage:
   tools/magic_numbers.py --sizes --show             ... with the source line
   tools/magic_numbers.py --sizes --category C       only C (alloc, copy, ...)
   tools/magic_numbers.py --sizes --min-confidence high
-  tools/magic_numbers.py --sizes --path src/engine/link    only files under a path
+  tools/magic_numbers.py --sizes --path engine/src/engine/link    only files under a path
   tools/magic_numbers.py --sizes --json             machine-readable, for agents
   tools/magic_numbers.py --sizes --report [OUT]     Markdown counts + samples
   tools/magic_numbers.py --sizes --db /tmp/sizes.json ...
@@ -91,7 +91,7 @@ import magic_numbers as mn  # noqa: E402
 
 ROOT = mn.ROOT
 GBA_HEADERS = [os.path.join(ROOT, "platform", "gba", "include", "gba", f) for f in ("defines.h", "io_reg.h", "dma_macros.h")]
-MEMORY_HEADER = os.path.join(ROOT, "include", "engine", "sys", "memory.h")
+MEMORY_HEADER = os.path.join(ROOT, "engine", "include", "engine", "sys", "memory.h")
 DB_VERSION = 1
 
 CATEGORIES = collections.OrderedDict(
@@ -353,7 +353,7 @@ class Types:
         if self._sizes is None:
             self._sizes = collections.defaultdict(list)
             for k, r in self.rec.items():
-                if r["anon"] or r["file"] in (None, "<internal>") or (r["file"].startswith("src/") and "/data/" in r["file"]) \
+                if r["anon"] or r["file"] in (None, "<internal>") or (r["file"].startswith("engine/src/") and "/data/" in r["file"]) \
                         or r["name"].startswith("__") or r["size"] < 4:
                     continue
                 if not any(self.rec[x]["name"] == r["name"] for x in self._sizes[r["size"]]):
@@ -653,7 +653,7 @@ def pointee(types, tree, src):
 
 
 # ---------------------------------------------------------------------------
-# Named constants (platform/gba/include/gba/*.h, include/engine/sys/memory.h)
+# Named constants (platform/gba/include/gba/*.h, engine/include/engine/sys/memory.h)
 
 
 def load_defines(paths):
@@ -1630,7 +1630,7 @@ class FileScan:
 
 def source_files(paths):
     out = []
-    for dirpath, dirnames, filenames in os.walk(os.path.join(ROOT, "src")):
+    for dirpath, dirnames, filenames in os.walk(os.path.join(ROOT, "engine", "src")):
         dirnames.sort()
         rel_dir = os.path.relpath(dirpath, ROOT)
         if "data" in rel_dir.split(os.sep)[1:]:

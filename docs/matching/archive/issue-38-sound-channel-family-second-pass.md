@@ -3,7 +3,7 @@
 
 A further pass over the two functions
 [docs/matching/archive/issue-38-sound-channel-family.md](./issue-38-sound-channel-family.md)
-left as `NON_MATCHING` C reconstructions in `src/game/ui/slideshow.c` -
+left as `NON_MATCHING` C reconstructions in `engine/src/game/ui/slideshow.c` -
 `BeginSlide` and `ShowSlidePicture`. Both had a single documented residual
 gap each; this pass found the actual fix for `ShowSlidePicture` (now real,
 matched C) and, while chasing `BeginSlide`'s documented gap, found the
@@ -85,12 +85,12 @@ one:
    `register T x asm("r7")` never adds an inline-asm-clobbered - or even
    a genuinely written-and-read - r7 to the function's own push/pop list.
    This is the same confirmed, extensively-precedented toolchain gap
-   documented at length for `StartTimeTrial` (`src/level/time_trial.c`)
-   and `LoadGraphicsPackage` (`src/engine/gfx/graphics_package.c`,
+   documented at length for `StartTimeTrial` (`engine/src/level/time_trial.c`)
+   and `LoadGraphicsPackage` (`engine/src/engine/gfx/graphics_package.c`,
    itself still `NON_MATCHING` for exactly this reason despite a fully
    pinned `register u16 *src asm("r7")` used throughout the function) -
    and every other `asm("r7")` call-out project-wide (`grep -rn
-   'asm("r7")' src/` turns up over a dozen). No C-level technique
+   'asm("r7")' engine/src/` turns up over a dozen). No C-level technique
    (explicit pin, output operand instead of clobber, increasing register
    pressure to coax the natural allocator into picking r7 on its own)
    gets around it.
@@ -106,7 +106,7 @@ in `docs/status/game_loop.md` and `tools/report_units.py`, and this pass
 doesn't claim it toward closing issue #38.
 
 `BeginSlide`/`RunSlideshow`/`SkipSlides`/`ShowSlidePicture` are now all one
-contiguous span in `src/game/ui/slideshow.c`'s own object
+contiguous span in `engine/src/game/ui/slideshow.c`'s own object
 (`src/game/ui/slideshow.o`), so the two single-function raw asm files
 that used to flank the matched middle (`asm/code_3_2_17_24590.s`,
 `asm/code_3_2_17_24708.s`) are deleted and `ldscript.txt`/

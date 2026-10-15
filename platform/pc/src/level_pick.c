@@ -13,7 +13,7 @@
 #include "gba/gba.h"
 #include "host_platform.h"
 
-/* LevelProgress's first fields (include/game/level/level_state.hpp):
+/* LevelProgress's first fields (engine/include/game/level/level_state.hpp):
  * two s32s, at the same offsets on any host. */
 struct LevelProgressHead {
     s32 level;

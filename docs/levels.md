@@ -1,18 +1,18 @@
 # Level data: rooms, layers, chunk streams, entities
 
 The game has 41 rooms (playable areas). Everything a room needs besides
-its tile graphics is built from [`data/levels/`](../data/levels) by
+its tile graphics is built from [`games/xs/data/levels/`](../games/xs/data/levels) by
 [`tools/levels.py`](../tools/levels.py):
 
 - the room data proper, 178,208 bytes in two ROM regions
   (`0x0824B638`-`0x08270F08`, 33 rooms, and `0x082B91D0`-`0x082BF120`,
   8 rooms): descriptors, chunk grids, palettes and entity lists, as typed
-  C in `src/game/level/data/level_rooms_main_bonus.cpp` and `src/game/level/data/level_rooms_bosses_gem_paths.cpp`;
+  C in `engine/src/game/level/data/level_rooms_main_bonus.cpp` and `engine/src/game/level/data/level_rooms_bosses_gem_paths.cpp`;
 - the 41 level assets (the per-layer tilemaps, compressed), `gRoomNNAsset`
-  in `src/game/level/data/level_assets.cpp`: 7 raw ones at `0x086C127C` and
+  in `engine/src/game/level/data/level_assets.cpp`: 7 raw ones at `0x086C127C` and
   `0x086ECCD4`-`0x087BC13C` (1,112,392 bytes), and 34 LZ77-packed ones
   between the intro graphics (`0x0864F830`-`0x086EC63C`, formerly the
-  "unidentified" `graphics/tileset1/27`-`60` `.bin` files).
+  "unidentified" `games/xs/graphics/tileset1/27`-`60` `.bin` files).
 
 The format below comes from the matched C that reads it. The consumer of
 each part is named in its section.
@@ -23,7 +23,7 @@ The level table `gLevelTable` (`struct level_info`, one per
 level) gives each level a room list: the rooms played in order and up
 to two extra rooms, each a `struct level_room` record
 `{const u16 *palette; const struct level_desc *desc; s32 kind; ...}`
-(0x14 bytes). All of it is in `src/game/level/data/level_table.cpp`, generated
+(0x14 bytes). All of it is in `engine/src/game/level/data/level_table.cpp`, generated
 from `levels.json` and the rooms' `room.json` (see "The level table"), with
 one record per room (`gLevelRoom00`..`gLevelRoom40`) plus seven records
 of kind 3 for the stages played in an actor category, which have no
@@ -40,7 +40,7 @@ The rooms are numbered here in the order of their records
 offset (`jungle_jam/main` is the room whose `level_desc` is at
 `0x0825E7DC`).
 
-The types are in [`include/game/level/level_data.h`](../include/level_data.h). Each
+The types are in [`engine/include/game/level/level_data.h`](../engine/include/level_data.h). Each
 struct names the code's own local views of the same record.
 
 ### `struct level_desc` (0x30)
@@ -59,7 +59,7 @@ struct names the code's own local views of the same record.
 ### `struct level_layer_desc` (0x20)
 
 The source of a BG layer and its streamer (`BgLayerBase::SetSource`,
-`BgStreamer`, include/game/level/bg_layer.hpp) and the terrain cache's `source`.
+`BgStreamer`, engine/include/game/level/bg_layer.hpp) and the terrain cache's `source`.
 
 | Offset | Field |
 |---|---|
@@ -197,9 +197,9 @@ top of it (`SetCrateAbove`/`SetCrateBelow`).
 ### Entity types
 
 The spawn functions in `gEntitySpawnFuncs`, identified from the sprite
-bank and animation each one sets up (`graphics/sprites/`), the pickup
+bank and animation each one sets up (`games/xs/graphics/sprites/`), the pickup
 code it gives the object and where the levels place it. Their names are
-in `data/levels/entity_types.json` (one record per type: `name`,
+in `games/xs/data/levels/entity_types.json` (one record per type: `name`,
 `spawner`, and for an enemy its `enemy_kind`), which the build turns into
 the `ENTITY_*` and `ENEMY_KIND_*` defines of `constants/entities.h` (see
 "Sources and build"):
@@ -214,7 +214,7 @@ the `ENTITY_*` and `ENEMY_KIND_*` defines of `constants/entities.h` (see
 | 0x09, 0x0A, 0x0B, 0x0C | `SpawnBlueGem`, `SpawnRedGem`, `SpawnGreenGem`, `SpawnYellowGem` | the coloured gems (bank 32) |
 | 0x10 | `SpawnStopwatch` | the time-trial stopwatch (bank 36) |
 | 0x12, 0x13, 0x14, 0x4A | `SpawnTurboRunPower`, `SpawnDoubleJumpPower`, `SpawnBodySlamPower`, `SpawnTornadoSpinPower` | the four power pictures (bank 38); no level places them |
-| 0x15-0x27 | `SpawnBasicCrate` .. `SpawnTimeCrate3` | crates: `CreateCrate` kinds 0-18 (bank 31), `CRATE_KIND_*` (`data/levels/crate_kinds.json`) |
+| 0x15-0x27 | `SpawnBasicCrate` .. `SpawnTimeCrate3` | crates: `CreateCrate` kinds 0-18 (bank 31), `CRATE_KIND_*` (`games/xs/data/levels/crate_kinds.json`) |
 | 0x51-0x54 | `SpawnRedGemPlatform`, `SpawnYellowGemPlatform`, `SpawnGreenGemPlatform`, `SpawnBlueGemPlatform` | a gem outline over a platform (bank 32) |
 | 0x28 | `SpawnLizard` | enemy, bank 13 |
 | 0x29 | `SpawnVulture` | enemy, bank 11 |
@@ -268,12 +268,12 @@ records, their offsets, the chunk grids (slot order), the palette, the
 type counts, the links (if any), the `level_desc`, the entity list
 header, the layer descriptors (slot order), the groups, the entities.
 The only gaps are the zero bytes agbcc's alignment gives a 4-aligned
-object after a `u16` one. `data/levels/levels.json` lists the rooms of
+object after a `u16` one. `games/xs/data/levels/levels.json` lists the rooms of
 each region in ROM order.
 
 ## Room folders
 
-Each room's folder is `data/levels/<level>/<slot>/`: the level whose
+Each room's folder is `games/xs/data/levels/<level>/<slot>/`: the level whose
 `gLevelRoomLists` entry plays it (named after its name in `levels.json`),
 and its slot there:
 
@@ -296,7 +296,7 @@ rooms`), not from the folders on disk.
 
 ## Sources and build
 
-`data/levels/` (XS's; `tools/levels.py --levels-dir DIR` works on another
+`games/xs/data/levels/` (XS's; `tools/levels.py --levels-dir DIR` works on another
 game's, such as N-Tranced's `games/n2/data/levels/`, docs/n_tranced.md):
 
 - `levels.json`: the rooms (their folders, `"rooms"`, in room-table
@@ -353,7 +353,7 @@ room's generated parameter struct).
   viewing picture `tilesets/<set>.png`) and the cells of every layer that
   uses it (`<room>/<layer>.map.bin`, little-endian `u16`, row-major),
   each written only if it changed (see "Tile sets");
-- `tools/levels.py asset data/levels/<room> build/.../data/levels/<room>/asset.bin --build build/.../data/levels`
+- `tools/levels.py asset games/xs/data/levels/<room> build/.../data/levels/<room>/asset.bin --build build/.../data/levels`
   per room, from those cells and `collision.png`; it also writes
   `asset.layout.json`, the layers' asset offsets and chunk grids, which
   the room data takes. gbagfx compresses the 34 packed assets, and
@@ -361,11 +361,11 @@ room's generated parameter struct).
   (`asset.bin.inc`, or `asset.bin.lz.inc` trimmed to the LZ77 stream);
 - `tools/levels.py assets build/.../data/levels/level_assets.inc`:
   the 41 asset definitions, in the ROM order of `levels.json`'s
-  `"assets"` list, `#include`d by `src/game/level/data/level_assets.cpp`;
+  `"assets"` list, `#include`d by `engine/src/game/level/data/level_assets.cpp`;
 - `tools/levels.py c <region> build/.../data/levels/<region>.inc --build build/.../data/levels`
-  per region, `#include`d by the two `src/*/data/level_rooms_*.cpp` files;
+  per region, `#include`d by the two `engine/src/*/data/level_rooms_*.cpp` files;
 - `tools/levels.py table levels|records build/.../data/levels/level_table[_rooms].inc`:
-  the level table, `#include`d by `src/game/level/data/level_table.cpp` (see
+  the level table, `#include`d by `engine/src/game/level/data/level_table.cpp` (see
   "The level table");
 - `tools/levels.py constants entities|crates|levels|themes build/include/constants/<name>.h`:
   the constants headers named in this data, `constants/entities.h`
@@ -381,7 +381,7 @@ room's generated parameter struct).
 ### Room classes
 
 Each room is a class of the generated `rooms.hpp` (#915), like a graphic
-of graphics/manifest.json (graphics.md, "Graphics classes"). Its graphics
+of games/xs/graphics/manifest.json (graphics.md, "Graphics classes"). Its graphics
 are static const data members: the BG palette (`palette`), its layers'
 chunk grids (`bg0Grid`, `bg1Grid`, `bg2Grid`, `bg3Grid`,
 `collisionGrid`, those of the layers it has) and its level asset
@@ -419,10 +419,10 @@ which the rooms of a theme share.
 
 A layer edit rebuilds only its room's map, asset and the room data.
 
-`tools/levels.py extract` writes `data/levels/` from `baserom.gba` (and
+`tools/levels.py extract` writes `games/xs/data/levels/` from `baserom.gba` (and
 checks that every asset re-encodes exactly from the written sources);
 extracting again gives the same files byte for byte. `tools/levels.py
-render data/levels/<room> <layer> out.png` draws a layer's picture again
+render games/xs/data/levels/<room> <layer> out.png` draws a layer's picture again
 from its cells (for the collision layer, the collision image).
 
 ### BG layers
@@ -511,7 +511,7 @@ declares it. A set named by BG0 layers is 8bpp, one named by BG1-3 layers
 
 1. tile 0, the blank tile;
 2. the rooms using the set, one after another: first the ones
-   `data/levels/tileset_order.json` lists for it, then the other rooms of
+   `games/xs/data/levels/tileset_order.json` lists for it, then the other rooms of
    the ROM's regions in `levels.json` order, then the new rooms (see
    "Adding a room");
 3. in a room, its layers using the set: `bg1`, `bg2`, `bg3`, or `bg0`;
@@ -552,7 +552,7 @@ drawn in, the palette of the set's first room).
 
 ### The level table
 
-The level table is generated, like the room data. `src/game/level/data/level_table.cpp`
+The level table is generated, like the room data. `engine/src/game/level/data/level_table.cpp`
 `#include`s two files that `tools/levels.py table` writes into
 `build/.../data/levels/`:
 
@@ -648,7 +648,7 @@ they are now, in the layout above:
   its place in `"levels"`, which the code's arithmetic needs in a set
   order (see "The counts the code takes from the levels"). Its name is
   the UI string `"name_text"`: a new `ui.level.<level>` entry after the
-  last `ui.*` one in `text/crashxs.pot`, with its translations in the
+  last `ui.*` one in `games/xs/text/crashxs.pot`, with its translations in the
   five `.po` files ([text.md, "A new level's name"](./text.md#a-new-levels-name)),
   which `make text-check` requires;
 - a stage of a new actor category (see "Actor categories") is one more
@@ -701,19 +701,19 @@ save"). `levels.json`'s `"themes"` names each theme
 
 ### Adding a room
 
-A room is a folder `data/levels/<level>/<slot>/` (room.json, the layer
+A room is a folder `games/xs/data/levels/<level>/<slot>/` (room.json, the layer
 pictures and `collision.png`), and `levels.json`'s `"rooms"` lists it.
 The ROM's rooms are those its `"regions"` list; a room in no region is a
 **new room**. Everything about it is data, and a plain `make` builds it:
 
 1. **Make the folder.** The quickest start is a copy of a room of the
-   same theme, `cp -r data/levels/snow_crash/part1 data/levels/jungle_jam/extra`.
+   same theme, `cp -r games/xs/data/levels/snow_crash/part1 games/xs/data/levels/jungle_jam/extra`.
    Then edit the pictures, `collision.png` and the entities in room.json.
 2. **Give it its own symbols.** Every name in room.json is a symbol:
    `"symbols"`, the asset's `"symbol"`, each layer's `"grid_symbol"` and
    the record's `"symbol"`. For a copy of room 23, rename `gRoom23` to
    `gRoom41` and `gLevelRoom23` to `gLevelRoom41`:
-   `sed -i 's/gRoom23/gRoom41/g; s/gLevelRoom23/gLevelRoom41/g' data/levels/jungle_jam/extra/room.json`.
+   `sed -i 's/gRoom23/gRoom41/g; s/gLevelRoom23/gLevelRoom41/g' games/xs/data/levels/jungle_jam/extra/room.json`.
    Set the record's `"kind"` (`ON_FOOT`, `UNDERWATER` or `HOVER`, which
    picks the player's controller) and `"blend"`. The room's class follows
    its descriptor's symbol (`gRoom41Desc`: `Room41`, see "Room classes").
@@ -778,7 +778,7 @@ colour:
 
 Every cell value (terrain type, flag nibble and open bits, see "Cells"
 above and [flags/terrain.md](./flags/terrain.md)) has its own colour,
-listed in `data/levels/collision_legend.json`. All 41 rooms use only the
+listed in `games/xs/data/levels/collision_legend.json`. All 41 rooms use only the
 37 values below. `tools/levels.py` reads the image directly when it
 builds the asset and the room data. `tools/collision_bmp.py` converts in
 either direction:
@@ -804,7 +804,7 @@ byte for byte.
 
 To edit the collision against the level picture:
 
-1. open the BG0 picture, `data/levels/<room>/bg0.png`, in an editor with
+1. open the BG0 picture, `games/xs/data/levels/<room>/bg0.png`, in an editor with
    layers (GIMP, Krita, Aseprite, ...) and add `collision.png` as a layer
    above it at offset 0, 0: the two are the same size, so they line up
    pixel for pixel;
@@ -923,11 +923,11 @@ A theme has:
 
 - `"constant"` and `"name"`: its `THEME_*` constant (`constants/themes.h`)
   and what it is;
-- `"song"`: a song of `sound/gax_manifest.json`'s `song_table`, by name
+- `"song"`: a song of `games/xs/sound/gax_manifest.json`'s `song_table`, by name
   (`SONG_<NAME>`, `constants/songs.h`);
 - `"picture"` (optional): a level-select picture, by its path under
-  `graphics/` (`level_select/pictures/*.png`, an entry of
-  `graphics/manifest.json` with a graphics class: one of the ROM's ten, or
+  `games/xs/graphics/` (`level_select/pictures/*.png`, an entry of
+  `games/xs/graphics/manifest.json` with a graphics class: one of the ROM's ten, or
   a new one, an entry with no ROM address, [graphics.md, "New
   graphics"](./graphics.md#new-graphics)). A theme with none
   behaves like mega-mix's: it has no entry of `gLevelSelectPictures`
@@ -999,7 +999,7 @@ its number.
    song"](./audio.md#adding-a-song)) and one of the
    level-select pictures, or none (then its levels must be off the grid,
    like mega-mix). A picture of its own is a new PNG in
-   `graphics/level_select/pictures/` with a manifest entry without a ROM
+   `games/xs/graphics/level_select/pictures/` with a manifest entry without a ROM
    address ([graphics.md, "New graphics"](./graphics.md#new-graphics)).
 2. **Give it a colour cycle**, an existing one by name, or a new one at
    the end of `"palette_cycles"`: `{"name": "lab", "lists": [{"symbol":
@@ -1271,7 +1271,7 @@ A stage (`{"stage": "<NAME>"}` in a level's `"rooms"`, a
 stages, which `ActorCategory::Init(catIndex)` plays (#966, phase 7).
 `ActorCategory::descriptors[catIndex]` (`struct category_descriptor`,
 `actor_anim.h`) says what it plays, and it is data: `levels.json`'s
-`"categories"` and a spawn list per category in `data/levels/spawns/`. A
+`"categories"` and a spawn list per category in `games/xs/data/levels/spawns/`. A
 new category, or a new mix of the existing actor kinds, builds with plain
 `make` and no code change.
 
@@ -1310,11 +1310,11 @@ levels"). What clearing it gives is the level's too, its `"on_clear"`.
 | `"constant"`, `"name"` | (its index) | `CATEGORY_<NAME>` (`constants/categories.h`), which a stage names as `<NAME>` |
 | `"type"` | `type` | `POLAR`, `JETPACK` or `HOVERCRAFT` (`CATEGORY_TYPE_*`) |
 | (the type) | `cellAnim`, `cellAnimSize`, `palette`, `anim_table`, `sprite_sheet` | the type's: polar `gCategoryFamily0CellAnim`, `gPolarCategoryPalette`, `gCategoryFamily0AnimTable`, `gPolarSpriteSheet`; jetpack `gCategoryFamily1CellAnim`, `gAirshipCategoryPalette`, `gCategoryFamily1AnimTable`, `gJetpackSpriteSheet`; hovercraft the jetpack's with `gHovercraftCategoryPalette`. The ROM's categories of a type all have the same ones, and the actor kinds index the type's animation table (data, see "Animation tables") |
-| `"cell_anim"` (optional) | `cellAnim`, `cellAnimSize` | the BG0 cell animation instead of the type's: a `cell_anim` of `graphics/manifest.json`, by its path (see "Category graphics") |
-| `"sky"` (optional) | `bgPicture` | the BG1 picture: one of the jetpack skies, `rocket_racket`, `blimp_bonanza`, `no_fly_zone` (`gCategory3/4/5BgPicture`, `graphics/vehicles/jetpack/skies/`), or a `bg_picture` of the manifest by its path (see "Category graphics"). None for a polar category |
+| `"cell_anim"` (optional) | `cellAnim`, `cellAnimSize` | the BG0 cell animation instead of the type's: a `cell_anim` of `games/xs/graphics/manifest.json`, by its path (see "Category graphics") |
+| `"sky"` (optional) | `bgPicture` | the BG1 picture: one of the jetpack skies, `rocket_racket`, `blimp_bonanza`, `no_fly_zone` (`gCategory3/4/5BgPicture`, `games/xs/graphics/vehicles/jetpack/skies/`), or a `bg_picture` of the manifest by its path (see "Category graphics"). None for a polar category |
 | `"palette"` (optional) | `palette` | the OBJ palette instead of the type's: a `category_palette` of the manifest, by its path (see "Category graphics") |
-| `"sprite_sheet"`, `"anim_table"` (optional) | `sprite_sheet`, `anim_table` | the sprite sheet (a `framed_sheet` of the manifest, by its path) and the animation table (of `data/levels/anim_tables/`, by name) instead of the type's (see "Category sprite sheets") |
-| `"spawns"` | `spawnTable` | its spawn list, `data/levels/spawns/<spawns>.json` |
+| `"sprite_sheet"`, `"anim_table"` (optional) | `sprite_sheet`, `anim_table` | the sprite sheet (a `framed_sheet` of the manifest, by its path) and the animation table (of `games/xs/data/levels/anim_tables/`, by name) instead of the type's (see "Category sprite sheets") |
+| `"spawns"` | `spawnTable` | its spawn list, `games/xs/data/levels/spawns/<spawns>.json` |
 | `"mask_assist_deaths"`, `"bonus_kind_deaths"`, `"retry_boss_deaths"` | the same | deaths before the mask assist, before the spawns' `bonus` kinds, before the boss's retry level |
 | `"boss_level"`, `"retry_boss_level"` | `bossLevel`, `retryBossLevel` | the boss's level: 0-5 for the yeti (`Yeti::chargeParams`), 0-3 for the airship (`Airship::attacks[kind + level]`), 0-1 for the hovercraft (`Hovercraft::attacks`) |
 
@@ -1374,7 +1374,7 @@ what a save's records mean.
 
 ### Adding a category
 
-1. **The spawn list.** A new `data/levels/spawns/<name>.json` with its
+1. **The spawn list.** A new `games/xs/data/levels/spawns/<name>.json` with its
    own `"symbol"`, for example a copy of a ROM list with kinds swapped,
    spawns added or moved.
 2. **The category.** An entry at the end of `"categories"`: its constant,
@@ -1412,7 +1412,7 @@ spawn list.
 A category's BG0 cell animation, BG1 sky, OBJ palette and (polar only)
 BG palette cycle are the type's unless it names its own (#966, #1089):
 `"cell_anim"`, `"sky"`, `"palette"` and `"palette_cycle"` name an entry
-of `graphics/manifest.json` by its path under `graphics/`.
+of `games/xs/graphics/manifest.json` by its path under `games/xs/graphics/`.
 That can be one of the ROM's (`vehicles/jetpack/clouds.png`, a sky) or a
 new graphic, an entry with no ROM address ([graphics.md, "New
 graphics"](./graphics.md#new-graphics)):
@@ -1452,7 +1452,7 @@ the code is the ROM's. Otherwise it is
 defines `ActorPaletteCycle::categoryFrames`, each category's frames (its
 own, or the ROM's `frames`), after the descriptors. The descriptors
 don't change (the ROM's have no field for it). The ROM's frames are
-`graphics/vehicles/polar/palette_cycle/` (the manifest's
+`games/xs/graphics/vehicles/polar/palette_cycle/` (the manifest's
 `gActorPaletteCycleFrames`, `actor_palette_cycle_frames.cpp` `#include`s
 them), so a recolour of every polar category is an edit of those 32
 files, and one category's a copy of them it names.
@@ -1540,7 +1540,7 @@ anim_table_record`, `actor_anim.h`) has one record per actor kind: the
 spawner indexes it with the spawn's kind (`gActorAnimTable[kind]`,
 `gJetpackAnimTable[kind]`, set by `ActorCategory::Select` from the
 descriptor), and the actors it makes draw the record's keyframes and
-frames. The ROM's two are data, `data/levels/anim_tables/polar.json`
+frames. The ROM's two are data, `games/xs/data/levels/anim_tables/polar.json`
 (`gCategoryFamily0AnimTable`, 41 records) and `jetpack.json`
 (`gCategoryFamily1AnimTable`, 47), with the arrays their records point
 at:
@@ -1595,13 +1595,13 @@ at:
     record's frames and loops back to `frame + loop start`; the attribute
     is OR'd into the OAM attributes (`0x1000`: flipped horizontally);
   - `{"frames": symbol, "list": [...]}`: frames of the family's sprite
-    sheet (`graphics/vehicles/<family>/sprite_sheet/`, or the table's
+    sheet (`games/xs/graphics/vehicles/<family>/sprite_sheet/`, or the table's
     `"sheet"`), each its entity folder and frame PNG, `"wumpa/03"`, which
     the build turns into the frame's offset in the decompressed sheet
     (`FRAMED_POLAR_WUMPA_03`, `tools/framed_gfx.py header`, under the
     sheet's `"prefix"`);
   - `{"player_frames": symbol, "list": [...]}`: record 0's, Crash's
-    compressed frames (`graphics/vehicles/<family>/player.png`) by number
+    compressed frames (`games/xs/graphics/vehicles/<family>/player.png`) by number
     (`PolarPlayerFrameSet::frames + RLE_SPRITES_POLAR_PLAYER_FRAME_nnn`).
     Only record 0 has them: the others' frames are sheet offsets.
 
@@ -1640,8 +1640,8 @@ type's unless the category names its own (#1087):
 
 | key | the descriptor's | what |
 |---|---|---|
-| `"sprite_sheet"` (optional) | `sprite_sheet` | a `framed_sheet` of `graphics/manifest.json`, by its path: the ROM's two, or a new one ([graphics.md, "New graphics"](./graphics.md#new-graphics)) |
-| `"anim_table"` (optional) | `anim_table` | an animation table of `data/levels/anim_tables/`, by name (see "Animation tables"), of the type's family |
+| `"sprite_sheet"` (optional) | `sprite_sheet` | a `framed_sheet` of `games/xs/graphics/manifest.json`, by its path: the ROM's two, or a new one ([graphics.md, "New graphics"](./graphics.md#new-graphics)) |
+| `"anim_table"` (optional) | `anim_table` | an animation table of `games/xs/data/levels/anim_tables/`, by name (see "Animation tables"), of the type's family |
 
 ```json
 {"path": "vehicles/jetpack/sprite_sheet_red/", "kind": "framed_sheet", "symbol": "gJetpackRedSpriteSheet", "prefix": "JETPACK_RED"}
@@ -1822,7 +1822,7 @@ a level gives is the level's.
 |---|---|---|
 | `"power"` | a power of `save->flags`: `TURBO_RUN`, `SUPER_BODY_SLAM`, `TORNADO_SPIN` or `DOUBLE_JUMP` (a new power is code). Given the first time the level is cleared, with its dialog | `if (!Has<Power>()) { ...; Give<Power>(); Show<Power>Dialog(); ... }` |
 | `"open_world"` | with a `"power"`, when it is given: the next level select turns to the next page by itself if it is open (see "Level-select pages") | `LevelSelect::SetNewWorldOpened()`, first in the block |
-| `"cutscene"` | a cutscene of `data/cutscenes.json` (`gCutscenes`, `PlayCutscene`): its index (0-10 for the ROM's) or its constant (`"CUTSCENE_LAB"`, a new one, [data.md, "A new cutscene"](./data.md#a-new-cutscene)). With a `"power"`, played once, last in its block; without one, at every clear | `PlayCutscene(N)`, N the index |
+| `"cutscene"` | a cutscene of `games/xs/data/cutscenes.json` (`gCutscenes`, `PlayCutscene`): its index (0-10 for the ROM's) or its constant (`"CUTSCENE_LAB"`, a new one, [data.md, "A new cutscene"](./data.md#a-new-cutscene)). With a `"power"`, played once, last in its block; without one, at every clear | `PlayCutscene(N)`, N the index |
 | `"mark_cleared"` | sets the level word's `cleared` bit (`LEVEL_FLAG_CRYSTAL`, the bit the crystal pickup sets) | `GetCurrentLevelFlags()->w.cleared = 1` |
 | `"next_level"` | `{"if_completion_over": N, "cutscene": C, "level": L}`: over N% completion (0-99), play C (optional) and go straight on to level L, with no level select in between | `if (progress.GetCompletionPercent() > N) { PlayCutscene(C); room.level += L - <this level>; room.roomIndex = 0; goto start; }` |
 | `"credits"` | `{}` or `{"cutscene": C}`: play C, then the credits | `PlayCutscene(C); RunCredits()` |
@@ -1861,7 +1861,7 @@ second level's block would never run.
 
 **Checks.** `levels.py` stops on an unknown key or power, a power given
 by two levels, `"open_world"` without a `"power"`, a cutscene that isn't
-one of `data/cutscenes.json`'s (an index past `CUTSCENE_COUNT`, 11 in the
+one of `games/xs/data/cutscenes.json`'s (an index past `CUTSCENE_COUNT`, 11 in the
 ROM, or an unknown constant), a `"next_level"` level that doesn't
 exist, a percentage past 0-99, and `"next_level"`s that come back round
 (a level that leads back to itself would replay forever). It warns

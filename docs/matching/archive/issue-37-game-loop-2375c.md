@@ -5,7 +5,7 @@ left this pair (`asm/code_3_2_17_2375c.s`, ROM `0x0802375C`-`0x08024007`)
 completely untouched as "not yet confidently understood branch-by-branch."
 This pass picks the smaller of the two back up.
 
-## `PlayRoom` - matched (`src/game/level/play_room.c`)
+## `PlayRoom` - matched (`engine/src/game/level/play_room.c`)
 
 A level-start dispatcher, called once from `UpdateGameFrame` when the
 level object's own `+0xdc->+8` state field is `2`
@@ -299,7 +299,7 @@ built to reproduce - forcing it from plain C would mean fighting the
 compiler's own switch lowering rather than working with it, for a
 function already well past the size where that's been worth trying.
 
-Transcribed instruction-for-instruction into `src/level/run_room.c`
+Transcribed instruction-for-instruction into `engine/src/level/run_room.c`
 (new file - `asm/code_3_2_17_23a1c.s` is now gone entirely), keeping
 the ROM's own `_0XXXXXXX` hex-address labels verbatim as file-local asm
 symbols, the same convention used throughout this project's other

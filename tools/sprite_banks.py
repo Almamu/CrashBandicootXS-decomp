@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Extracts the sprite-bank animation tables (gSpriteBankTable,
-0x084A5600-0x084C0006) from baserom.gba as typed C, the src/.../data/
+0x084A5600-0x084C0006) from baserom.gba as typed C, the engine/src/.../data/
 sprite_banks_*.cpp files (see docs/data.md and docs/data_map.md).
 
 This is a one-time extraction: the C it writes is
 the editable source, and the build compiles it like any other data file.
 Rerunning it overwrites those files with the ROM's tables.
 
-The layout, from the matched readers (include/engine/gfx/sprite_bank.h):
+The layout, from the matched readers (engine/include/engine/gfx/sprite_bank.h):
 
     header (struct sprite_bank_table)
     struct sprite_bank[56]
@@ -26,7 +26,7 @@ arrays, and its 12-byte header is directly followed by the next frame.
 
 The piece arrays (positions and piece bytes) and each frame's tile offset
 are not written here: tools/sprite_frames.py generates them from
-graphics/sprites/bankNN_<name>/bank.json (`sprites/bankNN_pieces.inc`,
+games/xs/graphics/sprites/bankNN_<name>/bank.json (`sprites/bankNN_pieces.inc`,
 `sprites/sprite_frames.h`), which `sprite_frames.py extract` writes from
 the same ROM. This script still checks that they sit where the ROM has them.
 
@@ -58,9 +58,9 @@ OBJ_PALETTES = 0x084A4660
 FILES = [(0, 9), (10, 21), (22, 38), (39, 55)]
 # where the files go, the ldscript that links them and the banks' sources,
 # per game (main())
-OUT_DIR = ROOT / "src" / "engine" / "gfx" / "data"
+OUT_DIR = ROOT / "engine" / "src" / "engine" / "gfx" / "data"
 LDSCRIPT = "games/xs/ldscript.txt"
-SPRITES = "graphics/sprites"
+SPRITES = "games/xs/graphics/sprites"
 
 # layout type -> (struct, number of boxes, has anchor)
 LAYOUTS = {
@@ -107,7 +107,7 @@ class Emitter:
 
 
 # struct hitbox_quad: XS's {s16, s16, u8 w, u8 h} and 2 bytes of padding,
-# N-Tranced's {s16, s16, u16 w, u16 h} (include/engine/gfx/hitbox_quad.h)
+# N-Tranced's {s16, s16, u16 w, u16 h} (engine/include/engine/gfx/hitbox_quad.h)
 WIDE_BOXES = False
 
 
@@ -281,7 +281,7 @@ def emit_bank(rom, i, em, out, decls):
 FILE_COMMENT = """\
 /*
  * ROM {start:#010x}-{end:#010x}: sprite banks {first}-{last} of the sprite-bank
- * animation system (gSpriteBankTable, include/engine/gfx/sprite_bank.h). Linked in
+ * animation system (gSpriteBankTable, engine/include/engine/gfx/sprite_bank.h). Linked in
  * ROM order {between} by {ldscript} - see
  * docs/data.md and docs/data_map.md ("gSpriteBankTable").
  *
@@ -324,11 +324,11 @@ def auto_files(rom, nbanks, starts, parts=4):
 def main():
     global TABLE, END, TILE_BASE, OBJ_PALETTES, FILES, OUT_DIR, LDSCRIPT, SPRITES, WIDE_BOXES
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--graphics-dir", default="graphics")
+    ap.add_argument("--graphics-dir", default="games/xs/graphics")
     ap.add_argument("rom", nargs="?", default=str(ROOT / "baserom.gba"))
     args = ap.parse_args()
     rom = Rom(args.rom)
-    xs = args.graphics_dir == "graphics"
+    xs = Path(args.graphics_dir) == Path("games/xs/graphics")
     if not xs:
         sprite_frames.use_graphics_dir(args.graphics_dir)
         TABLE = sprite_frames.BANK_TABLE
@@ -346,8 +346,8 @@ def main():
     if not xs:
         END = bank_end(rom, nbanks - 1)
         FILES = auto_files(rom, nbanks, starts)
-    src = "src" if xs else (Path(args.graphics_dir).parent / "src").as_posix()
-    comment = dict(between="between data/data.s sections" if xs else "between the incbin'd data",
+    src = "engine/src" if xs else (Path(args.graphics_dir).parent / "src").as_posix()
+    comment = dict(between="between games/xs/data/data.s sections" if xs else "between the incbin'd data",
                    ldscript=LDSCRIPT, baserom="baserom.gba" if xs else Path(args.rom).name,
                    args="" if xs else " --graphics-dir " + args.graphics_dir, sprites=SPRITES, src=src)
 

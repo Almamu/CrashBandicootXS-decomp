@@ -1,7 +1,7 @@
 # Data map: triage of every raw ROM data blob
 
 Everything after the code, `0x0803B8B0`-`0x08800000`, lives in
-[`data/data.s`](../data/data.s). This document covers the **412 labels
+[`games/xs/data/data.s`](../games/xs/data/data.s). This document covers the **412 labels
 there that still copy their bytes from `baserom.gba`** (6,504,293 bytes,
 of which the last 106,548 are `0xFF` cartridge fill, so 6,397,745 bytes
 count toward the data total). For each one it records what reads it,
@@ -23,8 +23,8 @@ label, with `regions` sub-lists for the composite blobs.
   starts; the enclosing function comes from the symbol table. A brute-force
   scan of 4-byte-aligned code words for `0x0803B8B0`-`0x08800000` values
   found 41 more hits, all instruction pairs, no missed references.
-- **Types.** `extern` declarations of each `gStaticData_*` in `src/` and
-  `include/`, plus `COMPILE_TIME_ASSERT` struct sizes.
+- **Types.** `extern` declarations of each `gStaticData_*` in `engine/src/` and
+  `engine/include/`, plus `COMPILE_TIME_ASSERT` struct sizes.
 - **Data-to-data pointers.** Every aligned word in the raw blobs was
   checked for ROM addresses. Many hits in graphics and audio data are
   coincidental (two 16-bit tilemap entries, or a smooth `u32` ramp,
@@ -36,7 +36,7 @@ label, with `regions` sub-lists for the composite blobs.
   the sprite-bank walker (`GetSpriteTileBase`/`GetSpriteFrame`/`sprite_renderer.cpp`),
   the level-descriptor walker (`level_layers.cpp`, `bg_layer.cpp`,
   `tile_cache_cell.cpp`), the category-descriptor fields (`cell_anim.cpp`,
-  `bg_picture.cpp`, `include/engine/actor/actor_anim.h`), and a `LoadTaggedAsset`
+  `bg_picture.cpp`, `engine/include/engine/actor/actor_anim.h`), and a `LoadTaggedAsset`
   header test (tag `0x00`/`0x10`/`0x30`) at every pointer target.
 
 The helper scripts are not in the repo; the algorithms are described
@@ -79,7 +79,7 @@ the appendix.
 | `086C127C`-`086D9CAC` | 100,912 | raw level asset (room `0825E7DC`) | `LoadRoom` -> `SetCollisionSource`/`SetBgStreamerSource` | high | **done** (decoded tilemaps) |
 | `086ECCD2`-`087E3BEC` | 1,011,482 | 2 B pad + 6 raw level assets | same | high | **done** (the pad is gbagfx's padding) |
 | `087E3BEC`-`087E55E4` | 6,648 | 93 gcc 2.x vtables | constructors (`CreateMovingSprite`, ...) | high | easy |
-| `087E55E4`-`087E5FCC` | 2,536 | IWRAM image (ARM code + data, copied by `crt0`) | `crt0.s` | high | **converted** (`platform/gba/asm/intr_main.s`, `src/engine/*/*_arm.cpp`, `src/engine/sys/iwram_data.cpp`; the code counts as code, 540 B of data) |
+| `087E55E4`-`087E5FCC` | 2,536 | IWRAM image (ARM code + data, copied by `crt0`) | `crt0.s` | high | **converted** (`platform/gba/asm/intr_main.s`, `engine/src/engine/*/*_arm.cpp`, `engine/src/engine/sys/iwram_data.cpp`; the code counts as code, 540 B of data) |
 | `087E5FCC`-`08800000` | 106,548 | `0xFF` fill (not counted as data) | - | high | - |
 
 By category, as a share of the 8,038,172-byte data total:
@@ -123,11 +123,11 @@ By category, as a share of the 8,038,172-byte data total:
   `gax_header_prefix.bin`) points into its tail (`0x0855BC98`). That
   prefix is the engine's `sfxTypes` array, so this set is the sound
   effects (confirmed from the matched engine code, see below).
-- **Most of `graphics/tileset1/*.bin` were not graphics.** Files `27`-`60`
+- **Most of `games/xs/graphics/tileset1/*.bin` were not graphics.** Files `27`-`60`
   (all but `21`-`26`) were LZ77-packed **level assets** (per-room chunk
   streams, `level_desc.asset` with `assetPacked = 1`, the same format as
-  the seven raw ones). They are gone from `graphics/tileset1/` now: the
-  build re-encodes them from the rooms' decoded tilemaps in `data/levels/`
+  the seven raw ones). They are gone from `games/xs/graphics/tileset1/` now: the
+  build re-encodes them from the rooms' decoded tilemaps in `games/xs/data/levels/`
   and gbagfx packs them again ([levels.md](./levels.md)). Files `23`-`26`
   are BG tile sets used by `bg_layer_desc.tileData`, and could become
   PNGs like `21`/`22`.
@@ -140,10 +140,10 @@ By category, as a share of the 8,038,172-byte data total:
 ### `gCategoryFamily0CellAnim` (485,488 B): BG0 cell animation A + category-0 table
 
 Nothing references this label directly. It is reached through the
-category descriptors `gActorCategories[0..2]` (`include/engine/actor/actor_anim.h`):
+category descriptors `gActorCategories[0..2]` (`engine/include/engine/actor/actor_anim.h`):
 `cellAnim = 0x0803B8B0`, `cellAnimSize = 0x75B94`, and
 `sub_effect_table = 0x080B1444` for category 0. `InitActorCategory`
-passes the first two to `InitCellAnim` (`src/engine/gfx/cell_anim.cpp`).
+passes the first two to `InitCellAnim` (`engine/src/engine/gfx/cell_anim.cpp`).
 That function reads a "cell record": a 256-colour palette (DMA'd whole to
 `0x05000000` by `ResetCellAnimBg`), `s16` cols and rows at `+0x200`/`+0x202`,
 then frames of `cols*rows*32` bytes of 4bpp tiles. When the category type
@@ -157,12 +157,12 @@ frameSize`.
 | `0803B8B0` | 0x75B94 | palette[256], cols=19, rows=13, **60 frames x 8,028 B** (7,904 B tiles + 124 B side data). `0x204 + 60*8028 = 0x75B94` exactly | medium |
 | `080B1444` | 0xCDC | category 0 `sub_effect_record[164]` (`0x14` each, count in record 0's `field_04`) + a 12-byte terminator (`{threshold, -1, ...}`) | easy |
 
-**Status: converted** (`src/game/vehicles/polar/data/polar_cell_anim.cpp`, see
+**Status: converted** (`engine/src/game/vehicles/polar/data/polar_cell_anim.cpp`, see
 [data.md](./data.md) "Category backgrounds"). The side data turned out
 to be one 4-bit palette bank per cell (low nibble first, 247 cells
 padded to 124 bytes): drawn with those banks, every frame is a clean
 picture. The animation is one 152x6240 indexed PNG
-(`graphics/vehicles/polar/ice_wall.png`, the 60 frames stacked,
+(`games/xs/graphics/vehicles/polar/ice_wall.png`, the 60 frames stacked,
 each cell drawn in its bank), converted by grit, and the table is a
 `SUB_EFFECT_TABLE(164)` of `struct sub_effect_record`.
 
@@ -182,10 +182,10 @@ animation-table `table_B` array:
 | `0813D934` | 0x3498 | **BG1 picture** (category 3, descriptor `+0x0C`) | `LoadBgPicture` layout below; size exact | medium |
 | `08140DCC` | 0x980 | category 3 `sub_effect_record[121]` + 0xC | descriptor 3 `+0x14`; ends exactly at the `0814174C` LZ77 sheet | easy |
 
-**Status:** the two tables are converted (`src/game/vehicles/polar/data/polar_spawn_tables.cpp`),
+**Status:** the two tables are converted (`engine/src/game/vehicles/polar/data/polar_spawn_tables.cpp`),
 and cell animation B, the category 3 picture and its table too
-(`src/game/vehicles/jetpack/data/jetpack_cell_anim.cpp`), and the two frame sets
-(`src/game/vehicles/polar/data/polar_rle_sprites.cpp`, see below). The pad at `080C0C36` is
+(`engine/src/game/vehicles/jetpack/data/jetpack_cell_anim.cpp`), and the two frame sets
+(`engine/src/game/vehicles/polar/data/polar_rle_sprites.cpp`, see below). The pad at `080C0C36` is
 built too: it is the zero padding gbagfx writes after the `.lz` stream
 (docs/data.md, "LZ77 stream padding").
 
@@ -231,7 +231,7 @@ halfwords is a zero run, shorter ones stay inside the literal run, and
 the leading zeros are always a zero run. Re-encoding the decoded frames
 with that rule gives all 344 frames byte for byte.
 
-**Status: converted.** Each set is one 4bpp PNG in `graphics/vehicles/`
+**Status: converted.** Each set is one 4bpp PNG in `games/xs/graphics/vehicles/`
 (frames stacked top to bottom), built with grit and compressed again by
 `tools/rle_sprites.py`, see docs/data.md "Compressed sprite frames".
 
@@ -251,8 +251,8 @@ above:
 | `0815A050` | 0xDA84 | **compressed frame set C**, `table_B` `0x0817BA44` (anim record 0 of categories 3-6, 80 pointers), 80 frames of 8x8 tiles | medium |
 
 **Status:** the pictures and tables (`08151AC4`-`0815A050`) are converted
-(`src/game/vehicles/jetpack/data/jetpack_sky_pictures.cpp`), and so is frame set C
-(`src/game/vehicles/jetpack/data/jetpack_rle_sprites.cpp`). The pad at `08151AC2` is gbagfx's
+(`engine/src/game/vehicles/jetpack/data/jetpack_sky_pictures.cpp`), and so is frame set C
+(`engine/src/game/vehicles/jetpack/data/jetpack_rle_sprites.cpp`). The pad at `08151AC2` is gbagfx's
 padding of the `.lz` stream before it, like the one at `080C0C36`.
 
 ### `gLanguageSelectPalette3` (3,305,076 B): level tile sets, room data, sprite tile pool
@@ -265,7 +265,7 @@ is reached through two pointer graphs.
 `gLevelTable`) point at 48 room records of 0x14 bytes, 41 of
 them rooms: `{u16 (*palette)[256]; struct level_desc *desc; s32 kind;
 ...; union {blend; u16 catIndex} param @0x10}` (now `struct level_room` in
-`src/game/level/data/level_table.cpp`). Every reader uses that struct
+`engine/src/game/level/data/level_table.cpp`). Every reader uses that struct
 (`level_layers.cpp`'s `struct level_load_args`, `play_room.cpp`'s
 `gl_widget_kind`, `level_query.cpp`'s `MedalListItem` and `play_room.cpp`'s
 `level_blend` were views of it; `desc->entities` is the descriptor's object list). A room record is
@@ -286,22 +286,22 @@ Walking them:
   this blob**. The pooled layer 0 reads those at `tiles + 4`, 64 bytes
   per tile, i.e. 8bpp (`tile_slot_pool.cpp`, `SetTileSlotPoolSource`).
 - `asset` is either an LZ77 blob between the intro graphics
-  (`assetPacked = 1`, formerly `graphics/tileset1/27`-`60`), or one of
+  (`assetPacked = 1`, formerly `games/xs/graphics/tileset1/27`-`60`), or one of
   **seven raw level assets** in `gRoom17Asset`/`gStaticData_086ECCD2`
   (`assetPacked = 0`).
 
 The full format (the object lists included) is in [levels.md](./levels.md).
 
-**Status: converted.** The blob is now five `src/*/data` objects
+**Status: converted.** The blob is now five `engine/src/*/data` objects
 (docs/data.md, "Raw tile pools"): the sprite banks are a PNG per frame
-(`graphics/sprites/bankNN_<name>/`, `tools/sprite_frames.py`), the five
+(`games/xs/graphics/sprites/bankNN_<name>/`, `tools/sprite_frames.py`), the five
 tile sets are made by the build from the rooms' layer pictures
 (docs/levels.md, "Tile sets"), the 125 OBJ palettes are JASC `.pal` files
-(`graphics/sprites/palettes/`, extracted by `tools/gfx_manifest.py
+(`games/xs/graphics/sprites/palettes/`, extracted by `tools/gfx_manifest.py
 extract`), and `gLanguageSelectPalette3` is a C `u16[16]`. The
 two room-data blocks (`0824B638`, `082B91D0`) are typed C
 (`level_rooms_main_bonus.cpp`, `level_rooms_bosses_gem_paths.cpp`) generated by
-`tools/levels.py` from `data/levels/` ([levels.md](./levels.md)).
+`tools/levels.py` from `games/xs/data/levels/` ([levels.md](./levels.md)).
 
 **2. Sprite banks.** The `gSpriteBankTable` header's second word is
 `0x082BF120`, and `GetSpriteTileBase` returns it. `sprite_renderer.cpp`'s
@@ -344,7 +344,7 @@ from the matched readers (`RunPauseMenu` in `pause_menu.cpp`, `GetSpriteTileBase
     u8 *palettes            = 0x084A4660   (125 OBJ palettes)
     u16 nbanks = 56, u16 paletteCount = 125
 0x084A5610 bank_record[56] (12 B): { anim_record *anims; frame_desc **frames; u16 unk; u16 nanims; }
-    (every "**gSpriteBankSet + 0x27C"-style offset in src/ is 12*N: bank N)
+    (every "**gSpriteBankSet + 0x27C"-style offset in engine/src/ is 12*N: bank N)
 per bank, back to back:
     anim_record[nanims] (0x1C): u16 *keyframes @0, two boxes @4/@0xC, u8 paletteId @0x14 (GetPaletteSlot id),
                                 u8 duration @0x15, u8 frameCount @0x16, u8 flags @0x17 (bit 1 = loop)
@@ -372,13 +372,13 @@ The anim record's last word (`+0x18`), every box's last `u16` and the
 bank's `unk` are always 0. Bank 0 alone is 48 animations, 465 frames and 250 KB of tiles, probably
 the player.
 
-**Status: converted** to typed C: `src/engine/gfx/data/sprite_banks_00_09.cpp` (the
+**Status: converted** to typed C: `engine/src/engine/gfx/data/sprite_banks_00_09.cpp` (the
 header, the bank table and banks 0-9), `sprite_banks_10_21.cpp` (10-21),
 `sprite_banks_22_38.cpp` (22-38) and `sprite_banks_39_55.cpp` (39-55),
-with the structs in `include/engine/gfx/sprite_bank.h` (`struct sprite_bank_table`,
+with the structs in `engine/include/engine/gfx/sprite_bank.h` (`struct sprite_bank_table`,
 `sprite_bank`, `sprite_anim`, `sprite_frame` and its five box/anchor
 variants). Every pointer is a symbol reference; frame tile offsets and
-the piece arrays are generated from `graphics/sprites/bankNN_<name>/` by
+the piece arrays are generated from `games/xs/graphics/sprites/bankNN_<name>/` by
 `tools/sprite_frames.py` (`SPRITE_TILES_BANKnn_FRAMEkkk`). `tools/sprite_banks.py` extracted the C once
 from `baserom.gba`, checking the layout above as it goes. The files are
 cut after banks whose piece bytes end on a word, because each C object
@@ -411,10 +411,10 @@ instrument numbers in this set. docs/audio.md, "Sound effects", has the
 whole path.
 
 **Status: converted.** The set is built by `tools/gax_audio.py --sfx` from
-`sound/gax_sfx_manifest.json` (the instruments, in the music manifest's
-format) and `sound/sfx_samples/01`-`87.wav`, and the music block's
+`games/xs/sound/gax_sfx_manifest.json` (the instruments, in the music manifest's
+format) and `games/xs/sound/sfx_samples/01`-`87.wav`, and the music block's
 prefix is generated from the set's layout instead of the old verbatim
-`gax_header_prefix.bin`. `data/data.s` incbins the built
+`gax_header_prefix.bin`. `games/xs/data/data.s` incbins the built
 `build/crashbandicootxs/sound/gax_sfx_data.bin` as
 `gGaxSfxData`. The samples are not deduplicated here (84 and 87
 are the same bytes, stored twice), unlike the music's.
@@ -422,7 +422,7 @@ are the same bytes, stored twice), unlike the music's.
 ### `gRoom17Asset` (100,912 B) and `gStaticData_086ECCD2` (1,011,482 B): raw level assets
 
 Each is a `level_desc.asset` with `assetPacked = 0`: the uncompressed form
-of what `graphics/tileset1/27`-`60` hold LZ77-packed. The asset is the
+of what `games/xs/graphics/tileset1/27`-`60` hold LZ77-packed. The asset is the
 "chunk stream" pack read by the custom RLE/delta decoders `DecodeLayerChunk`
 (visual layers) and `DecodeCollisionChunk` (terrain cache, 16x8 `u16` chunks). It
 starts with a `u16` offset table (offsets x 4). Each layer reads it at
@@ -440,12 +440,12 @@ starts with a `u16` offset table (offsets x 4). Each layer reads it at
 
 **Status: converted** (the 2-byte pad at `086ECCD2` is gbagfx's padding
 of the LZ77 asset before it). The chunk
-streams are decoded into one tilemap per layer (`data/levels/<room>/`),
+streams are decoded into one tilemap per layer (`games/xs/data/levels/<room>/`),
 and `tools/levels.py` re-encodes them byte for byte, the LZ77 ones
 included: its encoder reproduces the original tool's token choices and
 its leftover bytes. The built assets are C arrays under new
 labels (`gRoom15Asset`, `gRoom19Asset`, ...) in
-`src/game/level/data/level_assets.cpp`. The format
+`engine/src/game/level/data/level_assets.cpp`. The format
 and the encoder are in [levels.md](./levels.md).
 
 ### The IWRAM image (`087E55E4`-`087E5FCC`) + fill
@@ -455,9 +455,9 @@ from here (`__iwram_lma`) to `0x03000000` at boot. **Converted**: the
 image is now built from source and linked to run at `0x03000000`
 (games/xs/ldscript.txt's `iwram` section, stored in ROM with `AT(...)`):
 `IntrMain`, the hand-written interrupt dispatcher (`platform/gba/asm/intr_main.s`),
-ten ARM routines (`src/engine/util/string_arm.cpp`, `src/engine/gfx/sprite_arm.cpp`,
+ten ARM routines (`engine/src/engine/util/string_arm.cpp`, `engine/src/engine/gfx/sprite_arm.cpp`,
 built with agbcp_arm_patched) and the initialised IWRAM globals
-(`src/engine/sys/iwram_data.cpp`, 540 bytes from `0x030007CC`). The code counts
+(`engine/src/engine/sys/iwram_data.cpp`, 540 bytes from `0x030007CC`). The code counts
 toward code progress, the globals toward data. The `0xFF` fill from
 `0x087E5FCC` is the linker's `rom_fill` section, excluded from data as
 before. See docs/progress_report.md's "The IWRAM image" and
@@ -484,9 +484,9 @@ Notable mid-size tables:
 - `0816C86C` (0x514): the level table, 25 x 0x24 level records (the
   first word, 1, is record 0's name text id, not a header) + 25 room-list
   headers `{count, rooms**, extra1, extra2}`. It is declared under five
-  different struct names across `src/` (`gl_level_entry`, `level_info`,
+  different struct names across `engine/src/` (`gl_level_entry`, `level_info`,
   `level_guard`, `MedalTableEntry`, `threshold_table_entry`).
-  **Converted** with the next one (`src/game/level/data/level_table.cpp`,
+  **Converted** with the next one (`engine/src/game/level/data/level_table.cpp`,
   `struct level_info` in `level_data.h`).
 - `0816CD80` (0x474): 11 theme music cues, 17 extra-room records, the
   room-list pointer arrays and 31 more records (24 rooms, 7 category
@@ -496,25 +496,25 @@ Notable mid-size tables:
 - `0816D1F4` (0x53B4): the cutscenes: slide lists, the text of six
   languages (tables, pages, strings), and the 24 slides (0x1C each) that
   point at the intro pictures (palette + bitmap). **Converted**
-  (`src/game/ui/data/cutscenes.cpp`, `src/game/ui/data/cutscene_pictures.cpp`,
+  (`engine/src/game/ui/data/cutscenes.cpp`, `engine/src/game/ui/data/cutscene_pictures.cpp`,
   docs/data.md "Cutscenes").
 - `08178F80` (0x1738) / `0817AA98` (0x1728): the two actor-category
   families: palettes, `table_A` keyframes, `anim_table_record[41]`/`[47]`
   (`081796CC`/`0817B2A4`, already declared), and the `table_B` arrays.
   `docs/entities/*.json` already records all of it.
-  **Converted** (`src/game/vehicles/polar/data/polar_anim_family.cpp`,
-  `src/game/vehicles/jetpack/data/jetpack_anim_family.cpp`, docs/data.md "Category families").
+  **Converted** (`engine/src/game/vehicles/polar/data/polar_anim_family.cpp`,
+  `engine/src/game/vehicles/jetpack/data/jetpack_anim_family.cpp`, docs/data.md "Category families").
 - `08175558`+`08175564`+`08175584`: one `category_descriptor[7]`, split over three labels.
 - `081725C4` (0x261C): terrain shape records (36 B, heights 0-7, `0xFF`
   empty) for the collision streamer, then the game's UI text in six
-  languages. **Converted** (`src/game/level/data/terrain_types.cpp`,
-  `src/game/ui/data/ui_text.cpp`).
+  languages. **Converted** (`engine/src/game/level/data/terrain_types.cpp`,
+  `engine/src/game/ui/data/ui_text.cpp`).
 - `0817C5D0` (0x96C): popup/credits text opcode stream (`"\x03developed by\n\n\x01..."`).
-  **Converted** (`src/game/ui/data/credits_text.cpp`).
+  **Converted** (`engine/src/game/ui/data/credits_text.cpp`).
 - `0816AF10`: the CRC-16/CCITT table (poly `0x1021`) for link-cable packets.
-  **Converted** (`src/engine/link/data/link_crc_table.cpp`).
+  **Converted** (`engine/src/engine/link/data/link_crc_table.cpp`).
 - `0816A820`: `s16[256]` sine table. **Converted**
-  (`src/game/bosses/data/boss_pictures.cpp`).
+  (`engine/src/game/bosses/data/boss_pictures.cpp`).
 - `085A4C70`/`085A4D70`: two copies of libgcc's `__clz_tab` (`u8[256]`).
   **Converted** (`lib/libgcc/data/clz_tab.c`).
 - `085A60FF`...`085A62CC`: GAX2 version string (`"GAX Sound Engine 2.01D
@@ -534,24 +534,24 @@ Every one of the 412 labels is listed in the appendix.
    `tools/report_units.py` to handle anything besides one `incbin` per
    label. The easiest way is to take blob addresses and sizes from the
    linker map (`crashbandicootxs.map`) or the ELF symbol table, not from
-   summing `data/data.s`. Today `parse_data_s()` exits on any other line.
+   summing `games/xs/data/data.s`. Today `parse_data_s()` exits on any other line.
    A split `data.s` breaks its address check too: the C experiment below
    tripped it. Also add a "source group" for typed data (`.s` directives
-   or `src/*/data/*.c`), so those units count as built.
+   or `engine/src/*/data/*.c`), so those units count as built.
 2. **Done.** **Sprite tile pool to PNGs** (`082BF120`, 1.99 MB, **+24.7%**). Split
    by bank (the ranges are exact and back to back), one 4bpp PNG each,
-   no header. It needs a label split in `data.s`, a `graphics/sprites/`
+   no header. It needs a label split in `data.s`, a `games/xs/graphics/sprites/`
    directory, and the existing `%.4bpp` rule. It is the best ratio by
    far.
-3. **Done (the five tag-0 sets; `tileset1/21`-`26` too, as `graphics/level_bg_tiles/`, #914).** **Level tile sets to 8bpp PNGs** (5 assets, 1.13 MB, **+14.1%**), with the
+3. **Done (the five tag-0 sets; `tileset1/21`-`26` too, as `games/xs/graphics/level_bg_tiles/`, #914).** **Level tile sets to 8bpp PNGs** (5 assets, 1.13 MB, **+14.1%**), with the
    4-byte tag header generated by a one-line rule (`size << 8`). Convert
-   `graphics/tileset1/23`-`26` (`.bin` today) to PNG in the same pass for
+   `games/xs/graphics/tileset1/23`-`26` (`.bin` today) to PNG in the same pass for
    consistency.
 4. **BG0 cell animations and BG1 pictures** (775 KB, **+9.6%**). One small
    packer tool for the two formats documented above.
 5. **Done, decoded.** **Raw level assets** (1.11 MB, **+13.8%**): decoded
    into tilemaps and re-encoded by `tools/levels.py` together with the
-   34 LZ77 ones (`graphics/tileset1/27`-`60` before), not as `.bin`
+   34 LZ77 ones (`games/xs/graphics/tileset1/27`-`60` before), not as `.bin`
    passthroughs.
 6. **Done.** **Second GAX2 data set** (638 KB, **+7.9%**): extend `tools/gax_audio.py`.
 7. **Small tables** (128 KB, +1.6%, about 400 labels). Do the vtables and
@@ -563,29 +563,29 @@ Every one of the 412 labels is listed in the appendix.
    (`08178F80`/`0817AA98`, `sub_effect_record` tables): typed C with
    generators. The layouts are all known.
 9. **Room data** (178 KB, **done**, +2.2%, generated C from
-   `data/levels/`) and the **compressed frame sets** (304 KB, **done**,
+   `games/xs/data/levels/`) and the **compressed frame sets** (304 KB, **done**,
    +3.8%, the old "rotation strips": `tools/rle_sprites.py`).
 
 Steps 2-5 alone take data progress from 20.4% to about 83%.
 
 ### Conversion convention for small tables
 
-**Recommendation: C `const` arrays in `src/*/data/*.c`, placed by
+**Recommendation: C `const` arrays in `engine/src/*/data/*.c`, placed by
 `games/xs/ldscript.txt` in ROM order, with typed `.s` directives as the fallback**
 for the cases below. C matches the standing "prefer structs" direction:
-the structs already exist in `include/` and `src/`, so the table and its
+the structs already exist in `engine/include/` and `engine/src/`, so the table and its
 consumers share one definition, and function pointers are just the
 function names.
 
 The experiment (done in the worktree, then reverted, so no ROM-producing
 file is changed): `gObjPieceWidths`/`0816B2EC` (the OBJ piece
-width/height tables, `u8[12]` each) moved into `src/*/data/obj_piece_sizes.c`
-as `const u8` arrays. `data/data.s` got a second section
+width/height tables, `u8[12]` each) moved into `engine/src/*/data/obj_piece_sizes.c`
+as `const u8` arrays. `games/xs/data/data.s` got a second section
 (`.section .rodata.after_0816B2F8, "a"`) from the next label on.
 `games/xs/ldscript.txt` got
 `data.o(.rodata); src/*/data/obj_piece_sizes.o(.rodata); data.o(.rodata.after_0816B2F8);`.
 Result: `make compare` said **`crashbandicootxs.gba: OK`**, with the
-symbols at `0x0816B2E0`/`0x0816B2EC`. `src/*/*.c` is already globbed, so
+symbols at `0x0816B2E0`/`0x0816B2EC`. `engine/src/*/*.c` is already globbed, so
 the Makefile needed no change.
 
 agbcc/ldscript constraints found along the way:
@@ -599,7 +599,7 @@ agbcc/ldscript constraints found along the way:
   tables) adds one `.section .rodata.<next>` in `data.s` and two ldscript
   lines. With hundreds of tables, the better fix is to split `data.s`
   into one file per region/unit with matching ldscript entries (the
-  `data/*.s` glob already builds them).
+  `games/xs/data/*.s` glob already builds them).
 - **Alignment.** An object's `.rodata` is aligned to its strictest member.
   agbcc gives `.align 2` (4 bytes) to every struct-typed object and to
   every array initialised from a string literal (`const u8 s[5] = "abcd"`),
@@ -623,14 +623,14 @@ the new source kind first (step 1 above).
 
 ## Graphics assets
 
-Every source under `graphics/` and where the ROM has it, from
-`graphics/manifest.json` (docs/graphics.md, "The manifest"); the source
+Every source under `games/xs/graphics/` and where the ROM has it, from
+`games/xs/graphics/manifest.json` (docs/graphics.md, "The manifest"); the source
 file names don't carry addresses. Regenerate it with
 `tools/gfx_manifest.py table`. The level data's room records, assets and
 BG tile sets are in [levels.md](./levels.md).
 
 <!-- graphics assets: generated by tools/gfx_manifest.py table, do not edit -->
-| ROM | symbol | kind | source (graphics/) |
+| ROM | symbol | kind | source (games/xs/graphics/) |
 |---|---|---|---|
 | `0803B8B0` | `gCategoryFamily0CellAnim` | cell_anim | `vehicles/polar/ice_wall.png` |
 | `080B2120` | `gPolarSpriteSheet` | framed_sheet | `vehicles/polar/sprite_sheet/` |
@@ -779,7 +779,7 @@ BG tile sets are in [levels.md](./levels.md).
 
 ## Appendix: every raw label
 
-One row per `baserom.gba` incbin in `data/data.s`, in ROM order. The
+One row per `baserom.gba` incbin in `games/xs/data/data.s`, in ROM order. The
 consumers are the C functions that load the label's address (or, for
 the composites, the functions that reach it through pointers). Composite
 blobs are split into regions in the sections above and in
@@ -790,147 +790,147 @@ vtable shapes).
 
 | Address | Size | Format | Consumers | Conf. | Effort |
 |---|---:|---|---|---|---|
-| `0803B8B0` | 0x76870 | composite: BG0 streamed cell animation A + category-0 sub-effect table. **Converted** (`src/game/vehicles/polar/data/polar_cell_anim.cpp`) | `InitCellAnim`, `UploadCellAnimFrame`, `ResetCellAnimBg` +2 | high | done |
+| `0803B8B0` | 0x76870 | composite: BG0 streamed cell animation A + category-0 sub-effect table. **Converted** (`engine/src/game/vehicles/polar/data/polar_cell_anim.cpp`) | `InitCellAnim`, `UploadCellAnimFrame`, `ResetCellAnimBg` +2 | high | done |
 | `080C0C36` | 0x80B16 | composite: sub-effect tables, two compressed OBJ frame sets, BG0 cell animation B, BG1 picture. **Converted**, the 2-byte pad as gbagfx's padding of `00_0b2120.bin.lz` | `SelectActorCategory`, `GetAnimFrameData`, `InitCellAnim` +2 | high | done |
 | `08151AC2` | 0x16012 | composite: BG1 pictures, sub-effect tables, compressed OBJ frame set C (categories 3-6). **Converted**, the 2-byte pad as gbagfx's padding of `01_14174c.bin.lz` | `SelectActorCategory`, `GetAnimFrameData`, `LoadBgPicture` | high | done |
-| `08167AD4` | 0x200 | the jetpack stages' airship (the green blimp): 16-colour palette (+ zero to 0x200). **Converted** (`src/game/bosses/data/boss_pictures.cpp`) | `LoadAirshipGraphics`, `ConvertAirshipTiles` | high | done |
-| `08167CD4` | 0x1E14 | the airship's picture: {cols 18, rows 12}, 4 frames of {tile count, u16 map, 4bpp tiles} sharing one pool (graphics/vehicles/jetpack/airship/, tools/boss_pictures.py). **Converted** (`src/game/bosses/data/boss_pictures.cpp`) | `CreateAirship` | medium | done |
-| `08169AE8` | 0x200 | N. Gin's hovercraft: palette (16 colours + 240 x 0x03E0). **Converted** (`src/game/bosses/data/boss_pictures.cpp`) | `UpdateHovercraftHitFlash`, `LoadHovercraftGraphics`, `ConvertHovercraftTiles` | high | done |
-| `08169CE8` | 0xB28 | N. Gin's hovercraft picture: {cols 16, rows 10}, 1 frame (graphics/bosses/hovercraft.png). **Converted** (`src/game/bosses/data/boss_pictures.cpp`) | `CreateHovercraft` | medium | done |
-| `0816A810` | 0x10 | u8[16] d-pad direction lookup. **Converted** (`src/game/bosses/data/boss_pictures.cpp`) | `GetDpadDirection` | medium | done |
-| `0816A820` | 0x200 | s16[256] sine/direction table (`s16` x 256). **Converted** (`src/game/bosses/data/boss_pictures.cpp`) | `DrawPlayer`, `UpdateEnemyOscillateX`, `UpdateEnemyBob` +16 | high | done |
-| `0816AA20` | 0x4C | song table: 19 pointers into the music block, `gGaxMusicData + GAX_SONG_<NAME>` from the generated `gax_songs.h`. **Converted** (`src/engine/audio/data/song_table.cpp`) | `StartSong` | high | done |
-| `0816AF10` | 0x228 | CRC-16/CCITT lookup table (poly 0x1021, u16[256]) + the two link-cable pairing names "crash 1 <-> crash 2"/"crash 1 <-> crash 3" (`gCrash2LinkText`/`0816B124`, which the IWRAM data `gCrash2LinkTextPtr`/`0814` points at). **Converted** (`src/engine/link/data/link_crc_table.cpp`) | `MakeLinkHandshakeId`, `HandleLinkSerial` | high | done |
-| `0816B138` | 0x2 | the text ">". **Converted** (`src/game/ui/data/menu_tables.cpp`) | `DrawYesNoPrompt` | medium | done |
-| `0816B13A` | 0x20 | table of u16; 1 word(s) look like ROM pointers (`u16` x 16). **Converted** (`src/game/ui/data/menu_tables.cpp`) | `InitSaveMenuIcons` | high | done |
-| `0816B15A` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/game/ui/data/menu_tables.cpp`) | `InitSaveMenuIcons` | high | done |
-| `0816B17A` | 0x20 | table of u16 (`u16` x 16). **Converted** (`src/game/ui/data/menu_tables.cpp`) | `InitSaveMenuIcons` | high | done |
-| `0816B19A` | 0x22 | table of u16 (`u16` x 17). **Converted** (`src/game/ui/data/menu_tables.cpp`) | `InitSaveMenuIcons` | high | done |
-| `0816B1BC` | 0x14 | table of s32 (`s32` x 5). **Converted** (`src/game/ui/data/menu_tables.cpp`) | `DrawSaveMenuMain` | high | done |
-| `0816B1D0` | 0x14 | table of void* (`void*` x 5). **Converted** (`src/game/ui/data/menu_tables.cpp`) | `DrawPauseMenuPageTitle` | high | done |
-| `0816B1E4` | 0x8 | table of struct icon_pos. **Converted** (`src/game/ui/data/menu_tables.cpp`) | `InitPauseCrystalsPage`, `DrawPauseCrystalsPage` | high | done |
-| `0816B1EC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/game/ui/data/menu_tables.cpp`) | `InitPausePowersPage` | high | done |
-| `0816B20C` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/game/ui/data/menu_tables.cpp`) | `InitPausePowersPage` | high | done |
-| `0816B21C` | 0x28 | table of struct icon_pos. **Converted** (`src/game/ui/data/menu_tables.cpp`) | `DrawPauseGemsPage`, `InitPauseGemsPage` | high | done |
-| `0816B244` | 0x14 | table of u32 (`u32` x 5). **Converted** (`src/game/ui/data/menu_tables.cpp`) | `InitPauseGemsPage` | high | done |
-| `0816B258` | 0x18 | table of struct icon_pos. **Converted** (`src/game/ui/data/menu_tables.cpp`) | `DrawPauseRelicsPage`, `InitPauseRelicsPage` | high | done |
-| `0816B270` | 0xC | table of u32 (`u32` x 3). **Converted** (`src/game/ui/data/menu_tables.cpp`) | `InitPauseRelicsPage`, `InitPauseTimeTrialPage` | high | done |
-| `0816B27C` | 0x8 | table of struct icon_pos. **Converted** (`src/game/ui/data/menu_tables.cpp`) | `InitPauseTimeTrialPage`, `DrawPauseTimeTrialPage` | high | done |
+| `08167AD4` | 0x200 | the jetpack stages' airship (the green blimp): 16-colour palette (+ zero to 0x200). **Converted** (`engine/src/game/bosses/data/boss_pictures.cpp`) | `LoadAirshipGraphics`, `ConvertAirshipTiles` | high | done |
+| `08167CD4` | 0x1E14 | the airship's picture: {cols 18, rows 12}, 4 frames of {tile count, u16 map, 4bpp tiles} sharing one pool (games/xs/graphics/vehicles/jetpack/airship/, tools/boss_pictures.py). **Converted** (`engine/src/game/bosses/data/boss_pictures.cpp`) | `CreateAirship` | medium | done |
+| `08169AE8` | 0x200 | N. Gin's hovercraft: palette (16 colours + 240 x 0x03E0). **Converted** (`engine/src/game/bosses/data/boss_pictures.cpp`) | `UpdateHovercraftHitFlash`, `LoadHovercraftGraphics`, `ConvertHovercraftTiles` | high | done |
+| `08169CE8` | 0xB28 | N. Gin's hovercraft picture: {cols 16, rows 10}, 1 frame (games/xs/graphics/bosses/hovercraft.png). **Converted** (`engine/src/game/bosses/data/boss_pictures.cpp`) | `CreateHovercraft` | medium | done |
+| `0816A810` | 0x10 | u8[16] d-pad direction lookup. **Converted** (`engine/src/game/bosses/data/boss_pictures.cpp`) | `GetDpadDirection` | medium | done |
+| `0816A820` | 0x200 | s16[256] sine/direction table (`s16` x 256). **Converted** (`engine/src/game/bosses/data/boss_pictures.cpp`) | `DrawPlayer`, `UpdateEnemyOscillateX`, `UpdateEnemyBob` +16 | high | done |
+| `0816AA20` | 0x4C | song table: 19 pointers into the music block, `gGaxMusicData + GAX_SONG_<NAME>` from the generated `gax_songs.h`. **Converted** (`engine/src/engine/audio/data/song_table.cpp`) | `StartSong` | high | done |
+| `0816AF10` | 0x228 | CRC-16/CCITT lookup table (poly 0x1021, u16[256]) + the two link-cable pairing names "crash 1 <-> crash 2"/"crash 1 <-> crash 3" (`gCrash2LinkText`/`0816B124`, which the IWRAM data `gCrash2LinkTextPtr`/`0814` points at). **Converted** (`engine/src/engine/link/data/link_crc_table.cpp`) | `MakeLinkHandshakeId`, `HandleLinkSerial` | high | done |
+| `0816B138` | 0x2 | the text ">". **Converted** (`engine/src/game/ui/data/menu_tables.cpp`) | `DrawYesNoPrompt` | medium | done |
+| `0816B13A` | 0x20 | table of u16; 1 word(s) look like ROM pointers (`u16` x 16). **Converted** (`engine/src/game/ui/data/menu_tables.cpp`) | `InitSaveMenuIcons` | high | done |
+| `0816B15A` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`engine/src/game/ui/data/menu_tables.cpp`) | `InitSaveMenuIcons` | high | done |
+| `0816B17A` | 0x20 | table of u16 (`u16` x 16). **Converted** (`engine/src/game/ui/data/menu_tables.cpp`) | `InitSaveMenuIcons` | high | done |
+| `0816B19A` | 0x22 | table of u16 (`u16` x 17). **Converted** (`engine/src/game/ui/data/menu_tables.cpp`) | `InitSaveMenuIcons` | high | done |
+| `0816B1BC` | 0x14 | table of s32 (`s32` x 5). **Converted** (`engine/src/game/ui/data/menu_tables.cpp`) | `DrawSaveMenuMain` | high | done |
+| `0816B1D0` | 0x14 | table of void* (`void*` x 5). **Converted** (`engine/src/game/ui/data/menu_tables.cpp`) | `DrawPauseMenuPageTitle` | high | done |
+| `0816B1E4` | 0x8 | table of struct icon_pos. **Converted** (`engine/src/game/ui/data/menu_tables.cpp`) | `InitPauseCrystalsPage`, `DrawPauseCrystalsPage` | high | done |
+| `0816B1EC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`engine/src/game/ui/data/menu_tables.cpp`) | `InitPausePowersPage` | high | done |
+| `0816B20C` | 0x10 | table of u32 (`u32` x 4). **Converted** (`engine/src/game/ui/data/menu_tables.cpp`) | `InitPausePowersPage` | high | done |
+| `0816B21C` | 0x28 | table of struct icon_pos. **Converted** (`engine/src/game/ui/data/menu_tables.cpp`) | `DrawPauseGemsPage`, `InitPauseGemsPage` | high | done |
+| `0816B244` | 0x14 | table of u32 (`u32` x 5). **Converted** (`engine/src/game/ui/data/menu_tables.cpp`) | `InitPauseGemsPage` | high | done |
+| `0816B258` | 0x18 | table of struct icon_pos. **Converted** (`engine/src/game/ui/data/menu_tables.cpp`) | `DrawPauseRelicsPage`, `InitPauseRelicsPage` | high | done |
+| `0816B270` | 0xC | table of u32 (`u32` x 3). **Converted** (`engine/src/game/ui/data/menu_tables.cpp`) | `InitPauseRelicsPage`, `InitPauseTimeTrialPage` | high | done |
+| `0816B27C` | 0x8 | table of struct icon_pos. **Converted** (`engine/src/game/ui/data/menu_tables.cpp`) | `InitPauseTimeTrialPage`, `DrawPauseTimeTrialPage` | high | done |
 | `0816B284` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `InitPauseMenu` | medium | easy |
-| `0816B298` | 0x28 | table (element layout: see consumers). **Converted** (`src/game/ui/data/pause_menu_rows.cpp`) | `InitPauseMenu` | medium | done |
-| `0816B2C0` | 0x20 | table (element layout: see consumers). **Converted** (`src/game/ui/data/pause_menu_rows.cpp`) | `RunPauseMenu` | medium | done |
-| `0816B2E0` | 0xC | table (element layout: see consumers). **Converted** (`src/engine/gfx/data/obj_piece_sizes.cpp`) | `DrawSpritePieces`, `DrawAffineSpritePieces` | medium | done |
-| `0816B2EC` | 0xC | table (element layout: see consumers). **Converted** (`src/engine/gfx/data/obj_piece_sizes.cpp`) | `DrawSpritePieces`, `DrawAffineSpritePieces` | medium | done |
-| `0816B2F8` | 0x8 | all zero (zero-initialised table). **Converted** (`src/engine/gfx/data/obj_piece_sizes.cpp`) | `QueueCratePlayerCollision`, `GetSpriteAttackBox`, `GetSpriteBodyBox` +3 | high | done |
-| `0816B300` | 0x4 | all zero (zero-initialised table). **Converted** (`src/engine/gfx/data/obj_piece_sizes.cpp`) | `GetSpriteFrameAnchor`, `CollidePlayer`, `ActionCtrlHandleEvent` +1 | high | done |
-| `0816B304` | 0x318 | 44 {s32, s32, s32} motion records + 33 {a, b} entry pairs (`gActionCtrlMotionEntries`, gActionCtrlMotionSet's entries). **Converted** (`src/game/crash/data/motion_records.cpp`) | `StartCtrlTargetMotionYFromSet`, `StartCtrlTargetMotionXFromSet`, `ApplyActionCtrlMotion` | high | done |
-| `0816B61C` | 0x2A4 | 31 {s32, s32, s32} motion records + 38 {a, b} entry pairs (`gSwimCtrlMotionEntries`, gSwimCtrlMotionSet's entries). **Converted** (`src/game/crash/data/motion_records.cpp`) | `ApplySwimCtrlMotion`, `StartSwimCtrlMotionYFromSet`, `StartSwimCtrlMotionXFromSet` | high | done |
-| `0816B8C0` | 0x6C | table (element layout: see consumers). **Converted** (`src/game/crash/data/motion_records.cpp`) | `ApplyInputCtrlMotion` | medium | done |
+| `0816B298` | 0x28 | table (element layout: see consumers). **Converted** (`engine/src/game/ui/data/pause_menu_rows.cpp`) | `InitPauseMenu` | medium | done |
+| `0816B2C0` | 0x20 | table (element layout: see consumers). **Converted** (`engine/src/game/ui/data/pause_menu_rows.cpp`) | `RunPauseMenu` | medium | done |
+| `0816B2E0` | 0xC | table (element layout: see consumers). **Converted** (`engine/src/engine/gfx/data/obj_piece_sizes.cpp`) | `DrawSpritePieces`, `DrawAffineSpritePieces` | medium | done |
+| `0816B2EC` | 0xC | table (element layout: see consumers). **Converted** (`engine/src/engine/gfx/data/obj_piece_sizes.cpp`) | `DrawSpritePieces`, `DrawAffineSpritePieces` | medium | done |
+| `0816B2F8` | 0x8 | all zero (zero-initialised table). **Converted** (`engine/src/engine/gfx/data/obj_piece_sizes.cpp`) | `QueueCratePlayerCollision`, `GetSpriteAttackBox`, `GetSpriteBodyBox` +3 | high | done |
+| `0816B300` | 0x4 | all zero (zero-initialised table). **Converted** (`engine/src/engine/gfx/data/obj_piece_sizes.cpp`) | `GetSpriteFrameAnchor`, `CollidePlayer`, `ActionCtrlHandleEvent` +1 | high | done |
+| `0816B304` | 0x318 | 44 {s32, s32, s32} motion records + 33 {a, b} entry pairs (`gActionCtrlMotionEntries`, gActionCtrlMotionSet's entries). **Converted** (`engine/src/game/crash/data/motion_records.cpp`) | `StartCtrlTargetMotionYFromSet`, `StartCtrlTargetMotionXFromSet`, `ApplyActionCtrlMotion` | high | done |
+| `0816B61C` | 0x2A4 | 31 {s32, s32, s32} motion records + 38 {a, b} entry pairs (`gSwimCtrlMotionEntries`, gSwimCtrlMotionSet's entries). **Converted** (`engine/src/game/crash/data/motion_records.cpp`) | `ApplySwimCtrlMotion`, `StartSwimCtrlMotionYFromSet`, `StartSwimCtrlMotionXFromSet` | high | done |
+| `0816B8C0` | 0x6C | table (element layout: see consumers). **Converted** (`engine/src/game/crash/data/motion_records.cpp`) | `ApplyInputCtrlMotion` | medium | done |
 | `0816B92C` | 0x8 | pointer table (1 data pointers) | `PlayRoom` | high | easy |
 | `0816B934` | 0x8 | pointer table (1 data pointers) | `PlayRoom` | high | easy |
-| `0816B93C` | 0x50 | entry set {entries, 0x100} + its 9 {a, b} entries (`gInputCtrlMotionEntries`). **Converted** (`src/game/crash/data/input_ctrl_motion_set.cpp`) | `PlayRoom` | medium | done |
-| `0816B98C` | 0x20 | table (element layout: see consumers). **Converted** (`src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnLizard`, `SpawnVulture`, `SpawnVenusFlytrap` +22 | medium | done |
-| `0816B9AC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnPenguin` | high | done |
-| `0816B9CC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnPufferfish` | high | done |
-| `0816B9EC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnBlowgunTribesman` | high | done |
-| `0816BA0C` | 0x20 | table (element layout: see consumers). **Converted** (`src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnVenusFlytrap` | medium | done |
-| `0816BA2C` | 0x20 | table (element layout: see consumers). **Converted** (`src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnVulture` | medium | done |
-| `0816BA4C` | 0x20 | table (element layout: see consumers). **Converted** (`src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnShark` | medium | done |
-| `0816BA6C` | 0x20 | table (element layout: see consumers). **Converted** (`src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnSquid` | medium | done |
-| `0816BA8C` | 0x20 | table (element layout: see consumers). **Converted** (`src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnElectricEel` | medium | done |
-| `0816BAAC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnFlamethrowerLabAssistant` | high | done |
-| `0816BACC` | 0x20 | table (element layout: see consumers). **Converted** (`src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnStationarySpaceEnemy` | medium | done |
-| `0816BAEC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnPatrollingSpaceEnemy` | high | done |
-| `0816BB0C` | 0x20 | table (element layout: see consumers). **Converted** (`src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnPatrollingSewerEnemy`, `SpawnFrog` | medium | done |
-| `0816BB2C` | 0x20 | table (element layout: see consumers). **Converted** (`src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnPistonCrusher`, `SpawnWoodenCrusher` | medium | done |
-| `0816BB4C` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnSaucerLabAssistant` | high | done |
-| `0816BB6C` | 0x28 | entry set {entries, 0x100} + its 4 {a, b} entries (`gEnemyCtrlMotionEntries`). **Converted** (`src/game/crates/data/crate_tables.cpp`) | `ResetEnemyCtrl` | medium | done |
-| `0816BB94` | 0x4 | small constant (281e140a). **Converted** (`src/game/crates/data/crate_tables.cpp`) | `UpdateSlotCrate`, `CreateCrate` | medium | done |
-| `0816BB98` | 0x16 | table (element layout: see consumers). **Converted** (`src/game/crates/data/crate_tables.cpp`) | `OpenCheckpointCrate`, `BreakCrate`, `ExplodeCrate` | medium | done |
-| `0816BBAE` | 0x16 | table (element layout: see consumers). **Converted** (`src/game/crates/data/crate_tables.cpp`) | `BlastNearbyCrates`, `BreakCratesInArea`, `IsCrateKindBreakable` | medium | done |
-| `0816BBC4` | 0x16 | table (element layout: see consumers). **Converted** (`src/game/crates/data/crate_tables.cpp`) | `BreakCrateTouchedByPlayer`, `DropCratesAbove`, `BlastNearbyCrates` +3 | medium | done |
-| `0816BBDA` | 0x16 | table (element layout: see consumers). **Converted** (`src/game/crates/data/crate_tables.cpp`) | `QueueCratePlayerCollision`, `BreakCrateInStack` | medium | done |
-| `0816BBF0` | 0xA8 | table of s32 (`s32` x 42). **Converted** (`src/game/crates/data/crate_tables.cpp`) | `QueueCratePlayerCollision` | high | done |
-| `0816BC98` | 0x268 | table of s32[7] (`s32[7]` x 22). **Converted** (`src/game/crates/data/crate_tables.cpp`) | `QueueCratePlayerCollision`, `ApplyCrateCollision` | high | done |
-| `0816BF00` | 0x8 | `gAttackKindBreakLimited`: a flag per attack kind (only kind 2), whether its crate breaks go through the player's `countdown` limiter. **Converted** (`src/game/crates/data/crate_tables.cpp`) | `QueueCratePlayerCollision` | medium | done |
-| `0816BF08` | 0xC | table of s32 (`s32` x 3). **Converted** (`src/game/crates/data/crate_tables.cpp`) | `UpdateExtraLifeHop` | high | done |
-| `0816BF14` | 0xC | table of struct three_words. **Converted** (`src/game/crates/data/crate_tables.cpp`) | `UpdateWumpaHop` | high | done |
+| `0816B93C` | 0x50 | entry set {entries, 0x100} + its 9 {a, b} entries (`gInputCtrlMotionEntries`). **Converted** (`engine/src/game/crash/data/input_ctrl_motion_set.cpp`) | `PlayRoom` | medium | done |
+| `0816B98C` | 0x20 | table (element layout: see consumers). **Converted** (`engine/src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnLizard`, `SpawnVulture`, `SpawnVenusFlytrap` +22 | medium | done |
+| `0816B9AC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`engine/src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnPenguin` | high | done |
+| `0816B9CC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`engine/src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnPufferfish` | high | done |
+| `0816B9EC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`engine/src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnBlowgunTribesman` | high | done |
+| `0816BA0C` | 0x20 | table (element layout: see consumers). **Converted** (`engine/src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnVenusFlytrap` | medium | done |
+| `0816BA2C` | 0x20 | table (element layout: see consumers). **Converted** (`engine/src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnVulture` | medium | done |
+| `0816BA4C` | 0x20 | table (element layout: see consumers). **Converted** (`engine/src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnShark` | medium | done |
+| `0816BA6C` | 0x20 | table (element layout: see consumers). **Converted** (`engine/src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnSquid` | medium | done |
+| `0816BA8C` | 0x20 | table (element layout: see consumers). **Converted** (`engine/src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnElectricEel` | medium | done |
+| `0816BAAC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`engine/src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnFlamethrowerLabAssistant` | high | done |
+| `0816BACC` | 0x20 | table (element layout: see consumers). **Converted** (`engine/src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnStationarySpaceEnemy` | medium | done |
+| `0816BAEC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`engine/src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnPatrollingSpaceEnemy` | high | done |
+| `0816BB0C` | 0x20 | table (element layout: see consumers). **Converted** (`engine/src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnPatrollingSewerEnemy`, `SpawnFrog` | medium | done |
+| `0816BB2C` | 0x20 | table (element layout: see consumers). **Converted** (`engine/src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnPistonCrusher`, `SpawnWoodenCrusher` | medium | done |
+| `0816BB4C` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`engine/src/game/enemies/data/enemy_anim_maps.cpp`) | `SpawnSaucerLabAssistant` | high | done |
+| `0816BB6C` | 0x28 | entry set {entries, 0x100} + its 4 {a, b} entries (`gEnemyCtrlMotionEntries`). **Converted** (`engine/src/game/crates/data/crate_tables.cpp`) | `ResetEnemyCtrl` | medium | done |
+| `0816BB94` | 0x4 | small constant (281e140a). **Converted** (`engine/src/game/crates/data/crate_tables.cpp`) | `UpdateSlotCrate`, `CreateCrate` | medium | done |
+| `0816BB98` | 0x16 | table (element layout: see consumers). **Converted** (`engine/src/game/crates/data/crate_tables.cpp`) | `OpenCheckpointCrate`, `BreakCrate`, `ExplodeCrate` | medium | done |
+| `0816BBAE` | 0x16 | table (element layout: see consumers). **Converted** (`engine/src/game/crates/data/crate_tables.cpp`) | `BlastNearbyCrates`, `BreakCratesInArea`, `IsCrateKindBreakable` | medium | done |
+| `0816BBC4` | 0x16 | table (element layout: see consumers). **Converted** (`engine/src/game/crates/data/crate_tables.cpp`) | `BreakCrateTouchedByPlayer`, `DropCratesAbove`, `BlastNearbyCrates` +3 | medium | done |
+| `0816BBDA` | 0x16 | table (element layout: see consumers). **Converted** (`engine/src/game/crates/data/crate_tables.cpp`) | `QueueCratePlayerCollision`, `BreakCrateInStack` | medium | done |
+| `0816BBF0` | 0xA8 | table of s32 (`s32` x 42). **Converted** (`engine/src/game/crates/data/crate_tables.cpp`) | `QueueCratePlayerCollision` | high | done |
+| `0816BC98` | 0x268 | table of s32[7] (`s32[7]` x 22). **Converted** (`engine/src/game/crates/data/crate_tables.cpp`) | `QueueCratePlayerCollision`, `ApplyCrateCollision` | high | done |
+| `0816BF00` | 0x8 | `gAttackKindBreakLimited`: a flag per attack kind (only kind 2), whether its crate breaks go through the player's `countdown` limiter. **Converted** (`engine/src/game/crates/data/crate_tables.cpp`) | `QueueCratePlayerCollision` | medium | done |
+| `0816BF08` | 0xC | table of s32 (`s32` x 3). **Converted** (`engine/src/game/crates/data/crate_tables.cpp`) | `UpdateExtraLifeHop` | high | done |
+| `0816BF14` | 0xC | table of struct three_words. **Converted** (`engine/src/game/crates/data/crate_tables.cpp`) | `UpdateWumpaHop` | high | done |
 | `0816BF20` | 0x150 | pointer-to-member dispatch table: 42 x {0xFFFF0000, fn} (`struct act_pmf` x 42) | `UpdateActionCtrl` | high | easy |
 | `0816C070` | 0x20 | pointer table (8 data pointers) (`struct level_anim*` x 8) | `UpdateSwimCtrl`, `SwimCtrlStateTurn`, `SwimCtrlStateStop` +2 | high | easy |
-| `0816C090` | 0x1C0 | `struct speed_table` (8 s32, `gSwimCtrlTurnSpeeds`: speedX per frame of the swim turn) + `struct level_anim[8][13]` (`gSwimCtrlModeLevelAnims`, the rows gSwimCtrlModeAnimRows points at). **Converted** (`src/game/crash/data/swim_speeds.cpp`) | `StartSwimCtrlStroke` | high | done |
+| `0816C090` | 0x1C0 | `struct speed_table` (8 s32, `gSwimCtrlTurnSpeeds`: speedX per frame of the swim turn) + `struct level_anim[8][13]` (`gSwimCtrlModeLevelAnims`, the rows gSwimCtrlModeAnimRows points at). **Converted** (`engine/src/game/crash/data/swim_speeds.cpp`) | `StartSwimCtrlStroke` | high | done |
 | `0816C250` | 0x40 | function-pointer / pointer-to-member table (8 code pointers) | `UpdateSwimCtrl` | high | easy |
 | `0816C290` | 0x40 | table of struct pmf; 4 word(s) look like ROM pointers | `UpdateInputCtrl` | high | easy |
 | `0816C2D0` | 0x8 | pointer table (1 data pointers) | `ResetMegaMixCtrl` | high | easy |
-| `0816C2D8` | 0x30 | table (element layout: see consumers). **Converted** (`src/game/bosses/data/boss_motion_tables.cpp`) | `SetMegaMixMotionYFromSet`, `SetMegaMixMotionXFromSet`, `StartMegaMixMotionYFromSet` +1 | medium | done |
-| `0816C308` | 0x3 | small constant (040100). **Converted** (`src/game/bosses/data/boss_motion_tables.cpp`) | `UpdateTiny`, `SetTinyState` | medium | done |
-| `0816C30B` | 0x4D | table (element layout: see consumers). **Converted** (`src/game/bosses/data/boss_motion_tables.cpp`) | `PickTinyHopTarget` | medium | done |
-| `0816C358` | 0x4 | small constant (100e0a20). **Converted** (`src/game/bosses/data/boss_motion_tables.cpp`) | `SetCortexTargetDest` | medium | done |
-| `0816C35C` | 0x3 | small constant (181612). **Converted** (`src/game/bosses/data/boss_motion_tables.cpp`) | `UpdateCortexTarget` | medium | done |
-| `0816C35F` | 0x3 | small constant (040404). **Converted** (`src/game/bosses/data/boss_motion_tables.cpp`) | `UpdateCortexTarget` | medium | done |
-| `0816C362` | 0x6 | small constant (020202000000). **Converted** (`src/game/bosses/data/boss_motion_tables.cpp`) | `UpdateCortexTarget` | medium | done |
-| `0816C368` | 0x10 | table of s32 (`s32` x 4). **Converted** (`src/game/bosses/data/boss_motion_tables.cpp`) | `UpdateDingodile` | high | done |
-| `0816C378` | 0x18 | table of s32 (`s32` x 6). **Converted** (`src/game/bosses/data/boss_motion_tables.cpp`) | `UpdateDingodile` | high | done |
-| `0816C390` | 0x10 | table of s32 (`s32` x 4). **Converted** (`src/game/bosses/data/boss_motion_tables.cpp`) | `UpdateDingodile` | high | done |
-| `0816C3A0` | 0x18 | table of s32 (`s32` x 6). **Converted** (`src/game/bosses/data/boss_motion_tables.cpp`) | `UpdateDingodile` | high | done |
-| `0816C3B8` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/game/bosses/data/boss_motion_tables.cpp`) | `UpdateDingodileShark`, `StartDingodileMotion` | high | done |
-| `0816C3E8` | 0xC | table (element layout: see consumers). **Converted** (`src/game/bosses/data/boss_motion_tables.cpp`) | `UpdateDingodileProjectile` | medium | done |
-| `0816C3F4` | 0x24 | table (element layout: see consumers). **Converted** (`src/game/bosses/data/boss_motion_tables.cpp`) | `UpdateDingodileProjectile` | medium | done |
+| `0816C2D8` | 0x30 | table (element layout: see consumers). **Converted** (`engine/src/game/bosses/data/boss_motion_tables.cpp`) | `SetMegaMixMotionYFromSet`, `SetMegaMixMotionXFromSet`, `StartMegaMixMotionYFromSet` +1 | medium | done |
+| `0816C308` | 0x3 | small constant (040100). **Converted** (`engine/src/game/bosses/data/boss_motion_tables.cpp`) | `UpdateTiny`, `SetTinyState` | medium | done |
+| `0816C30B` | 0x4D | table (element layout: see consumers). **Converted** (`engine/src/game/bosses/data/boss_motion_tables.cpp`) | `PickTinyHopTarget` | medium | done |
+| `0816C358` | 0x4 | small constant (100e0a20). **Converted** (`engine/src/game/bosses/data/boss_motion_tables.cpp`) | `SetCortexTargetDest` | medium | done |
+| `0816C35C` | 0x3 | small constant (181612). **Converted** (`engine/src/game/bosses/data/boss_motion_tables.cpp`) | `UpdateCortexTarget` | medium | done |
+| `0816C35F` | 0x3 | small constant (040404). **Converted** (`engine/src/game/bosses/data/boss_motion_tables.cpp`) | `UpdateCortexTarget` | medium | done |
+| `0816C362` | 0x6 | small constant (020202000000). **Converted** (`engine/src/game/bosses/data/boss_motion_tables.cpp`) | `UpdateCortexTarget` | medium | done |
+| `0816C368` | 0x10 | table of s32 (`s32` x 4). **Converted** (`engine/src/game/bosses/data/boss_motion_tables.cpp`) | `UpdateDingodile` | high | done |
+| `0816C378` | 0x18 | table of s32 (`s32` x 6). **Converted** (`engine/src/game/bosses/data/boss_motion_tables.cpp`) | `UpdateDingodile` | high | done |
+| `0816C390` | 0x10 | table of s32 (`s32` x 4). **Converted** (`engine/src/game/bosses/data/boss_motion_tables.cpp`) | `UpdateDingodile` | high | done |
+| `0816C3A0` | 0x18 | table of s32 (`s32` x 6). **Converted** (`engine/src/game/bosses/data/boss_motion_tables.cpp`) | `UpdateDingodile` | high | done |
+| `0816C3B8` | 0x30 | table of s32 (`s32` x 12). **Converted** (`engine/src/game/bosses/data/boss_motion_tables.cpp`) | `UpdateDingodileShark`, `StartDingodileMotion` | high | done |
+| `0816C3E8` | 0xC | table (element layout: see consumers). **Converted** (`engine/src/game/bosses/data/boss_motion_tables.cpp`) | `UpdateDingodileProjectile` | medium | done |
+| `0816C3F4` | 0x24 | table (element layout: see consumers). **Converted** (`engine/src/game/bosses/data/boss_motion_tables.cpp`) | `UpdateDingodileProjectile` | medium | done |
 | `0816C418` | 0x40 | table of struct vec_pair | `StartDingodileMotion` | high | easy |
 | `0816C458` | 0x8 | pointer table (1 data pointers) | `CreatePlatformMover` | high | easy |
-| `0816C460` | 0x24 | table of struct speed_ramp (was `struct vec3`). **Converted** (`src/game/objects/data/platform_mover_motion.cpp`) | `UpdatePlatformMover`, `SetPlatformMoverMotionYFromSet`, `SetPlatformMoverMotionXFromSet` +2 | high | done |
+| `0816C460` | 0x24 | table of struct speed_ramp (was `struct vec3`). **Converted** (`engine/src/game/objects/data/platform_mover_motion.cpp`) | `UpdatePlatformMover`, `SetPlatformMoverMotionYFromSet`, `SetPlatformMoverMotionXFromSet` +2 | high | done |
 | `0816C484` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `LoadSaveMenuBg`, `InitPowerDialog`, `InitLevelSelect` +1 | medium | easy |
-| `0816C498` | 0x8 | table of struct xy_pair. **Converted** (`src/game/ui/data/level_select_layout.cpp`) | `InitLevelSelect` | high | done |
-| `0816C4A0` | 0x8 | table of struct xy_pair. **Converted** (`src/game/ui/data/level_select_layout.cpp`) | `InitLevelSelect` | high | done |
-| `0816C4A8` | 0x8 | table of struct xy_pair. **Converted** (`src/game/ui/data/level_select_layout.cpp`) | `InitLevelSelect` | high | done |
-| `0816C4B0` | 0x8 | table of struct xy_pair. **Converted** (`src/game/ui/data/level_select_layout.cpp`) | `InitLevelSelect` | high | done |
-| `0816C4B8` | 0x8 | table of struct xy_pair. **Converted** (`src/game/ui/data/level_select_layout.cpp`) | `InitLevelSelect` | high | done |
-| `0816C4C0` | 0x8 | table of struct xy_pair. **Converted** (`src/game/ui/data/level_select_layout.cpp`) | `InitLevelSelect`, `DrawLevelSelectTime` | high | done |
-| `0816C4C8` | 0x8 | table of struct xy_pair. **Converted** (`src/game/ui/data/level_select_layout.cpp`) | `InitLevelSelect` | high | done |
-| `0816C4D0` | 0x8 | table of struct xy_pair. **Converted** (`src/game/ui/data/level_select_layout.cpp`) | `InitLevelSelect` | high | done |
-| `0816C4D8` | 0x30 | table of struct xy_pair. **Converted** (`src/game/ui/data/level_select_layout.cpp`) | `LevelSelectTurnPage`, `PlaceLevelSelectEntries` | high | done |
-| `0816C508` | 0x30 | table of struct xy_pair. **Converted** (`src/game/ui/data/level_select_layout.cpp`) | `LevelSelectTurnPage`, `PlaceLevelSelectEntries` | high | done |
-| `0816C538` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/game/ui/data/level_select_layout.cpp`) | `LevelSelectTurnPage`, `SetLevelSelectEntryBoxes` | high | done |
-| `0816C548` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/game/ui/data/level_select_layout.cpp`) | `InitLevelSelect`, `RefreshLevelSelectPage` | high | done |
-| `0816C558` | 0x14 | table of u32 (`u32` x 5). **Converted** (`src/game/ui/data/level_select_layout.cpp`) | `LoadLevelSelectRecord` | high | done |
-| `0816C56C` | 0x20 | table (element layout: see consumers). **Converted** (`src/game/ui/data/level_select_layout.cpp`) | `RunLevelSelect` | medium | done |
+| `0816C498` | 0x8 | table of struct xy_pair. **Converted** (`engine/src/game/ui/data/level_select_layout.cpp`) | `InitLevelSelect` | high | done |
+| `0816C4A0` | 0x8 | table of struct xy_pair. **Converted** (`engine/src/game/ui/data/level_select_layout.cpp`) | `InitLevelSelect` | high | done |
+| `0816C4A8` | 0x8 | table of struct xy_pair. **Converted** (`engine/src/game/ui/data/level_select_layout.cpp`) | `InitLevelSelect` | high | done |
+| `0816C4B0` | 0x8 | table of struct xy_pair. **Converted** (`engine/src/game/ui/data/level_select_layout.cpp`) | `InitLevelSelect` | high | done |
+| `0816C4B8` | 0x8 | table of struct xy_pair. **Converted** (`engine/src/game/ui/data/level_select_layout.cpp`) | `InitLevelSelect` | high | done |
+| `0816C4C0` | 0x8 | table of struct xy_pair. **Converted** (`engine/src/game/ui/data/level_select_layout.cpp`) | `InitLevelSelect`, `DrawLevelSelectTime` | high | done |
+| `0816C4C8` | 0x8 | table of struct xy_pair. **Converted** (`engine/src/game/ui/data/level_select_layout.cpp`) | `InitLevelSelect` | high | done |
+| `0816C4D0` | 0x8 | table of struct xy_pair. **Converted** (`engine/src/game/ui/data/level_select_layout.cpp`) | `InitLevelSelect` | high | done |
+| `0816C4D8` | 0x30 | table of struct xy_pair. **Converted** (`engine/src/game/ui/data/level_select_layout.cpp`) | `LevelSelectTurnPage`, `PlaceLevelSelectEntries` | high | done |
+| `0816C508` | 0x30 | table of struct xy_pair. **Converted** (`engine/src/game/ui/data/level_select_layout.cpp`) | `LevelSelectTurnPage`, `PlaceLevelSelectEntries` | high | done |
+| `0816C538` | 0x10 | table of u32 (`u32` x 4). **Converted** (`engine/src/game/ui/data/level_select_layout.cpp`) | `LevelSelectTurnPage`, `SetLevelSelectEntryBoxes` | high | done |
+| `0816C548` | 0x10 | table of u32 (`u32` x 4). **Converted** (`engine/src/game/ui/data/level_select_layout.cpp`) | `InitLevelSelect`, `RefreshLevelSelectPage` | high | done |
+| `0816C558` | 0x14 | table of u32 (`u32` x 5). **Converted** (`engine/src/game/ui/data/level_select_layout.cpp`) | `LoadLevelSelectRecord` | high | done |
+| `0816C56C` | 0x20 | table (element layout: see consumers). **Converted** (`engine/src/game/ui/data/level_select_layout.cpp`) | `RunLevelSelect` | medium | done |
 | `0816C58C` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `CreateLevelSelectPageBg` | medium | easy |
 | `0816C5A0` | 0x50 | pointer table (20 data pointers) | `UpdateZoomBg` | high | easy |
-| `0816C5F0` | 0x20 | table of struct xy_pair. **Converted** (`src/game/ui/data/level_select_anims.cpp`) | `InitZoomBg` | high | done |
-| `0816C610` | 0x14 | table of u32 (`u32` x 5). **Converted** (`src/game/ui/data/level_select_anims.cpp`) | `SetLevelSelectEntryBox` | high | done |
-| `0816C624` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/game/ui/data/level_select_anims.cpp`) | `SetLevelSelectEntryLevel` | high | done |
-| `0816C634` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/game/ui/data/level_select_anims.cpp`) | `UpdateLevelSelectCursor` | high | done |
-| `0816C644` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/game/ui/data/level_select_anims.cpp`) | `FitScaledSprite`, `DrawScaledSprite` | high | done |
-| `0816C674` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/game/ui/data/level_select_anims.cpp`) | `FitScaledSprite`, `DrawScaledSprite` | high | done |
+| `0816C5F0` | 0x20 | table of struct xy_pair. **Converted** (`engine/src/game/ui/data/level_select_anims.cpp`) | `InitZoomBg` | high | done |
+| `0816C610` | 0x14 | table of u32 (`u32` x 5). **Converted** (`engine/src/game/ui/data/level_select_anims.cpp`) | `SetLevelSelectEntryBox` | high | done |
+| `0816C624` | 0x10 | table of u32 (`u32` x 4). **Converted** (`engine/src/game/ui/data/level_select_anims.cpp`) | `SetLevelSelectEntryLevel` | high | done |
+| `0816C634` | 0x10 | table of u32 (`u32` x 4). **Converted** (`engine/src/game/ui/data/level_select_anims.cpp`) | `UpdateLevelSelectCursor` | high | done |
+| `0816C644` | 0x30 | table of s32 (`s32` x 12). **Converted** (`engine/src/game/ui/data/level_select_anims.cpp`) | `FitScaledSprite`, `DrawScaledSprite` | high | done |
+| `0816C674` | 0x30 | table of s32 (`s32` x 12). **Converted** (`engine/src/game/ui/data/level_select_anims.cpp`) | `FitScaledSprite`, `DrawScaledSprite` | high | done |
 | `0816C6A4` (`gEntitySpawnFuncs`) | 0x170 | function-pointer table: 92 Thumb function pointers (menu/trigger-effect dispatch) (`void (*)(void)` x 92) | `CreateEntitySpawner` | high | easy |
-| `0816C814` (`gThemePaletteCycle2`) | 0xA | `u16[5]` palette-entry list of a level-start colour cycle. **Converted** (`src/game/level/data/level_table.cpp`) | `RunRoom` | high | done |
+| `0816C814` (`gThemePaletteCycle2`) | 0xA | `u16[5]` palette-entry list of a level-start colour cycle. **Converted** (`engine/src/game/level/data/level_table.cpp`) | `RunRoom` | high | done |
 | `0816C81E` (`gThemePaletteCycle1A`) | 0x12 | `u16[9]` colour-cycle list. **Converted** (same) | `RunRoom` | high | done |
 | `0816C830` (`gThemePaletteCycle1B`) | 0x12 | `u16[9]` colour-cycle list. **Converted** (same) | `RunRoom` | high | done |
 | `0816C842` (`gThemePaletteCycle3`) | 0x20 | `u16[16]` colour-cycle list (palette entries 0x20-0x2F, not a palette). **Converted** (same) | `RunRoom` | high | done |
 | `0816C862` (`gThemePaletteCycle5`) | 0xA | `u16[5]` colour-cycle list. **Converted** (same) | `RunRoom` | high | done |
 | `0816C86C` (`gLevelTable`) | 0x514 | level table: 25 x 0x24 `struct level_info`, then 25 x 0x10 room lists `{count, rooms**, extra1, extra2}`. **Converted** (same) | `InitPauseMenuInfo`, `InitPauseTimeTrialPage`, `CountPlatinumRelics` +17 | high | done |
 | `0816CD80` (`gThemeMusicCues`) | 0x474 | `u8[11]` theme music cues, 17 room records (0x14 each), the room lists' pointer arrays, 31 more room records. **Converted** (same); its last 0x2C bytes are the English cutscene table `0816D1C8` | `PlayRoomMusic` | high | done |
-| `0816D1F4` (`gCutscenes`) | 0x53B4 | the cutscenes: 11 slide lists `{slides*, count}` (`struct cutscene_slides`), the English pages, 5 more language tables, slide arrays, text strings and pointer arrays of 6 languages, 24 slides (0x1C, `struct cutscene_slide`). **Converted** (`src/game/ui/data/cutscenes.cpp`, from `0816D1C8`) | `PlayCutscene` | high | done |
-| `081725A8` (`gTerrainTypes`) | 0x4 | 51 `struct terrain_type` {u8 modeValue[4]; u8 heights[4][8]} (the rest of the old blob is the UI text, see `081725C4`). **Converted** (`src/game/level/data/terrain_types.cpp`) | `GetSolidTerrainModeValue` | high | done |
-| `081725AC` (`gTerrainHeights0`) | 0x8 | name for heights[0] of terrain type 0 (an `asm` `.set` alias into gTerrainTypes). **Converted** (`src/game/level/data/terrain_types.cpp`) | `GetTerrainHeights`, `GetSolidTerrainHeights` | medium | done |
-| `081725B4` (`gTerrainHeights1`) | 0x8 | name for heights[1] of terrain type 0 (alias). **Converted** (`src/game/level/data/terrain_types.cpp`) | `GetSolidTerrainHeights` | medium | done |
-| `081725BC` (`gTerrainHeights2`) | 0x8 | name for heights[2] of terrain type 0 (alias). **Converted** (`src/game/level/data/terrain_types.cpp`) | `GetSolidTerrainHeights` | medium | done |
-| `081725C4` (`gTerrainHeights3`) | 0x261C | heights[3] of terrain type 0 (alias); the old label ran on through the terrain table and then the game's UI text: 367 strings and the six 70-entry language tables `gUiTextEnglish`...`gUiTextDutch` (`src/game/ui/data/ui_text.cpp`). **Converted** (`src/game/level/data/terrain_types.cpp, src/game/ui/data/ui_text.cpp`) | `GetSolidTerrainHeights` | medium | done |
-| `08174BE0` | 0x8C | table of u32 (`u32` x 35). **Converted** (`src/game/ui/data/hud_font_tables.cpp`) | `InitHud`, `ConfigureHudParts` | high | done |
-| `08174C6C` | 0x118 | table of struct hud_pos. **Converted** (`src/game/ui/data/hud_font_tables.cpp`) | `InitHud`, `ConfigureHudParts`, `UpdateHudBoss` +2 | high | done |
-| `08174D84` | 0x50 | HUD font A's characters in glyph order (a string, Latin-1). **Converted** (`src/game/ui/data/hud_font_tables.cpp`) | `InitSmallFont` | medium | done |
-| `08174DD4` | 0x3B4 | table (element layout: see consumers). **Converted** (`src/game/ui/data/hud_font_tables.cpp`) | `InitSmallFont` | medium | done |
-| `08175188` | 0x4C | HUD font B's characters in glyph order. **Converted** (`src/game/ui/data/hud_font_tables.cpp`) | `InitLargeFont` | medium | done |
-| `081751D4` | 0x384 | table (element layout: see consumers). **Converted** (`src/game/ui/data/hud_font_tables.cpp`) | `InitLargeFont` | medium | done |
+| `0816D1F4` (`gCutscenes`) | 0x53B4 | the cutscenes: 11 slide lists `{slides*, count}` (`struct cutscene_slides`), the English pages, 5 more language tables, slide arrays, text strings and pointer arrays of 6 languages, 24 slides (0x1C, `struct cutscene_slide`). **Converted** (`engine/src/game/ui/data/cutscenes.cpp`, from `0816D1C8`) | `PlayCutscene` | high | done |
+| `081725A8` (`gTerrainTypes`) | 0x4 | 51 `struct terrain_type` {u8 modeValue[4]; u8 heights[4][8]} (the rest of the old blob is the UI text, see `081725C4`). **Converted** (`engine/src/game/level/data/terrain_types.cpp`) | `GetSolidTerrainModeValue` | high | done |
+| `081725AC` (`gTerrainHeights0`) | 0x8 | name for heights[0] of terrain type 0 (an `asm` `.set` alias into gTerrainTypes). **Converted** (`engine/src/game/level/data/terrain_types.cpp`) | `GetTerrainHeights`, `GetSolidTerrainHeights` | medium | done |
+| `081725B4` (`gTerrainHeights1`) | 0x8 | name for heights[1] of terrain type 0 (alias). **Converted** (`engine/src/game/level/data/terrain_types.cpp`) | `GetSolidTerrainHeights` | medium | done |
+| `081725BC` (`gTerrainHeights2`) | 0x8 | name for heights[2] of terrain type 0 (alias). **Converted** (`engine/src/game/level/data/terrain_types.cpp`) | `GetSolidTerrainHeights` | medium | done |
+| `081725C4` (`gTerrainHeights3`) | 0x261C | heights[3] of terrain type 0 (alias); the old label ran on through the terrain table and then the game's UI text: 367 strings and the six 70-entry language tables `gUiTextEnglish`...`gUiTextDutch` (`engine/src/game/ui/data/ui_text.cpp`). **Converted** (`engine/src/game/level/data/terrain_types.cpp, engine/src/game/ui/data/ui_text.cpp`) | `GetSolidTerrainHeights` | medium | done |
+| `08174BE0` | 0x8C | table of u32 (`u32` x 35). **Converted** (`engine/src/game/ui/data/hud_font_tables.cpp`) | `InitHud`, `ConfigureHudParts` | high | done |
+| `08174C6C` | 0x118 | table of struct hud_pos. **Converted** (`engine/src/game/ui/data/hud_font_tables.cpp`) | `InitHud`, `ConfigureHudParts`, `UpdateHudBoss` +2 | high | done |
+| `08174D84` | 0x50 | HUD font A's characters in glyph order (a string, Latin-1). **Converted** (`engine/src/game/ui/data/hud_font_tables.cpp`) | `InitSmallFont` | medium | done |
+| `08174DD4` | 0x3B4 | table (element layout: see consumers). **Converted** (`engine/src/game/ui/data/hud_font_tables.cpp`) | `InitSmallFont` | medium | done |
+| `08175188` | 0x4C | HUD font B's characters in glyph order. **Converted** (`engine/src/game/ui/data/hud_font_tables.cpp`) | `InitLargeFont` | medium | done |
+| `081751D4` | 0x384 | table (element layout: see consumers). **Converted** (`engine/src/game/ui/data/hud_font_tables.cpp`) | `InitLargeFont` | medium | done |
 | `08175558` | 0xC | first 0xC bytes of category_descriptor[0] (label splits the struct array) (`struct category_descriptor` x 7) | `InitActorCategory`, `SetupActorVramPool`, `CountCategoryCrates` +1 | high | easy |
 | `08175564` | 0x20 | category_descriptor[0] bytes 0x0C-0x2B (part of gActorCategories[7]) | `InitActorCategory` | high | easy |
 | `08175584` | 0x140 | category_descriptor[0] +0x2C .. [6] end (part of gActorCategories[7]) | `InitActorCategory` | high | easy |
 | `081756C4` | 0x9C | category_vtable[3]: 3 x 13 Thumb function pointers (slots 7/8 of type 0 hold junk values) | `SelectActorCategory` | high | easy |
-| `08175760` | 0x3800 | palette-cycle frames: 32 x 0x1C0-byte BGR555 blocks (BG palettes 0-13). **Converted** (`src/engine/actor/data/actor_palette_cycle_frames.cpp`) | `UpdateActorPaletteCycle` | high | done |
+| `08175760` | 0x3800 | palette-cycle frames: 32 x 0x1C0-byte BGR555 blocks (BG palettes 0-13). **Converted** (`engine/src/engine/actor/data/actor_palette_cycle_frames.cpp`) | `UpdateActorPaletteCycle` | high | done |
 | `08178F60` | 0x10 | palette-cycle cursor starts `s32[4]`. **Converted** | `SetActorPaletteCycle` | high | done |
 | `08178F70` | 0x10 | palette-cycle cursor bounds `s32[4]`. **Converted** | `SetActorPaletteCycle` | high | done |
-| `08178F80` | 0x1738 | categories 0-2 family data: OBJ palette, keyframe tables (table_A), anim table gCategoryFamily0AnimTable (41 x 0x28) and table_B arrays. **Converted** (`src/game/vehicles/polar/data/polar_anim_family.cpp`, docs/data.md "Category families") | `RunCompanyLogos` | high | done |
+| `08178F80` | 0x1738 | categories 0-2 family data: OBJ palette, keyframe tables (table_A), anim table gCategoryFamily0AnimTable (41 x 0x28) and table_B arrays. **Converted** (`engine/src/game/vehicles/polar/data/polar_anim_family.cpp`, docs/data.md "Category families") | `RunCompanyLogos` | high | done |
 | `0817A6B8` | 0x70 | function-pointer / pointer-to-member table (14 code pointers) | `UpdatePolarPlayer`, `RunPolarPlayerState` | high | easy |
-| `0817A728` | 0x20 | 16-colour palette. **Converted** (`src/game/vehicles/polar/data/polar_palettes_boxes.cpp`) | `HurtPolarPlayer`, `PolarPlayerStateShocked` | high | done |
+| `0817A728` | 0x20 | 16-colour palette. **Converted** (`engine/src/game/vehicles/polar/data/polar_palettes_boxes.cpp`) | `HurtPolarPlayer`, `PolarPlayerStateShocked` | high | done |
 | `0817A748` | 0x20 | 16-colour palette. **Converted** | `PolarPlayerStateShocked` | high | done |
 | `0817A768` | 0xC | `struct anim_box`. **Converted** | `UpdatePolarNitroCrate` | medium | done |
 | `0817A774` | 0xC | `struct anim_box`. **Converted** | `UpdatePolarElectricFence` | medium | done |
@@ -941,32 +941,32 @@ vtable shapes).
 | `0817A7D8` | 0x20 | 16-colour palette. **Converted** | `UpdatePolarAkuAku` | high | done |
 | `0817A7F8` | 0x48 | 6 x `{s32 value, s32 threshold, s32 threshold}`. **Converted** | `YetiStateChase`, `YetiStateCharge` | medium | done |
 | `0817A840` | 0x10 | function-pointer / pointer-to-member table (4 code pointers) (`void (*)(void)` x 4) | `UpdateYeti` | high | easy |
-| `0817A850` | 0x30 | 4 `struct anim_frame_record` (the CreateYeti singleton's keyframes). **Converted** (`src/game/vehicles/polar/data/yeti_keyframes.cpp`) | `CreateYeti` | medium | done |
+| `0817A850` | 0x30 | 4 `struct anim_frame_record` (the CreateYeti singleton's keyframes). **Converted** (`engine/src/game/vehicles/polar/data/yeti_keyframes.cpp`) | `CreateYeti` | medium | done |
 | `0817A880` | 0x1EC | table_B: 123 absolute pointers into compressed frame set B (0x080DA1D8..) | `CreateYeti` | high | easy |
-| `0817AA6C` | 0x20 | 16-colour gradient palette. **Converted** (`src/game/vehicles/jetpack/data/jetpack_anim_family.cpp`) | `UpdateYetiPalette` | high | done |
+| `0817AA6C` | 0x20 | 16-colour gradient palette. **Converted** (`engine/src/game/vehicles/jetpack/data/jetpack_anim_family.cpp`) | `UpdateYetiPalette` | high | done |
 | `0817AA8C` | 0xC | `struct anim_box`. **Converted** | `IsTouchingYeti` | medium | done |
-| `0817AA98` | 0x1728 | categories 3-6 family data: a box, 2 OBJ palettes, table_A, anim table gCategoryFamily1AnimTable (47 x 0x28), table_B arrays. **Converted** (`src/game/vehicles/jetpack/data/jetpack_anim_family.cpp`) | `UpdateYeti` | high | done |
+| `0817AA98` | 0x1728 | categories 3-6 family data: a box, 2 OBJ palettes, table_A, anim table gCategoryFamily1AnimTable (47 x 0x28), table_B arrays. **Converted** (`engine/src/game/vehicles/jetpack/data/jetpack_anim_family.cpp`) | `UpdateYeti` | high | done |
 | `0817C1C0` | 0x40 | function-pointer / pointer-to-member table (8 code pointers) | `UpdateJetpackPlayer`, `RunJetpackPlayerState` | high | easy |
-| `0817C200` | 0x60 | 3-frame 16-colour palette strip. **Converted** (`src/game/vehicles/jetpack/data/jetpack_flash_palettes.cpp`) | `AnimateJetpackPlayerPalette` | high | done |
+| `0817C200` | 0x60 | 3-frame 16-colour palette strip. **Converted** (`engine/src/game/vehicles/jetpack/data/jetpack_flash_palettes.cpp`) | `AnimateJetpackPlayerPalette` | high | done |
 | `0817C260` | 0x20 | function-pointer / pointer-to-member table (4 code pointers) | `UpdateJetpackPlane`, `RunJetpackPlaneState` | high | easy |
 | `0817C280` | 0x38 | function-pointer / pointer-to-member table (7 code pointers) | `UpdateJetpackBomber`, `RunJetpackBomberState` | high | easy |
 | `0817C2B8` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `UpdateAirshipFireball`, `RunAirshipFireballState` | high | easy |
-| `0817C2D0` | 0xA8 | 6 `struct airship_attack` (7 words). **Converted** (`src/game/vehicles/jetpack/data/airship_attacks.cpp`) | `SpawnAirship` | high | done |
+| `0817C2D0` | 0xA8 | 6 `struct airship_attack` (7 words). **Converted** (`engine/src/game/vehicles/jetpack/data/airship_attacks.cpp`) | `SpawnAirship` | high | done |
 | `0817C378` | 0x60 | 3-frame 16-colour palette strip. **Converted** | `SpawnAirship`, `AnimateAirshipPalette` | high | done |
 | `0817C3D8` | 0xC | `struct anim_box`. **Converted** | `AirshipStateExplode`, `SteerAirship`, `IsTouchingAirship` | high | done |
 | `0817C3E4` | 0x18 | 2 `struct anim_frame_record`. **Converted** | `CreateAirship` | high | done |
 | `0817C3FC` | 0x18 | function-pointer / pointer-to-member table (6 code pointers) (`void*` x 6) | `UpdateAirship` | high | easy |
 | `0817C414` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `RunJetpackBalloonState` | high | easy |
 | `0817C42C` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `UpdateJetpackBalloonCrate`, `RunJetpackBalloonCrateState` | high | easy |
-| `0817C444` | 0xC | `struct anim_box`. **Converted** (`src/game/vehicles/jetpack/data/jetpack_rocket_box.cpp`) | `UpdateJetpackRocket` | medium | done |
+| `0817C444` | 0xC | `struct anim_box`. **Converted** (`engine/src/game/vehicles/jetpack/data/jetpack_rocket_box.cpp`) | `UpdateJetpackRocket` | medium | done |
 | `0817C450` | 0x10 | function-pointer / pointer-to-member table (2 code pointers) | `UpdateHovercraftFireball`, `RunHovercraftFireballState` | high | easy |
-| `0817C460` | 0x50 | 2 `struct hovercraft_attack` (10 words). **Converted** (`src/game/bosses/data/hovercraft_attacks.cpp`) | `SpawnHovercraft` | high | done |
+| `0817C460` | 0x50 | 2 `struct hovercraft_attack` (10 words). **Converted** (`engine/src/game/bosses/data/hovercraft_attacks.cpp`) | `SpawnHovercraft` | high | done |
 | `0817C4B0` | 0xC | `struct anim_box`. **Converted** | `HovercraftStateCloseIn` | high | done |
 | `0817C4BC` | 0xC | 1 `struct anim_frame_record`. **Converted** | `CreateHovercraft` | medium | done |
 | `0817C4C8` | 0x18 | function-pointer / pointer-to-member table (6 code pointers) (`void*` x 6) | `RunHovercraftState` | high | easy |
 | `0817C4E0` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `UpdateHovercraftCannon`, `RunHovercraftCannonState` | high | easy |
 | `0817C4F8` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `UpdateHovercraftLauncher`, `RunHovercraftLauncherState` | high | easy |
-| `0817C510` | 0x2 | the text ">". **Converted** (`src/game/ui/data/continue_prompt_palettes.cpp`) | `DrawContinuePrompt` | medium | done |
+| `0817C510` | 0x2 | the text ">". **Converted** (`engine/src/game/ui/data/continue_prompt_palettes.cpp`) | `DrawContinuePrompt` | medium | done |
 | `0817C512` | 0x20 | 16 palette halfwords. **Converted** | `InitContinuePromptGraphics` | high | done |
 | `0817C532` | 0x20 | 16 palette halfwords. **Converted** | `InitContinuePromptGraphics` | high | done |
 | `0817C552` | 0x20 | 16 halfwords (mostly 0xFFFF). **Converted** | `InitContinuePromptGraphics` | high | done |
@@ -974,25 +974,25 @@ vtable shapes).
 | `0817C594` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `InitContinuePrompt` | medium | easy |
 | `0817C5A8` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `InitContinuePrompt` | medium | easy |
 | `0817C5BC` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `InitContinuePrompt` | medium | easy |
-| `0817C5D0` | 0x96C | the credits: text lines with opcodes 1 n (picture n), 2 (small font), 3 (large font), zero-terminated. **Converted** (`src/game/ui/data/credits_text.cpp`) | `InitCredits` | high | done |
-| `0817CF3C` | 0x4 | an empty string (4 bytes). **Converted** (`src/game/ui/data/credits_text.cpp`) | `UpdateCreditsText` | high | done |
+| `0817C5D0` | 0x96C | the credits: text lines with opcodes 1 n (picture n), 2 (small font), 3 (large font), zero-terminated. **Converted** (`engine/src/game/ui/data/credits_text.cpp`) | `InitCredits` | high | done |
+| `0817CF3C` | 0x4 | an empty string (4 bytes). **Converted** (`engine/src/game/ui/data/credits_text.cpp`) | `UpdateCreditsText` | high | done |
 | `0817CF40` | 0x64 | table of struct popup_glyph_src; 10 word(s) look like ROM pointers | `LoadCreditsLogos` | high | easy |
 | `0817CFA4` | 0x50 | table (element layout: see consumers); 9 word(s) look like ROM pointers | `RunTitleScreen`, `ResetTitleLogoPieces` | medium | easy |
-| `0817CFF4` | 0x40 | 8 {x, y} OAM piece offsets. **Converted** (`src/game/ui/data/title_screen_gfx.cpp`) | `DrawTitleLogoPieces` | high | done |
-| `0817D034` | 0x20 | table (element layout: see consumers); 1 word(s) look like ROM pointers. **Converted** (`src/game/ui/data/title_screen_gfx.cpp`) | `InitTitleScreen` | medium | done |
-| `0817D054` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/game/ui/data/title_screen_gfx.cpp`) | `InitTitleScreen` | high | done |
-| `0817D074` | 0x70 | 16-colour palette + 4 OBJ sprite `struct bg_package`s (`gTitleBandicootObj`/`0A8`/`0BC`/`0D0`, gTitleObjPackages's). **Converted** (`src/game/ui/data/title_screen_gfx.cpp`) | `InitTitleScreen` | medium | done |
-| `0817D0E4` | 0x5B4 | `struct bg_package` (BG2) + 9 motion sequences of `struct delta_record` (`gTitleLogoPieceMotion0`...), the seeds' targets. **Converted** (`src/game/ui/data/title_screen_gfx.cpp`) | `LoadTitleScreenBg` | high | done |
-| `0817D698` | 0x28 | an animation record (actor_anim.h's `struct anim_table_record`, family A record 0's arrays). **Converted** (`src/game/ui/data/title_screen_gfx.cpp`) | `RunCompanyLogos` | medium | done |
+| `0817CFF4` | 0x40 | 8 {x, y} OAM piece offsets. **Converted** (`engine/src/game/ui/data/title_screen_gfx.cpp`) | `DrawTitleLogoPieces` | high | done |
+| `0817D034` | 0x20 | table (element layout: see consumers); 1 word(s) look like ROM pointers. **Converted** (`engine/src/game/ui/data/title_screen_gfx.cpp`) | `InitTitleScreen` | medium | done |
+| `0817D054` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`engine/src/game/ui/data/title_screen_gfx.cpp`) | `InitTitleScreen` | high | done |
+| `0817D074` | 0x70 | 16-colour palette + 4 OBJ sprite `struct bg_package`s (`gTitleBandicootObj`/`0A8`/`0BC`/`0D0`, gTitleObjPackages's). **Converted** (`engine/src/game/ui/data/title_screen_gfx.cpp`) | `InitTitleScreen` | medium | done |
+| `0817D0E4` | 0x5B4 | `struct bg_package` (BG2) + 9 motion sequences of `struct delta_record` (`gTitleLogoPieceMotion0`...), the seeds' targets. **Converted** (`engine/src/game/ui/data/title_screen_gfx.cpp`) | `LoadTitleScreenBg` | high | done |
+| `0817D698` | 0x28 | an animation record (actor_anim.h's `struct anim_table_record`, family A record 0's arrays). **Converted** (`engine/src/game/ui/data/title_screen_gfx.cpp`) | `RunCompanyLogos` | medium | done |
 | `0817D6C0` | 0xA8 | table (element layout: see consumers); 20 word(s) look like ROM pointers | `InitVvLogoPieces` | medium | easy |
 | `0817D768` | 0x14 | table (element layout: see consumers); 2 word(s) look like ROM pointers | `LoadVvLogoGraphics` | medium | easy |
 | `0817D77C` | 0x14 | table (element layout: see consumers); 2 word(s) look like ROM pointers | `LoadVvLogoGraphics` | medium | easy |
 | `0817D790` | 0x14 | table (element layout: see consumers); 2 word(s) look like ROM pointers | `LoadVvLogoGraphics` | medium | easy |
-| `0817D7A4` | 0xF70 | `struct bg_package` (BG2) + 20 motion sequences of `struct delta_record` + the 6 language names (`gLanguageNameEnglish`...). **Converted** (`src/game/ui/data/universal_vv_logo_motions.cpp`) | `LoadUniversalLogoBg` | medium | done |
+| `0817D7A4` | 0xF70 | `struct bg_package` (BG2) + 20 motion sequences of `struct delta_record` + the 6 language names (`gLanguageNameEnglish`...). **Converted** (`engine/src/game/ui/data/universal_vv_logo_motions.cpp`) | `LoadUniversalLogoBg` | medium | done |
 | `0817E714` | 0x18 | pointer table (6 data pointers) (`void*` x 6) | `DrawLanguageSelect` | high | easy |
-| `0817E72C` | 0x20 | table of u16; 1 word(s) look like ROM pointers (`u16` x 16). **Converted** (`src/game/ui/data/language_select_palettes.cpp`) | `InitLanguageSelectGraphics` | high | done |
-| `0817E74C` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/game/ui/data/language_select_palettes.cpp`) | `InitLanguageSelectGraphics` | high | done |
-| `0817E76C` | 0x20 | table of u16 (`u16` x 16). **Converted** (`src/game/ui/data/language_select_palettes.cpp`) | `InitLanguageSelectGraphics` | high | done |
+| `0817E72C` | 0x20 | table of u16; 1 word(s) look like ROM pointers (`u16` x 16). **Converted** (`engine/src/game/ui/data/language_select_palettes.cpp`) | `InitLanguageSelectGraphics` | high | done |
+| `0817E74C` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`engine/src/game/ui/data/language_select_palettes.cpp`) | `InitLanguageSelectGraphics` | high | done |
+| `0817E76C` | 0x20 | table of u16 (`u16` x 16). **Converted** (`engine/src/game/ui/data/language_select_palettes.cpp`) | `InitLanguageSelectGraphics` | high | done |
 | `0817E78C` | 0x326E74 | composite: level BG tile sets (raw tag-0x00 assets), per-room level data, sprite-bank tile pool | `InitLanguageSelectGraphics` | high | medium |
 | `084A5600` | 0xB66B4 | composite: sprite-bank (animation) table (**converted**, C) + GAX2 sound-effect bank (**converted**, `gax_audio.py --sfx`) | `RunPauseMenu`, `InitLevelState` | high | medium |
 | `085A4C5C` | 0x14 | the default song's GAX2_Song struct `{4, mixer, info, unk_ptr, channel}` (the engine's default handler layout). **Built** by `tools/gax_audio.py` (`gax_default_layout.bin`) | `GAX2_estimate`, `GAX2_init` | high | done |
@@ -1017,29 +1017,29 @@ vtable shapes).
 | `085A9EF8` | 0xC | `struct EepromConfig` of the 4 Kbit chip. **Converted** (`lib/agb_eeprom/data/eeprom_data.c`) | `EEPROMConfigure` | high | done |
 | `085A9F04` | 0xC | `struct EepromConfig` of the 64 Kbit chip. **Converted** | `EEPROMConfigure` | high | done |
 | `085A9F10` | 0x260 | EEPROM write timeout `u16[3]` + pad, then the library's 22 address constants (`gEepromLibraryAddresses`, no reader), then the palette of cutscene picture 00. **Converted** (`eeprom_data.c`, `cutscene_pictures.cpp`) | `EEPROMWrite` | high | done |
-| `085ADBD1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 01), bit 15 set in many entries. **Converted** (`gCutscenePicture01`, `src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
-| `085B34E1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 02), bit 15 set in many entries. **Converted** (`gCutscenePicture02`, `src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
-| `085B82BC` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 03), bit 15 set in many entries. **Converted** (`gCutscenePicture03`, `src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
-| `085BC6E8` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 04), bit 15 set in many entries. **Converted** (`gCutscenePicture04`, `src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
-| `085C1936` | 0x202 | 2 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 05), bit 15 set in many entries. **Converted** (`gCutscenePicture05`, `src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
-| `085C674D` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 06), bit 15 set in many entries. **Converted** (`gCutscenePicture06`, `src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
-| `085CB15D` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 07), bit 15 set in many entries. **Converted** (`gCutscenePicture07`, `src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
-| `085CFECA` | 0x202 | 2 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 08), bit 15 set in many entries. **Converted** (`gCutscenePicture08`, `src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
-| `085D6531` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 09), bit 15 set in many entries. **Converted** (`gCutscenePicture09`, `src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
-| `085DB765` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 10), bit 15 set in many entries. **Converted** (`gCutscenePicture10`, `src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
-| `085DFABC` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 11), bit 15 set in many entries. **Converted** (`gCutscenePicture11`, `src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
-| `085E550B` | 0x201 | 1 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 12), bit 15 set in many entries. **Converted** (`gCutscenePicture12`, `src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
-| `085EAC44` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 13), bit 15 set in many entries. **Converted** (`gCutscenePicture13`, `src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
-| `085F0367` | 0x201 | 1 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 14), bit 15 set in many entries. **Converted** (`gCutscenePicture14`, `src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
-| `085F4CC1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 15), bit 15 set in many entries. **Converted** (`gCutscenePicture15`, `src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
-| `085FA1D2` | 0x202 | 2 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 16), bit 15 set in many entries. **Converted** (`gCutscenePicture16`, `src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
-| `085FF779` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 17), bit 15 set in many entries. **Converted** (`gCutscenePicture17`, `src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
-| `086039B2` | 0x202 | 2 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 18), bit 15 set in many entries. **Converted** (`gCutscenePicture18`, `src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
-| `08608A50` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 19), bit 15 set in many entries. **Converted** (`gCutscenePicture19`, `src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
-| `0860D577` | 0x201 | 1 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 20), bit 15 set in many entries. **Converted** (`gCutscenePicture20`, `src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
-| `08611BD9` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 21), bit 15 set in many entries. **Converted** (`gCutscenePicture21`, `src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
-| `08616360` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 22), bit 15 set in many entries. **Converted** (`gCutscenePicture22`, `src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
-| `08619F51` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 23), bit 15 set in many entries. **Converted** (`gCutscenePicture23`, `src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
+| `085ADBD1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 01), bit 15 set in many entries. **Converted** (`gCutscenePicture01`, `engine/src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
+| `085B34E1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 02), bit 15 set in many entries. **Converted** (`gCutscenePicture02`, `engine/src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
+| `085B82BC` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 03), bit 15 set in many entries. **Converted** (`gCutscenePicture03`, `engine/src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
+| `085BC6E8` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 04), bit 15 set in many entries. **Converted** (`gCutscenePicture04`, `engine/src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
+| `085C1936` | 0x202 | 2 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 05), bit 15 set in many entries. **Converted** (`gCutscenePicture05`, `engine/src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
+| `085C674D` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 06), bit 15 set in many entries. **Converted** (`gCutscenePicture06`, `engine/src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
+| `085CB15D` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 07), bit 15 set in many entries. **Converted** (`gCutscenePicture07`, `engine/src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
+| `085CFECA` | 0x202 | 2 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 08), bit 15 set in many entries. **Converted** (`gCutscenePicture08`, `engine/src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
+| `085D6531` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 09), bit 15 set in many entries. **Converted** (`gCutscenePicture09`, `engine/src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
+| `085DB765` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 10), bit 15 set in many entries. **Converted** (`gCutscenePicture10`, `engine/src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
+| `085DFABC` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 11), bit 15 set in many entries. **Converted** (`gCutscenePicture11`, `engine/src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
+| `085E550B` | 0x201 | 1 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 12), bit 15 set in many entries. **Converted** (`gCutscenePicture12`, `engine/src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
+| `085EAC44` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 13), bit 15 set in many entries. **Converted** (`gCutscenePicture13`, `engine/src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
+| `085F0367` | 0x201 | 1 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 14), bit 15 set in many entries. **Converted** (`gCutscenePicture14`, `engine/src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
+| `085F4CC1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 15), bit 15 set in many entries. **Converted** (`gCutscenePicture15`, `engine/src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
+| `085FA1D2` | 0x202 | 2 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 16), bit 15 set in many entries. **Converted** (`gCutscenePicture16`, `engine/src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
+| `085FF779` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 17), bit 15 set in many entries. **Converted** (`gCutscenePicture17`, `engine/src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
+| `086039B2` | 0x202 | 2 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 18), bit 15 set in many entries. **Converted** (`gCutscenePicture18`, `engine/src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
+| `08608A50` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 19), bit 15 set in many entries. **Converted** (`gCutscenePicture19`, `engine/src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
+| `0860D577` | 0x201 | 1 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 20), bit 15 set in many entries. **Converted** (`gCutscenePicture20`, `engine/src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
+| `08611BD9` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 21), bit 15 set in many entries. **Converted** (`gCutscenePicture21`, `engine/src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
+| `08616360` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 22), bit 15 set in many entries. **Converted** (`gCutscenePicture22`, `engine/src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
+| `08619F51` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 23), bit 15 set in many entries. **Converted** (`gCutscenePicture23`, `engine/src/game/ui/data/cutscene_pictures.cpp`) | `gCutscenes (slide packages)` | high | done |
 | `0861BF2E` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
 | `0861C182` | 0x2 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
 | `0861C309` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
@@ -1201,4 +1201,4 @@ vtable shapes).
 | `087E5554` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateHovercraftSideGun` | high | easy |
 | `087E558C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateHovercraftCannonFlash` | high | easy |
 | `087E55C4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitLogoActor`, `DestroyLogoActor` | high | easy |
-| `087E55E4` | 0x1AA1C | IWRAM image (ARM code + initialised data, 0x9E8 B) copied to 0x03000000 by crt0, then 0xFF cartridge fill | `_0800012C` | high | **converted** (`platform/gba/asm/intr_main.s`, `src/engine/*/*_arm.cpp`, `src/engine/sys/iwram_data.cpp`, ldscript `iwram`/`rom_fill`) |
+| `087E55E4` | 0x1AA1C | IWRAM image (ARM code + initialised data, 0x9E8 B) copied to 0x03000000 by crt0, then 0xFF cartridge fill | `_0800012C` | high | **converted** (`platform/gba/asm/intr_main.s`, `engine/src/engine/*/*_arm.cpp`, `engine/src/engine/sys/iwram_data.cpp`, ldscript `iwram`/`rom_fill`) |

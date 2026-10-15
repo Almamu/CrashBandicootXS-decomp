@@ -45,7 +45,7 @@ place of its link. So every object gets exactly the ROM build's compiler
 and flags (agbcc, old_agbcc, agbcp, old_agbcp, agbcc_arm(_patched);
 OLD_AGBCC_OBJS, CXX_OBJS, NO_IMPLEMENT_INLINES_OBJS, the ARM and -O1
 objects, single-object flags), and nothing in the checkout (build/ or
-src/) is read as output or written. The generated constants headers are
+engine/src/) is read as output or written. The generated constants headers are
 made once into the temporary directory.
 
 How objects are compared: the .o is parsed as ELF and reduced to
@@ -85,12 +85,12 @@ a removed macro are listed for a manual edit. A dry run never touches
 the sources, and nothing is written when interrupted before the end.
 
 Usage:
-  tools/match_prune.py src/                   dry run, per-file report and summary
-  tools/match_prune.py -v src/engine/util/aabb.cpp     also list the sites kept, and why
-  tools/match_prune.py --write src/engine/gfx/       apply the removals
-  tools/match_prune.py --list src/            list the sites without building
-  tools/match_prune.py --kinds MATCH_BARRIER,MATCH_USE src/
-  tools/match_prune.py --json out.json src/   also write the results as JSON
+  tools/match_prune.py engine/src/                   dry run, per-file report and summary
+  tools/match_prune.py -v engine/src/engine/util/aabb.cpp     also list the sites kept, and why
+  tools/match_prune.py --write engine/src/engine/gfx/       apply the removals
+  tools/match_prune.py --list engine/src/            list the sites without building
+  tools/match_prune.py --kinds MATCH_BARRIER,MATCH_USE engine/src/
+  tools/match_prune.py --json out.json engine/src/   also write the results as JSON
 
 Options: -j N workers (default: CPU count), --no-pairs, --max-pairs N
 (per file and round, default 4000), --keep-temp DIR.
@@ -793,7 +793,7 @@ class Builder:
     def make_args(self, w, obj, probe=False):
         args = ["make", "--no-print-directory", "-f", "Makefile", "-f", self.mk,
                 "OBJ_DIR=" + os.path.join(w, "obj"),
-                "C_SUBDIR=" + os.path.join(w, "src"),
+                "C_SUBDIR=" + os.path.join(w, "engine", "src"),
                 "C_BUILDDIR=" + os.path.join(w, "obj", "src"),
                 "LIB_SUBDIR=" + os.path.join(w, "lib"),
                 "LIB_BUILDDIR=" + os.path.join(w, "obj", "lib"),
@@ -815,7 +815,8 @@ class Builder:
                 os.unlink(path)
             with open(path, "w", encoding="utf-8") as f:
                 f.write(text)
-            stem = os.path.splitext(rel)[0]
+            # engine/src/<path> builds obj/src/<path>.o (the Makefile's C_BUILDDIR)
+            stem = os.path.splitext(rel)[0].removeprefix("engine/")
             obj = os.path.join(w, "obj", stem + ".o")
             asm = os.path.join(w, "obj", stem + ".s")
             for p in (obj, asm):
@@ -891,7 +892,7 @@ def prune_file(rel, builder, args, log):
         return res
     res.baseline = base
     want = digest(base)
-    ref = os.path.join(ROOT, "build", "crashbandicootxs", os.path.splitext(rel)[0] + ".o")
+    ref = os.path.join(ROOT, "build", "crashbandicootxs", os.path.splitext(rel)[0].removeprefix("engine/") + ".o")
     if os.path.exists(ref):
         try:
             if digest(elf_summary(ref)) != want:
@@ -1253,7 +1254,7 @@ def collect(paths):
         if not rel.endswith((".c", ".cpp")):
             print("skipping %s: only .c/.cpp translation units are tried" % rel, file=sys.stderr)
             continue
-        if not (re.fullmatch(r"src/(?:[^/]+/)+[^/]+\.(?:c|cpp)", rel)
+        if not (re.fullmatch(r"engine/src/(?:[^/]+/)+[^/]+\.(?:c|cpp)", rel)
                 or re.fullmatch(r"lib/[^/]+/(?:src|data)/[^/]+\.c", rel)):
             print("skipping %s: not an object the Makefile builds" % rel, file=sys.stderr)
             continue

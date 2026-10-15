@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-"""text/: the game's text as gettext files (docs/text.md, #1070).
+"""games/xs/text/: the game's text as gettext files (docs/text.md, #1070).
 
-text/crashxs.pot is the template: one entry per string, its key in
+games/xs/text/crashxs.pot is the template: one entry per string, its key in
 `msgctxt`, the English text as `msgid` and translator comments (`#.`).
-text/<lang>.po has a language's text (fr, de, es, it, nl). The build
+games/xs/text/<lang>.po has a language's text (fr, de, es, it, nl). The build
 compiles each .po with msgfmt and generates the C++ of the three string
 tables and the credits from the template and the .mo files.
 
     tools/text.py cpp TABLE OUT [--mo DIR]
         Writes the C++ definitions of TABLE (ui_text,
         cutscene_text_english, cutscene_text_translations or
-        credits_text), which src/.../data/TABLE.cpp #includes, reading each
+        credits_text), which engine/src/.../data/TABLE.cpp #includes, reading each
         language's text from DIR/<lang>.mo with the stdlib gettext module
         (pgettext).
 
@@ -22,11 +22,11 @@ tables and the credits from the template and the .mo files.
         that each .po's credits.* entries are the English, unchanged.
 
     tools/text.py extract [baserom.gba] [--check]
-        Writes text/crashxs.pot and the .po files from the ROM's tables
-        (the credits' keys from data/credits.json),
+        Writes games/xs/text/crashxs.pot and the .po files from the ROM's tables
+        (the credits' keys from games/xs/data/credits.json),
         through msgcat so they are in gettext's own layout. With --check,
         writes them into a temporary directory and compares them with
-        text/ byte for byte.
+        games/xs/text/ byte for byte.
 
     tools/text.py --game n2 cpp|check|extract ...
         N-Tranced's text (docs/n_tranced.md, "Text"): games/n2/text/
@@ -50,7 +50,7 @@ The tables (docs/data.md, "Text tables"):
 - credits_text: gCreditsText, the credits' one stream (every language
   shows it): the template's credits.* entries, in English (each .po has
   them too, as copies of the English that check() holds equal), in the
-  order data/credits.json lists them, with the font switches and the logos
+  order games/xs/data/credits.json lists them, with the font switches and the logos
   it gives.
 
 A string is stored once, under its first use in this order; a later use
@@ -75,12 +75,12 @@ import tempfile
 import textwrap
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-TEXT_DIR = os.path.join(ROOT, "text")
+TEXT_DIR = os.path.join(ROOT, "games", "xs", "text")
 POT = os.path.join(TEXT_DIR, "crashxs.pot")
-FONTS_SRC = os.path.join(ROOT, "src", "game", "ui", "data", "hud_font_tables.cpp")
-LEVELS_JSON = os.path.join(ROOT, "data", "levels", "levels.json")
-GRAPHICS_MANIFEST = os.path.join(ROOT, "graphics", "manifest.json")
-CREDITS_JSON = os.path.join(ROOT, "data", "credits.json")
+FONTS_SRC = os.path.join(ROOT, "engine", "src", "game", "ui", "data", "hud_font_tables.cpp")
+LEVELS_JSON = os.path.join(ROOT, "games", "xs", "data", "levels", "levels.json")
+GRAPHICS_MANIFEST = os.path.join(ROOT, "games", "xs", "graphics", "manifest.json")
+CREDITS_JSON = os.path.join(ROOT, "games", "xs", "data", "credits.json")
 
 # gLanguage's order: the languages of gUiTextTables and gCutsceneTexts.
 LANGUAGES = [("en", "English"), ("fr", "French"), ("de", "German"), ("es", "Spanish"), ("it", "Italian"),
@@ -212,7 +212,7 @@ def read_glyph_widths(src, name):
 
 class Font:
     """One of the HUD fonts: its characters (gSmallFontChars or
-    gLargeFontChars, src/game/ui/data/hud_font_tables.cpp) and their widths."""
+    gLargeFontChars, engine/src/game/ui/data/hud_font_tables.cpp) and their widths."""
 
     def __init__(self, src, chars, glyphs, space):
         self.chars = read_c_string(src, chars)
@@ -352,7 +352,7 @@ def translate(tr, code, entry):
     pgettext would return the English)."""
     ctx, msgid = entry["ctx"], entry["id"]
     if (ctx + "\x04" + msgid) not in tr._catalog:
-        fail("text/%s.po: %s is untranslated or fuzzy (where the game keeps the English, msgstr is the "
+        fail("games/xs/text/%s.po: %s is untranslated or fuzzy (where the game keeps the English, msgstr is the "
              "English text)" % (code, ctx))
     return tr.pgettext(ctx, msgid)
 
@@ -452,14 +452,14 @@ def cutscene_tables(pages, tr, small, large):
 
 # --- The credits ----------------------------------------------------------
 
-# The credits stream's opcodes (include/game/ui/frontend.hpp, CREDITS_OP_*)
+# The credits stream's opcodes (engine/include/game/ui/frontend.hpp, CREDITS_OP_*)
 # and its logos (Credits::logos, gCreditsLogos).
 CREDITS_OP_PICTURE, CREDITS_OP_SMALL, CREDITS_OP_LARGE = 1, 2, 3
 CREDITS_LOGOS = 5
 
 
 def read_credits():
-    """data/credits.json's items, checked: each is {"large": key},
+    """games/xs/data/credits.json's items, checked: each is {"large": key},
     {"small": key} (the font switch, then the text), {"text": key} (the
     text in the font so far), {"picture": n} (logo n) or {"blank": n} (n
     empty lines). Each text item is a line, or lines, then a newline."""
@@ -565,7 +565,7 @@ def credits_stream(small, large):
 
 
 def credits_table(small, large):
-    out = ["/* Generated by tools/text.py from text/crashxs.pot and data/credits.json",
+    out = ["/* Generated by tools/text.py from games/xs/text/crashxs.pot and games/xs/data/credits.json",
            " * (docs/text.md, \"The credits\"): don't edit. gCreditsText's initializer:",
            " * one string per line, \\001 n before a logo's line (n: the logo),",
            " * \\002 or \\003 before a line in the small or large font. */"]
@@ -717,7 +717,7 @@ POT_HEADER = """\
 # msgctxt is the key, msgid the English text. The ui.* entries are in
 # GetUiText's text id order (append new ones); the cutscene ones are
 # cutscene<NN>.page<P>.<I>, the strings of a page in the order they show;
-# the credits ones are credits.<heading>[.names], which data/credits.json
+# the credits ones are credits.<heading>[.names], which games/xs/data/credits.json
 # lists in the order the credits show them, with the fonts and the logos.
 # The text is lower case: the fonts have no capital letters, and "A", "B",
 # "L" and "R" draw the GBA's buttons. Characters are Latin-1 and must be in
@@ -823,7 +823,7 @@ def extract_entries(rom):
             for arrays, uses in langs:
                 aptr = [a for a, v in arrays.items() if v[:2] == (c, p)][0]
                 texts.append(rom.string(rom.w(aptr + 4 * i)))
-            comments = ["Cutscene %d, page %d (over graphics/%s)%s." % (
+            comments = ["Cutscene %d, page %d (over games/xs/graphics/%s)%s." % (
                 c, p, picture, ", string %d of %d" % (i + 1, n) if n > 1 else "")]
             if also:
                 comments.append("Also shown as " + ", ".join("cutscene %d's page %d" % u for u in also) + ".")
@@ -869,7 +869,7 @@ def write_po(path, entries, code, lang):
 CREDITS_TEXT = 0x0817C5D0
 
 def extract_credits(rom):
-    """The credits' entries from the ROM's stream, keyed by data/credits.json:
+    """The credits' entries from the ROM's stream, keyed by games/xs/data/credits.json:
     (key, English, {lang: text}, comments) in the order the items list
     them, every language's text the English. A text item's
     lines run on across empty lines that a plain line (no opcode) follows,

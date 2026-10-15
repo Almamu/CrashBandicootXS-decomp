@@ -17,10 +17,10 @@ hand-written ARM mixer/DSP routines in `lib/gax/asm/gax_arm_dsp.s`
 `lib/gax/src/gax_internal.h`. The libgcc 64-bit helpers linked in with it
 (`__divdi3`/`__udivdi3`/`__udivsi3`/`__muldi3`, right before the engine)
 are in `lib/libgcc/`. The game's side of the audio (the `AudioContext`
-manager, the song and sound-effect tables) is in `src/engine/audio/` and
-`include/engine/audio/audio.hpp` and calls the engine through `<gax.h>`. The songs and
+manager, the song and sound-effect tables) is in `engine/src/engine/audio/` and
+`engine/include/engine/audio/audio.hpp` and calls the engine through `<gax.h>`. The songs and
 the sound-effect set below are the game's content in GAX2's format, so
-they stay with the game's assets (`sound/`).
+they stay with the game's assets (`games/xs/sound/`).
 
 ## Data layout
 
@@ -127,7 +127,7 @@ note/effect mini-sequence, distinct from a channel's pattern rows).
 
 ### Samples
 
-29 shared raw signed 8-bit PCM samples (`sound/samples/*.wav`, indices
+29 shared raw signed 8-bit PCM samples (`games/xs/sound/samples/*.wav`, indices
 01-29; a new instrument's come after them), referenced only via instruments — deduplicated by content when
 linking (unlike instrument rows).
 
@@ -154,7 +154,7 @@ semis = (pattern_note - 49) + relativeNote + fineTune/128
 rate  = 8363 * 2 ** (semis / 12)
 ```
 
-This matters for `sound/samples/*.wav` preview accuracy (the WAV's declared
+This matters for `games/xs/sound/samples/*.wav` preview accuracy (the WAV's declared
 sample rate is cosmetic only — the build never reads it, see below). Most
 samples are melodic and get replayed at dozens of different notes across
 songs, so there's no single "correct" preview rate for them — they're left
@@ -328,7 +328,7 @@ Distinct from music: `PlaySfx` (ROM `0x08001854`, called ~264 times
 across gameplay code), is the sound-effect trigger:
 `PlaySfx(context, sfx_id, volume_param)`. It looks up `sfx_id` in a
 table at ROM `0x0816AA6C`, 99 entries in the ROM (`gSfxTable[SFX_COUNT]`,
-`sound/sfx_table.json`, `struct SfxTableEntry` in `include/engine/audio/audio.hpp`), each entry `{slot_id,
+`games/xs/sound/sfx_table.json`, `struct SfxTableEntry` in `engine/include/engine/audio/audio.hpp`), each entry `{slot_id,
 chan_arg, volume}` (volume as 8.8 fixed point; the JSON still calls the
 middle field `pitch_offset`) - the matching pass corrected the middle
 field's guessed name from "pitch_offset" to `chan_arg`: `PlaySfx` passes
@@ -337,7 +337,7 @@ below), and the ambient-sfx sibling `PlayAmbientSfx` never reads it at all
 (always passes a hardcoded `0` there instead) - and uses it to steal a
 mixing voice (`GAX_fx_ex`) and play a note.
 
-Every ID the game plays is named in `sound/sfx_table.json`: such an
+Every ID the game plays is named in `games/xs/sound/sfx_table.json`: such an
 entry has a `name` and a `comment`, and `tools/sfx_table.py --constants`
 writes them as the `SFX_<name>` defines of the generated
 `constants/sfx.h` (`SFX_CRATE_BREAK`, `SFX_MENU_SELECT`, ...;
@@ -407,7 +407,7 @@ the formula in "Sample pitch / playback rate" below. That is the rate the
 `pendingSfx`) and the cutscene slides use, is the ID one past the table,
 not a fixed 0x63: the code compares with `SFX_NONE`, and `gSfxTable` is
 `SFX_COUNT` long, both from `tools/sfx_table.py --constants`. So an entry
-can be added at the end of `sound/sfx_table.json`'s `entries`:
+can be added at the end of `games/xs/sound/sfx_table.json`'s `entries`:
 `{"slot_id": 40, "pitch_offset": 0, "volume": 256, "name": "BEEP",
 "comment": "..."}`, `slot_id` one of the sound-effect set's instruments
 (1-87), `pitch_offset` the priority and `volume` the 8.8 volume. It is
@@ -417,7 +417,7 @@ that names one (a cutscene slide's); the ROM's IDs stay as they are.
 
 A sound effect can also have its own sample: instead of `slot_id`, the
 entry names a new instrument, `"instrument": "beep"`, which is
-`sound/instruments/beep.json` and its WAV (see "New instruments" below,
+`games/xs/sound/instruments/beep.json` and its WAV (see "New instruments" below,
 e.g. `{"sample": "sfx_samples/beep.wav"}`). `tools/gax_audio.py --sfx`
 appends it to the sound-effect set after the ROM's 87 instruments (88 for
 the first; a sample already in the set is not stored again), and
@@ -438,7 +438,7 @@ first slide calls `PlaySfx(0x63)` and `GAX_fx_ex` with instrument 40, and
 the audio context's `activeSfx.id` is 0x64, the new "none".
 
 Tested in scratch with plain `make` (#1118): `TEST_BEEP` naming
-`sound/instruments/beep.json`, a synthesized 8-bit sample at 8000 Hz (a
+`games/xs/sound/instruments/beep.json`, a synthesized 8-bit sample at 8000 Hz (a
 decaying 1 kHz square, 2400 samples), played by the legal notice's slide
 over a new silent song. The build adds sound-effect instrument 88 and
 sample 88 (2400 bytes) and writes `{88, 0, 256}` as entry 0x63. In mGBA
@@ -451,23 +451,23 @@ half rate (correlation 0.9999; 0.877 against a full-rate render).
 Everything is generated from editable sources, never read from
 `baserom.gba` at build time:
 
-- `sound/gax_manifest.json` — one-time-extracted instrument definitions and
+- `games/xs/sound/gax_manifest.json` — one-time-extracted instrument definitions and
   per-song scaffold data (channel transposes, pattern grouping/order, title
   strings, etc), and `song_table`, the song IDs (`gSongTable`'s order,
   which isn't `song_order`, the block's).
-- `sound/songs/*.xm` — one FastTracker II module per song (patterns/notes),
+- `games/xs/sound/songs/*.xm` — one FastTracker II module per song (patterns/notes),
   editable in any XM tracker; and a new song's optional settings,
-  `sound/songs/<key>.json` (see "Adding a song").
-- `sound/samples/*.wav` — one sample per instrument sample slot.
-- `sound/instruments/*.json` — new instruments, each with a WAV under
-  `sound/`, for new songs and new sound effects (see "New
+  `games/xs/sound/songs/<key>.json` (see "Adding a song").
+- `games/xs/sound/samples/*.wav` — one sample per instrument sample slot.
+- `games/xs/sound/instruments/*.json` — new instruments, each with a WAV under
+  `games/xs/sound/`, for new songs and new sound effects (see "New
   instruments"). The ROM has none.
-- `sound/music.json` — `screen_music`, the song each screen plays (see
+- `games/xs/sound/music.json` — `screen_music`, the song each screen plays (see
   "Which song plays where").
-- `sound/gax_sfx_manifest.json` — the sound-effect set: its 88 instruments
+- `games/xs/sound/gax_sfx_manifest.json` — the sound-effect set: its 88 instruments
   (the same fields as the music's), the voice type's song-header fields,
   and `voice_types`, the length of the `sfxTypes` array (9).
-- `sound/sfx_samples/*.wav` — the sound-effect set's 87 samples, 01-87
+- `games/xs/sound/sfx_samples/*.wav` — the sound-effect set's 87 samples, 01-87
   (8-bit mono, declared at 7,994 Hz, see "Sound effects").
 - `tools/gax_audio.py` — a from-scratch GAX2 encoder (no external tool or
   `.NET` dependency) that links all of the above back into the original
@@ -485,7 +485,7 @@ Everything is generated from editable sources, never read from
   actually need to differ.
 - Nothing outside the audio build points into the music block by a fixed
   address any more: the song table `gSongTable`
-  (`src/engine/audio/data/song_table.cpp`) is written as `gGaxMusicData +
+  (`engine/src/engine/audio/data/song_table.cpp`) is written as `gGaxMusicData +
   GAX_SONG_<NAME>` from the generated `gax_songs.h`, and the default layout
   is built with the block. So a song can change size.
 - The song table is generated as well: `tools/gax_audio.py --table
@@ -496,30 +496,30 @@ Everything is generated from editable sources, never read from
   without its entry.
 - Nothing in the blocks is an absolute address either (#967,
   [shifting.md](./shifting.md)): each block is written as a `.bin` with
-  its pointers left 0 and a `.s`, which `data/data.s` includes, with the
+  its pointers left 0 and a `.s`, which `games/xs/data/data.s` includes, with the
   `.bin`'s bytes and each pointer as a relocation (`.4byte gGaxMusicData
   + 0x1234`, `.4byte gGaxSfxData + 0x9bc90`, `.4byte GaxInfoInit`). So
   the blocks can sit anywhere, and the sound-effect set can change size
   too (a sample can be lengthened). Each block starts word-aligned
   (`.balign 4` in data.s), which its own padding assumes.
 - `tools/sfx_table.py` — rebuilds the sound-effect trigger table from
-  `sound/sfx_table.json`; `--constants SFX.h` writes its names
+  `games/xs/sound/sfx_table.json`; `--constants SFX.h` writes its names
   (`constants/sfx.h`).
 
 Both tools write into `build/crashbandicootxs/sound/`, and the constants
-headers into `build/include/constants/` — `sound/` itself only ever holds
+headers into `build/include/constants/` — `games/xs/sound/` itself only ever holds
 editable sources, never build products.
 
 ## Adding a song
 
-A new song is an XM in `sound/songs/` and an entry of the manifest's
+A new song is an XM in `games/xs/sound/songs/` and an entry of the manifest's
 `song_table`. The ROM's 19 songs keep the scaffold the manifest recorded
 for them (`songs`: how their patterns are shared and laid out, their
 transposes, their title bytes), which is what makes them rebuild byte for
 byte. A song that isn't in `songs` has no ROM history, and
 `tools/gax_audio.py` derives its scaffold from the XM.
 
-1. **Write the XM**, `sound/songs/<key>.xm`. The key is the song's name
+1. **Write the XM**, `games/xs/sound/songs/<key>.xm`. The key is the song's name
    (`SONG_<KEY>`), so lower case and `_`.
    - Its instruments, by name:
      - `Instrument N` plays the pool's instrument N (1-51, the
@@ -527,7 +527,7 @@ byte. A song that isn't in `songs` has no ROM history, and
        and envelopes aren't read; the ROM songs' XMs carry each pool
        instrument with its sample, so copy them from one of those to hear
        the song in a tracker.
-     - A name with a `sound/instruments/<name>.json` plays that new
+     - A name with a `games/xs/sound/instruments/<name>.json` plays that new
        instrument (see "New instruments"), which other songs and sound
        effects can share.
      - Any other name (an empty one too) is a new instrument made from
@@ -554,7 +554,7 @@ byte. A song that isn't in `songs` has no ROM history, and
      (`1xx`, `2xx`, `3xx`), volume (`Cxx`), pattern break (`Dxx`), `Exx`
      and speed (`Fxx` under 0x20), or else the volume column's volume or
      fine volume slide. Other effects are dropped.
-2. **Settings** (optional), `sound/songs/<key>.json`; every field has a
+2. **Settings** (optional), `games/xs/sound/songs/<key>.json`; every field has a
    default, the ROM's level songs':
 
    | field | default | what |
@@ -567,14 +567,14 @@ byte. A song that isn't in `songs` has no ROM history, and
    | `mixer_data_bytes` | 28 zeros | the mixer's echo taps (`GaxDspParams`), as in the manifest's songs; all 0 is no echo |
 
 3. **Give it an id**: add `{"song": "<key>", "comment": "..."}` at the
-   end of `song_table` in `sound/gax_manifest.json`. Its place is its id,
+   end of `song_table` in `games/xs/sound/gax_manifest.json`. Its place is its id,
    `SONG_<KEY>` (`constants/songs.h`), and `gSongTable` gets its entry
    (`song_table.inc`). At the end, the ROM's ids stay as they are;
    `SONG_COUNT` and `SONG_NONE` grow by one.
 4. **Use it**: name it where a song is chosen (see "Which song plays
-   where"): a level theme's `"song"` (`data/levels/levels.json`,
+   where"): a level theme's `"song"` (`games/xs/data/levels/levels.json`,
    [levels.md, "Adding a theme"](./levels.md#adding-a-theme)) or a
-   screen's (`sound/music.json`).
+   screen's (`games/xs/sound/music.json`).
 5. **Run `make`.** The song is linked after the ROM's songs, before the
    default song, so the music block grows and everything after it moves
    ([shifting.md](./shifting.md)).
@@ -605,7 +605,7 @@ channel's order entry is a 16-bit offset); and on settings GAX2 can't
 play: a `sample_rate` that isn't one of its 12 mix rates, or a song that
 needs more work RAM than the game gives GAX2 (see "GAX2's limits").
 `--constants` and `--table` stop when `song_table` names a song that is
-neither the ROM's nor a `sound/songs/<key>.xm`, or leaves one of the
+neither the ROM's nor a `games/xs/sound/songs/<key>.xm`, or leaves one of the
 ROM's out. An XM that no `song_table` entry names isn't built.
 
 Tested in scratch with plain `make`: a 2-channel test tune written for the
@@ -646,7 +646,7 @@ every ROM instrument has (`unknown12`; the engine never reads it).
 ### From the XM
 
 An XM instrument that isn't `Instrument N` and has no
-`sound/instruments/<name>.json` is converted from the XM:
+`games/xs/sound/instruments/<name>.json` is converted from the XM:
 
 | XM | GAX2 |
 |---|---|
@@ -686,9 +686,9 @@ The tool stops, with the reason, on what GAX2 can't play:
 
 ### From a WAV
 
-`sound/instruments/<name>.json` is an instrument from a WAV anywhere
-under `sound/` (by convention `sound/samples/` for songs,
-`sound/sfx_samples/` for sound effects). An XM instrument with that name
+`games/xs/sound/instruments/<name>.json` is an instrument from a WAV anywhere
+under `games/xs/sound/` (by convention `games/xs/sound/samples/` for songs,
+`games/xs/sound/sfx_samples/` for sound effects). An XM instrument with that name
 plays it (the XM instrument's own sample and settings aren't read), and
 a sound effect names it with `"instrument": "<name>"` (see "Adding a
 sound effect"). However many songs and sound effects name it, each pool
@@ -707,7 +707,7 @@ gets it once.
 
 | field | default | what |
 |---|---|---|
-| `sample` | (needed) | the WAV, a path under `sound/`: mono PCM, 8-bit, or 16, 24 or 32-bit rounded to 8 |
+| `sample` | (needed) | the WAV, a path under `games/xs/sound/`: mono PCM, 8-bit, or 16, 24 or 32-bit rounded to 8 |
 | `rate` | the WAV's | the rate the sample plays at on C-4 (a song's instrument), or always (a sound effect's, fixed pitch) |
 | `loop` | `none` | `none`, `forward` or `pingpong` |
 | `loop_start`, `loop_end` | 0, the sample's length | the loop, in samples, the end exclusive |
@@ -750,7 +750,7 @@ isn't mono PCM, and on the limits above.
 
 Tested in scratch with plain `make`: a new song `test_inst` (2 channels,
 speed 5, patterns of 32, 16 and 24 rows, order `0 1 2`, restart 1) on
-`lead`, a `sound/instruments/lead.json` instrument (a synthesized 16-bit
+`lead`, a `games/xs/sound/instruments/lead.json` instrument (a synthesized 16-bit
 WAV at 16000 Hz, 1600 samples, 0.1 s: an 800-sample decaying attack,
 then 10 periods of a 200 Hz tone, looped), on the pool's `Instrument 2`
 (a drum), and on `xmsine`, an XM-own instrument (an 8-bit sine, 4
@@ -781,11 +781,11 @@ Every song the game picks is named in data, by its `song_table` name:
 
 | what | where | data |
 |---|---|---|
-| a level's music | `PlayRoomMusic` plays `gThemeMusicCues[theme]` | the level theme's `"song"`, `data/levels/levels.json` ([levels.md, "Themes"](./levels.md#themes)) |
-| the screens' music, the bonus rooms' and the invincibility drums | `SCREEN_SONG_<SCREEN>` (`constants/songs.h`) where the code plays it | `sound/music.json`'s `screen_music` |
+| a level's music | `PlayRoomMusic` plays `gThemeMusicCues[theme]` | the level theme's `"song"`, `games/xs/data/levels/levels.json` ([levels.md, "Themes"](./levels.md#themes)) |
+| the screens' music, the bonus rooms' and the invincibility drums | `SCREEN_SONG_<SCREEN>` (`constants/songs.h`) where the code plays it | `games/xs/sound/music.json`'s `screen_music` |
 | a cutscene slide's | the slide's song | the cutscene data (#1092) |
 
-`sound/music.json`'s `screen_music` has one entry per place the code
+`games/xs/sound/music.json`'s `screen_music` has one entry per place the code
 plays a fixed song: `{"screen": "title", "song": "main_menu_europe",
 "comment": "..."}`. `tools/gax_audio.py --constants` writes each as
 `#define SCREEN_SONG_<SCREEN> SONG_<KEY>` into `constants/songs.h`, after

@@ -6,11 +6,11 @@ None of them needs a register pin.
 
 | Function | File | Size | Before | Result |
 |---|---|---|---|---|
-| `DropWumpa` | `src/game/level/entity_spawner.c` | 132 B | 5 hw (note) | **Closed** |
-| `LaunchEffectPart` | `src/game/level/entity_spawner.c` | 160 B | 61 hw (note), no draft | **Closed** |
-| `DecodeLayerChunk` | `src/game/ui/cutscene_player.c` | 320 B | 13 hw (note), no draft | **Closed** |
-| `RunCutscenePlayer` | `src/game/ui/cutscene_player.c` | 284 B | 77 hw (note), no draft | **Closed** |
-| `DrawSpritePieces` | `src/gfx/sprite_pieces.c` (new, split from `graphics.c`) | 600 B | draft removed long ago | **Closed** |
+| `DropWumpa` | `engine/src/game/level/entity_spawner.c` | 132 B | 5 hw (note) | **Closed** |
+| `LaunchEffectPart` | `engine/src/game/level/entity_spawner.c` | 160 B | 61 hw (note), no draft | **Closed** |
+| `DecodeLayerChunk` | `engine/src/game/ui/cutscene_player.c` | 320 B | 13 hw (note), no draft | **Closed** |
+| `RunCutscenePlayer` | `engine/src/game/ui/cutscene_player.c` | 284 B | 77 hw (note), no draft | **Closed** |
+| `DrawSpritePieces` | `engine/src/gfx/sprite_pieces.c` (new, split from `graphics.c`) | 600 B | draft removed long ago | **Closed** |
 
 `entity_spawner.c` and `cutscene_player.c` were already on `OLD_AGBCC_OBJS`.
 `DrawSpritePieces` was the last function in `graphics.c`, which is built with

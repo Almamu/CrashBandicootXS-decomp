@@ -1,0 +1,70 @@
+#include "game/enemies/enemy_ctrl.hpp"
+#include "game/level/spawners.hpp"
+
+extern "C" {
+#include "match.h"
+#include <libgcc.h>
+#include "globals.h"
+}
+
+using Game::Enemies::EnemyCtrl;
+using Game::Entities::MovingSprite;
+using Game::Level::EntitySpawner;
+
+/* GitHub issue #9/#10: EnemyCtrl's shooter (engine/include/game/enemies/enemy_ctrl.hpp),
+ * called only from Update's state 16, after UpdateAttackCycle
+ * (docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md).
+ *
+ * Once every `shotPeriod` frames of gRoomFrameCount (offset by
+ * `shotPhase`, the gate PeriodicSpawner::Update uses too), a walking
+ * shooter (mode 0 or 4) starts its shooting animation (mode 2 or 7).
+ * On the other frames, a shooting one goes back to walking when the
+ * animation is done, and otherwise fires its shot (a harmful effect
+ * part, kind EVENT_HIT_DART) at keyframe 10 (mode 2) or 8 (mode 7).
+ *
+ * The C pinned the controller to r4 and read gRoomFrameCount in a
+ * statement of its own; g++ gives the ROM's code as written. */
+void EnemyCtrl::UpdateShooter()
+{
+    MovingSprite *part;
+    MovingSprite *shot;
+
+    if (__modsi3(gRoomFrameCount + shotPeriod - shotPhase, shotPeriod) == 0) {
+        switch (mode) {
+        case ENEMY_MODE_NORMAL:
+            SetAnimMode(ENEMY_MODE_STRIKE);
+            break;
+        case ENEMY_MODE_ATTACK:
+            SetAnimMode(ENEMY_MODE_ATTACK_STRIKE);
+            break;
+        }
+        return;
+    }
+
+    part = target;
+    if (part->animDone != 0) {
+        switch (mode) {
+        case ENEMY_MODE_STRIKE:
+            SetAnimMode(ENEMY_MODE_NORMAL);
+            break;
+        case ENEMY_MODE_ATTACK_STRIKE:
+            SetAnimMode(ENEMY_MODE_ATTACK);
+            break;
+        }
+        return;
+    }
+
+    shot = 0;
+    switch (mode) {
+    case ENEMY_MODE_STRIKE:
+        if (part->frame == 0xa && part->stepTimer == 0)
+            shot = EntitySpawner::LaunchHarmfulEffectPart(0xc, 6, 0, -0xa, 0x400, part);
+        break;
+    case ENEMY_MODE_ATTACK_STRIKE:
+        if (part->frame == 8 && part->stepTimer == 0)
+            shot = EntitySpawner::LaunchHarmfulEffectPart(0xc, 6, 0, 8, 0x400, part);
+        break;
+    }
+    if (shot != 0)
+        shot->kind = EVENT_HIT_DART;
+}

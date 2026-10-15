@@ -3,7 +3,7 @@
 
 /*
  * ROM 0x085A6100-0x085A9EEC: the GAX2 sound engine's constant data. Linked
- * in ROM order between data/data.s sections by games/xs/ldscript.txt - see
+ * in ROM order between games/xs/data/data.s sections by games/xs/ldscript.txt - see
  * docs/data.md.
  */
 

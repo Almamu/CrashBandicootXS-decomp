@@ -1,0 +1,260 @@
+#ifndef __ACTOR_ANIM_H__
+#define __ACTOR_ANIM_H__
+
+#include "core.h"
+#include "constants/categories.h"
+#include "constants/actor_kinds.h"
+
+/*
+ * The category-descriptor -> vtable -> animation-table -> keyframe ->
+ * frame system used to render rotating pickup/hazard sprites (crates,
+ * fruit, balloons, checkpoint text, ...). See docs/graphics.md, "Found
+ * the real per-actor animation-frame system" onward, for how each of
+ * these was reversed, and each docs/entities/<family>.json
+ * for the actual data (every category, every animation-table record, every
+ * keyframe, resolved to the exact ROM address or extracted frame PNG it
+ * uses).
+ *
+ * None of the *code* behind this system (ActorCategory::Select, InitActorPart,
+ * GetAnimFrameData, the per-category vtable functions, ...) has been
+ * reversed to C yet - these structs are only the data layout, written
+ * ahead of that so the two can be matched up directly once it is.
+ */
+
+/* One entry of AnimPart's `anims` (actor_self.hpp), stride
+ * 12 - only the five fields actually read by matched functions are
+ * named; the rest (0xa-0xb) isn't exercised by any function matched so
+ * far. */
+struct anim_frame_record {
+    u16 duration;   // 0x00 - copied into the owning self's `animTimer` on a sequence reset
+    s16 frameIndex; // 0x02 - added to GetAnimFrameBaseOffset()'s result, indexes frameOffsets
+    // 0x04 - UpdateJetpackCheckpointText wraps self->animTime back once the frame base
+    // offset reaches this value
+    s16 loopThreshold;
+    s16 loopBase; // 0x06 - subtracted from loopThreshold (then <<8) as the wrap amount
+    u16 attr;     // 0x08 - packed into the high halfword of GetAnimFrameAttr's return value
+    u8 unknown_0a[2];
+};
+
+/* A box in the actors' 16-bit world units: position then size. The
+ * anim_table_record's box_14, ActorSelf's `box` and several small engine/src/.../data
+ * tables are this. A fixed box is copied into an actor by struct
+ * assignment (`box = gJetpackRocketBox`): the ROM's `ldm`/`stm`. */
+struct anim_box {
+    s16 x, y, z;
+    s16 w, h, d;
+}; // 0xC
+COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct anim_box) == 0xC);
+
+/* gCategoryFamily0AnimTable (categories 0-2, 41 slots) and gCategoryFamily1AnimTable
+ * (categories 3-6, 47 slots) - one record per animation clip, defined in
+ * games/xs/data/levels/anim_tables/polar.json / jetpack.json (docs/levels.md). Several slots
+ * share another slot's table_A/table_B arrays (see "duplicate_of_slot"
+ * in docs/entities/), and slots 32-34 of the first table are all zero. */
+struct anim_table_record {
+    /* 0x00 - equals the record's own slot number in every valid record
+     * observed. Read with ldrb; 0x01-0x03 are padding, 0 in every table. */
+    u8 index;
+    // 0x04 - the clip's keyframes (struct anim_frame_record, above), no count stored
+    const struct anim_frame_record *table_A;
+    // 0x08 - the frame array, of offsets (`const u32[]`) or of pointers
+    // (`const u8 *const[]`): see the comment below
+    const void *table_B;
+    // 0x0C - OBJ palette bank; InitActorPart copies it to actor_self.palette (+0x18), which
+    // DrawActor puts in OAM attr 2 (<< 12)
+    u8 palette;
+    // 0x10 - 0 or 0x260C-0x36D5: the depth at which the
+    // part draws unscaled (DrawActor divides by it)
+    s32 baseDepth;
+    // 0x14 - copied into the runtime per-part instance
+    // at +0x38 by InitActorPart; zero in some records
+    struct anim_box box_14;
+    s32 spawnX; // 0x20 - added to the spawn X by PolarPlayer::CreateActor (the factory)
+    s32 spawnY; // 0x24 - added to the spawn Y by PolarPlayer::CreateActor
+}; // 0x28
+LAYOUT_ASSERT(actor_anim_h, sizeof(struct anim_table_record) == 0x28);
+
+/* table_A is an array of struct anim_frame_record (above): one
+ * entry per keyframe, {duration, frameIndex (into table_B), loop
+ * threshold, loop base, OAM attribute bits, 2 unknown bytes}. There's no
+ * end marker or count; the actor's state code knows how many keyframes
+ * each clip has. */
+
+/*
+ * table_B (see struct anim_table_record above) is an array of one entry
+ * per frame, in one of two addressing modes - fixed per record, never
+ * mixed within one record. AnimPart (actor_self.hpp) reads an offset
+ * table as `u32`s (frameOffsets) and a pointer table as `uintptr_t`s
+ * (frameAddrs), so a pointer table is pointer-sized on any platform:
+ *
+ *   - "absolute_rom": each entry (`const u8 *const`) is a ROM pointer straight to a
+ *     zero-run-compressed frame ({w, h, 0x30, 0} + u16 run stream,
+ *     unpacked by the gUnpackRleSpriteFrameFunc IWRAM hook). Used only by record
+ *     0 of both animation tables (and the CreateYeti singleton's table):
+ *     the frame sets are polar_rle_sprites.cpp / jetpack_rle_sprites.cpp,
+ *     built from games/xs/graphics/vehicles/ (docs/data.md, "Compressed sprite
+ *     frames").
+ *
+ *   - "pool_offset": each entry is a byte offset from the start of the
+ *     category family's decompressed sprite sheet
+ *     (gPolarSpriteSheet for categories 0-2, gJetpackSpriteSheet for
+ *     3-6) to a frame: a 4-byte {w_tiles, h_tiles, 0x10, 0} header and
+ *     the 4bpp tiles (docs/graphics.md has the format). These frames *are*
+ *     extracted - see games/xs/graphics/vehicles/<family>/sprite_sheet/<entity>/NN.png,
+ *     one file per frame.
+ *
+ * docs/entities/'s "addressing_mode" field records which mode each
+ * record uses; "frames" resolves every keyframe-used table_B entry to
+ * either {rom_address, w_tiles, h_tiles} or {asset_file, w_tiles, h_tiles}
+ * accordingly.
+ */
+
+/* ActorCategory::descriptors - 7 entries (categories 0-2 use the family rooted
+ * at gCategoryFamily0AnimTable, 3-6 the one at gCategoryFamily1AnimTable). Each
+ * category's `type` field (0/1/2, see below) - NOT the category index
+ * itself - selects a shared vtable: traced the one real call site, and
+ * the caller reads ActorCategory::descriptors[category].type into the
+ * register it passes as ActorCategory::Select's first argument, which
+ * then computes ActorCategory::vtables + type*0x34 (confirmed against
+ * ActorCategory::Select's own disassembly). Categories 0/1/2 all have
+ * type 0 and share one vtable; 3/4/5 all have type 1 and share another;
+ * 6 is type 2, on its own - three real vtables total, not seven, so
+ * ActorCategory::vtables below is declared [3]. Whatever data actually
+ * follows those three at ActorCategory::vtables+0x9C (ROM 0x08175760) is
+ * unrelated - it doesn't decode as a 4th/5th/6th/7th vtable no matter
+ * how it's sliced (verified directly against the raw bytes), so
+ * there's no "categories 3-6 vtable" to go looking for. */
+/* category_descriptor.spawnTable is a struct actor_spawn_table (actor.h). */
+struct actor_spawn_table;
+
+/* The start of a BG0 cell animation (category_descriptor.cellAnim,
+ * read by InitCellAnim/ResetCellAnimBg/UploadCellAnimFrame in cell_anim.cpp): a
+ * 256-colour palette DMA'd whole to BG palette RAM, the grid size in 8x8
+ * cells, then the frames, each `cols * rows` 4bpp tiles in row-major cell
+ * order (plus, for type-0 categories, one 4-bit palette bank per cell
+ * padded to a multiple of 4 bytes, handed to the gDrawMirroredTilemapFunc map
+ * callback). cellAnimSize is the whole record's size. */
+struct cell_anim_header {
+    u16 palette[256]; // 0x000
+    s16 cols;         // 0x200
+    s16 rows;         // 0x202
+}; // 0x204, the frames follow
+
+/* The start of a BG1 picture (category_descriptor.bgPicture,
+ * read by LoadBgPicture in bg_picture.cpp): a 256-colour palette, the map
+ * size, the tile count, then `u16 map[cols * rows]` (padded to a multiple
+ * of 4 bytes), `tileCount` 4bpp tiles, and one 4-bit palette bank per map
+ * entry, low nibble first. */
+struct bg_picture_header {
+    u16 palette[256]; // 0x000
+    s16 cols;         // 0x200
+    s16 rows;         // 0x202
+    u32 tileCount;    // 0x204
+}; // 0x208, the map follows
+
+struct category_descriptor {
+    // 0x00 - 0 for categories 0-2, 1 for 3-5, 2 for 6 - selects the shared vtable, see above
+    u32 type;
+    // 0x04 - the BG0 cell animation
+    // (gCategoryFamily0CellAnim/gCategoryFamily1CellAnim), played by InitCellAnim
+    void *cellAnim;
+    u32 cellAnimSize; // 0x08 - its size in bytes
+    // 0x0C - the BG1 picture LoadBgPicture shows (gCategoryNBgPicture);
+    // NULL for type-0 categories (0-2), 5 and 6 share one
+    const u8 *bgPicture;
+    // 0x10 - raw 16-color RGB555 palette, DMA'd to OBJ palette RAM (ActorCategory::Init)
+    const u16 *palette;
+    // 0x14 - the stage's actor spawn list (gCategoryNSpawnTable)
+    struct actor_spawn_table *spawnTable;
+    // 0x18 - this category's animation table base
+    // (gCategoryFamily0AnimTable or gCategoryFamily1AnimTable)
+    struct anim_table_record *anim_table;
+    const u8 *sprite_sheet; // 0x1C - this category family's LZ77-compressed sprite sheet
+    // 0x20 - deaths since the checkpoint (ActorCategoryStats::deaths) after
+    // which ActorCategoryStats::IsMaskAssistDue reports true
+    s32 maskAssistDeaths;
+    // 0x24 - deaths since the checkpoint (ActorCategoryStats::deaths) after which the
+    // spawns use their `bonusKind` (ActorCategory::Init -> ActorSpawns::useBonus)
+    s32 bonusKindDeaths;
+    // 0x28 - boss deaths (ActorCategoryStats::bossDeaths) after which the boss is
+    // created with `retryBossLevel` instead of `bossLevel`
+    s32 retryBossDeaths;
+    // 0x2C - the argument ActorCategory::Init passes to the boss's constructor
+    // (category vtable slot 2: CreateYeti's gYetiParamsIndex,
+    // CreateAirship's gAirshipLevel, CreateHovercraft's gHovercraftLevel)
+    u32 bossLevel;
+    u32 retryBossLevel; // 0x30 - the same, once retryBossDeaths is reached
+}; // 0x34
+LAYOUT_ASSERT(actor_anim_h, sizeof(struct category_descriptor) == 0x34);
+
+struct actor_spawn; /* actor.h */
+#ifdef __cplusplus
+/* actor_self.hpp's class, in its namespace (docs/cplusplus.md,
+ * "Namespaces"); C sees an incomplete struct. */
+namespace Game
+{
+namespace Entities
+{
+class ActorSelf;
+} // namespace Entities
+} // namespace Game
+#else
+struct ActorSelf;
+#endif
+
+/* ActorCategory::vtables - 3 entries, type-indexed (see category_descriptor
+ * above), not category-indexed: categories that share a type share one.
+ * ActorCategory::Select points ActorCategory::vtable at the selected type's.
+ * Not a g++ vtable: no RTTI slot, 4-byte slots, two of them values, and
+ * the callers NULL-test the boss slots before calling them. Slots 2-6 are
+ * the one interface the yeti, the airship and the hovercraft share; the
+ * rest are the player's and the spawner's. */
+struct category_vtable {
+    /* 0x00 - builds the player: PolarPlayer::Create (polar),
+     * JetpackPlayer::Create (jetpack, hovercraft) */
+    void (*createPlayer)(struct anim_table_record *table, s32 checkpoint);
+    /* 0x04 - spawns a level spawn record's object: PolarPlayer::SpawnActor,
+     * JetpackPlayer::SpawnActor (ActorCategory::RunFrame, ActorCategory::Select) */
+#ifdef __cplusplus
+    Game::Entities::ActorSelf *(*spawn)(struct actor_spawn *spawn, u8 useBonus, s32 zOffset);
+#else
+    struct ActorSelf *(*spawn)(struct actor_spawn *spawn, u8 useBonus, s32 zOffset);
+#endif
+    void (*createBoss)(s32 level);  // 0x08 - CreateYeti/CreateAirship/CreateHovercraft
+    void (*updateBoss)(void);       // 0x0C - each category frame's start
+    void (*updateBossBg2)(void);    // 0x10 - ActorCategory::UpdateBg2
+    void (*destroyBoss)(void);      // 0x14 - ActorCategory::DestroyActors
+    void (*loadBossGraphics)(void); // 0x18 - ActorCategory::ReloadGraphics
+    /* 0x1C - a spawn record is spawned once its depth is within this of
+     * the scroll distance (-0x11 polar, 0xA9 jetpack/hovercraft) */
+    s32 spawnDistance;
+    /* 0x20 - ActorCategory::Select skips the records whose depth is below
+     * this plus the start distance (-0x2F polar, 0x1C jetpack/hovercraft) */
+    s32 skipDistance;
+    /* 0x24 - ActorCategory::IsTouchingPlayer */
+#ifdef __cplusplus
+    s32 (*isTouchingPlayer)(Game::Entities::ActorSelf *self);
+#else
+    s32 (*isTouchingPlayer)(struct ActorSelf *self);
+#endif
+    void (*reachCourseEnd)(void);    // 0x28 - once the course length is passed
+    void (*reloadPlayerTiles)(void); // 0x2C - ActorCategory::ReloadGraphics
+    s32 (*isPauseLocked)(void);      // 0x30 - ActorCategory::CanPause
+}; // 0x34
+LAYOUT_ASSERT(actor_anim_h, sizeof(struct category_vtable) == 0x34);
+
+/* Both tables are defined in engine/src/engine/actor/data/actor_categories.cpp (7*0x34 =
+ * 0x16C bytes of descriptors, then ActorCategory::vtables). The latter
+ * has 3 entries, which is also all of it - there is no 4th/5th/6th/7th
+ * vtable to find,
+ * see the comment on category_descriptor.type above. What follows it at
+ * ActorCategory::vtables+0x9C (ROM 0x08175760) is unrelated: the BG
+ * palette-cycle frames of engine/src/engine/actor/data/actor_palette_cycle_frames.cpp. Both are
+ * ActorCategory's static data members (actor_category.hpp). */
+
+/* Defined in engine/src/game/vehicles/polar/data/polar_anim_family.cpp and jetpack_anim_family.cpp,
+ * generated from games/xs/data/levels/anim_tables/ (docs/levels.md, "Animation tables"). */
+extern const struct anim_table_record gCategoryFamily0AnimTable[41]; // 0x081796CC, categories 0-2
+extern const struct anim_table_record gCategoryFamily1AnimTable[47]; // 0x0817B2A4, categories 3-6
+
+#endif /* !__ACTOR_ANIM_H__ */

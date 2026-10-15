@@ -89,7 +89,9 @@ def main():
     for r in rows:
         by[r['obj']].append(r)
     rows = [l.split() for l in open('games/n2/objects.txt') if l.strip() and not l.startswith('#')]
-    linked = {r[2].rsplit('.', 1)[0] for r in rows}
+    # objects.txt names the shared sources by their path (engine/src/...),
+    # match.json by their object's under the build directory (engine/src/...)
+    linked = {r[2].rsplit('.', 1)[0].removeprefix('engine/') for r in rows}
     # the linked objects' ranges: a place inside one is another copy of the
     # same code (a short function the ROM has several of), not this object
     spans = [(int(r[0], 16), int(r[0], 16) + int(r[1], 16), r[2]) for r in rows]
@@ -113,7 +115,8 @@ def main():
         out = 'build/ntranced/' + obj
         # built as if in objects.txt (game.mk's N2_TRY_SRCS): its compiler
         # and flags are then the ones the link would have
-        src = next((s for s in (obj[:-2] + '.cpp', obj[:-2] + '.c') if Path(s).exists()), obj[:-2] + '.cpp')
+        base = 'engine/' + obj[:-2] if obj.startswith('src/') else obj[:-2]
+        src = next((s for s in (base + '.cpp', base + '.c') if Path(s).exists()), base + '.cpp')
         Path(out).unlink(missing_ok=True)
         r = subprocess.run(['make', 'GAME=n2', '-s', 'N2_TRY_SRCS=' + src] + (['N2_TRY_AGBCP=' + out] if args.agbcp else [])
                            + [out], capture_output=True, text=True)

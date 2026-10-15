@@ -1,0 +1,48 @@
+#ifndef GUARD_CRATES_H
+#define GUARD_CRATES_H
+
+/* The crates subsystem (engine/src/game/crates/): the crate object (class Crate,
+ * crate.hpp, with its types), its collision and breaking, the
+ * slot crate, and the crate list (the bucketed grid of crates and other
+ * collidable parts).
+ *
+ * Declarations here are the functions' real prototypes, copied from
+ * their definitions. A .c file that needs a different local declaration
+ * for codegen keeps it as an asm-label alias with a `codegen:` comment
+ * (docs/headers.md).
+ *
+ * The crate list (`CrateList`, engine/include/game/crates/crate_list.hpp) is set up by
+ * InitCrateList (engine/src/game/crates/crate_list_update.cpp). */
+
+#include "core.h"
+#include "engine/util/math_util.h"
+#include "engine/util/aabb.h"
+#include "engine/gfx/gfx.h"
+#include "game/entities/objects.h"
+#include "byte_arg.h"
+#include "constants/attack_kinds.h"
+#include "constants/crates.h"
+#include "constants/entities.h"
+
+
+/* The crate tables, indexed by crate kind (engine/src/game/crates/data/crate_tables.cpp). */
+extern const u8 gSlotCrateTimers[4];
+extern const u8 gCrateKindCounted[CRATE_KIND_COUNT];
+extern const u8 gCrateKindBreakable[CRATE_KIND_COUNT];
+extern const u8 gCrateKindExplosive[CRATE_KIND_COUNT];
+extern const u8 gCrateKindUnbreakable[CRATE_KIND_COUNT];
+extern const s32 gCrateHitResponse[CRATE_KIND_COUNT][ATTACK_KIND_COUNT];
+extern const u8 gAttackKindBreakLimited[8];
+
+/* Set when the crate list changes (games/xs/sym_iwram.txt). */
+extern u8 gCrateListChanged;
+
+/* engine/src/game/crates/crate.cpp */
+extern void ResolvePlayerCollisions(void);
+/* FindLineCrossingYMajor and FindLineCrossingXMajor are C++ functions
+ * in Engine::Util (engine/include/engine/util/line_steppers.hpp, via crate.hpp). */
+
+/* engine/src/game/crates/crate_reset.cpp */
+extern s32 FindLineCrossing(s32 pos, s32 count, s32 a, s32 b, s32 limit);
+
+#endif /* GUARD_CRATES_H */

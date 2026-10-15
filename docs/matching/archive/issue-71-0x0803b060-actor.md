@@ -1,7 +1,7 @@
 # Issue #71: 0x0803B060-0x0803B4EC (actor)
 
 25 functions, ~1.1 KB, `asm/code_3_3.s`. This chunk sits immediately
-after `src/util/aabb_setup.c`/`actor_anim.c`'s existing
+after `engine/src/util/aabb_setup.c`/`actor_anim.c`'s existing
 content (issue #70) - `GetAnimFrameBaseOffset` (already matched in
 `actor_anim.c`) ends exactly at `0x0803B060`, so this chunk's C landed
 in the same file (`actor_anim.c`) rather than a new `actor_partN.c`,
@@ -11,7 +11,7 @@ now.
 
 ## Matched (24/25)
 
-All in `src/actor/actor_anim.c`, in ROM order:
+All in `engine/src/actor/actor_anim.c`, in ROM order:
 
 - **`GetAnimFrameAttr`** - reads the current keyframe record's `attr`
   halfword (`frameTable[frameIndex].attr`) and returns it pre-shifted
@@ -35,7 +35,7 @@ All in `src/actor/actor_anim.c`, in ROM order:
   function's embedded literal pointer resolves to the same
   `gActorVtable` symbol, and the surrounding unlink/free
   sequence is otherwise identical). Same doubly-linked-list unlink
-  convention already named in `src/game/ui/language_select.c`'s
+  convention already named in `engine/src/game/ui/language_select.c`'s
   `DestroyLogoActor` (a local `struct linked_node` with `+0x48`=prev,
   `+0x4c`=next, `+0x50`=state/vtable pointer): set `self+0x50` to the
   shared "dead" table `gActorVtable`, unlink `self` from its
@@ -95,7 +95,7 @@ All in `src/actor/actor_anim.c`, in ROM order:
   `GetAnimFrameAttr`'s attr flag, and a priority/palette nibble from
   `self+0x18`/`self+0x14`) and calls `SetupSpriteFrameOam`. This is the
   near-identical twin of the already-parked `DrawPolarCollectedWumpa`
-  (`src/vehicle/polar_pickups.c`, self-relative position instead of a
+  (`engine/src/vehicle/polar_pickups.c`, self-relative position instead of a
   fixed one) - and hits the exact same two gaps documented there:
   - A `| 0`-with-a-zero-valued term (`packed = ... | attr | flag` where
     `flag` is always 0 at this call site) that the ROM keeps as a real
@@ -130,7 +130,7 @@ All in `src/actor/actor_anim.c`, in ROM order:
 - No renames were needed - every function in this chunk keeps its
   original name (either an existing `GetAnimFrameData`-style name
   already referenced by other files, or `sub_XXXXXXXX`), so no other
-  `asm/*.s`/`src/**/*.c` call site needed updating.
+  `asm/*.s`/`engine/src/**/*.c` call site needed updating.
 
 See [docs/status/actor.md](../../status/actor.md) for the running matched/
 parked list, and [docs/workflow.md](../../workflow.md) for the per-function

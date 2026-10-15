@@ -1,7 +1,7 @@
 # The terrain types, collision modes and open bits (#843)
 
-The level collision map (TileCache, include/game/level/bg_layer.hpp) has one 16-bit
-cell per 8x8 tile. The names are in include/game/level/level.h, next to
+The level collision map (TileCache, engine/include/game/level/bg_layer.hpp) has one 16-bit
+cell per 8x8 tile. The names are in engine/include/game/level/level.h, next to
 `struct terrain_type`.
 
 ## The cell's terrain type (bits 0-7)
@@ -52,5 +52,5 @@ lookups then return NULL / 0.
 The `RIGHT` arms of both lookups test `hi & mode` (mode is 1 there), the
 register the ROM ANDs; they keep that spelling with a comment.
 
-The collision layers themselves are images now: `data/levels/<room>/collision.png`,
+The collision layers themselves are images now: `games/xs/data/levels/<room>/collision.png`,
 at the BG0 picture's size (one 8x8 block per cell), one colour per cell value, legend in [levels.md, "Collision layers"](../levels.md#collision-layers).

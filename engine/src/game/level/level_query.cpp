@@ -1,0 +1,270 @@
+#include "engine/audio/audio.hpp"
+#include "game/level/level_state.hpp"
+#include "game/level/entity_flags.hpp"
+#include "engine/actor/actor_category.hpp"
+extern "C" {
+#include "core.h"
+#include "engine/actor/actor.h"
+#include "engine/sys/memory.h"
+#include "game/level/level.h"
+#include "globals.h"
+}
+
+using Engine::Actor::ActorCategory;
+using Game::Level::LevelProgress;
+
+/* GitHub issue #38: 0x0802425C-0x08024810 (game_loop). Continues the
+ * medal-results tally chain documented in docs/rom_map.md ("A per-level
+ * completion-time cascade, and a medal-table tally chain") - see
+ * docs/matching/archive/issue-38-medal-results-tally.md for the full write-up
+ * of this chunk (this first part covers the front slice, up to but not
+ * including LevelHasEntityType, which follows further down this file - it's
+ * contiguous with both halves in ROM, and ended up grouped with the
+ * wrapper functions that call it).
+ *
+ * `gLevelTable` is the level table (`struct level_info`, level_data.h):
+ * this file reads each level's `theme` (the gThemeMusicCues offset,
+ * PlayRoomMusic) and `rooms` (its room list, CountLevelCrates).
+ * Each level's rooms are a `const struct level_room_list` of `struct
+ * level_room` records (level_data.h; this file's `MedalItemList` and
+ * `MedalListItem` were views of them). A room's entities are its
+ * descriptor's `entities` list, whose `typeCounts` LevelHasEntityType
+ * reads. */
+
+/* UNUSED - no caller anywhere in the ROM (checked engine/src/ and asm/): the
+ * destructor (DestroyUnusedLevelObject; g++'s deleting destructor frees
+ * `this` when bit 0 of its __in_chrg is set) and the empty constructor
+ * (InitUnusedLevelObject, which returns `this` by leaving r0 alone) of a
+ * class with no fields and
+ * no vtable that nothing creates. C++ since the #664 cleanup; the rest of
+ * the file is LevelProgress's: the level queries are its static members
+ * (#915), IsInGemPathRoom and IsInBonusRoom its methods. In the
+ * namespace Game::Level, with LevelProgress (#1033). */
+namespace Game
+{
+namespace Level
+{
+class UnusedLevelObject
+{
+public:
+    UnusedLevelObject();  // InitUnusedLevelObject
+    ~UnusedLevelObject(); // DestroyUnusedLevelObject
+};
+
+} // namespace Level
+} // namespace Game
+
+using Game::Level::UnusedLevelObject;
+
+UnusedLevelObject::~UnusedLevelObject()
+{
+}
+
+UnusedLevelObject::UnusedLevelObject()
+{
+}
+
+/* Per-level medal tally: sums, across `gLevelTable[idx]`'s
+ * item list (`rooms[]`, plus the two extra single-item slots), a
+ * per-item value - `gEntityFlags->CountCrateEntities(item->desc->entities)` for
+ * `kind` 0-2, `ActorCategory::CountCrates(item->param.catIndex)` for `kind == 3`, 0
+ * otherwise (including `kind < 0`). The same 4-branch
+ * dispatch is inlined three times in the ROM (once per source: the
+ * `rooms[]` array, `extra1`, `extra2`) rather than calling a shared
+ * helper - `CountRoomCrates` (below) is a separate, standalone
+ * instance of the same dispatch body, not something this function
+ * reaches through. Each dispatch compiles as a genuine `switch` here
+ * (rather than an if/else-if chain) - only that shape reproduces the
+ * ROM's exact "test all three conditions inline, jump out to
+ * out-of-line handler blocks" layout for this compiler. */
+s32 LevelProgress::CountLevelCrates(s32 idx)
+{
+    s32 total = 0;
+    const struct level_room_list *list = gLevelTable[idx].rooms;
+    s32 i;
+
+    for (i = 0; i < list->count; i++) {
+        const struct level_room *item = list->rooms[i];
+        s32 v = 0;
+        s32 type = item->kind;
+
+        switch (type) {
+        case ROOM_KIND_ON_FOOT:
+        case ROOM_KIND_UNDERWATER:
+        case ROOM_KIND_HOVER:
+            v = gEntityFlags->CountCrateEntities(item->desc->entities);
+            break;
+        case ROOM_KIND_CATEGORY:
+            v = ActorCategory::CountCrates(item->param.catIndex);
+            break;
+        }
+        total += v;
+    }
+
+    if (list->extra1 != 0) {
+        const struct level_room *item = list->extra1;
+        s32 v = 0;
+        s32 type = item->kind;
+
+        switch (type) {
+        case ROOM_KIND_ON_FOOT:
+        case ROOM_KIND_UNDERWATER:
+        case ROOM_KIND_HOVER:
+            v = gEntityFlags->CountCrateEntities(item->desc->entities);
+            break;
+        case ROOM_KIND_CATEGORY:
+            v = ActorCategory::CountCrates(item->param.catIndex);
+            break;
+        }
+        total += v;
+    }
+
+    if (list->extra2 != 0) {
+        const struct level_room *item = list->extra2;
+        s32 v = 0;
+        s32 type = item->kind;
+
+        switch (type) {
+        case ROOM_KIND_ON_FOOT:
+        case ROOM_KIND_UNDERWATER:
+        case ROOM_KIND_HOVER:
+            v = gEntityFlags->CountCrateEntities(item->desc->entities);
+            break;
+        case ROOM_KIND_CATEGORY:
+            v = ActorCategory::CountCrates(item->param.catIndex);
+            break;
+        }
+        total += v;
+    }
+
+    return total;
+}
+
+/* GitHub issue #38: 0x0802425C-0x08024810 (game_loop), continued from
+ * the code above - see this file's header comment and
+ * docs/matching/archive/issue-38-medal-results-tally.md for the full write-up.
+ * This slice picks up with LevelHasEntityType (contiguous with the
+ * trailing CountLevelCrates above in ROM, so it lives here instead of getting its
+ * own file - see docs/workflow.md's "one .c file per contiguous ROM
+ * region" rule) and runs through CountRoomCrates. The chunk's last
+ * functions, PlayRoomMusic-SelectRoom, are in room_select.cpp (#770). */
+
+/* Scans `gLevelTable[idx]`'s item list (`rooms[]`, plus the two
+ * extra single-item slots, same shape CountLevelCrates above
+ * walks) for the first non-type-3 item whose entity list
+ * (`desc->entities`) has a nonzero count of entity type `flagIdx`
+ * (`typeCounts[flagIdx]`) - i.e. "does any room of the level have an
+ * entity of type `flagIdx`". Returns as soon as
+ * a set flag is found (or a table read comes back nonzero), otherwise
+ * 0. `LevelHasYellowGemEntity`/`34`/`40`/`4C`/`58` below are thin wrappers baking in
+ * a constant `flagIdx`.
+ *
+ * `flagIdx` stays in `ip`/r12 for the whole function, as in the ROM,
+ * with no pin (old_agbcp; agbcp needs pins for the table reads). */
+bool LevelProgress::LevelHasEntityType(s32 idx, s32 flagIdx)
+{
+    s32 result = 0;
+    const struct level_room_list *list = gLevelTable[idx].rooms;
+    s32 i = 0;
+
+    if (result < list->count) {
+        const struct level_room *const *itemPtr = list->rooms;
+
+        do {
+            const struct level_room *item = *itemPtr;
+
+            if (item->kind != ROOM_KIND_CATEGORY) {
+                result = item->desc->entities->typeCounts[flagIdx] != 0;
+            }
+            itemPtr++;
+            i++;
+        } while (i < list->count && result == 0);
+    }
+
+    if (result == 0 && list->extra1 != 0 && list->extra1->kind != ROOM_KIND_CATEGORY) {
+        result = list->extra1->desc->entities->typeCounts[flagIdx] != 0;
+    }
+
+    if (result == 0 && list->extra2 != 0 && list->extra2->kind != ROOM_KIND_CATEGORY) {
+        result = list->extra2->desc->entities->typeCounts[flagIdx] != 0;
+    }
+
+    return result;
+}
+
+/* `cat == gLevelTable[level].rooms->extra2` - i.e.
+ * "does this object's cached value (see SelectRoom) match this medal entry's
+ * item list's `extra2` slot" - a sibling read of the same field
+ * EnterGemPathRoom copies out. */
+bool LevelProgress::IsInGemPathRoom()
+{
+    const struct level_room_list *list = gLevelTable[level].rooms;
+    s32 result = 0;
+
+    if (cat == list->extra2) {
+        result = 1;
+    }
+    return result;
+}
+
+/* Same as IsInGemPathRoom but against the item list's `extra1` slot. */
+bool LevelProgress::IsInBonusRoom()
+{
+    const struct level_room_list *list = gLevelTable[level].rooms;
+    s32 result = 0;
+
+    if (cat == list->extra1) {
+        result = 1;
+    }
+    return result;
+}
+
+/* LevelHasYellowGemEntity/34/40/4C/58: five thin wrappers over LevelHasEntityType with
+ * the medal "flag index" constant baked in (0xc, 9, 0xb, 0xa, 8 -
+ * plausibly per-medal-type slot indices into the halfword table
+ * LevelHasEntityType reads). */
+bool LevelProgress::LevelHasYellowGemEntity(s32 idx)
+{
+    return LevelHasEntityType(idx, ENTITY_YELLOW_GEM);
+}
+
+bool LevelProgress::LevelHasBlueGemEntity(s32 idx)
+{
+    return LevelHasEntityType(idx, ENTITY_BLUE_GEM);
+}
+
+bool LevelProgress::LevelHasGreenGemEntity(s32 idx)
+{
+    return LevelHasEntityType(idx, ENTITY_GREEN_GEM);
+}
+
+bool LevelProgress::LevelHasRedGemEntity(s32 idx)
+{
+    return LevelHasEntityType(idx, ENTITY_RED_GEM);
+}
+
+bool LevelProgress::LevelHasGemPathGemEntity(s32 idx)
+{
+    return LevelHasEntityType(idx, ENTITY_GEM_PATH_GEM);
+}
+
+/* Standalone instance of CountLevelCrates's (above) per-item
+ * dispatch body, taking the item pointer directly instead of resolving
+ * it from the medal table - see CountLevelCrates's comment for the shared
+ * semantics. */
+s32 LevelProgress::CountRoomCrates(const struct level_room *item)
+{
+    s32 v = 0;
+
+    switch (item->kind) {
+    case ROOM_KIND_ON_FOOT:
+    case ROOM_KIND_UNDERWATER:
+    case ROOM_KIND_HOVER:
+        v = gEntityFlags->CountCrateEntities(item->desc->entities);
+        break;
+    case ROOM_KIND_CATEGORY:
+        v = ActorCategory::CountCrates(item->param.catIndex);
+        break;
+    }
+    return v;
+}

@@ -6,9 +6,9 @@ closed and one draft got much closer.
 
 | Function | File | Before | Now | Status |
 |---|---|---|---|---|
-| `DrawPauseFraction` (#7) | `src/game/ui/pause_menu_widgets.c` | 14 | match (both compilers) | **Closed** |
-| `ResetLinkSessionState` (#4) | `src/engine/link/link_session_reset.c` (split) | 136 | 51 (same size, old_agbcc + `-fno-rerun-loop-opt`) | Draft updated |
-| `SpawnFlamethrowerLabAssistant` (#31) | `src/game/enemies/spawn_enemies.c` | 4 | 4 | Note added |
+| `DrawPauseFraction` (#7) | `engine/src/game/ui/pause_menu_widgets.c` | 14 | match (both compilers) | **Closed** |
+| `ResetLinkSessionState` (#4) | `engine/src/engine/link/link_session_reset.c` (split) | 136 | 51 (same size, old_agbcc + `-fno-rerun-loop-opt`) | Draft updated |
+| `SpawnFlamethrowerLabAssistant` (#31) | `engine/src/game/enemies/spawn_enemies.c` | 4 | 4 | Note added |
 
 ## `DrawPauseFraction`: closed
 
@@ -50,7 +50,7 @@ posX, and making `ox` global with a volatile `"+r"` tail.
 - `link_session_reset.c`: `ResetLinkSessionState` only
 - `link_session.c`: `UpdateLinkSession`, `HandleLinkSerial`
 
-The structs moved to `include/link_session.h`. The Makefile's new
+The structs moved to `engine/include/link_session.h`. The Makefile's new
 `NO_RERUN_LOOP_OPT_OBJS` list gives `link_session_reset.o` the flag. The
 NAKED body doesn't depend on it; the flag is there for the draft.
 

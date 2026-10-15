@@ -18,7 +18,7 @@ The rewrites come in one of two forms.
 
 A spec is a Python file defining:
 
-    SOURCE   = "src/game/bosses/hovercraft.cpp"   # the file the function is in
+    SOURCE   = "engine/src/game/bosses/hovercraft.cpp"   # the file the function is in
     SYMBOL   = "ConvertHovercraftTiles"      # its symbol in the object
     TARGET   = "p8r/target/hovercraft.o"     # an object with the ROM's code
     REGION   = '''...'''                     # exact text of SOURCE to replace
@@ -60,7 +60,7 @@ A third form, an edit-list spec, lists edits instead of slots (the edit-list
 workflow; the spec is exec'd from the current directory, so it may load
 and extend another spec):
 
-    src    = "src/engine/util/string_arm.cpp"   # the source file
+    src    = "engine/src/engine/util/string_arm.cpp"   # the source file
     obj    = "src/engine/util/string_arm" # its object, under build/crashbandicootxs/
     func   = "strncpy_arm"                # the symbol scored
     extra  = ["strlen_arm", ...]          # optional: other symbols that must stay
@@ -194,7 +194,7 @@ class TemplateSource:
             sys.exit("a template needs --src, --sig and --sym")
         self.source = src
         self.symbol = sym
-        self.target = ref or os.path.join("build/crashbandicootxs", os.path.splitext(src)[0] + ".o")
+        self.target = ref or os.path.join("build/crashbandicootxs", os.path.splitext(src)[0].removeprefix("engine/") + ".o")
         text = open(os.path.join(ROOT, src)).read()
         i = text.index("\n" + sig + "\n") + 1
         j = text.index("\n}\n", i) + 3
@@ -240,7 +240,7 @@ class TemplateSource:
 
 def make_commands(source):
     """The Makefile's cpp and cc1 command lines for SOURCE's object."""
-    obj = "build/crashbandicootxs/" + os.path.splitext(source)[0] + ".o"
+    obj = "build/crashbandicootxs/" + os.path.splitext(source)[0].removeprefix("engine/") + ".o"
     out = subprocess.run(["make", "-n", "-W", source, obj], cwd=ROOT, capture_output=True, text=True).stdout
     for line in out.splitlines():
         if "|" in line and source in line and "agbc" in line:

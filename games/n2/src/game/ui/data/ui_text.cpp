@@ -5,7 +5,7 @@ extern "C" {
 
 /*
  * N-Tranced's ROM 0x081D1C8C-0x081DEA40: its UI text (menus, level names,
- * hints, ...) in the six languages, laid out as XS's (src/game/ui/data/
+ * hints, ...) in the six languages, laid out as XS's (engine/src/game/ui/data/
  * ui_text.cpp): per language (English, French, German, Spanish, Italian,
  * Dutch) the strings it adds, then its array of UI_TEXT_COUNT (196)
  * strings, which GetUiText reads through gUiTextTables. A string several

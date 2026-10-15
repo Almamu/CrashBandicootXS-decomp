@@ -1,7 +1,7 @@
 #include "gba/types.h"
 
 /*
- * ROM 0x085A4C70-0x085A4E70. Linked in ROM order between data/data.s
+ * ROM 0x085A4C70-0x085A4E70. Linked in ROM order between games/xs/data/data.s
  * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 

@@ -1,7 +1,7 @@
 # Issues #64/#65: NAKED retry (0x08034AA4-0x08036CF4)
 
-This pass retried the NAKED functions in `src/game/ui/credits.c`
-(issue #64) and `src/frontend/title_screen_init.c` (issue #65).
+This pass retried the NAKED functions in `engine/src/game/ui/credits.c`
+(issue #64) and `engine/src/frontend/title_screen_init.c` (issue #65).
 Seven of the twelve are now real C. Five are still NAKED; four of those
 have a near-miss draft under `#if NON_MATCHING`.
 

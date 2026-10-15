@@ -1,4 +1,4 @@
-# The game's functions named as the C library's (src/engine/util/): the
+# The game's functions named as the C library's (engine/src/engine/util/): the
 # pc platform renames them in the game's objects (platform.mk, objcopy
 # --redefine-syms), so that the host's C library keeps its own for its
 # other users (platform/pc/src/, libstdc++). Their callers in the game are

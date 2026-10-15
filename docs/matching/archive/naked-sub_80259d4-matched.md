@@ -1,6 +1,6 @@
 # `SetEntityIdActivated` converted from NAKED transcription to real matched C
 
-`SetEntityIdActivated` (`src/game/level/entity_flags.c`, sets a bit in both the
+`SetEntityIdActivated` (`engine/src/game/level/entity_flags.c`, sets a bit in both the
 `self+0x208` and `self+0x308` bit-grids at once) had been parked as a
 byte-correct NAKED asm transcription - see
 [issue-41-game-loop-25894.md](./issue-41-game-loop-25894.md) for the

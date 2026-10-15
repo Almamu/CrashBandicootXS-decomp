@@ -62,7 +62,7 @@ neighborhood - the same fields `player_flags.c`/`kill_player.c`/
   `asr #3; lsl #3; sub` immediately after).
 - `self+0x38` - a one-shot flag, tested only at the very end.
 
-Two file-scope globals not previously declared anywhere in `src/`:
+Two file-scope globals not previously declared anywhere in `engine/src/`:
 `gAkuAkuInvincibleFrame`/`gAkuAkuFollowFrame` (both plain `u32`, alongside
 the already-`extern`'d `gRoomFrameCount` frame counter and
 `gSpriteRenderer`, a plain `void *` OAM-manager-style global several
@@ -251,7 +251,7 @@ coincide` (checksum matches).
 
 ## Files changed
 
-- **New**: `src/player/player_event.c` - `DrawPlayer`, NAKED.
+- **New**: `engine/src/player/player_event.c` - `DrawPlayer`, NAKED.
 - `asm/code_3_2_16_ac2c.s` - trimmed to end right after `PlayerHandleEvent`
   (`DrawPlayer`'s real bytes, and its own trailing literal pool,
   removed).
@@ -272,16 +272,16 @@ coincide` (checksum matches).
 - `docs/matching/archive/issue-9-10-0x0800aaec-graphics.md` - the
   `self+0x20`/`+0x2d`/28-byte-record convention worked out in detail
   there, reused here for the child object's own record lookup.
-- `src/player/kill_player.c` - `KillPlayer`'s own
+- `engine/src/player/kill_player.c` - `KillPlayer`'s own
   `part+0x20 -> *ptr + tag*0x1c` chain, the closest existing sibling of
   this function's own child-record clamp.
-- `src/player/player_flags.c` - the `self+0x8c`
+- `engine/src/player/player_flags.c` - the `self+0x8c`
   `IsTimerArmed`/`SetTimer` convention and the mirror-flag-bit
   convention, both reused here.
-- `src/game/ui/starfield.c` - `gSineTable`'s own
+- `engine/src/game/ui/starfield.c` - `gSineTable`'s own
   `extern s16 [];` declaration and confirmed 256-entry sine-table
   shape.
-- `src/game/entities/sprite.c` - `DrawSprite`'s own matched definition
+- `engine/src/game/entities/sprite.c` - `DrawSprite`'s own matched definition
   (confirms it's an OAM-queue/draw call, not a hitbox operation).
 
 ## Later pass (issue #9 NAKED retry)

@@ -5,13 +5,13 @@ this project hadn't used before: a bare `"m"` (memory) operand
 constraint in inline asm, used to force instruction-scheduling *order*
 around a memory access while still letting the compiler own that
 access's own address computation and register allocation (see
-`src/game/level/tile_slot_pool.c`'s `AcquireTileSlot` for the original example
+`engine/src/game/level/tile_slot_pool.c`'s `AcquireTileSlot` for the original example
 and comment). This session tried adapting that same idea - "isolate
 just the two instructions this compiler's scheduler puts in the wrong
 relative order, and pin only their order via a narrow inline-asm
 snippet, everything else stays plain C" - against the two remaining
 `InitActorPart`-family NAKED functions in
-`src/vehicle/jetpack_crates.c` flagged as candidates in
+`engine/src/vehicle/jetpack_crates.c` flagged as candidates in
 [issue-59-60-gap-31a6c-part1.md](issue-59-60-gap-31a6c-part1.md):
 `CreateJetpackParachuteNitro` (closed) and `InitJetpackBalloonCrate` (still NAKED, but with two of
 its three real gaps closed and the third now precisely characterized).
@@ -75,7 +75,7 @@ void *CreateJetpackParachuteNitro(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 asm(".align 2, 0\n1: .4byte 0xFFFF0600\n2: .4byte gJetpackParachuteNitroVtable\n");
 ```
 
-(see the real, commented version in `src/vehicle/jetpack_crates.c` for
+(see the real, commented version in `engine/src/vehicle/jetpack_crates.c` for
 the exact final shape, including `d`'s own outgoing-argument slot as a
 plain `"m"` local - letting the compiler still own its address/frame
 allocation - and `a`/`b` passed through r1/r2 via plain `"r"` operands
@@ -215,7 +215,7 @@ make compare` → `crashbandicootxs.gba: OK`.
 
 ## Later pass: `InitJetpackBalloonCrate` and `CreateJetpackRocket` matched as plain C
 
-Both are real C now (in `src/vehicle/jetpack_crates.c`, still built with
+Both are real C now (in `engine/src/vehicle/jetpack_crates.c`, still built with
 the current agbcc; both also match under old_agbcc).
 
 - **`InitJetpackBalloonCrate`**: none of the three gaps above exists. The plain

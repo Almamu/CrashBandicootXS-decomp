@@ -8,7 +8,7 @@ was already matched in an earlier pass), issue #36 lists
 file's 49 functions, `0x080231CC`-`0x08023488` (`CheckAllCratesBroken` itself
 ends at `0x080234E8`, where `src/game/level/level_state.o` picks up).
 
-The block sits immediately after `src/game/level/level_state.c`'s own
+The block sits immediately after `engine/src/game/level/level_state.c`'s own
 existing functions (`FreezeLevelClock`-`HasTurboRun`) in ROM, with no gap -
 `ldscript.txt` already links `level_state.o` directly before what was
 `asm/code_3_2_17_231cc.o`. All 49 functions turned out to be a direct
@@ -146,8 +146,8 @@ to its pinned register if the ROM's own code did so.
 `SetMaskLevel` (calls `StartSong(gAudioContext, 0x12)` on state
 `3`) needed `extern void StartSong(struct AudioContext *self, u32
 songIndex);`, matching the signature already used in
-`src/engine/audio/audio.c`/
-`src/frontend/title_screen_init.c`. Unlike those files, `level_state.c` had
+`engine/src/engine/audio/audio.c`/
+`engine/src/frontend/title_screen_init.c`. Unlike those files, `level_state.c` had
 no prior reference to `struct AudioContext` anywhere at file scope, so
 the tag's first appearance was inside this `extern` declaration's own
 parameter list - triggering `agbcc`'s "declared inside parameter list"

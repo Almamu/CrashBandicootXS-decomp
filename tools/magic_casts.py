@@ -2,7 +2,7 @@
 """`tools/magic_numbers.py --casts`: the casts in the game code, grouped
 by the thing being cast (#855).
 
-Scans the game code (src/ without src/.../data/, and include/; the C++ and
+Scans the game code (engine/src/ without engine/src/.../data/, and engine/include/; the C++ and
 the C that is left) for C-style casts `(T)x` and puts each one under the
 thing it converts: a field (`Sprite::x`, the class that declares the
 member and the member path from there), a local or a parameter (`local x

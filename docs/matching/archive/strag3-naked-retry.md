@@ -5,8 +5,8 @@ retries, each with an open parked-function issue. Both are now real C.
 
 | Function | File | Size | Before | Compiler | Result |
 |---|---|---|---|---|---|
-| `DrawPowerDialog` | `src/game/ui/power_dialog_draw.c` | 240 B | no draft in tree | agbcc (either) | **Closed** (#101) |
-| `DrawWrappedText` | `src/engine/text/wrapped_text.c` | 384 B | heavily pinned draft, "2 residuals" | old_agbcc | **Closed** (#102) |
+| `DrawPowerDialog` | `engine/src/game/ui/power_dialog_draw.c` | 240 B | no draft in tree | agbcc (either) | **Closed** (#101) |
+| `DrawWrappedText` | `engine/src/engine/text/wrapped_text.c` | 384 B | heavily pinned draft, "2 residuals" | old_agbcc | **Closed** (#102) |
 
 ## DrawPowerDialog
 

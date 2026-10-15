@@ -16,7 +16,7 @@ as of
 
 ## Parked (`NON_MATCHING`, not yet byte-exact) - 1 function
 
-- **`CollidePlayerWithObjects`** (`src/player/player_event.c`) - a two-flag-gated
+- **`CollidePlayerWithObjects`** (`engine/src/player/player_event.c`) - a two-flag-gated
   teardown/notification step on `self`, the same still-unnamed "big
   object" (at least 0x108 bytes) `player_update.c`/`player_init.c`
   already work on. Guarded by `self+0x105` (a "torn down already"
@@ -211,7 +211,7 @@ as of
   starting point, including the exact function this write-up closes
   (as far as it could be closed) and the `GetSpriteFrame`/`GetSpriteFrameAnchor`
   keyframe-lookup convention referenced above.
-- `src/objects/sprite_anim.c` - `CollidePartList`'s own doc comment
+- `engine/src/objects/sprite_anim.c` - `CollidePartList`'s own doc comment
   (the "relocate then unpack" idiom this function's first branch
   mirrors) and `CollidePartWithPlayer`/`CollidePartWithObject`'s doc comment (the
   precedent for this exact "argument already in the right stack
@@ -222,7 +222,7 @@ as of
 
 ## Matched: old_agbcc and a by-value box
 
-`CollidePlayerWithObjects` is now real C (`src/player/player_event.c`), and
+`CollidePlayerWithObjects` is now real C (`engine/src/player/player_event.c`), and
 `asm/code_3_2_16_ab9c.s` is gone. `player_event.o` is on the Makefile's
 `OLD_AGBCC_OBJS`. It is the only function in that file, so no other
 function had to be rechecked.

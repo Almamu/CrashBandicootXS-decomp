@@ -11,8 +11,8 @@ semantic account.
 
 ## Callers
 
-No caller in already-decompiled `src/` calls `UpdateMegaMix` directly
-(`grep -rn "UpdateMegaMix("` over `src/` is empty) - it's presumably
+No caller in already-decompiled `engine/src/` calls `UpdateMegaMix` directly
+(`grep -rn "UpdateMegaMix("` over `engine/src/` is empty) - it's presumably
 invoked through a function-pointer table still raw/unexamined
 elsewhere, the same "no free caller-side context" situation as most of
 this large action-table family.
@@ -142,7 +142,7 @@ case, this was recognized immediately and NAKED-transcribed rather than
 re-attempted from scratch.
 
 Transcribed mechanically from `asm/code_3_2_17_17ab0.s` (now retired -
-its one function moved to the new `src/game/bosses/mega_mix_update.c`),
+its one function moved to the new `engine/src/game/bosses/mega_mix_update.c`),
 keeping the ROM's own `_0XXXXXXX` hex-address labels verbatim as plain,
 file-local asm symbols (safe since each is a unique ROM address) - the
 same approach `action_ctrl_event.c`'s `ActionCtrlHandleEvent`, `action_ctrl_run_jump.c`'s

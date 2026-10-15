@@ -1,7 +1,7 @@
 # Issue #21: 0x08017524-0x08017A44, graphics - a D-pad-driven actor-part controller
 
 All 25 functions are byte-exact matched as plain C in the new
-`src/game/crash/input_ctrl.c` (named by address, following
+`engine/src/game/crash/input_ctrl.c` (named by address, following
 `action_ctrl_run_jump.c`'s precedent, since what this object controls in-game
 isn't established). It replaces the tail of `asm/code_3_2_17_16048.s`,
 which now ends at `SetPlayerCtrlMotionXPending` (the rest of that file is issue #20).
@@ -55,7 +55,7 @@ thunks), are what gcc's C++ front end emits, so this object was very
 likely written in C++. The C here models the vtable/PMF layouts as
 structs; nothing is renamed.
 
-UNUSED - no reference anywhere (the asm/ sources, src/, and a whole-ROM
+UNUSED - no reference anywhere (the asm/ sources, engine/src/, and a whole-ROM
 Thumb pointer scan): the six byte accessors and `SetInputCtrlMotionYPending`-
 `IsInputCtrlMotionYPending`. Matched anyway.
 
@@ -126,7 +126,7 @@ All 25 functions still match. What became unnecessary:
   and the `dirtyB` test is a plain `if`.
 - The virtual-call macros use `if (1) { } else (void)0` instead of
   `do`/`while (0)` (both match here; this is the form
-  `include/actor_self.h` uses).
+  `engine/include/actor_self.h` uses).
 
 Still needed under old_agbcc: `InputCtrlHandleEvent`'s `s32 lo = 1` lower bound
 (with a literal `1`, gcc folds `>= 1` into `> 0`), and the

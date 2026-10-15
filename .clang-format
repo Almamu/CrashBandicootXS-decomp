@@ -7,7 +7,7 @@
 # (Linux-style braces, 4-space indent, `type *name`, unindented case labels)
 # with the least churn. Formatting must never change the object code, so:
 # include order is left alone, macro bodies are left alone (the matching
-# macros in include/match.h, BOX_ADDR, ...), and comments and string
+# macros in engine/include/match.h, BOX_ADDR, ...), and comments and string
 # literals are never reflowed.
 ---
 Language: Cpp

@@ -5,7 +5,7 @@
 
 | Function | File | Compiler | Result |
 |---|---|---|---|
-| `DrawVvLogoPieces` | `src/game/ui/company_logos.c` (new) | old_agbcc, strength reduction on | matched |
+| `DrawVvLogoPieces` | `engine/src/game/ui/company_logos.c` (new) | old_agbcc, strength reduction on | matched |
 
 ## File split
 

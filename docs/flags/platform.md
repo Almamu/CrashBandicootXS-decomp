@@ -1,6 +1,6 @@
 # `Platform::type`: what a platform does (#843)
 
-A level platform (`class Platform`, include/game/objects/platform.hpp) has a `type`
+A level platform (`class Platform`, engine/include/game/objects/platform.hpp) has a `type`
 (+0x78). Platform::Create takes it from the platform's spawn record, unless
 the spawn kind forces one. Every platform that gets a PlatformMover also
 copies the type into the mover's `kind` (+0x10). The names,

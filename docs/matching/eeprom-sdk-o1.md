@@ -163,7 +163,7 @@ is built with the setting it was compiled with.
   old `continue` chain.
 
 The functions keep the project's `s32` return types, which the callers
-in `src/engine/save/save_data.cpp` and the siblings in
+in `engine/src/engine/save/save_data.cpp` and the siblings in
 `eeprom_read_write.c` declare; the SDK returns `u16`, and the code is the
 same either way because every result is a `u16` local.
 
@@ -187,13 +187,13 @@ Searched for, and nothing else found:
 - **Game code that looks like library code.** `irq.c` (IRQ table
   setup, VBlank handler, key reading), `memory.c` (heap), `rand.c`,
   `number_format.c`/`string.c`/`printf.c` (`itoa`, `strcat` etc. on `u8 *`),
-  `bios_util.cpp` and the link-cable/SIO files (`src/engine/link/*.c`, a custom
+  `bios_util.cpp` and the link-cable/SIO files (`engine/src/engine/link/*.c`, a custom
   CRC-16 handshake) sit in the game's own address range with the
   game's own data structures, and none follows an SDK source. As a
   check, the pinned `irq.c` functions `DisableVBlankHandler`, `UpdateKeys`
   and `ClearKeys` (the last two in `key_input.cpp` since #767) written as plain C are 11/26/5 halfwords off at
   **both** -O1 and -O2, so -O1 does not explain their pins.
-- **Whole-tree sweep.** Every `src/**/*.c` was compiled at -O1 (agbcc
+- **Whole-tree sweep.** Every `engine/src/**/*.c` was compiled at -O1 (agbcc
   and old_agbcc) and compared per function. About 200 objects also
   match at -O1, but those are small functions that come out the same
   at either level, pins included, so this says nothing about how they

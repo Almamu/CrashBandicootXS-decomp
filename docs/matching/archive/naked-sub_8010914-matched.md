@@ -1,6 +1,6 @@
 # `GetTopCrate`/`GetBottomCrate` converted from NAKED transcription to real matched C
 
-`GetTopCrate` and `GetBottomCrate` (`src/crates/crate_stack.c`, the
+`GetTopCrate` and `GetBottomCrate` (`engine/src/crates/crate_stack.c`, the
 "get prev"/"get next" neighbor-list-walk-and-filter helpers) had been
 parked as byte-correct NAKED asm transcriptions - see
 [issue-13-fc70-continuation.md](./issue-13-fc70-continuation.md) for

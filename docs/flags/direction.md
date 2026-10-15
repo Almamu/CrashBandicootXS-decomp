@@ -1,7 +1,7 @@
 # The direction bits: `Sprite::dir`, `hitAxes`, `hitMask` (#843)
 
 Four bytes and words of the sprite objects hold the same four direction
-bits. The names, `PART_DIR_*`, are in include/game/entities/sprite_flags.h (sprite_obj.hpp
+bits. The names, `PART_DIR_*`, are in engine/include/game/entities/sprite_flags.h (sprite_obj.hpp
 includes it). They replace player.hpp's `PLAYER_DIR_*` and
 `PLAYER_HIT_X`/`PLAYER_HIT_Y`, which named the same bits on the player.
 

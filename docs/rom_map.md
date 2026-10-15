@@ -34,7 +34,7 @@ counts are upper bounds, not precise figures.
 
 238.2 KB of code between the ROM header and the start of `.rodata`
 (`0x08000000`-`0x0803B8B0`). Only **5.2 KB (2.2%)** is matched to C so
-far (`src/*.c`, tracked precisely as objdiff units per
+far (`engine/src/*.c`, tracked precisely as objdiff units per
 [`docs/progress_report.md`](./progress_report.md)); the rest is still raw
 `asm/code_3_*.s`, this document's subject.
 
@@ -99,11 +99,11 @@ across the *entire* address range rather than one clump.
 Spot-checked two of the small chains (`DestroyCtrl`, `DestroySpriteObj`) and
 found the *same* code shape in both: set one field of a passed-in struct
 to a ROM data pointer, then conditionally call `OperatorDelete` (matched,
-`src/game/ui/power_dialog_draw.c`/`graphics.c`) based on a bit in the second
+`engine/src/game/ui/power_dialog_draw.c`/`graphics.c`) based on a bit in the second
 argument. Both point at a data symbol from the same family -
 `gCtrlVtable`/`gEntityVtable` - which turns out to be
 **93 distinct, individually-labeled, variable-sized entries** in
-`data/data.s` (`gEntityVtable` onward, sizes from `0x58` to
+`games/xs/data/data.s` (`gEntityVtable` onward, sizes from `0x58` to
 `0x78`+ bytes each in the two sampled) - a genuinely large table, clearly
 separate from the 3-vtable/7-category actor system this document already
 confirmed. Read as **per-placeable-object-type descriptors** - crates,
@@ -154,7 +154,7 @@ hot IWRAM globals (`gEntityFlags`-`0300130C`) already tied to the
 confirmed core throughout this investigation. Read as: this remainder is
 very likely more of the same system, just small individual functions
 this pass's seeds don't happen to reach directly (called only via
-function pointer/jump table, or only from already-matched `src/*.c` this
+function pointer/jump table, or only from already-matched `engine/src/*.c` this
 BFS can't see) - not a fourth hidden category. **92.3% is a reasonable
 place to stop for this pass**; closing the last ~7.7 KB from here means
 reading individual leftover functions one at a time rather than finding
@@ -353,7 +353,7 @@ mechanically the same update cycle here, not just two categories that
 happen to call into each other.
 
 `+0x70` and `+0xC4` had no direct-write hits from this search - either
-written somewhere outside `code_3_2.s` (an already-matched `src/*.c`
+written somewhere outside `code_3_2.s` (an already-matched `engine/src/*.c`
 file, invisible to this grep), through a level of indirection this
 pattern search doesn't catch (a computed offset rather than a literal
 `#0x70`/`#0xC4`), or genuinely not written at all in the raw code
@@ -417,7 +417,7 @@ dispatch table**, not a guess.
 The table sits **inside the exact same `0x0816Bxxx`-`0x0816Dxxx` region**
 this document already tied to `game_loop` (`gLevelTable`) and
 to `DrawScaledSprite`'s background-centering math
-(`gObjSizeWidths`/`gObjSizeHeights`) - and in `data/data.s`,
+(`gObjSizeWidths`/`gObjSizeHeights`) - and in `games/xs/data/data.s`,
 it currently sits inside a still-unlabeled stretch between
 `gEntitySpawnFuncs` and `gThemePaletteCycle2` (0x170 bytes, only
 partially covered by the confirmed 0x94-byte pointer run - the rest is
@@ -442,15 +442,15 @@ one sample read.
 
 | Address range | Size | Category | Confidence | Evidence |
 |---|---|---|---|---|
-| `0x08000000`-`0x08006C00` | ~26 KB | `system`/`util`/`graphics` | **matched** | `src/*.c`, see progress_report.md |
+| `0x08000000`-`0x08006C00` | ~26 KB | `system`/`util`/`graphics` | **matched** | `engine/src/*.c`, see progress_report.md |
 | `0x080014A4`-`0x08006700` | 20.6 KB | audio (SFX) | medium | anchored on `PlaySfx`; see "The SFX system" below |
 | `0x08006700`-`0x08006C00` | ~1.3 KB | `graphics` | **matched** | `power_dialog_draw.c`/`graphics.c` (since #767 `game_progress.cpp`, the `gfx/` manager files, `objects/entity.cpp`) |
 | `0x0801E578`-`0x08029ED0`ish | ~27 KB | graphics loading + HUD + actor init | high | `LoadGraphicsPackage`, `InitSmallFont/B`, `FontMeasureText`, `FontUploadTiles`, `DestroyFont`, `InitObjTileFreeList`, `LoadSpriteFrameTiles`, `SetupSpriteFrameOam`, `DecompressCategorySpriteSheet`, `SetupActorVramPool`, `InitActorCategory` all fall in this stretch, tightly packed |
 | `0x08029ED0`-`0x0802B348`ish | ~5.6 KB | actor system | high | `SelectActorCategory`, `InitActorPart`, `DrawActor`, `ConstructAnimTableState`, `ConstructActorPart` - the vtable/animation system documented in `docs/graphics.md` |
 | `0x080354E0`-`0x08035780`ish | ~0.7 KB | graphics loading | high | `InitTitleScreen`, `LoadTitleScreenBg`, `LoadTitleScreenObjTiles` |
 | `0x08037110`-~`0x0803A950` | ~14 KB | audio (GAX2) | medium, **narrowed this pass** | see "Narrowing the GAX2 boundary" below |
-| `0x0803A950`-`0x0803B058` | ~1.5 KB | `system` (asset loading) | high | `LZ77UnCompVram`/`RLUnCompVram`, confirmed called from the already-matched `src/engine/gfx/asset.cpp` |
-| `0x0803B058`-`0x0803B060` | 8 B | `graphics` | **matched** | `src/game/entities/anim_part.cpp` |
+| `0x0803A950`-`0x0803B058` | ~1.5 KB | `system` (asset loading) | high | `LZ77UnCompVram`/`RLUnCompVram`, confirmed called from the already-matched `engine/src/engine/gfx/asset.cpp` |
+| `0x0803B058`-`0x0803B060` | 8 B | `graphics` | **matched** | `engine/src/game/entities/anim_part.cpp` |
 | `0x0803B060`-`0x0803B8B0` | ~2.1 KB | actor system | medium | `GetAnimFrameData`, 43 other still-unnamed neighbors in `code_3_3.s` |
 
 ## Two big unnamed systems
@@ -480,7 +480,7 @@ itself part of any subsystem documented so far - player control, physics/
 collision, camera, or level scripting are all plausible, none confirmed.
 **The single largest uncharted stretch in the ROM.**
 
-Cross-referencing calls against every *already-matched* `src/*.c`
+Cross-referencing calls against every *already-matched* `engine/src/*.c`
 function (not just the raw-asm landmarks the automated pass above uses)
 confirms the "self-contained, touches everything only lightly" read:
 only 17 of the zone's 804 functions call out to real matched code at
@@ -502,7 +502,7 @@ closely-related "run one frame of \[mode/level-type A vs B\]"
 entry points). Given a struct pointer (fields observed out to at least
 `+0xA8`, so the struct is at least 0xAC bytes), it: calls
 `FlushVramDmaQueue` (draining the queued VRAM DMA transfers - already
-matched, `src/gfx/graphics.c`), then assembles and writes **every
+matched, `engine/src/gfx/graphics.c`), then assembles and writes **every
 core PPU register that isn't already owned by a matched file** in one
 pass - `REG_BG0HOFS` (`0x04000010`, driven by a monotonically
 incrementing per-object counter at `+0x7C` shifted right 3 - a fixed-rate
@@ -587,7 +587,7 @@ the function it's about.
 
 **Confirmed, not just guessed** - dumped all 3×13 = 39 raw pointers out
 of `gActorCategoryVtables` (the category vtable array, see
-`include/engine/actor/actor_anim.h`) directly from `baserom.gba` and checked each
+`engine/include/engine/actor/actor_anim.h`) directly from `baserom.gba` and checked each
 against this zone's bounds:
 
 - **Slot 0** (the constructor) resolves to `ConstructAnimTableState`
@@ -600,7 +600,7 @@ against this zone's bounds:
   `docs/graphics.md`) rather than by type individually - types 1 and 2
   share a sprite family, so they share a constructor.
 - **Slots 2-6** (13 - the ones "that actually differ between types" per
-  `include/engine/actor/actor_anim.h`'s comment) land **inside this 40.4 KB zone for
+  `engine/include/engine/actor/actor_anim.h`'s comment) land **inside this 40.4 KB zone for
   all three types**, 5 functions each, 17 unique addresses total (type
   1 and 2's slots 0/1 being shared accounts for 17 rather than 19):
   type 0 at `0x0802D7B1`-`0x0802DFDD`, the type-1/2-shared pair at
@@ -616,7 +616,7 @@ Tracing the call graph **from just those 17 confirmed addresses**,
 staying within this zone, reaches **115 of 331 functions (17.0 KB,
 ~42%)** - real, direct confirmation that a large share of this zone is
 genuinely the per-type behavior implementation (`Actor0_*`/`Actor1_*`/
-`Actor2_*` placeholders from `include/engine/actor/actor_anim.h`, plus whatever they
+`Actor2_*` placeholders from `engine/include/engine/actor/actor_anim.h`, plus whatever they
 call). Adding `InitActorPart`'s own 34 in-zone callers as extra seeds
 (the earlier pass under-counted this - it only followed edges *between*
 zone functions, and `InitActorPart` itself lives just outside the zone,
@@ -643,7 +643,7 @@ them directly:
   neighborhood.
 - **New finding: several of these runs also call `_call_via_r2`/
   `_call_via_r3`** - the text-drawing helpers already matched in
-  `src/engine/text/wrapped_text.c`/`power_dialog_draw.c` (`_call_via_r2` measures a
+  `engine/src/engine/text/wrapped_text.c`/`power_dialog_draw.c` (`_call_via_r2` measures a
   string's pixel width, `_call_via_r3` draws one). Meaning: at least some
   actor types render text as part of their behavior - a floating score,
   a countdown, a crate-contents readout, something along those lines.
@@ -652,9 +652,9 @@ them directly:
 - **A concrete link back to the 94 KB zone's own finding**: one of the
   IWRAM globals in that zone's hot cluster, `gOamBuffer`, is
   passed as the `struct oam_shadow_buffer *` argument to `HideUnusedOamEntries`
-  (matched, `src/gfx/graphics.c`) - and `HideUnusedOamEntries` shows up
+  (matched, `engine/src/gfx/graphics.c`) - and `HideUnusedOamEntries` shows up
   repeatedly as an outgoing call from these leftover actor runs too, as
-  does `WaitForVBlank` (matched, `src/engine/sys/irq.cpp`'s region). So the same
+  does `WaitForVBlank` (matched, `engine/src/engine/sys/irq.cpp`'s region). So the same
   OAM-shadow-buffer singleton and the same low-level sync helper get
   used by text layout, the 94 KB zone's frame-end display commit
   function, and these actor-behavior functions alike - one shared piece
@@ -837,7 +837,7 @@ but backed by a RAM table rather than a `gStaticData_` ROM one.
 **`SpawnHovercraft`** is the clearest of the three: writes directly into
 `gHovercraftX`/`B8`/`BC` - the exact family `HovercraftStateCloseIn` used two
 rounds ago - and calls **`GetAnimFrameBaseOffset`** (already matched,
-`src/game/vehicles/actor_destructors.cpp`). This is **hard confirmation that
+`engine/src/game/vehicles/actor_destructors.cpp`). This is **hard confirmation that
 `gUnknown_030015xx` is a real, animation-system-wired object**, not
 just a coincidentally-similar camera computation - `SpawnHovercraft` reads
 as its constructor/init step (packs scaled position args into the
@@ -919,7 +919,7 @@ would be the natural next step for anyone continuing this thread.
 
 A further pass read 11 more actor-zone functions. **Two new confirmed
 slots in the type-0 `category_vtable`** (`gActorCategoryVtables[0]`,
-`include/engine/actor/actor_anim.h`): `UpdateYeti` and `LoadYetiGraphics` both appear as
+`engine/include/engine/actor/actor_anim.h`): `UpdateYeti` and `LoadYetiGraphics` both appear as
 raw pointers at `0x081756D0`/`0x081756DC` - slot indices 3 and 6 of
 the 13-entry `fn[13]` array, previously unreversed. Both operate on
 the `gYeti`-rooted animation-linked family (call
@@ -959,7 +959,7 @@ cluster `gContinuePromptPalette0`/`532`/`552`/`572`.
 
 Follow-up on the two leads above. **The five `sub_802A5xx` siblings are
 field accessors into `category_descriptor.sub_effect_table`'s runtime-
-loaded array** (`include/engine/actor/actor_anim.h`, offset `0x14`, marked
+loaded array** (`engine/include/engine/actor/actor_anim.h`, offset `0x14`, marked
 "structure not reversed"). All five index a global pointer
 `gActorSpawnTable` - which `SelectActorCategory` itself sets directly
 from its own second parameter (`asm/code_3_2.s:73135`, inside
@@ -1047,7 +1047,7 @@ frame from per-level source data. Two parallel field sets
 (`gHovercraftMapCols`-family vs. `gAirshipMapCols`-family) suggest a
 P1/P2 pair, consistent with this session's other two-player findings.
 **`ConvertAirshipTiles` is called from `LoadAirshipGraphics`, a new confirmed
-`category_vtable` slot** (`include/engine/actor/actor_anim.h`) - lands at
+`category_vtable` slot** (`engine/include/engine/actor/actor_anim.h`) - lands at
 `gActorCategoryVtables`, **type 1, slot 6** - a real behavioral tie:
 this meter system is invoked as part of type-1's per-frame vtable
 dispatch.
@@ -1375,7 +1375,7 @@ projection helpers. **`UpdatePolarCheckpointCrate`** (from the same round) is a
 two-stage proximity/AABB state machine whose first-stage helpers,
 **`SetActorCheckpoint`** and **`CreatePolarCheckpointText`**, were read in a follow-up:
 `SetActorCheckpoint` resets the actor category's death counters
-(`gActorCategoryDeaths`, which `include/engine/actor/actor_anim.h`'s
+(`gActorCategoryDeaths`, which `engine/include/engine/actor/actor_anim.h`'s
 `category_descriptor.maskAssistDeaths`/`bonusKindDeaths` are compared with) and
 also pokes the documented lap-counter function `SetCheckpointAtPlayer` - shared
 reset/teardown infrastructure, confirmed by a second, unrelated
@@ -1496,7 +1496,7 @@ consistent with the earlier "homing/seek-toward-point" reading.
 ### Issue #59 Phase 2 second half closes the singleton's camera-follow RAM family, and corrects a floor/ceiling misreading
 
 `docs/matching/archive/issue-60-61-gap-31a6c-part2.md` matched/NAKED all 30
-functions from `0x080326E4` to `0x08033804` (`src/game/bosses/hovercraft.c`).
+functions from `0x080326E4` to `0x08033804` (`engine/src/game/bosses/hovercraft.c`).
 Two things worth recording here rather than only in that writeup:
 
 - **This pass's "second RAM-struct family" guess above turned out not
@@ -1534,7 +1534,7 @@ instead of one blob:
 | **Level-parameterized logic** | 31.3 KB | 67 | Reachable from the dispatch chain *and* reads the per-level descriptor family (`gStaticData_0816Bxxx`-`0816Dxxx`) - game logic whose behavior varies by which level is loaded. |
 | **Entity/object spawn (in-loop)** | 4.8 KB | 50 | Reachable from the dispatch chain *and* references the 93-entry placeable-object family (`gStaticData_087Exxx`) - spawn/construct calls made as part of the main loop. |
 | **`UpdateGameFrame`-`MainLoop` cluster** | 18.3 KB | 259 | Cross-checked below - total zone size revised up from the original ~17.1 KB/~101 connectivity-only estimate once the whole zone was actually counted; 65% is one dominant connected component, the same signature every other confirmed subsystem here shows. |
-| **Standalone entity constructors** | 1.0 KB | 39 | Reference the entity family but aren't reachable from the dispatch chain - presumably called from elsewhere (another vtable, or matched `src/*.c`). |
+| **Standalone entity constructors** | 1.0 KB | 39 | Reference the entity family but aren't reachable from the dispatch chain - presumably called from elsewhere (another vtable, or matched `engine/src/*.c`). |
 | **Standalone level-config readers** | 1.3 KB | 13 | Same story, for the level-config family. |
 | **Unidentified** | 9.3 KB | 325 | No landmark reachability, no data-family signature - genuinely uncharacterized. |
 
@@ -1800,7 +1800,7 @@ dispatched (all reached via `bl`); the two concrete new leads:
   suggesting they're sibling state machines on the same object-type
   family. `UpdateSwimCtrl` (2088 B) is a per-frame input/state-machine
   handler: reads D-pad input via the already-matched `GetDpadDirection`
-  (`src/engine/sys/key_input.cpp`), gates on a child object's `+0x2D` type field
+  (`engine/src/engine/sys/key_input.cpp`), gates on a child object's `+0x2D` type field
   against `0x1d`/`0x1f`/`0x20`, then dispatches a 34-case jump table on
   `self+0x22` - strong evidence of core **player movement/action
   control**, referencing a new unlabeled table `gSwimCtrlStateFuncs`.
@@ -2267,7 +2267,7 @@ custom RLE/delta token-stream decoder** - not the already-documented
 LZ77/RL wrappers in `graphics_loading`. Both look up a base pointer
 via `[self+4]` indexed by a halfword table (`table[idx]*4 + base` -
 the same indexing *shape* as `anim_table_record`/`table_B` in
-`include/engine/actor/actor_anim.h`, but a different scheme, decoding 16-bit values
+`engine/include/engine/actor/actor_anim.h`, but a different scheme, decoding 16-bit values
 rather than tile pixel data), then decode a token stream with a budget
 counter starting at `0x7F` and three run modes per token byte
 (literal-fill run, signed-delta-accumulate run, raw-copy run).
@@ -2313,7 +2313,7 @@ not tied to one data type:
   via `((y&7)<<4 | (x&0xf))<<1` - exactly a 16-wide x 8-tall halfword
   grid (`16*8*2=256B`, matching the cache slot size precisely). The
   low byte of the fetched halfword (bounds-checked `<=0x23`/35) indexes
-  **`gTerrainHeights0`** (a real ROM label, `data/data.s:511`) at
+  **`gTerrainHeights0`** (a real ROM label, `games/xs/data/data.s:511`) at
   36-byte stride - a **36-entry tile-type/terrain-property table**.
   The high nibble of the same halfword is a separate flag byte.
 
@@ -2321,7 +2321,7 @@ Neither consumer's record-index table resolved to a named
 `gStaticData_` symbol - both are reached through runtime pointer
 fields, presumably set up by an unread constructor. Confidence: high
 on both call chains and the `gTerrainHeights0` tie-in (read
-directly, cross-checked against `data/data.s`); medium on "terrain-
+directly, cross-checked against `games/xs/data/data.s`); medium on "terrain-
 property table" as the specific semantic label for that table.
 
 ### More of the cluster: the frame-end flush hub, a `CheckTerrainFlag`-style API, and collision response
@@ -2431,7 +2431,7 @@ array.
 
 A further pass read six more functions in this cluster, none showing
 the paired-vtable `{0,ptr}` shape. The standout: **`CountCategoryCrates`**
-(~140 B) resolves part of `include/engine/actor/actor_anim.h`'s explicitly-marked-
+(~140 B) resolves part of `engine/include/engine/actor/actor_anim.h`'s explicitly-marked-
 unreversed `category_descriptor.sub_effect_table` field (`+0x14`).
 Given a category index, it indexes `gActorCategories[idx]`, reads
 `+0x14` (the sub-effect table pointer) and `+0x00` (`type`), then
@@ -2760,7 +2760,7 @@ tables:
   - show a hint icon when near a specific object type, distance varying
   by type.
 - **`ApplySwimCtrlSwimDrift`** (484 B): dispatches on a `self+8` type (`2`/`3`/
-  default), calls the matched `GetDpadDirection` (`src/engine/sys/key_input.cpp`), gates
+  default), calls the matched `GetDpadDirection` (`engine/src/engine/sys/key_input.cpp`), gates
   on `gRoomFrameCount`'s low 7 bits `==0` (a periodic ~128-frame
   check - `gRoomFrameCount` is the same counter the post-fade
   investigation above also touches) **and** an input check
@@ -2980,7 +2980,7 @@ characterized) among others.
 Switched from chasing individual functions to mapping the
 `0x0816Bxxx`-`0x0816Dxxx` data region itself, now that three unrelated
 systems (`game_loop`, `menu_ui`, and the bonus-popup dispatch above)
-have all turned out to read from it. `data/data.s` has **108 labeled
+have all turned out to read from it. `games/xs/data/data.s` has **108 labeled
 symbols** in this range - 90 actually referenced from `code_3_2.s`
 (7956 bytes), only 18 (424 bytes) with no code reference found. Sizes
 range from 2 bytes to 1300 bytes with no uniform stride across the whole
@@ -3342,7 +3342,7 @@ pause-menu screens sharing one constructor toolkit**:
   alpha-ish counter `0x1f`→`0`, VBlank-waits for a button press, ramps
   back `0`→`0x10`) - a complete modal-dialog lifecycle. (`DrawPowerDialog`,
   one of `PowerDialogLoop`'s callees, is already partially matched as
-  `src/game/ui/power_dialog_draw.c`, parked under `#if NON_MATCHING` per an asm
+  `engine/src/game/ui/power_dialog_draw.c`, parked under `#if NON_MATCHING` per an asm
   comment right after it - a useful cross-reference for whoever
   continues this thread.)
 - **`InitPauseMenu`, `InitPowerDialog`, `InitPauseTimeTrialPage` are all instances of
@@ -3398,7 +3398,7 @@ screen plus a separate one-shot achievement-notification sequence.**
   other sits in a different, level-init-adjacent context (near
   `SetupActorVramPool`), not fully characterized.
 - **`ShowPowerDialog` has no `bl` caller in raw asm - it's called from
-  already-matched C code**, `src/game/ui/power_dialog_draw.c`. Four tiny
+  already-matched C code**, `engine/src/game/ui/power_dialog_draw.c`. Four tiny
   wrappers there (`ShowTurboRunDialog`...`ShowSuperBodySlamDialog`) each call it with a fixed
   `(label1, label2, type)` triple, matching `InitPowerDialog`'s dialog-box
   shape exactly. These four wrappers are called from `UpdateGameFrame`'s
@@ -3435,14 +3435,14 @@ The ~0.4 KB of tiny leaf singletons left unlabeled by the split above
 noise. **`FadePaletteToBlack`**, the very first function in the entire file,
 loops calling **`DarkenPalette`** at increasing factors (`0, 2, 4, ...,
 0x10`) - and `DarkenPalette` is not raw asm at all, it's **already matched**
-(`src/engine/gfx/fade.cpp`), documented there as blending the whole
+(`engine/src/engine/gfx/fade.cpp`), documented there as blending the whole
 512-entry palette toward black by `factor/16` per channel. Between each
-step, `FadePaletteToBlack` calls `WaitForVBlank` (matched, `src/engine/sys/irq.cpp`'s
+step, `FadePaletteToBlack` calls `WaitForVBlank` (matched, `engine/src/engine/sys/irq.cpp`'s
 region - a VBlank-wait/commit helper used throughout this document) and
 DMAs the result out - the textbook shape of a **fade-to-black effect**,
 one step per frame. `fade.c`'s own header comment already
 anticipated this: *"Sits right after `FadeBrightness`
-(`src/engine/gfx/fade.cpp`) and before whatever's still raw in
+(`engine/src/engine/gfx/fade.cpp`) and before whatever's still raw in
 `asm/code_3_1_7.s`"* - this is that continuation, finally identified.
 
 The other 12 functions in the cluster (16-24 B each) are get/set
@@ -3558,7 +3558,7 @@ found across this session's actor/game_loop reads
 (`gSwimCtrlTurnSpeeds`, `0816C070`, `0816C250`, `0816C308`/`35F`/
 `5F0`, `0816C460`, `0816C86C`, ...) are scattered tables or one region.
 **They're one fully contiguous, byte-precise-labeled ROM span** -
-`data/data.s` already splits the entire range from the 42-slot action
+`games/xs/data/data.s` already splits the entire range from the 42-slot action
 table `gActionCtrlStateTable` (ends `0x0816C070`) straight through to
 the 36-slot per-level master table `gCutscenes` (21 KB,
 above) into ~90 individually-labeled `.incbin` chunks with zero gaps -
@@ -4025,7 +4025,7 @@ concrete evidence: `LZ77UnCompVram`/`RLUnCompVram` sit at
 `0x0803A950`, only ~630 bytes after the last address `docs/audio.md`
 names as GAX2-internal (`0x0803A325`) - and those two wrapper functions
 are **confirmed non-audio**, directly referenced by
-`src/engine/gfx/asset.cpp`'s already-matched `LoadTaggedAsset`. Since
+`engine/src/engine/gfx/asset.cpp`'s already-matched `LoadTaggedAsset`. Since
 functions from one original source file are contiguous in this ROM, GAX2
 can't extend past wherever its last real function ends, somewhere at or
 before `0x0803A950` - **at least 1.5 KB less than previously estimated**,

@@ -3,7 +3,7 @@
 All 13 functions from this chunk now have a byte-exact answer - either
 real C or a NAKED transcription - with the whole raw span
 (`asm/code_3_2_20_28568_c99c_31784_33ef4_34aa4.s`) removed, replaced by
-`src/game/ui/credits.c`.
+`engine/src/game/ui/credits.c`.
 
 This picks up straight from
 [issue-63-final-raw-actor.md](issue-63-final-raw-actor.md): the first

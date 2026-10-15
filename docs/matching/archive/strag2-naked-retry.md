@@ -4,7 +4,7 @@ This pass covered six unfinished functions that no open issue tracked:
 
 - Two still-raw functions from issue #62 (closed too early), parked back
   in PR #216.
-- Four NAKED transcriptions from issue #18's `actor_part38*` family (now `src/game/crash/action_ctrl*.c`), in
+- Four NAKED transcriptions from issue #18's `actor_part38*` family (now `engine/src/game/crash/action_ctrl*.c`), in
   the confirmed old_agbcc range.
 
 **5 of 6 closed.** All five match under both agbcc and old_agbcc.

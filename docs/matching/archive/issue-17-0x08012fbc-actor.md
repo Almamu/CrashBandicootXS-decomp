@@ -20,10 +20,10 @@ accurate by this pass's own full transcription.
 
 ## New files
 
-`src/player/action_ctrl_run_jump.c` (`ActionCtrlStateRun`/`ActionCtrlStateJump`,
-0x08012FBC-0x080134B8), `src/game/crash/action_ctrl_states.c`
+`engine/src/player/action_ctrl_run_jump.c` (`ActionCtrlStateRun`/`ActionCtrlStateJump`,
+0x08012FBC-0x080134B8), `engine/src/game/crash/action_ctrl_states.c`
 (`ActionCtrlStateAirborne`, 0x080134B8-0x080138E8), and
-`src/game/crash/action_ctrl_states.c` (`ActionCtrlStateFlipBodySlamStart`/`ActionCtrlStateSlide`,
+`engine/src/game/crash/action_ctrl_states.c` (`ActionCtrlStateFlipBodySlamStart`/`ActionCtrlStateSlide`,
 0x080138E8-0x08013C60). All three are named `actor_part_<addr>.c`
 (address-suffixed) rather than the next sequential `actor_partNN`
 (`actor_part85.c`/`86.c`/...) - `actor_part85.c` (now
@@ -41,7 +41,7 @@ untouched files (`title_screen_init.c`, `language_select_setup.c`,
 as a "pre-existing repo bug" once `git diff --stat HEAD -- ...` was
 checked and showed 716 insertions/369 deletions against a file this
 pass had supposedly only ever *created* fresh. Restored via
-`git checkout HEAD -- src/game/ui/starfield.c` and the real new
+`git checkout HEAD -- engine/src/game/ui/starfield.c` and the real new
 content moved to address-suffixed names instead, which fixed the link
 on its own with no other changes needed. Filed here as a standing
 warning: **check for an existing file before naming a new
@@ -282,8 +282,8 @@ itself stays open - only 5 of its 25 scoped functions are covered here
 
 This pass covers the rest of the chunk, the two raw files
 `asm/code_3_2_17_12af4.s` (`ActionCtrlStateSpin`-`ActionCtrlStateCrouch`, now
-`src/game/crash/action_ctrl_states.c`) and `asm/code_3_2_17_14674.s`
-(`ActionCtrlStateLeftGround`-`ActionCtrlStateHangStop`, now `src/player/action_ctrl_hang.c`).
+`engine/src/game/crash/action_ctrl_states.c`) and `asm/code_3_2_17_14674.s`
+(`ActionCtrlStateLeftGround`-`ActionCtrlStateHangStop`, now `engine/src/player/action_ctrl_hang.c`).
 Both raw files are retired. Of the 14 functions, 9 are real C and 5 are
 NAKED transcriptions, each with its C kept under `#if NON_MATCHING`.
 
@@ -309,7 +309,7 @@ retry, which this pass did not attempt.
 
 ### Shared header
 
-The player/action object now has a struct view, `include/game/crash/action_input.h`
+The player/action object now has a struct view, `engine/include/game/crash/action_input.h`
 (`struct act`, `struct act_part`). The header also holds the method-call
 macros, the input-snapshot accessors and the trio helpers both files
 use. The older files in this family still use raw offsets.
@@ -393,7 +393,7 @@ compilers. `ActionCtrlStateSlide` differs in 35 bytes under the current agbcc.
 
 ### What made them match
 
-- **Trio helpers with parameters.** `include/game/crash/action_input.h`'s
+- **Trio helpers with parameters.** `engine/include/game/crash/action_input.h`'s
   `ActSetNext` idea applies to the +0x31/+0x2F/+0x27 trio too. Each file
   has local inline helpers. `ActQueue27(self, cur, next)` stores a
   literal 1 in +0x2F. `ActTrio27(self, cur, flag, next)` stores a caller
@@ -410,9 +410,9 @@ compilers. `ActionCtrlStateSlide` differs in 35 bytes under the current agbcc.
   writes the tail out on each path. gcc's cross-jumping merges them back
   and each copy keeps its own CSE state. A shared `goto` label instead
   starts a new basic block, and the 1 stored after it gets reloaded.
-- **`ACT_CALL1`/`ACT_CALL2`** (new in `include/game/crash/action_input.h`). These
+- **`ACT_CALL1`/`ACT_CALL2`** (new in `engine/include/game/crash/action_input.h`). These
   are the method-call macros in `if (1) { ... } else (void)0` form, the
-  same finding as `include/actor_self.h`. `ACT_VCALL`'s
+  same finding as `engine/include/actor_self.h`. `ACT_VCALL`'s
   `do { } while (0)` puts loop notes around every call. CSE then won't
   carry the fire test's constant 1 (kept in `r6`/`r7`) into the +0x2F
   stores after the calls, but the ROM does. `ActionCtrlStateRun`,

@@ -21,7 +21,7 @@ is still open. They are kept up to date.
 
 The general reference for the matching techniques (old_agbcc, per-file
 flags, register pins and holds, the `asm` nudges and their
-[include/match.h](../../include/match.h) macros, and the like) is
+[engine/include/match.h](../../engine/include/match.h) macros, and the like) is
 [docs/matching_techniques.md](../matching_techniques.md). It links the
 archive cases below that each technique came from.
 
@@ -42,7 +42,7 @@ a particular workaround or build flag. The file names follow the old
 convention: `issue-<N>-<slug>.md` for a GitHub chunk or parked-function
 issue `<N>`, and `<slug>.md` for passes that weren't tied to one issue.
 Function and file names inside the older files may be the pre-rename
-ones (`sub_XXXX` labels, old `src/` paths); `tools/file_layout_plan.tsv`
+ones (`sub_XXXX` labels, old `engine/src/` paths); `tools/file_layout_plan.tsv`
 at commit `ab4f9c9b` maps the file names from before #575's move to the
 ones after it (#844 removed it).
 

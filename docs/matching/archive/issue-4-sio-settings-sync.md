@@ -15,7 +15,7 @@ compare` ("La suma coincide").
 
 - **`EnableMusicVCountIrq`/`MusicVCountIrqHandler`** (audio) - installs a VCount-IRQ
   handler that forwards into the music player's existing per-tick fade
-  update (`UpdateAudio`, `src/engine/audio/audio.c`). That file's
+  update (`UpdateAudio`, `engine/src/engine/audio/audio.c`). That file's
   header comment already anticipated this pair by name. Matched.
 - **`MakeLinkHandshakeId`-`ReadSaveData`ish** (system) - the genuine GBA
   multiplayer link-cable/SIO transport this document's `rom_map.md`
@@ -39,32 +39,32 @@ compare` ("La suma coincide").
   accessor (`GetSaveGameId`), the checksum validate/DMA-repair function
   (`ValidateSaveData`), and three per-row helpers
   (`ReadSaveSlot`/`WriteSaveSlot`/`EraseSaveSlot`) that directly extend
-  `struct save_data` from `include/settings_sync.h`
+  `struct save_data` from `engine/include/settings_sync.h`
   (issue #5). `EraseSaveSlot` in particular was already referenced by
   name in that header's `rowSelected` field comment and in
-  `src/engine/save/save_data.c`'s extern declaration, both written
+  `engine/src/engine/save/save_data.c`'s extern declaration, both written
   before this chunk landed.
 
 ## Matched (16)
 
-- `EnableMusicVCountIrq`, `MusicVCountIrqHandler` (`src/engine/audio/audio.c`) - VCount-IRQ
+- `EnableMusicVCountIrq`, `MusicVCountIrqHandler` (`engine/src/engine/audio/audio.c`) - VCount-IRQ
   registration and handler for the music player's per-tick update.
-- `LinkStop` (`src/engine/link/link_handshake.c`) - link-session "stop":
+- `LinkStop` (`engine/src/engine/link/link_handshake.c`) - link-session "stop":
   IME-guarded Serial/Timer3 IRQ disable, RCNT/SIOCNT/TM3CNT reset,
   IF acknowledge.
 - `LinkStart`, `LinkSetupSio`, `ResetLinkSession`, `DestroyLinkSession`,
-  `InitLinkSession`, `LinkSerialIntr`, `LinkTimer3Intr` (`src/engine/link/link_sio.c`)
+  `InitLinkSession`, `LinkSerialIntr`, `LinkTimer3Intr` (`engine/src/engine/link/link_sio.c`)
   - link-session "start" (counterpart to `LinkStop`), a small
   RCNT/SIOCNT reset helper, a reset-wrapper convenience function, a
   reset+conditional-teardown function (with an inert 4-iteration
   dead-address-computation loop that has no observable effect - kept
   byte-faithful since it's genuinely present in the ROM), the session
   object constructor, and the Serial/Timer3 IRQ handlers.
-- `LoadSaveData` (`src/engine/save/save_data.c`) - EEPROM-load-with-
+- `LoadSaveData` (`engine/src/engine/save/save_data.c`) - EEPROM-load-with-
   retry (up to 3 tries) plus marker/checksum validation, muting the
   music player across the transfer.
 - `CheckSaveChecksum`, `UpdateSaveChecksum`, `GetSaveGameId`, `StoreSaveData`,
-  `ReadSaveSlot`, `WriteSaveSlot`, `EraseSaveSlot` (`src/engine/save/save_data.c`)
+  `ReadSaveSlot`, `WriteSaveSlot`, `EraseSaveSlot` (`engine/src/engine/save/save_data.c`)
   - checksum compare/store, `versionNibble` accessor, EEPROM-save-with-
   retry (up to 5 tries, same music-mute pattern as `LoadSaveData`), and
   the three per-row default-refresh/force-set/mark-selected helpers.
@@ -119,7 +119,7 @@ register-choice nondeterminism (see `DrawPowerDialog`/`DrawSaveMenuTitle` for
 the established pattern this project has hit many times before):
 
 - **`MakeLinkHandshakeId`** (`asm/code_3_1_10_3_1cb8.s`, C in
-  `src/engine/link/link_handshake.c`) - the per-player CRC-16-style handshake-id
+  `engine/src/engine/link/link_handshake.c`) - the per-player CRC-16-style handshake-id
   hash helper. This project's first attempt at this specific table-walk
   idiom: the leading fill loop and the hash loop's setup match the
   ROM's exact registers, but the per-byte table-index computation
@@ -137,7 +137,7 @@ the established pattern this project has hit many times before):
   the function's size, on the assumption the gap is the same
   unresolved class documented elsewhere, not a semantic error.
 - **`ReadSaveData`, `WriteSaveData`** (`asm/code_3_1_10_3_2868.s`, C in
-  `src/engine/save/save_data.c`) - the EEPROM load/save block-loop
+  `engine/src/engine/save/save_data.c`) - the EEPROM load/save block-loop
   pair. Semantics fully confirmed; the shared IME-save/IE-clear/IME-
   restore snippet (repeated per exit path) routes the saved IME value
   through an extra register hop this compiler introduces that the ROM
@@ -145,7 +145,7 @@ the established pattern this project has hit many times before):
   count (buffer/self/len/p/i) versus the near-identical snippet that
   matched cleanly in the much smaller `LinkStop`.
 - **`ValidateSaveData`** (`asm/code_3_1_10_3_2aa4.s`, C in
-  `src/engine/save/save_data.c`) - checksum validate + DMA-repair.
+  `engine/src/engine/save/save_data.c`) - checksum validate + DMA-repair.
   The ROM caches four field addresses (`self+0x1f8/0x1f9/0x1fa/0x1fb`)
   into `r6`/`sb`/`r7`/`r8` ahead of the row loop; explicit register
   pins reproduced that caching and got the loop body and post-loop
@@ -175,7 +175,7 @@ the established pattern this project has hit many times before):
 ## Struct/header changes
 
 None - all new code reuses `struct save_data`/
-`struct settings_sync_pump` from `include/settings_sync.h` (issue #5)
+`struct settings_sync_pump` from `engine/include/settings_sync.h` (issue #5)
 without modification. `struct EepromConfig`/`gEepromConfig` from
 `lib/agb_eeprom/src/eeprom_timer.c` are referenced via a raw `u8 *` cast rather
 than importing that file-local struct definition, to avoid coupling
@@ -376,7 +376,7 @@ are set before `p`, so they come before its init as in the ROM. See
 
 ## Later pass: last-eleven NAKED retry
 
-`ResetLinkSessionState` is real C now (`src/engine/link/link_session_reset.c`, old_agbcc
+`ResetLinkSessionState` is real C now (`engine/src/engine/link/link_session_reset.c`, old_agbcc
 plus `-fno-rerun-loop-opt`). The 0x1234 magic moved into a
 function-scope local, so its pseudo lives across the whole loop, gets no
 register and is rematerialized at each store, which is the ROM's

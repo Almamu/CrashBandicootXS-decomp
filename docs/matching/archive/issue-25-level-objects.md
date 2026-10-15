@@ -15,14 +15,14 @@ The range is split by address into five objects so that
 
 | file | functions | state |
 |---|---|---|
-| `src/game/bosses/dingodile_create.c` | `CreateDingodileShieldCtrl`-`SetDingodileNextState` (6) | matched |
-| `src/game/objects/platform_create.c` | `CreatePlatform` | matched (old_agbcc) |
-| `src/game/objects/platform_contact.c` | `CheckPlatformContact` | matched |
-| `src/game/objects/platform_collide.c` | `ResolvePlatformCollision` | NAKED (C under NON_MATCHING) |
-| `src/game/objects/platform.c` | `UpdatePlatform`-`ClearPlatformMoverActive` (16) | matched |
+| `engine/src/game/bosses/dingodile_create.c` | `CreateDingodileShieldCtrl`-`SetDingodileNextState` (6) | matched |
+| `engine/src/game/objects/platform_create.c` | `CreatePlatform` | matched (old_agbcc) |
+| `engine/src/game/objects/platform_contact.c` | `CheckPlatformContact` | matched |
+| `engine/src/game/objects/platform_collide.c` | `ResolvePlatformCollision` | NAKED (C under NON_MATCHING) |
+| `engine/src/game/objects/platform.c` | `UpdatePlatform`-`ClearPlatformMoverActive` (16) | matched |
 
 Shared structs, externs and the virtual-call macros live in
-`include/gobj_1a794.h`.
+`engine/include/gobj_1a794.h`.
 
 ## What the code is
 
@@ -112,7 +112,7 @@ and the `rec` barrier are removed (with them left in, old_agbcc is still
 off - 696 vs 700 bytes, first difference at +0x60). The spawn-record lookup is plain
 `recs + offsets[index]`. Two workarounds remain: the hand-built
 outgoing-argument block (old_agbcc also widens a `u8` stack argument to
-`str`; the struct and `MOVER_NEW` moved to `include/mover_new.h`, shared
+`str`; the struct and `MOVER_NEW` moved to `engine/include/mover_new.h`, shared
 with `CreateCortexBossPlatformMover`), and the barrier on the palette nibble's `0xF`.
 
 `ResolvePlatformCollision` stays NAKED: under old_agbcc its NON_MATCHING C is still

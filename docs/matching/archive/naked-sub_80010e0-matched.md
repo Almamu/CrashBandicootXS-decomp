@@ -1,6 +1,6 @@
 # `WaitForKeyPress` converted from NAKED transcription to real matched C
 
-`WaitForKeyPress` (`src/engine/sys/input.cpp`) had been parked as a
+`WaitForKeyPress` (`engine/src/engine/sys/input.cpp`) had been parked as a
 byte-correct NAKED asm transcription - see
 [naked-transcription-parked-functions.md](./naked-transcription-parked-functions.md)
 for the original parking rationale. It's now genuinely matched as real

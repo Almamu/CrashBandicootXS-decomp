@@ -2,28 +2,28 @@
 
 Every compiled function in the ROM is matched. The data after the code
 (`0x0803B8B0` to the end of the ROM) is still mostly `.incbin
-"baserom.gba", ...` in `data/data.s`. This document is the convention for
+"baserom.gba", ...` in `games/xs/data/data.s`. This document is the convention for
 turning it into real source, starting with pointer tables. For how data
 progress is measured, see [progress_report.md](./progress_report.md), "Data
 progress".
 
-## The convention: `const` arrays in `src/*/data/`
+## The convention: `const` arrays in `engine/src/*/data/`
 
-A converted table is a `const` object in a `src/*/data/*.cpp` file, written
+A converted table is a `const` object in a `engine/src/*/data/*.cpp` file, written
 in C++ like the rest of the game code (#844; the tables were C files until
 then), with a real element type (from a shared header when the consuming
 code has one) and real symbol references for every pointer. The string
 tables are generated from gettext files instead (see "Text tables"
 below and [text.md](./text.md)). The linker
 script places the file's `.rodata` at the table's ROM address, between the
-raw parts of `data/data.s`. A library's own tables (GAX2's, AgbEeprom's,
+raw parts of `games/xs/data/data.s`. A library's own tables (GAX2's, AgbEeprom's,
 libgcc's `__clz_tab`) follow the same convention in C under
 `lib/<name>/data/` instead (see [libraries.md](./libraries.md)).
 
 - **One file per contiguous run of converted tables.** Name it
   `<what>_<ROM offset>.cpp`, the offset in lowercase hex without the
   `0x08` (`action_ctrl_state_table.cpp` is at `0x0816BF20`), the way
-  `src/game/crash/swim_ctrl.cpp` is named. Two files can sit next to
+  `engine/src/game/crash/swim_ctrl.cpp` is named. Two files can sit next to
   each other when their tables are unrelated (`level_select_page_bg_package.cpp`,
   then `level_select_picture_table.cpp`).
 - **Symbol names don't change.** The code references
@@ -41,9 +41,9 @@ libgcc's `__clz_tab`) follow the same convention in C under
   uses a plain type or a small local struct and says whose view it
   mirrors. Moving such structs into headers is a separate cleanup.
 
-### Layout: `data/data.s` sections and `games/xs/ldscript.txt`
+### Layout: `games/xs/data/data.s` sections and `games/xs/ldscript.txt`
 
-`data/data.s` is split into sections at every C object. Each section is
+`games/xs/data/data.s` is split into sections at every C object. Each section is
 named after the ROM address of its first byte, and a comment marks the
 hole:
 
@@ -51,7 +51,7 @@ hole:
 gWumpaHopWidths:
 	.incbin "baserom.gba", 0x0016BF14, 0x0000000C
 
-@ gActionCtrlStateTable..gSwimCtrlModeAnimRows: src/game/crash/data/action_ctrl_state_table.cpp
+@ gActionCtrlStateTable..gSwimCtrlModeAnimRows: engine/src/game/crash/data/action_ctrl_state_table.cpp
 
 .section .rodata.0816C090
 
@@ -73,7 +73,7 @@ An input-section name in the linker script matches exactly, so
 `data.o(.rodata)` never pulls in `.rodata.0816C090`. The first section is
 plain `.rodata` (from `0x0803B8B0`). This scales to any number of C
 objects, generated ones included: each one is one more line pair.
-`src/*/data/*.cpp` is already covered by the Makefile's `find src -name '*.cpp'`
+`engine/src/*/data/*.cpp` is already covered by the Makefile's `find engine/src -name '*.cpp'`
 (built by agbcp like the other C++ objects); nothing else needs
 registering. Everything the linker script doesn't name is discarded
 (`/DISCARD/`), so a data file's empty `.text` is harmless.
@@ -107,8 +107,8 @@ registering. Everything the linker script doesn't name is discarded
    and each data label as `extern const u8 gStaticData_XXXX[];`. A
    pointer into the middle of a still-raw blob is `gStaticData_XXXX +
    0x20`. Put a comment on each table naming the functions that read it.
-3. **Cut it out of `data/data.s`.** Delete the labels' blocks, leave the
-   `@ first..last: src/*/data/file.cpp` comment, and start a new
+3. **Cut it out of `games/xs/data/data.s`.** Delete the labels' blocks, leave the
+   `@ first..last: engine/src/*/data/file.cpp` comment, and start a new
    `.section .rodata.<ADDR>` at the next label, `<ADDR>` being that
    label's ROM address. (When the next thing is already another data
    object, no new section is needed.)
@@ -158,7 +158,7 @@ The string tables, `cutscene_text_english.cpp` and
 `cutscene_text_translations.cpp` (the cutscenes' pages) and
 `ui_text.cpp` (the UI text), are generated: each `#include`s the
 `.inc` that `tools/text.py` writes into `build/crashbandicootxs/text/`
-from `text/crashxs.pot` and the languages' `.po` files (#1070, see
+from `games/xs/text/crashxs.pot` and the languages' `.po` files (#1070, see
 [text.md](./text.md) for the files and the translators' workflow). Each
 is a run of `extern const u8 s[] = "..."` arrays with, after them, the
 arrays of pointers that list them, every pointer spelled
@@ -196,7 +196,7 @@ internal linkage in C++, see above), and so is every string, which keeps
 the C files' global symbols. `system.h` declares the UI text's six arrays
 with `UI_TEXT_COUNT`, so a template with another number of `ui.*` entries
 stops the build. The cutscene files (`cutscenes.cpp`,
-`cutscene_slides.cpp`, generated from `data/cutscenes.json`, see
+`cutscene_slides.cpp`, generated from `games/xs/data/cutscenes.json`, see
 "Cutscenes") declare the page arrays their `struct cutscene_page` tables
 point at, sized by the template. A table that has strings and other data
 is split at the ROM boundary between them: the cutscenes are four files
@@ -244,12 +244,12 @@ in ROM order.
 ### Fallback: typed directives in `.s`
 
 The other route is to write the table in assembly: `.4byte sub_XXXX` (the
-linker adds the Thumb bit here too), `.2byte`, `.byte`, in `data/data.s`
-or a `data/*.s` file linked the same way. The C++ route has matched
+linker adds the Thumb bit here too), `.2byte`, `.byte`, in `games/xs/data/data.s`
+or a `games/xs/data/*.s` file linked the same way. The C++ route has matched
 byte-for-byte on every table so far, so this is only for a table it
 provably can't express. Nothing uses it yet. If something does,
 `tools/report_units.py` needs to learn to size and classify directive
-blobs (today it only understands `.incbin` lines in `data/data.s`).
+blobs (today it only understands `.incbin` lines in `games/xs/data/data.s`).
 
 ## What has been converted
 
@@ -281,16 +281,16 @@ The first batch (all pointer tables, all byte-exact):
 | `level_select_picture_table.cpp` | `0x0816C5A0` | 10 `{palette, tiles}` asset pairs, a level-select picture per theme, generated from `levels.json`'s `"themes"` (`levels.py table pictures`) |
 | `level_select_anims.cpp` | `0x0816C5F0` | level-select offsets, animation ids, OBJ sizes |
 | `entity_spawn_funcs.cpp` | `0x0816C6A4` | the unified 92-slot function-pointer dispatch array |
-| `level_table.cpp` | `0x0816C814` | the level table (25 `struct level_info`), the levels' room lists and 48 room records, the theme music cues and 5 colour-cycle lists, all generated from `data/levels/` (`levels.py table`, see "Level data") |
-| `cutscenes.cpp` | `0x0816D1C8` | the 11 cutscenes' language tables and slide lists, the English pages, generated from `data/cutscenes.json` (see "Cutscenes") |
-| `cutscene_text_english.cpp` | `0x0816D4D8` | the cutscenes' English text, generated from `text/` (see "Text tables") |
-| `cutscene_slides.cpp` | `0x0816E064` | the other five languages' pages, the 24 slides, generated from `data/cutscenes.json` |
-| `cutscene_text_translations.cpp` | `0x0816E8A4` | the French, German, Spanish, Italian and Dutch text, generated from `text/` |
+| `level_table.cpp` | `0x0816C814` | the level table (25 `struct level_info`), the levels' room lists and 48 room records, the theme music cues and 5 colour-cycle lists, all generated from `games/xs/data/levels/` (`levels.py table`, see "Level data") |
+| `cutscenes.cpp` | `0x0816D1C8` | the 11 cutscenes' language tables and slide lists, the English pages, generated from `games/xs/data/cutscenes.json` (see "Cutscenes") |
+| `cutscene_text_english.cpp` | `0x0816D4D8` | the cutscenes' English text, generated from `games/xs/text/` (see "Text tables") |
+| `cutscene_slides.cpp` | `0x0816E064` | the other five languages' pages, the 24 slides, generated from `games/xs/data/cutscenes.json` |
+| `cutscene_text_translations.cpp` | `0x0816E8A4` | the French, German, Spanish, Italian and Dutch text, generated from `games/xs/text/` |
 | `terrain_types.cpp` | `0x081725A8` | the 51 terrain types of the collision maps |
-| `ui_text.cpp` | `0x08172CD4` | the game's UI text in six languages, generated from `text/` (see "Terrain types and UI text") |
+| `ui_text.cpp` | `0x08172CD4` | the game's UI text in six languages, generated from `games/xs/text/` (see "Terrain types and UI text") |
 | `hud_font_tables.cpp` | `0x08174BE0` | the HUD digit slots and the two HUD fonts' character lists and glyph metrics |
 | `actor_categories.cpp` | `0x08175558` | 7 `struct category_descriptor`, 3 `struct category_vtable` |
-| `actor_palette_cycle_frames.cpp` | `0x08175760` | the 32-frame BG palette cycle (`ActorPaletteCycle::frames`, from `graphics/vehicles/polar/palette_cycle/NN.pal`, docs/levels.md "Category graphics") and its 4 cursor start/bound pairs (`startFrames`, `targetFrames`, docs/cplusplus.md) |
+| `actor_palette_cycle_frames.cpp` | `0x08175760` | the 32-frame BG palette cycle (`ActorPaletteCycle::frames`, from `games/xs/graphics/vehicles/polar/palette_cycle/NN.pal`, docs/levels.md "Category graphics") and its 4 cursor start/bound pairs (`startFrames`, `targetFrames`, docs/cplusplus.md) |
 | `polar_anim_family.cpp` | `0x08178F80` | categories 0-2: OBJ palette, animation table `gCategoryFamily0AnimTable`, keyframe and frame arrays (see "Category families") |
 | `polar_player_state_table.cpp` | `0x0817A6B8` | 1 actor PMF table, in C++ (`PolarPlayer::stateFuncs`, docs/cplusplus.md) |
 | `polar_palettes_boxes.cpp` | `0x0817A728` | 5 small palettes, 4 `struct anim_box`, 6 threshold records |
@@ -320,7 +320,7 @@ The first batch (all pointer tables, all byte-exact):
 | `language_names.cpp` | `0x0817E714` | 6 pointers to the language names |
 | `language_select_palettes.cpp` | `0x0817E72C` | 3 palette-cache halves |
 | `level_tilesets_jungle_snow_underwater.cpp` | `0x0817E78C` | a `u16[16]` (`InitLanguageSelectGraphics`), level BG tile sets 1-3 (grit, see "Resources") |
-| `level_rooms_main_bonus.cpp` | `0x0824B638` | the level data of 33 rooms, generated from `data/levels/` (see "Level data") |
+| `level_rooms_main_bonus.cpp` | `0x0824B638` | the level data of 33 rooms, generated from `games/xs/data/levels/` (see "Level data") |
 | `level_tilesets_sewer_space.cpp` | `0x08270F08` | level BG tile sets 4-5 (grit) |
 | `level_rooms_bosses_gem_paths.cpp` | `0x082B91D0` | the level data of the other 8 rooms (same) |
 | `sprite_tiles.cpp` | `0x082BF120` | the sprite tile pool (56 banks, `tools/sprite_frames.py`) and the 125 OBJ palettes (JASC `.pal`) |
@@ -352,10 +352,10 @@ backgrounds" below):
 | `jetpack_sky_pictures.cpp` | `0x08151AC4` | category 4 and 5/6 BG1 pictures, categories 4-6 `sub_effect_table`s |
 | `jetpack_rle_sprites.cpp` | `0x0815A050` | compressed OBJ frame set C |
 
-The GAX2 audio isn't C: `tools/gax_audio.py` builds it from `sound/`
-into two blocks that `data/data.s` includes from `build/`, the
+The GAX2 audio isn't C: `tools/gax_audio.py` builds it from `games/xs/sound/`
+into two blocks that `games/xs/data/data.s` includes from `build/`, the
 sound-effect set (`gGaxSfxData`, `--sfx`: 88 instruments and 87
-samples, `sound/gax_sfx_manifest.json` + `sound/sfx_samples/*.wav`) and
+samples, `games/xs/sound/gax_sfx_manifest.json` + `games/xs/sound/sfx_samples/*.wav`) and
 the music block (`gGaxMusicData`). Each is a `.bin` and a `.s` that
 incbins it with the pointers as relocations, so the blocks can move
 (docs/shifting.md). See docs/audio.md.
@@ -364,7 +364,7 @@ incbins it with the pointers as relocations, so the blocks can move
 
 The sprite-bank animation system (`0x084A5600`-`0x084C0006`, 2,429
 frames in 56 banks) is typed C in four files, with the structs in
-`include/engine/gfx/sprite_bank.h`. It was extracted once by `tools/sprite_banks.py`,
+`engine/include/engine/gfx/sprite_bank.h`. It was extracted once by `tools/sprite_banks.py`,
 which walks the tables the way the matched readers do and asserts the
 layout (every object where agbcc will put it, only zero padding between);
 the C is the source from then on.
@@ -389,7 +389,7 @@ the C is the source from then on.
   pointer, so it can't be a symbol reference. It is written as
   `SPRITE_TILES_BANKnn_FRAMEkkk`, which `tools/sprite_frames.py`
   generates (`sprites/sprite_frames.h`) from the frame PNGs and
-  `bank.json` of `graphics/sprites/bankNN_<name>/`.
+  `bank.json` of `games/xs/graphics/sprites/bankNN_<name>/`.
 - The piece arrays (`...FrameKKKPos`, `...FrameKKKPieces`) are generated
   from `bank.json` too (`sprites/bankNN_pieces.inc`, included where the
   ROM has them), and the same header declares the frames, with the
@@ -398,7 +398,7 @@ the C is the source from then on.
   file starts with a word-aligned struct, and `tools/report_units.py`
   doesn't accept linker fill between objects.
 
-#### Sprite bank frames (`graphics/sprites/bankNN_<name>/`)
+#### Sprite bank frames (`games/xs/graphics/sprites/bankNN_<name>/`)
 
 The banks' art and pieces are not in the C. Each bank is a directory:
 - `fKKK.png`, one per frame: the frame with its pieces in place, a 4bpp
@@ -428,18 +428,18 @@ banks (#914)", has the details.
 
 The category families' animation tables (`actor_anim.h`'s
 `gCategoryFamily0AnimTable`/`gCategoryFamily1AnimTable`) are data,
-`data/levels/anim_tables/`, see "Category families" below.
+`games/xs/data/levels/anim_tables/`, see "Category families" below.
 
 ### Category families
 
 The two actor-category families (docs/data_map.md, `08178F80` and
-`0817AA98`) are `src/game/vehicles/polar/data/polar_anim_family.cpp` (categories 0-2) and
-`src/game/vehicles/jetpack/data/jetpack_anim_family.cpp` (categories 3-6). Each is an OBJ palette
+`0817AA98`) are `engine/src/game/vehicles/polar/data/polar_anim_family.cpp` (categories 0-2) and
+`engine/src/game/vehicles/jetpack/data/jetpack_anim_family.cpp` (categories 3-6). Each is an OBJ palette
 (256 colours, then 0x200 zero bytes nothing reads; the second family has
 two), the animation table (`struct anim_table_record`, `actor_anim.h`,
 41 and 47 records), and the arrays the records point at. The palettes
 (and the yeti's palette and boxes) are C; the tables and their arrays are
-`data/levels/anim_tables/polar.json` and `jetpack.json`, which
+`games/xs/data/levels/anim_tables/polar.json` and `jetpack.json`, which
 `tools/levels.py anim-table` generates in place (docs/levels.md,
 "Animation tables"):
 
@@ -450,7 +450,7 @@ two), the animation table (`struct anim_table_record`, `actor_anim.h`,
   (`gPolarPlayerRleFrames + RLE_SPRITES_POLAR_PLAYER_FRAME_nnn`, set C for the
   second family), so it's a `const u8 *const []`. Every other record's
   is `u32` byte offsets into the family's framed sheet
-  (`graphics/vehicles/polar/sprite_sheet/`, `vehicles/jetpack/sprite_sheet/`, decompressed), written
+  (`games/xs/graphics/vehicles/polar/sprite_sheet/`, `vehicles/jetpack/sprite_sheet/`, decompressed), written
   `FRAMED_POLAR_<FOLDER>_<NN>`. `tools/framed_gfx.py header` generates
   those from the sheet's frame PNGs, in the order the sheet is built
   (`graphics.mk`), so a resized frame moves the offsets with it. Every
@@ -479,12 +479,12 @@ the matched code's `struct anim_frame_record`.
 ## Resources (grit-style)
 
 Graphics, and other assets built from files, use the same layout as the
-hand-written tables: each asset becomes a `const` array in a `src/*/data/*.cpp`
+hand-written tables: each asset becomes a `const` array in a `engine/src/*/data/*.cpp`
 object, and `games/xs/ldscript.txt` places that object's `.rodata` at the asset's
 address in the `/* Data */` block. The pixel conversion is done by
 [grit](https://github.com/devkitPro/grit). Built this way so far:
 the 24 cutscene pictures (Mode 4 bitmaps,
-`src/game/ui/data/cutscene_pictures.cpp`, see "Cutscenes" below), the actor-category backgrounds
+`engine/src/game/ui/data/cutscene_pictures.cpp`, see "Cutscenes" below), the actor-category backgrounds
 (see "Category backgrounds" at the end), and the uncompressed tile pools
 of the old `gLanguageSelectPalette3` blob (see "Raw tile pools" below).
 
@@ -503,7 +503,7 @@ reproduced.
 | Are grit's tilemaps byte-exact? | **Yes, when seeded** with the ROM tileset as grit's external tileset (`-fx`). Without `-fx`, grit forces a blank tile 0, so every index comes out one too high. |
 | Is grit's LZ77 (`-gzl`) byte-exact? | **No.** 26 of 141 streams match (only tiny ones). gbagfx matches 141 of 141. |
 | Can grit's C output (`-ftc`) be used as-is? | **No.** Its compressed output uses grit's own LZ77 (see above). It pads the compressed data to 4 bytes with uninitialised memory. It appends `Bitmap`/`Tiles`/`Pal`/`Map` to the symbol name. |
-| Adopted pipeline | grit `-ftb` (layout) -> gbagfx (LZ77) -> `tools/bin2c.py --lz` -> `#include` in a hand-written `src/*/data/*.cpp` declaration |
+| Adopted pipeline | grit `-ftb` (layout) -> gbagfx (LZ77) -> `tools/bin2c.py --lz` -> `#include` in a hand-written `engine/src/*/data/*.cpp` declaration |
 
 ### 1. Building grit
 
@@ -602,26 +602,26 @@ sizes, and none of the assets identified so far is uncompressed.
 ### 3. Adopted pipeline
 
 ```
-graphics/<dir>/<name>.png
+games/xs/graphics/<dir>/<name>.png
   --grit <kind flags> -p! -ftb -fh!-->  build/.../<name>.img.bin     (layout)
   --gbagfx-->                           build/.../<name>.img.bin.lz  (byte-exact LZ77)
   --tools/bin2c.py --lz-->              build/.../<name>.img.bin.lz.inc
-src/*/data/<asset>.c:   const u8 gStaticData_XXXXXXXX[] = {
+engine/src/*/data/<asset>.c:   const u8 gStaticData_XXXXXXXX[] = {
                       #include "<dir>/<name>.img.bin.lz.inc"
                       };
 ```
 
 `tools/bin2c.py --lz` trims gbagfx's 4-byte padding back to the stream's
 real length. It fails if the trimmed bytes aren't zero. The declaration
-(symbol name, type, comment) is hand-written in `src/*/data/*.cpp`, so names
+(symbol name, type, comment) is hand-written in `engine/src/*/data/*.cpp`, so names
 follow the repo's conventions, and only the bytes are generated. This
 replaces the earlier plan of generating the whole `.c` file under
 `build/`. Keeping the declaration checked in means the symbol name, the
 element type and the comment live in the repo, and the object sits in
-`src/*/data/`, where the linker script and the report already handle it.
+`engine/src/*/data/`, where the linker script and the report already handle it.
 The element type is `u8`: the ROM's LZ77 streams have odd lengths and
 are packed back to back. Objects
-under `src/*/data/` get `-iquote build/crashbandicootxs/graphics`, so the
+under `engine/src/*/data/` get `-iquote build/crashbandicootxs/graphics`, so the
 `#include` path is just `<dir>/<file>`.
 
 Per asset kind:
@@ -634,8 +634,8 @@ Per asset kind:
 | 16-colour palette | `-g! -p -pn16` on an indexed PNG carrying it | gbagfx LZ77 | verified |
 | 256-colour palette | `-g! -p -pn256` | gbagfx LZ77 | verified; the bit-15 palettes are their PNGs' palettes, read by `tools/jasc_pal.py` |
 | tilemap (+ tileset) from one full image | `-gt -gB4 -m -mRtf -mLf -fx <tileset.png>` | gbagfx LZ77 | map verified; the tileset itself stays a separate PNG |
-| framed OBJ sheets (`graphics/vehicles/*/sprite_sheet/`) | not migrated: each frame has a 4-byte header grit doesn't know about | `tools/framed_gfx.py` | - |
-| raw 4bpp tile pool (`graphics/sprites/`) | `-gt -gB4 -p!` | `tools/bin2c.py --size` | used, 57 PNGs |
+| framed OBJ sheets (`games/xs/graphics/vehicles/*/sprite_sheet/`) | not migrated: each frame has a 4-byte header grit doesn't know about | `tools/framed_gfx.py` | - |
+| raw 4bpp tile pool (`games/xs/graphics/sprites/`) | `-gt -gB4 -p!` | `tools/bin2c.py --size` | used, 57 PNGs |
 | raw 8bpp tag-0x00 tile set | none: generated from the rooms' pictures (levels.md, "Tile sets") | `tools/bin2c.py`, header in C | used, 5 sets |
 
 **Never** use grit's `-gzl`/`-pzl`/`-mzl` or its `-ftc` for LZ77 assets.
@@ -650,17 +650,17 @@ C (see "Level data").
 
 | object | contents | source |
 |---|---|---|
-| `level_tilesets_jungle_snow_underwater.cpp` | `gLanguageSelectPalette3` (`u16[16]`), tile sets 1-3 | generated from `data/levels/` (levels.md, "Tile sets") |
-| `level_rooms_main_bonus.cpp` | room data, 33 rooms | `data/levels/` via `tools/levels.py` (see "Level data") |
-| `level_tilesets_sewer_space.cpp` | tile sets 4-5 | generated from `data/levels/` |
+| `level_tilesets_jungle_snow_underwater.cpp` | `gLanguageSelectPalette3` (`u16[16]`), tile sets 1-3 | generated from `games/xs/data/levels/` (levels.md, "Tile sets") |
+| `level_rooms_main_bonus.cpp` | room data, 33 rooms | `games/xs/data/levels/` via `tools/levels.py` (see "Level data") |
+| `level_tilesets_sewer_space.cpp` | tile sets 4-5 | generated from `games/xs/data/levels/` |
 | `level_rooms_bosses_gem_paths.cpp` | room data, 8 rooms | same |
-| `sprite_tiles.cpp` | 56 sprite banks, 125 OBJ palettes | `graphics/sprites/bankNN_<name>/`, `graphics/sprites/palettes/NNN_<owner>.pal` |
+| `sprite_tiles.cpp` | 56 sprite banks, 125 OBJ palettes | `games/xs/graphics/sprites/bankNN_<name>/`, `games/xs/graphics/sprites/palettes/NNN_<owner>.pal` |
 
 - **Sprite banks.** The pool at `0x082BF120` has no header. Each of the 56
   banks of `gSpriteBankTable` owns one back-to-back range of it, in
   bank order, and each range is one `const u8 gSpriteBankNNTiles[]`. The
   sources are the banks' frames, a PNG each in the palette of its
-  animation, in `graphics/sprites/bankNN_<name>/`; `tools/sprite_frames.py`
+  animation, in `games/xs/graphics/sprites/bankNN_<name>/`; `tools/sprite_frames.py`
   extracts and packs them (see docs/graphics.md, "Sprite banks").
 - **OBJ palettes.** `gObjPalettes` (`0x084A4660`, 4,000 bytes) is 125
   16-colour palettes, the table header's `palettes`/`paletteCount`. An
@@ -668,7 +668,7 @@ C (see "Level data").
   (`struct sprite_anim` +0x14): `GetPaletteSlot` copies it into a free
   OBJ palette slot, and the slot goes into the OAM entries that draw the
   animation's frames. Each palette is one JASC file,
-  `graphics/sprites/palettes/NNN_<owner>.pal`, `NNN` being the `paletteId`
+  `games/xs/graphics/sprites/palettes/NNN_<owner>.pal`, `NNN` being the `paletteId`
   and `<owner>` what uses it (see docs/graphics.md, "OBJ palettes");
   `graphics.mk` builds each with `tools/jasc_pal.py` and concatenates them
   in index order. None has bit 15 set. 98 of them are named by some
@@ -678,7 +678,7 @@ C (see "Level data").
   49-53 by banks 32, 39, 43 and 53). This used to be
   `tile_pool_4a4660.png`, read as "125 fixed OBJ tiles".
 - **Level tile sets.** These are tag-0x00 raw tagged assets: a
-  `{size << 8}` word, then 8bpp tiles. `include/engine/gfx/tagged_asset.h` gives each
+  `{size << 8}` word, then 8bpp tiles. `engine/include/engine/gfx/tagged_asset.h` gives each
   one a sized struct (`TAGGED_RAW_ASSET(n)`, `TAGGED_RAW_HEADER(n)`) whose
   `data` member `#include`s the tiles, its size being
   `TILES_SIZE_<set>` from the generated `tilesets/<set>.h`. The tiles
@@ -698,9 +698,9 @@ C (see "Level data").
 hovercraft, 16x10 cells, 1 frame) were read as "per-level meter grid
 tables" before; drawn, they are the two big enemies that fly on an affine
 BG. The airship is a jetpack-stage object (`Airship`,
-`src/vehicle/jetpack/airship*.cpp`, created by `CreateAirship` in
+`engine/src/vehicle/jetpack/airship*.cpp`, created by `CreateAirship` in
 categories 3-5), and the hovercraft is N. Gin's (`Hovercraft`,
-`src/game/bosses/hovercraft*.cpp`, category 6, `CATEGORY_TYPE_HOVERCRAFT`),
+`engine/src/game/bosses/hovercraft*.cpp`, category 6, `CATEGORY_TYPE_HOVERCRAFT`),
 the craft of N. Gin's level-select picture; earlier notes called it
 Cortex's. Each is `{s16 cols,
 s16 rows}` and its frames, a frame being a tile count, a `cols * rows`
@@ -711,12 +711,12 @@ of BG palette 1, since an affine BG only takes 8bpp, and `DrawAirshipMap`
 lays them out by the maps. The palette in front of each picture is its
 own label (`gAirshipPalette`, `gHovercraftPalette`), and the code
 walks the frames from that label + 0x204, so the two stay back to back
-in `src/game/bosses/data/boss_pictures.cpp`.
+in `engine/src/game/bosses/data/boss_pictures.cpp`.
 
 The maps are exactly what deduplicating the frames in reading order gives
 (the first identical tile, no flips, one pool across the frames). So the
-sources are the whole frames, `graphics/vehicles/jetpack/airship/frameN.png`
-and `graphics/bosses/hovercraft.png` (4bpp, the 16 colours of BG palette
+sources are the whole frames, `games/xs/graphics/vehicles/jetpack/airship/frameN.png`
+and `games/xs/graphics/bosses/hovercraft.png` (4bpp, the 16 colours of BG palette
 1). grit (`-gt -gB4`) turns each into
 tiles in cell order, and `tools/boss_pictures.py pack` deduplicates them
 into the `.inc` with the frames' initializers and a header with the tile
@@ -737,14 +737,14 @@ address: the pairs in `motion_records.cpp` (`gActionCtrlMotionEntries`,
 `gSwimCtrlMotionEntries`), which `action_swim_motion_sets.cpp` now points at by
 name, the level animation rows `gSwimCtrlModeLevelAnims` that
 `action_ctrl_state_table.cpp` points at, and the two link-cable names
-`gCrash2LinkText`/`0816B124` that the IWRAM data points at (`src/engine/sys/iwram_data.cpp`). A few
+`gCrash2LinkText`/`0816B124` that the IWRAM data points at (`engine/src/engine/sys/iwram_data.cpp`). A few
 byte tables sit at odd addresses (`gTinyHopTargets`); brace-list `u8`
 arrays aren't aligned by agbcc, so they stay in place.
 
 ### Level data
 
 The rooms' level data and level assets ([levels.md](./levels.md)) are
-built from `data/levels/` by `tools/levels.py`, from editable sources:
+built from `games/xs/data/levels/` by `tools/levels.py`, from editable sources:
 per room a `room.json` (layer settings, entities, parameter records,
 links, symbol names), each BG layer as its whole picture (`<layer>.png`,
 8bpp indexed with the room palette, which the pictures carry, decoded back to
@@ -760,22 +760,22 @@ see [levels.md, "Collision layers"](./levels.md#collision-layers)). The build
 | `build/.../data/levels/<room>/<layer>.map.bin` | the BG layer's cells, made with its tile set (`levels.py tileset`) | the room's asset |
 | `build/.../data/levels/tilesets/<set>.bin` | a BG tile set, made from its rooms' pictures (`levels.py tileset`) | `level_tilesets_*.cpp`, `level_bg_tiles.cpp` |
 | `build/.../data/levels/<room>/asset.bin.inc` | the room's tilemaps, re-encoded into the ROM's chunk streams, as `tools/bin2c.py` bytes | `level_assets.inc` (7 raw assets) |
-| `build/.../data/levels/<room>/asset.bin.lz.inc` | the same, gbagfx LZ77, `tools/bin2c.py --lz` bytes | `level_assets.inc` (34 packed assets, formerly `graphics/tileset1/27`-`60`) |
-| `build/.../data/levels/level_assets.inc` | the 41 `gRoomNNAsset` definitions, in `levels.json`'s `"assets"` (ROM) order, then the new rooms' | `#include`d by `src/game/level/data/level_assets.cpp` |
-| `build/.../data/levels/level_rooms_<region>.inc` | all rooms of a region; the last region (`bosses_gem_paths`) then has the new tile sets and the new rooms | `#include`d by `src/game/level/data/level_rooms_<region>.cpp` |
-| `build/.../data/levels/level_table.inc` | the colour cycles' lists, `gLevelTable`, `gLevelRoomLists` and `gThemeMusicCues`, from `levels.json`'s `"levels"`, `"themes"` and `"palette_cycles"` (`levels.py table levels`) | `#include`d by `src/game/level/data/level_table.cpp` |
+| `build/.../data/levels/<room>/asset.bin.lz.inc` | the same, gbagfx LZ77, `tools/bin2c.py --lz` bytes | `level_assets.inc` (34 packed assets, formerly `games/xs/graphics/tileset1/27`-`60`) |
+| `build/.../data/levels/level_assets.inc` | the 41 `gRoomNNAsset` definitions, in `levels.json`'s `"assets"` (ROM) order, then the new rooms' | `#include`d by `engine/src/game/level/data/level_assets.cpp` |
+| `build/.../data/levels/level_rooms_<region>.inc` | all rooms of a region; the last region (`bosses_gem_paths`) then has the new tile sets and the new rooms | `#include`d by `engine/src/game/level/data/level_rooms_<region>.cpp` |
+| `build/.../data/levels/level_table.inc` | the colour cycles' lists, `gLevelTable`, `gLevelRoomLists` and `gThemeMusicCues`, from `levels.json`'s `"levels"`, `"themes"` and `"palette_cycles"` (`levels.py table levels`) | `#include`d by `engine/src/game/level/data/level_table.cpp` |
 | `build/.../data/levels/level_table_16c814_rooms.inc` | the room records and the played-room arrays, from room.json's `"record"` and `levels.json`'s `"table"` and `"levels"` (`levels.py table records`) | the same, after it |
-| `build/.../data/levels/level_select_pictures.inc` | `gLevelSelectPictures`, from `levels.json`'s `"themes"` (`levels.py table pictures`) | `#include`d by `src/game/ui/data/level_select_picture_table.cpp` |
+| `build/.../data/levels/level_select_pictures.inc` | `gLevelSelectPictures`, from `levels.json`'s `"themes"` (`levels.py table pictures`) | `#include`d by `engine/src/game/ui/data/level_select_picture_table.cpp` |
 | `build/include/theme_palette_cycles.h` | RunRoom's colour-cycle cases per theme and the lists' declarations, from `levels.json`'s `"themes"` and `"palette_cycles"` (`levels.py palette-cycles`) | `play_room.cpp`, `level_table.cpp` |
 
 Every pointer in the room data is a symbol reference (the room's own
 objects, the tile sets, the assets), and everything the ROM derives
 (chunk grids and sets, asset offsets, entity groups and counts, parameter
-offsets) is computed from the sources again. `include/game/level/level_data.h` has
+offsets) is computed from the sources again. `engine/include/game/level/level_data.h` has
 the types.
 
 The records that point at the rooms are generated too, into
-`src/game/level/data/level_table.cpp`: the level table `gLevelTable`
+`engine/src/game/level/data/level_table.cpp`: the level table `gLevelTable`
 (25 `struct level_info`, indexed by level id), one `struct
 level_room_list` per level (the rooms played in order, `gLevelNNRooms`,
 and up to two extra rooms), and the 48 `struct level_room` records
@@ -810,11 +810,11 @@ table"](./levels.md#the-level-table) has the field-by-field sources.
 ### Cutscenes
 
 The 11 cutscenes (the intro, the story scenes between worlds, the
-endings) are `src/game/ui/data/cutscenes.cpp`, `cutscene_text_english.cpp`,
+endings) are `engine/src/game/ui/data/cutscenes.cpp`, `cutscene_text_english.cpp`,
 `cutscene_slides.cpp` and `cutscene_text_translations.cpp`
-(`0x0816D1C8`-`0x081725A8` in that order, types in `include/game/ui/cutscene.hpp`;
-the text is generated from `text/`, see "Text tables") and
-`src/game/ui/data/cutscene_pictures.cpp`
+(`0x0816D1C8`-`0x081725A8` in that order, types in `engine/include/game/ui/cutscene.hpp`;
+the text is generated from `games/xs/text/`, see "Text tables") and
+`engine/src/game/ui/data/cutscene_pictures.cpp`
 (`0x085A9F70`-`0x0861BADC`). `PlayCutscene` plays cutscene `idx`: the
 slides of `gCutscenes[idx]` (`struct cutscene_slides`), each a
 `struct cutscene_slide` (picture, timing, fades, music cue, sound
@@ -822,14 +822,14 @@ effect), shown with the page of text at the same index of the current
 language's `struct cutscene_page` array. The six language tables
 (`gCutsceneTextEnglish` is English, then French, German, Spanish,
 Italian and Dutch) are listed by `gCutsceneTexts`, a pointer table in
-the IWRAM image (`src/engine/sys/iwram_data.cpp`). The text is strings (Latin-1, all lower case),
+the IWRAM image (`engine/src/engine/sys/iwram_data.cpp`). The text is strings (Latin-1, all lower case),
 each page's strings in a `const u8 *const []`. The template's keys are
 `cutscene<NN>.page<P>.<I>` ([text.md](./text.md)). The cutscenes, their
-slides and their pages are data, `data/cutscenes.json` (below).
+slides and their pages are data, `games/xs/data/cutscenes.json` (below).
 
 A picture is a 256-colour palette followed directly by its LZ77 Mode 4
 bitmap: a slide points at the palette and `ShowSlidePicture` reads the bitmap
-at `+0x200`. The bitmaps are the grit-built `graphics/cutscenes/NN_<what>.png`
+at `+0x200`. The bitmaps are the grit-built `games/xs/graphics/cutscenes/NN_<what>.png`
 (the Mode 4 row of the table above), NN being the picture's number in
 `gCutscenePictureNN`. Each palette (`gCutscenePictureNN`,
 an uncompressed `u16[256]`) is the PNG's own palette:
@@ -844,7 +844,7 @@ One picture is often shown by several cutscenes, so the pictures are
 one flat folder, not one folder per cutscene. Slides 08 and 09 show
 pictures 09 and 08, swapped.
 
-| cutscene | constant | played by | pictures (`graphics/cutscenes/`) |
+| cutscene | constant | played by | pictures (`games/xs/graphics/cutscenes/`) |
 |---|---|---|---|
 | 0 | `CUTSCENE_LEGAL_NOTICE` | boot, `PlayBootCutscene` | 23 `legal_notice` |
 | 1 | `CUTSCENE_INTRO` | intro, `PlayIntroCutscene` | 00 `space_station`, 01 `uka_uka_and_cortex`, 02 `cortex`, 01 |
@@ -867,7 +867,7 @@ pages are translated like the others.
 
 #### The cutscene data
 
-The cutscenes' structure is `data/cutscenes.json` (#1092), and
+The cutscenes' structure is `games/xs/data/cutscenes.json` (#1092), and
 `tools/cutscenes.py` generates the tables of `cutscenes.cpp` and
 `cutscene_slides.cpp` from it (`cutscenes.mk`, into
 `build/crashbandicootxs/cutscenes/`); with the ROM's data they are the
@@ -902,14 +902,14 @@ ROM's bytes:
   each names a slide record (`slide`) and, where text shows with it, its
   page (`text`), `cutscene<NN>.page<P>`. The page's strings are the
   template's `cutscene<NN>.page<P>.<I>` entries, `I` from 0: the page's
-  string count is the template's, so a string added to a page in `text/`
+  string count is the template's, so a string added to a page in `games/xs/text/`
   needs no other edit. A slide with no `text` shows the picture only
   (`{ 0, 0 }`). Two slides can show one page (cutscene 10's third slide
   shows `cutscene09.page1`).
 - **`slides`**, the slide records (`gCutsceneSlideNN`, NN their
   position), in ROM order; several cutscenes can show one. The fields are
   `struct cutscene_slide`'s: `picture` (a cutscene picture of
-  `graphics/manifest.json`, by its path; the record points at its
+  `games/xs/graphics/manifest.json`, by its path; the record points at its
   palette), `wait` (WaitForKeyPress's frame count), `fade` and
   `fade_after` (BrightnessFade::Start's flags as the slide starts and
   after it, -1 none), `buttons` (1: a key press goes on, and SkipSlides
@@ -934,7 +934,7 @@ with the size the data gives it.
 `tools/cutscenes.py check`), on:
 
 - a slide whose `picture` isn't a cutscene picture of the manifest (a
-  `bitmap` entry under `graphics/cutscenes/`);
+  `bitmap` entry under `games/xs/graphics/cutscenes/`);
 - a `text` page with no `.0` entry in the template, a page of the
   template that no slide shows, a slide record no cutscene shows, a
   slide name that no record has, or has twice;
@@ -945,7 +945,7 @@ with the size the data gives it.
 #### A new cutscene
 
 1. **The picture**, if it is a new one: a 240x160 8bpp PNG with its
-   256-colour palette in `graphics/cutscenes/` (`24_<what>.png`), and a
+   256-colour palette in `games/xs/graphics/cutscenes/` (`24_<what>.png`), and a
    manifest entry with no `rom`, its `class` and `"object":
    "cutscene_pictures"` ([graphics.md, "New
    graphics"](./graphics.md#new-graphics)):
@@ -962,7 +962,7 @@ with the size the data gives it.
    timing, song or sound).
 3. **The cutscene**: an entry at the end of `cutscenes`, with its
    constant and its slides, each with its page (`cutscene11.page0`, ...).
-4. **The text**: the pages' strings in `text/crashxs.pot`
+4. **The text**: the pages' strings in `games/xs/text/crashxs.pot`
    (`cutscene11.page0.0`, ...), then `make text-update` and each
    language's text ([text.md](./text.md)).
 5. **What plays it**: code calls `PlayCutscene(CUTSCENE_LAB)`, or a
@@ -1016,8 +1016,8 @@ linker's zero fill up to the 4-aligned `.rodata` of `gax_tables.o`.
 ### Placing it and counting it
 
 Placement is the same as for a hand-written table (see "Layout" above).
-`data/data.s` drops the asset's label and `.incbin`, leaves a
-`@ ...: src/.../data/<file>.cpp` comment, and starts a new `.section` for what
+`games/xs/data/data.s` drops the asset's label and `.incbin`, leaves a
+`@ ...: engine/src/.../data/<file>.cpp` comment, and starts a new `.section` for what
 follows; `games/xs/ldscript.txt` links the object's `.rodata` in between (the
 first asset done this way was the intro bitmap `gCutscenePicture00Bitmap`,
 now part of `cutscene_pictures.cpp`). agbcc doesn't align a `u8`
@@ -1026,7 +1026,7 @@ what the ROM has for these unaligned stream lengths. Where the ROM starts
 a stream on a word boundary (every other LZ77 asset), the definition says
 `__attribute__((aligned(4)))`, see "LZ77 stream padding".
 
-The report needs nothing extra. The object is in `src/*/data/`, so
+The report needs nothing extra. The object is in `engine/src/*/data/`, so
 `tools/report_units.py` counts it as built data from the `games/xs/ldscript.txt`
 layout like any other table. `make report` depends on `$(C_OBJS)`, and
 `graphics.mk` makes the object depend on its generated `.inc`, so grit
@@ -1038,18 +1038,18 @@ was an `.incbin` of the gbagfx output, so converting it doesn't change
 
 1. Make sure the PNG is indexed (convert the grayscale ones first) and the
    grit rule for its kind is in `graphics.mk`.
-2. Write `src/<area>/<namespace>/data/<content>.cpp` (next to the code
+2. Write `engine/src/<area>/<namespace>/data/<content>.cpp` (next to the code
    that reads it, named after what it holds, never its address) with the
    hand-written declaration. Add a `$(call data_obj,<content>): <...>.lz.inc`
    dependency line to `graphics.mk`.
-3. Split `data/data.s` and add the `games/xs/ldscript.txt` lines, as for any table.
+3. Split `games/xs/data/data.s` and add the `games/xs/ldscript.txt` lines, as for any table.
 4. Run a full clean `make` (`make tidy && make`). It must print
    `crashbandicootxs.gba: OK`.
 
 ### Terrain types and UI text
 
 The old raw blob `gStaticData_081725C4` was two things. First
-`src/game/level/data/terrain_types.cpp`: 51 terrain types (`gTerrainTypes`, `struct
+`engine/src/game/level/data/terrain_types.cpp`: 51 terrain types (`gTerrainTypes`, `struct
 terrain_type`, 36 bytes: a value per collision mode, then the height of
 each of a cell's 8 pixel columns per mode). The code reads the height
 rows of each mode as their own 36-byte-stride tables through the labels
@@ -1059,28 +1059,28 @@ record. Those stay as symbols (the code uses them), defined with
 `asm(".set ...")` in the C file as names for addresses inside the
 table: they aren't objects, so the report doesn't count them.
 
-Then `src/game/ui/data/ui_text.cpp`: the game's own text (menus, level
+Then `engine/src/game/ui/data/ui_text.cpp`: the game's own text (menus, level
 names, popups) in six languages, 70 strings each. `GetUiText` looks a
-text id up in `gUiTextTables[language]` (`src/engine/sys/iwram_data.cpp`),
+text id up in `gUiTextTables[language]` (`engine/src/engine/sys/iwram_data.cpp`),
 which now points at `gUiTextEnglish`...`gUiTextDutch` by name. Each
 language's new strings sit before its array, and strings several
 languages share (mostly the level names) are stored once. Every string
 in the region is referenced, and every pointer lands on a string start.
 Strings are named after the first language and index that use them
-(`gUiTextEnglish00` is "level"). The table is generated from `text/`
+(`gUiTextEnglish00` is "level"). The table is generated from `games/xs/text/`
 (see "Text tables" and [text.md](./text.md)): the template's `ui.*`
 entries in text id order. The compiler's 4-byte alignment of string
 arrays gives the ROM's zero padding.
 
 ### Credits
 
-`gCreditsText` (`src/game/ui/data/credits_text.cpp`) is the credits
+`gCreditsText` (`engine/src/game/ui/data/credits_text.cpp`) is the credits
 stream `UpdateCreditsText` draws line by line as floating glyphs. It is text
 with three opcodes: 1, n (popup glyph picture n, the logos of
 `credits_title_logos.cpp`), 2 and 3 (the small and the large HUD font).
 A zero byte ends it, and the code starts over there. It is generated from
-`text/crashxs.pot`'s `credits.*` entries (the English text, which every
-language shows) and `data/credits.json` (the order, the
+`games/xs/text/crashxs.pot`'s `credits.*` entries (the English text, which every
+language shows) and `games/xs/data/credits.json` (the order, the
 font switches and the logos), see [text.md, "The
 credits"](./text.md#the-credits).
 
@@ -1103,7 +1103,7 @@ points at them by name too.
 
 The actor categories (`struct category_descriptor`, `actor_anim.h`) point
 at two kinds of uncompressed background, both now built from PNGs in
-`graphics/vehicles/`: the polar stages' ice wall
+`games/xs/graphics/vehicles/`: the polar stages' ice wall
 (`vehicles/polar/ice_wall.png`), the jetpack stages' clouds
 (`vehicles/jetpack/clouds.png`) and the skies of Rocket Racket, Blimp
 Bonanza and No-Fly Zone (`vehicles/jetpack/skies/`):
@@ -1142,7 +1142,7 @@ grit does all the conversion (flags in `graphics.mk`):
 | animation banks | `-gt -gB4 -p! -m -mRtp -mLf` | only the bank bits are used; `tools/grit_bg.py frames --banks` packs them after each frame's tiles |
 
 grit also writes the `-fx` tile set back out when it finishes, so the map
-rule hands it a copy under `build/` rather than the PNG in `graphics/`.
+rule hands it a copy under `build/` rather than the PNG in `games/xs/graphics/`.
 Rewriting the source PNG raced with the tiles rule reading it in a
 parallel build.
 
@@ -1154,7 +1154,7 @@ keep a non-zero colour somewhere. The header fields (`cols`, `rows`,
 its struct's size with `COMPILE_TIME_ASSERT`.
 
 The spawn tables in the same regions are generated in place from
-`data/levels/spawns/*.json` (docs/levels.md, "Actor categories"): each
+`games/xs/data/levels/spawns/*.json` (docs/levels.md, "Actor categories"): each
 `ACTOR_SPAWN_TABLE(n)` (`actor.h`) is the course length, the spawn
 count, the `n` spawns (`struct actor_spawn_entry`: the `struct
 actor_spawn` and the next target) and 4 bytes after the last one that
@@ -1181,13 +1181,13 @@ u16 zeros;         // ...
 ```
 
 The IWRAM routine `0x03000634` (`UnpackRleSpriteFrame` in
-`src/engine/gfx/sprite_arm.cpp`, the `gUnpackRleSpriteFrameFunc` hook, called by
+`engine/src/engine/gfx/sprite_arm.cpp`, the `gUnpackRleSpriteFrameFunc` hook, called by
 `polar_player.cpp`, `jetpack_player_update.cpp` and `company_logos.cpp`)
 unpacks a frame into a VRAM tile block. The frame pointer tables
 (`table_B` of animation record 0 of both category families, and
 `gYetiFrames`) point at the frame headers.
 
-Each set is one PNG: `graphics/vehicles/polar/player.png` (A, the polar
+Each set is one PNG: `games/xs/graphics/vehicles/polar/player.png` (A, the polar
 player), `vehicles/polar/yeti.png` (B, the Yeti) and
 `vehicles/jetpack/player.png` (C, the jetpack player):
 4bpp indexed, one frame per `w*8` x `h*8` block, the frames stacked top to
@@ -1205,7 +1205,7 @@ sets (A and C) use bank 0 of their category's OBJ palette
 | tiles | grit `-gt -gB4 -p! -ftb -fh!` | `<set>.img.bin` |
 | compression | `tools/rle_sprites.py pack --frame WxH` | `<set>.inc` (the bytes), `<set>.h` (`RLE_SPRITES_<NAME>_SIZE`, `_COUNT`, `_FRAME_nnn` byte offsets; NAME is `POLAR_PLAYER`, `YETI` or `JETPACK_PLAYER`) |
 
-`src/game/vehicles/polar/data/polar_rle_sprites.cpp` (sets A and B) and `jetpack_rle_sprites.cpp`
+`engine/src/game/vehicles/polar/data/polar_rle_sprites.cpp` (sets A and B) and `jetpack_rle_sprites.cpp`
 (set C) declare `const u8 gStaticData_<addr>[RLE_SPRITES_<NAME>_SIZE]`
 around the `.inc`. The frame size per set (graphics.mk's
 `RLE_SPRITE_RULE` calls: 8x8, 10x10, 8x8) is the only thing not in the
@@ -1237,7 +1237,7 @@ bytes used to be 70 raw labels (`gStaticData_080C0C36`,
 referenced any of them.
 
 They are alignment. Each of these streams is a `u8` array declared
-`__attribute__((aligned(4)))` in `src/*/data/` (`polar_sprite_sheet.cpp`,
+`__attribute__((aligned(4)))` in `engine/src/*/data/` (`polar_sprite_sheet.cpp`,
 `jetpack_sprite_sheet.cpp`, `font_tiles.cpp`,
 `menu_graphics.cpp`, `level_select_graphics.cpp`,
 `level_bg_tiles.cpp`, `level_assets.cpp`), with

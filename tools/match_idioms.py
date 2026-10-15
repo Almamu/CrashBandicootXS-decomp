@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Count the matching workarounds left in the C sources (#576).
 
-Scans every .c, .h, .cpp and .hpp file under src/, lib/ and include/ and counts each
+Scans every .c, .h, .cpp and .hpp file under engine/src/, lib/ and engine/include/ and counts each
 workaround idiom by kind and by file, plus the per-object compiler flag
 lists in the Makefile. The idioms and the macros that replace them are
-described in docs/matching_techniques.md and include/match.h.
+described in docs/matching_techniques.md and engine/include/match.h.
 
 It does not run the preprocessor: both arms of an `#if NON_MATCHING` are
 read. Comments are stripped before matching, so an idiom quoted in a
@@ -39,12 +39,12 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SCAN_DIRS = ("src", "lib", "include", "platform")
+SCAN_DIRS = ("engine/src", "lib", "engine/include", "platform")
 # Where the macros are defined: not counted as sites.
-SKIP_FILES = ("include/match.h",)
+SKIP_FILES = ("engine/include/match.h",)
 
 # Kind name -> one-line description, in report order. A `*_macro` kind
-# counts the sites already converted to the include/match.h macro.
+# counts the sites already converted to the engine/include/match.h macro.
 KINDS = collections.OrderedDict([
     ("pin", 'register-variable pin: `register T x asm("rN")`'),
     ("pin_macro", "MATCH_HOLD_REG(T, x, rN)"),
@@ -550,7 +550,7 @@ def check_macros():
     import subprocess
 
     def tokens(src):
-        out = subprocess.run(["arm-none-eabi-cpp", "-iquote", os.path.join(ROOT, "include"),
+        out = subprocess.run(["arm-none-eabi-cpp", "-iquote", os.path.join(ROOT, "engine", "include"),
                               "-I", os.path.join(ROOT, "platform", "gba", "include"),
                               "-nostdinc", "-undef", "-P"], input=src,
                              capture_output=True, text=True, check=True).stdout
@@ -595,10 +595,10 @@ ORIGINAL_SOURCE = {
     ("lib/gax/src/gax_swi.c", "pin"):
         (2, "GaxHuffUnComp's r7/r8 register variables, Shin'en's: the ROM has "
             "agbcc's r7-pin bug (docs/libraries.md, \"GAX implementation notes\")"),
-    ("src/engine/sys/bios_util.cpp", "insn"):
+    ("engine/src/engine/sys/bios_util.cpp", "insn"):
         (1, "DivMod's inline svc #6 with its push {r2}/pop {r2}, which gcc never "
             "emits for a save, so the ROM's source had them in the asm (#662)"),
-    ("src/engine/sys/bios_util.cpp", "pin"):
+    ("engine/src/engine/sys/bios_util.cpp", "pin"):
         (2, "DivMod's r0/r1 register variables: the Div SWI's operand binding, "
             "as an inline SWI wrapper is written for gcc (no per-register asm "
             "constraints on ARM), not a register-choice nudge (#662)"),
@@ -633,7 +633,7 @@ def check_spelled(hits):
             bad += 1
             for r, ln in sorted(hits[kind]):
                 if r == rel:
-                    print("%s:%d: spelled-out %s; use its include/match.h macro (%s)"
+                    print("%s:%d: spelled-out %s; use its engine/include/match.h macro (%s)"
                           % (r, ln, kind, KINDS[kind]))
     for (rel, kind), (n, _) in sorted(ALLOWED_SPELLED.items()):
         if counts[(rel, kind)] < n:
@@ -671,7 +671,7 @@ WORKAROUND_KINDS = (
     "reg_clobber", "clobber_macro", "mem_ref", "mem_ref_macro", "empty_other", "insn", "pool",
     "box_addr", "field_cast_store", "field_cast_load", "self_init", "non_matching", "naked",
     "volatile_local")
-# Any include/match.h macro, including the ones with no kind of their own
+# Any engine/include/match.h macro, including the ones with no kind of their own
 # (MATCH_KEEP_EXPR).
 ANY_MATCH_MACRO = re.compile(r"\bMATCH_[A-Z0-9_]+\s*\(")
 FUNC_NAME = re.compile(r"(?:operator\s*\S+|~?[A-Za-z_]\w*(?:\s*::\s*~?[A-Za-z_]\w*)*)\s*$")
@@ -874,7 +874,8 @@ def function_counts():
         return None
     with_wa = collections.Counter()
     for rel, name in dirty:
-        obj = os.path.splitext(rel)[0]
+        # engine/src/<path> builds build/crashbandicootxs/src/<path>.o
+        obj = os.path.splitext(rel)[0].removeprefix("engine/")
         if obj not in total:
             continue  # not a report unit
         with_wa[obj] += 1
@@ -913,7 +914,7 @@ def functions_report(list_dirty):
     if list_dirty:
         print()
         for (rel, name), kinds in sorted(dirty.items()):
-            if os.path.splitext(rel)[0] in total:
+            if os.path.splitext(rel)[0].removeprefix("engine/") in total:
                 print("%s: %s: %s" % (rel, name, ", ".join(kinds)))
     return 0
 
@@ -926,7 +927,7 @@ def main():
                     help="with --kind, print each site's source line")
     ap.add_argument("--list-kinds", action="store_true")
     ap.add_argument("--convert", metavar="KIND[,KIND]",
-                    help="rewrite every site of these kinds in src/, lib/ and include/ "
+                    help="rewrite every site of these kinds in engine/src/, lib/ and engine/include/ "
                          "to its match.h macro, adding the #include")
     ap.add_argument("--check-macros", action="store_true",
                     help="check that each match.h macro expands to the tokens "

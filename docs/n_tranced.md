@@ -65,13 +65,13 @@ N-Tranced steps are skipped until that secret exists.
 
 The two games share XS's sources, with N-Tranced's own on top:
 
-- **`src/` and `include/`** are XS's, and shared. N-Tranced builds the
-  `src/` files `games/n2/objects.txt` lists, with `GAME_N2` defined (XS's
+- **`engine/src/` and `engine/include/`** are XS's, and shared. N-Tranced builds the
+  `engine/src/` files `games/n2/objects.txt` lists, with `GAME_N2` defined (XS's
   build defines `GAME_XS`).
-- **`games/n2/src/<path>`**, when it exists, replaces `src/<path>` in
+- **`games/n2/src/<path>`**, when it exists, replaces `engine/src/<path>` in
   N-Tranced's build: the same object (`build/ntranced/src/<path>.o`), so
   compile.mk's per-object flags apply to it too. `objects.txt` can name
-  it either way. **`games/n2/include/`** comes before `include/` on
+  it either way. **`games/n2/include/`** comes before `engine/include/` on
   N-Tranced's include path, for a header of its own or its copy of one.
   Only C++ sources can be replaced (all the game code is C++).
 - **XS-only files** need nothing: N-Tranced doesn't list them.
@@ -112,7 +112,7 @@ A difference stays in the shared file when it is small and contained:
 
 When a function differs throughout, most of a file does, or the file is
 N-Tranced's own, it is a copy in `games/n2/src/` instead: start it with
-`cp src/<path> games/n2/src/<path>` and change what N-Tranced does
+`cp engine/src/<path> games/n2/src/<path>` and change what N-Tranced does
 differently. Moving code out of a shared file into copies (or back) is
 fine as long as both ROMs keep matching.
 
@@ -140,7 +140,7 @@ match it, and the original's bytes:
   (jiangzhengwenjz/gbadisasm, `new_features`) from
   [`games/n2/gbadisasm.cfg`](../games/n2/gbadisasm.cfg).
 - [`games/n2/objects.txt`](../games/n2/objects.txt): the shared sources
-  (`src/...`) N-Tranced links in place of the disassembly, with the
+  (`engine/src/...`) N-Tranced links in place of the disassembly, with the
   N-Tranced address and size of each one's code; and, after the code,
   the data objects linked in place of the incbin'd data (the level
   assets). They are built for
@@ -274,9 +274,9 @@ them (`disasm.py` stops at a pointer into an object to an unnamed
 
 | Source | N-Tranced |
 |---|---|
-| `src/engine/gfx/data/obj_piece_sizes.cpp` | `0x081CDFEC` |
-| `src/game/crash/data/input_ctrl_motion_set.cpp` | `0x081CE454` |
-| `src/game/level/data/terrain_types.cpp` | `0x081D0E10` |
+| `engine/src/engine/gfx/data/obj_piece_sizes.cpp` | `0x081CDFEC` |
+| `engine/src/game/crash/data/input_ctrl_motion_set.cpp` | `0x081CE454` |
+| `engine/src/game/level/data/terrain_types.cpp` | `0x081D0E10` |
 | `lib/libgcc/data/clz_tab.c` | `0x085291D0` |
 | `lib/agb_eeprom/data/eeprom_data.c` | `0x087F8430` |
 
@@ -303,7 +303,7 @@ checks what `extract` checks for XS: every layer's chunks re-encode to
 the ROM's bytes (2 rooms need `pad_overrides`, as 2 of XS's do), and the
 8 BG tile sets the build makes from the pictures are the ROM's, and so is
 every layer's cells. The folders are `<level>/<slot>`: the level's name
-and `main`/`part<N>`/`bonus`/`gem_path` as in data/levels. The names are
+and `main`/`part<N>`/`bonus`/`gem_path` as in games/xs/data/levels. The names are
 `levels.json`'s `"level_names"`, one per level of `gLevelTable`, which
 `extract-rooms` keeps: each level's own name (its record's `name_text`, an
 index into the UI strings, 41-69). Its 29 levels are 24 and then the 5
@@ -356,7 +356,7 @@ is, by [`games/n2/levels.mk`](../games/n2/levels.mk) with
 | The rooms' data (level_desc, layers, chunk grids, palette, entity lists), 4 regions | `0x081E44C4`-`0x082B3914`, between the BG0 tile sets | `games/n2/src/game/level/data/level_rooms_<N>.cpp` (`levels.py c`) |
 | The 3 BG0 tile sets (8bpp) | between the regions | `level_bg0_tiles_<N>.cpp` (`levels.py tileset`) |
 | The 5 BG1-3 tile sets (4bpp, LZ77) | `0x085346AC`-`0x08544635`, in two runs | `level_bg_tiles_<N>.cpp` |
-| The 36 level assets | `0x08544638`-`0x0869B8CC` | `src/game/level/data/level_assets.cpp` (shared) |
+| The 36 level assets | `0x08544638`-`0x0869B8CC` | `engine/src/game/level/data/level_assets.cpp` (shared) |
 
 That's 2,313,432 bytes, 28.9% of its data. A room's parts are in another
 order than XS's (`levels.json`'s `"room_layout"`: the type counts, entity
@@ -376,7 +376,7 @@ N-Tranced's graphics are built as XS's are (docs/graphics.md), from
 which has XS's format: its entries have N-Tranced's addresses, and its
 `objects` are N-Tranced's graphics class objects (in `objects.txt` too).
 A graphic both games have keeps XS's source: an entry whose file isn't
-under `games/n2/graphics/` is XS's `graphics/<path>`, so the continue
+under `games/n2/graphics/` is XS's `games/xs/graphics/<path>`, so the continue
 prompt's three pictures, the same bytes in both ROMs, have one PNG each.
 Only N-Tranced's own art is under `games/n2/graphics/`. A class keeps
 XS's name and its parts XS's C names ("same job, same name"; both builds
@@ -396,7 +396,7 @@ python3 tools/gfx_manifest.py --graphics-dir games/n2/graphics extract baserom_n
 ```
 
 `extract` (without `--check`) writes into `games/n2/graphics/` only what
-XS's `graphics/` doesn't have the same; `--check` compares every source,
+XS's `games/xs/graphics/` doesn't have the same; `--check` compares every source,
 N-Tranced's or the shared XS one, with N-Tranced's ROM.
 
 | What | Where (ROM) | Source |
@@ -494,7 +494,7 @@ report:
 
 - **code**, in bytes: the code, `0x08000000` to the start of the
   incbin'd data. **Matching** is the shared sources' (`games/n2/objects.txt`,
-  built from `src/`, byte-identical); the disassembly (`games/n2/asm/`) is
+  built from `engine/src/`, byte-identical); the disassembly (`games/n2/asm/`) is
   still to do.
 - **functions:** every function of `ntranced.elf`; matching, the shared
   sources'.

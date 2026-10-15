@@ -1,4 +1,4 @@
-/* The sound blocks of data/data.s, in place of the GBA's data.s:
+/* The sound blocks of games/xs/data/data.s, in place of the GBA's data.s:
  * gSfxTable (AudioContext's sound-effect table), the music block
  * gGaxMusicData (whose start AudioContext hands to GAX2 as the song's
  * sfxTypes, and whose songs gSongTable points at) and the sound-effect

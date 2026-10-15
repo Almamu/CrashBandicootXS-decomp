@@ -1,6 +1,6 @@
 # The game's text
 
-The game's text is in `text/` as gettext files (#1070): the menus, the
+The game's text is in `games/xs/text/` as gettext files (#1070): the menus, the
 level names and the other UI strings (`GetUiText`'s text ids), and the
 cutscenes' pages, in the six languages of the language select (English,
 French, German, Spanish, Italian, Dutch), and the credits, which every
@@ -9,8 +9,8 @@ tables and the credits from them (docs/data.md, "Text tables").
 
 | File | What |
 |---|---|
-| `text/crashxs.pot` | the template: every string's key, its English text and the translator comments |
-| `text/fr.po`, `de.po`, `es.po`, `it.po`, `nl.po` | a language's text, one entry per template entry |
+| `games/xs/text/crashxs.pot` | the template: every string's key, its English text and the translator comments |
+| `games/xs/text/fr.po`, `de.po`, `es.po`, `it.po`, `nl.po` | a language's text, one entry per template entry |
 | `tools/text.py` | the generator, the checks and the extractor |
 | `text.mk` | the build rules and the `text-check`/`text-update` targets |
 
@@ -64,15 +64,15 @@ The keys:
   page that shows with slide `P` of the cutscene. A page's strings show
   one after the other. A page used twice (cutscene 10's page 2 is
   cutscene 9's page 1) has one key. Which slide shows a page is
-  `data/cutscenes.json`'s (a slide's `"text": "cutscene<NN>.page<P>"`,
+  `games/xs/data/cutscenes.json`'s (a slide's `"text": "cutscene<NN>.page<P>"`,
   [data.md, "The cutscene data"](./data.md#the-cutscene-data)), and the
   page has as many strings as the template has entries for it.
 
 ## The text
 
 The game draws the text with its two HUD fonts, whose characters are
-`gSmallFontChars` and `gLargeFontChars` (src/game/ui/data/hud_font_tables.cpp,
-the glyphs are graphics/fonts/): the 26 lower case letters, the digits,
+`gSmallFontChars` and `gLargeFontChars` (engine/src/game/ui/data/hud_font_tables.cpp,
+the glyphs are games/xs/graphics/fonts/): the 26 lower case letters, the digits,
 `- + ! : , ? . ' %` and `< >` (the small font only), the accented letters
 `ä à á â ë è é ê ï ì í î ö ò ó ô ü ù ú û ñ ß ç ¿ ¡ ´ œ`, and `A`, `B`,
 `L`, `R`, which draw the GBA's buttons (the small font only). So the text
@@ -117,7 +117,7 @@ ROM that `make compare` rejects.
 
 ## Changing the template
 
-To change the English text or add an entry, edit `text/crashxs.pot`
+To change the English text or add an entry, edit `games/xs/text/crashxs.pot`
 (the English, the key, the comments), then
 
     make text-update
@@ -140,7 +140,7 @@ its number of entries. The entries' order in the template is the order
 the strings are stored in, and a page's entries are together and
 numbered from 0 (tools/text.py stops otherwise). A new page is new
 entries (`cutscene11.page0.0`, ...) that a slide of
-`data/cutscenes.json` shows ([data.md, "A new
+`games/xs/data/cutscenes.json` shows ([data.md, "A new
 cutscene"](./data.md#a-new-cutscene)); a page no slide shows, or a slide
 showing a page the template lacks, stops the build.
 
@@ -149,7 +149,7 @@ showing a page the template lacks, stops the build.
 A level's name is data in the six languages (#966):
 
 1. **The template.** Add the entry after the last `ui.*` one (before the
-   first `cutscene*` entry) of `text/crashxs.pot`, keyed
+   first `cutscene*` entry) of `games/xs/text/crashxs.pot`, keyed
    `ui.level.<level>` after the level's constant (`LEVEL_LAB`:
    `ui.level.lab`), with its comment:
 
@@ -216,7 +216,7 @@ The build reads only the template's English. `make text-check` fails if
 a language's copy isn't the English, unchanged, or is missing or fuzzy,
 so a translation can't go in by mistake and look as if the game used it.
 
-`data/credits.json` gives the order the credits show them in, with the
+`games/xs/data/credits.json` gives the order the credits show them in, with the
 fonts and the logos:
 
 ```json
@@ -235,14 +235,14 @@ fonts and the logos:
 
 `tools/text.py cpp credits_text` writes the stream from them, a line per
 string (`credits_text.cpp` #includes it). To change a name or add one,
-edit the entry in `text/crashxs.pot`; to add a heading, add its entries
+edit the entry in `games/xs/text/crashxs.pot`; to add a heading, add its entries
 to the template and its items to the list. Then run `make text-update`
 and copy the new English into each `.po`'s `msgstr` (for a changed
 entry, also delete its `#, fuzzy` and `#|` lines). The build, and `make text-check`, stop on an item
 whose key the template lacks, an entry no item uses, an empty entry, a
 logo past the fifth, and a character the font the item is drawn in lacks
 (a heading's must be in the large font). `tools/text.py extract` writes
-the `credits.*` entries from the ROM too, keyed by `data/credits.json`,
+the `credits.*` entries from the ROM too, keyed by `games/xs/data/credits.json`,
 into the template and the `.po` files, and `extract --check` compares
 them.
 
@@ -255,14 +255,14 @@ them.
   English) and each language's `.mo` with Python's gettext module
   (`pgettext`, the key being the context), and writes
   `build/crashbandicootxs/text/<table>.inc`, which
-  `src/*/data/<table>.cpp` includes. It stops on a key a `.mo` lacks.
+  `engine/src/*/data/<table>.cpp` includes. It stops on a key a `.mo` lacks.
 - The tables store each distinct string once, at its first use, in the
   order docs/data.md, "Text tables", gives, as the ROM does.
 
 ## Extracting the text again
 
-`tools/text.py extract [baserom.gba]` writes `text/` from the ROM's
+`tools/text.py extract [baserom.gba]` writes `games/xs/text/` from the ROM's
 tables, with the keys and the comments; this is how the files were made.
 `tools/text.py extract --check` writes them into a temporary directory
-and compares them with `text/` byte for byte: it passes as long as
-`text/` is the ROM's text.
+and compares them with `games/xs/text/` byte for byte: it passes as long as
+`games/xs/text/` is the ROM's text.

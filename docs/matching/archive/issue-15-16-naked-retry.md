@@ -17,14 +17,14 @@ under both).
 
 ## Structs
 
-- New `include/orbit_part.h`: `struct orbit_part`, the 0x54-byte part
+- New `engine/include/orbit_part.h`: `struct orbit_part`, the 0x54-byte part
   object `CreateExtraLife`/`CreateWumpa` spawn and
   `UpdateExtraLife`/`UpdateWumpa`/`UpdateExtraLifeHop`/`UpdateWumpaHop` drive
   (`struct actor` head, animation bank/tag/frame, timer, velocity,
   state/counter/mode/phase bytes, orbit anchor). The x/y head and the
   anchor are both `struct orbit_vec`, so the spawners' paired
   `ldr; ldr; str; str` anchor copy is a struct copy (`ORBIT_POS`).
-- `include/game/crash/action_input.h` gained named fields only: `act.anims`
+- `engine/include/game/crash/action_input.h` gained named fields only: `act.anims`
   (+0x04), the method slots `m10`/`m28`..`m48`, `act_part` fields
   (`rampXStart`/`rampXStep`/`rampXTarget`/`speedX`/`deadline`/`bumped`/`listCount`/
   `slippery`/`pushLeft`/`pushRight`) and `act_anim_bank.unk_0A`.

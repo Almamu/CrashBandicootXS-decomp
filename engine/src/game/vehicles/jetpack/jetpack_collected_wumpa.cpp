@@ -1,0 +1,168 @@
+#include "game/bosses/boss_actors.hpp"
+#include "game/vehicles/vehicle.hpp"
+#include "engine/audio/audio.hpp"
+#include "game/level/level_state.hpp"
+#include "engine/actor/actor_bg.hpp"
+
+extern "C" {
+#include "match.h"
+#include <libgcc.h>
+#include "engine/sys/system.h"
+#include "engine/actor/actor.h"
+#include "engine/gfx/gfx.h"
+#include "game/level/level.h"
+#include "globals.h"
+#include "engine/util/math_util.h"
+}
+
+using Engine::Actor::ActorBg;
+using Game::Entities::HpActor;
+using Game::Vehicles::Jetpack::JetpackCollectedWumpa;
+using Game::Vehicles::Jetpack::JetpackRing;
+
+/* The jetpack ring's constructor and IsUnshootable and the collected
+ * wumpa (#664 part 11h, engine/include/game/vehicles/vehicle.hpp), ROM 0x080326E4-0x08032910,
+ * between jetpack_rocket.cpp and engine/src/game/bosses/hovercraft_fireball.cpp. The
+ * collected wumpa's destructor is its key method, so
+ * gJetpackCollectedWumpaVtable is emitted here. In hovercraft.cpp until
+ * #769; built with old_agbcp, as that was. See
+ * docs/matching/archive/issue-60-61-gap-31a6c-part2.md. */
+
+/* 1 hit point, not cued yet. */
+JetpackRing::JetpackRing(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
+    : HpActor(rec, x, y, z, 1)
+{
+    cued = 0;
+}
+
+/* Rings can't be shot. */
+u8 JetpackRing::IsUnshootable()
+{
+    return 1;
+}
+
+/* Flies on towards the wumpa counter; once there (out of the positive
+ * quadrant past 0x1000), the collect sound and deletes itself, otherwise
+ * the animation step. */
+void JetpackCollectedWumpa::Update()
+{
+    s32 one = 1;
+    s32 nx, ny;
+
+    sortKey = one;
+    nx = x += velX;
+    ny = y += velY;
+    if (nx <= 0x1000 || ny <= 0x1000) {
+        gAudioContext->PlaySfx(SFX_HUD_COLLECT, 0x100);
+        delete this;
+        return;
+    }
+    animTime += animTimer;
+    animDone = 0;
+    if (GetAnimFrameBaseOffset() >= anims[animIndex].loopThreshold) {
+        ANIM_REWIND(animTime, anims[animIndex]);
+        animDone = one;
+    }
+}
+
+/* Draws the current frame at the position, centred on the frame's width
+ * and height, unless it is entirely off screen. Same shape as
+ * ActorSelf::Draw with the scale doubling fixed off: `scaled` starts at
+ * 0 (halving nothing) and becomes the 0x100 OBJ-affine bit once the
+ * sprite is known to be visible. The third OAM word takes the palette as
+ * its priority nibble, plus 0x800 when the sort key is behind the BG. */
+void JetpackCollectedWumpa::Draw()
+{
+    /* `sx` also holds the palette once the attributes are packed: the
+     * ROM's register */
+    screen_x_t sx;
+    screen_y_t sy;
+    u8 *frame;
+    u32 scaled;
+    screen_dx_t halfW;
+    screen_dy_t halfH;
+    u32 attr;
+    u32 attr2;
+    u16 attr2Out;
+    /* `oamPriority` is needed: inlined, the code is 5 instructions longer */
+    s32 oamPriority = 0x180;
+    /* `highBit` is needed: inlined, the code is 2 instructions longer */
+    u32 highBit = 0x800;
+
+    s32 qx = x, qy = y;
+
+    sx = Q8_TO_INT(qx);
+    sy = Q8_TO_INT(qy);
+    frame = GetAnimFrameData();
+    scaled = 0;
+    halfW = scaled ? frame[0] << 3 : frame[0] << 2;
+    halfH = scaled ? frame[1] << 3 : frame[1] << 2;
+    sx -= halfW;
+    sy -= halfH;
+    if (sy > DISPLAY_HEIGHT - 1)
+        return;
+    if (sy + halfH * 2 < 0)
+        return;
+    if (sx > DISPLAY_WIDTH - 1)
+        return;
+    if (sx + halfW * 2 < 0)
+        return;
+
+    scaled |= 0x100;
+    attr = OAM_Y(sy) | (OAM_X(sx) << 16) | GetAnimFrameAttr() | scaled;
+    sx = palette;
+    attr2 = sx << 12;
+    if (sortKey & SORT_KEY_FLAG_BEHIND_BG)
+        attr2Out = attr2 | highBit;
+    else
+        attr2Out = attr2;
+    SetupSpriteFrameOam(frame, attr, attr2Out, oamPriority);
+}
+
+/* Adds the fruit it carries. */
+JetpackCollectedWumpa::~JetpackCollectedWumpa()
+{
+    s32 i;
+
+    for (i = 0; i < reward; i++)
+        gLevelState->CollectWumpa();
+}
+
+/* PolarCollectedWumpa's constructor with 1 hit point: from the BG's
+ * centre, the velocity that reaches the wumpa counter (0x1000, 0x1000) in
+ * a number of frames proportional to the distance. */
+JetpackCollectedWumpa::JetpackCollectedWumpa(const struct anim_table_record *rec, s32 x, s32 y,
+                                             s32 reward)
+    : HpActor(rec, x, y, 1, 1)
+{
+    s32 sum;
+    s32 q;
+    s32 nx;
+
+    this->reward = reward;
+    this->y += ActorBg::GetCenterY();
+    nx = this->x + ActorBg::GetCenterX();
+    this->x = nx;
+
+    s32 dx = nx - 0x1000;
+    /* `absDx` is needed (inlined, the instructions are reordered); `absDy`
+     * stays beside it */
+    s32 absDx = ABS_BRANCHLESS(dx);
+    s32 ny = this->y;
+    s32 dy = ny - 0x1000;
+    s32 absDy = ABS_BRANCHLESS(dy);
+
+    sum = absDx + absDy;
+    if (sum < 0)
+        sum += 0x7ff;
+    q = sum >> 0xb;
+
+    velX = __divsi3(0x1000 - nx, q);
+    velY = __divsi3(0x1000 - ny, q);
+}
+
+/* Collected wumpas can't be shot. */
+u8 JetpackCollectedWumpa::IsUnshootable()
+{
+    return 1;
+}

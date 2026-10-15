@@ -7,7 +7,7 @@ See docs/levels.md for the format. In short, a room is
   the pooled BG0 and the collision layer), the level asset, the entity list
   and the entity links;
 - per layer a `struct level_layer_desc` (the BG layers' source,
-  include/game/level/bg_layer.hpp) and a grid of 16x8-cell chunk ids;
+  engine/include/game/level/bg_layer.hpp) and a grid of 16x8-cell chunk ids;
 - the level asset: per layer a table of chunk offsets and one RLE/delta
   token stream per chunk (decoded by DecodeLayerChunk/DecodeCollisionChunk). 34 rooms
   keep it LZ77-packed next to the intro graphics, 7 keep it raw;
@@ -15,7 +15,7 @@ See docs/levels.md for the format. In short, a room is
   records in 256-px columns), the spawn parameter records and the
   per-type entity counts.
 
-The editable sources live in data/levels/: levels.json (the rooms, the
+The editable sources live in games/xs/data/levels/: levels.json (the rooms, the
 two ROM regions and which rooms they hold, in ROM order, the ROM order
 of the level assets, the ROM layout of the level table, and the levels:
 their gLevelTable fields and the rooms each plays, see "The level table"
@@ -27,12 +27,12 @@ picture (8bpp indexed with the room's palette, 8x8 pixels per cell; a
 BG1-3 pixel is `bank * 16 + pixel`, see "BG layer pictures" below), and
 `collision.png`, the collision layer as an image the size of the BG0
 picture (one 8x8 block per cell, coloured by
-data/levels/collision_legend.json, see tools/collision_bmp.py). The BG
+games/xs/data/levels/collision_legend.json, see tools/collision_bmp.py). The BG
 tile sets, the cells, the chunk set, the chunk grid, the asset offsets,
 the entity groups, the parameter offsets and the per-type counts are all
 derived from those again.
 
-    tools/levels.py extract [baserom.gba]     write data/levels/ from the ROM
+    tools/levels.py extract [baserom.gba]     write games/xs/data/levels/ from the ROM
     tools/levels.py --levels-dir DIR extract-rooms ROM TABLE
                                               another game's rooms only (N-Tranced:
                                               DIR games/n2/data/levels, TABLE its
@@ -42,7 +42,7 @@ derived from those again.
                                               tileset_order.json, checked like extract
                                               (docs/n_tranced.md)
     --levels-dir DIR                          (any command) the level data is DIR,
-                                              not data/levels
+                                              not games/xs/data/levels
     tools/levels.py rooms [--packed] [--new]  levels.json's rooms (with --packed,
                                               those with an LZ77-packed asset;
                                               with --new, those in no ROM region)
@@ -80,10 +80,10 @@ derived from those again.
                                               and gThemeMusicCues (levels), or the
                                               room records and the played-room
                                               arrays (records), #included by
-                                              src/game/level/data/level_table.cpp
+                                              engine/src/game/level/data/level_table.cpp
     tools/levels.py table pictures OUT        gLevelSelectPictures, a level-select
                                               picture per theme, #included by
-                                              src/game/ui/data/
+                                              engine/src/game/ui/data/
                                               level_select_picture_table.cpp
     tools/levels.py palette-cycles OUT        theme_palette_cycles.h: RunRoom's
                                               colour-cycle cases per theme
@@ -104,7 +104,7 @@ derived from those again.
                                               levels.json's "on_clear"
     tools/levels.py spawns SYMBOL OUT         the ROM's spawn list SYMBOL
                                               (gCategoryNSpawnTable), from its
-                                              category's data/levels/spawns/ file,
+                                              category's games/xs/data/levels/spawns/ file,
                                               #included where the ROM has it
     tools/levels.py categories OUT            actor_categories.inc:
                                               ActorCategory::descriptors, from
@@ -115,7 +115,7 @@ derived from those again.
                                               sky replace
     tools/levels.py anim-table NAME OUT       the ROM's animation table NAME (polar,
                                               jetpack) and its keyframes and
-                                              frames, from data/levels/
+                                              frames, from games/xs/data/levels/
                                               anim_tables/NAME.json, #included by
                                               its family's *_anim_family.cpp
     tools/levels.py classes OUT               rooms.hpp: every room's class (its BG
@@ -147,9 +147,9 @@ derived from those again.
                                               count, and its version and checksum
                                               seed, from a CRC-32 of the level data
 
-The entity types are named in data/levels/entity_types.json (one record
+The entity types are named in games/xs/data/levels/entity_types.json (one record
 per gEntitySpawnFuncs slot) and room.json gives a placed entity's type by
-that name; the crate kinds are named in data/levels/crate_kinds.json.
+that name; the crate kinds are named in games/xs/data/levels/crate_kinds.json.
 """
 import json
 import re
@@ -173,7 +173,7 @@ REGIONS = [
     ("level_rooms_main_bonus", 0x0824B638, 0x08270F08),
     ("level_rooms_bosses_gem_paths", 0x082B91D0, 0x082BF120),
 ]
-# The level assets, all 41 back to back (src/game/level/data/level_assets.cpp).
+# The level assets, all 41 back to back (engine/src/game/level/data/level_assets.cpp).
 ASSET_REGION = ("level_assets", 0x0864F830, 0x087E3BEC)
 # The seven raw (assetPacked = 0) assets and their sizes; the packed ones
 # are LZ77 streams whose header gives the size.
@@ -199,7 +199,7 @@ ROOM_LAYOUT = ["params", "grids", "palette", "type_counts", "links", "desc", "en
 # Entities are grouped into 256-px columns (x >> 8).
 GROUP_SHIFT = 8
 
-LEVELS_DIR = Path("data/levels")
+LEVELS_DIR = Path("games/xs/data/levels")
 ENTITY_TYPES_JSON = LEVELS_DIR / "entity_types.json"
 CRATE_KINDS_JSON = LEVELS_DIR / "crate_kinds.json"
 LEVELS_JSON = LEVELS_DIR / "levels.json"
@@ -432,7 +432,7 @@ def read_json(path):
 
 
 def room_key(room_dir):
-    """A room's folder under data/levels/, e.g. "jungle_jam/main": its name
+    """A room's folder under games/xs/data/levels/, e.g. "jungle_jam/main": its name
     in levels.json and under the build directory."""
     return Path(room_dir).relative_to(LEVELS_DIR).as_posix()
 
@@ -541,7 +541,7 @@ def build_asset(room_dir, build_dir=None):
 # Room classes
 #
 # Each room is a class (docs/levels.md, "Room classes"), like a graphic of
-# graphics/manifest.json (docs/graphics.md, "Graphics classes"): its BG
+# games/xs/graphics/manifest.json (docs/graphics.md, "Graphics classes"): its BG
 # palette, its layers' chunk grids and its level asset are static const
 # data members (Room37::palette, ::bg1Grid, ::asset), which keep their
 # room.json symbols as their C names through cxx_symbols.txt. The class is
@@ -592,7 +592,7 @@ def all_rooms():
 
 def rooms_hpp():
     """rooms.hpp: every room's class, in levels.json's order."""
-    out = ["/* Generated by tools/levels.py from data/levels/ - do not edit. */", "",
+    out = ["/* Generated by tools/levels.py from games/xs/data/levels/ - do not edit. */", "",
            "/* The room classes (docs/levels.md, \"Room classes\"): each room's BG",
            " * palette, chunk grids and level asset as static const data members,",
            " * defined by the level data (level_rooms_*.cpp, level_assets.cpp)",
@@ -605,7 +605,7 @@ def rooms_hpp():
     for room in all_rooms():
         decls = ["    static const %s %s[%s];" % (t, m, b) for m, _, t, b, _ in room_members(room)]
         width = max(len(d) for d in decls)
-        out += ["", "/* data/levels/%s (%s) */" % (room["name"], room["symbols"]["desc"]),
+        out += ["", "/* games/xs/data/levels/%s (%s) */" % (room["name"], room["symbols"]["desc"]),
                 "class %s" % room_class(room), "{", "public:"]
         out += ["%s // %s - %s" % (d.ljust(width), sym, what) for d, (_, sym, _, _, what) in zip(decls, room_members(room))]
         out.append("};")
@@ -616,7 +616,7 @@ def rooms_hpp():
 
 def room_symbols_block():
     lines = [ROOM_CLASSES_BEGIN,
-             "# The room classes (data/levels/, docs/levels.md \"Room classes\"): each",
+             "# The room classes (games/xs/data/levels/, docs/levels.md \"Room classes\"): each",
              "# member keeps its room.json symbol."]
     for room in all_rooms():
         lines += ["%s %s" % (mangled(room, m), sym) for m, sym, _, _, _ in room_members(room)]
@@ -862,7 +862,7 @@ def region_c(region_name, out_path, build_dir=None):
         # after the region's own rooms
         bodies[len(region["rooms"]):len(region["rooms"])] = new_tilesets_c(levels, build_dir)
         externs -= {sym for sym, _ in new_tilesets(levels)}
-    text = ["/* Generated by tools/levels.py from data/levels/ - do not edit. */", ""]
+    text = ["/* Generated by tools/levels.py from games/xs/data/levels/ - do not edit. */", ""]
     for s in sorted(externs):
         text.append("extern const u8 %s[];" % s)
     text.append("")
@@ -884,7 +884,7 @@ def assets_c(out_path):
         sys.exit("levels.json: the \"assets\" order must list every room of the ROM's regions once "
                  "(a new room's asset comes after them)")
     rooms = rooms + new_rooms(levels)
-    text = ["/* Generated by tools/levels.py from data/levels/ - do not edit. */", ""]
+    text = ["/* Generated by tools/levels.py from games/xs/data/levels/ - do not edit. */", ""]
     for rname in rooms:
         room = read_json(LEVELS_DIR / rname / "room.json")
         asset = room["asset"]
@@ -898,7 +898,7 @@ def assets_c(out_path):
 
 
 # ---------------------------------------------------------------------------
-# BG layer pictures (data/levels/<level>/<slot>/bg0-3.png) and BG tile sets
+# BG layer pictures (games/xs/data/levels/<level>/<slot>/bg0-3.png) and BG tile sets
 #
 # A BG layer is kept as its whole picture: 8x8 pixels per cell, 8bpp
 # indexed with the room's palette. A cell's block is its tile, flipped as
@@ -911,7 +911,7 @@ def assets_c(out_path):
 # of the layers that name it in room.json (docs/levels.md, "Tile sets"):
 # - tile 0 is the blank tile;
 # - then the rooms that use the set, one after another: first the ones
-#   data/levels/tileset_order.json lists for it, then the other rooms of the
+#   games/xs/data/levels/tileset_order.json lists for it, then the other rooms of the
 #   ROM's regions in levels.json order, then the new rooms (in no region);
 # - inside a room bg1, bg2, bg3 (a BG0 set: bg0), each picture in chunk
 #   order (the 16x8-cell chunks row by row, a chunk's cells row by row);
@@ -1038,7 +1038,7 @@ def tileset_users(levels):
             bpp = 8 if lname == "bg0" else 4
             s = sets.setdefault(layer["tileset"], {"bpp": bpp, "rooms": {}})
             if s["bpp"] != bpp:
-                sys.exit("data/levels/%s: %s names %s, which other rooms use for %s: a BG0 tile set "
+                sys.exit("games/xs/data/levels/%s: %s names %s, which other rooms use for %s: a BG0 tile set "
                          "(8bpp) can't be a BG1-3 one (4bpp)" % (r, lname, layer["tileset"],
                                                                   "BG0" if s["bpp"] == 8 else "BG1-3"))
             s["rooms"].setdefault(r, []).append(lname)
@@ -1051,7 +1051,7 @@ def load_tileset_order():
 
 def is_rom_tileset(spec, levels):
     """A tile set the ROM's rooms use (the ROM's own, defined by the
-    hand-written src/.../data files); the others are new ones."""
+    hand-written engine/src/.../data files); the others are new ones."""
     rom = set(rom_region_rooms(levels))
     return any(r in rom for r in spec["rooms"])
 
@@ -1225,7 +1225,7 @@ def tilesets_mk(out_path, build_dir):
     b = build_dir
     d = LEVELS_DIR.as_posix()
     # another game's (--levels-dir) runs the tool on its directory too
-    tool = "tools/levels.py" if d == "data/levels" else "tools/levels.py --levels-dir %s" % d
+    tool = "tools/levels.py" if d == "games/xs/data/levels" else "tools/levels.py --levels-dir %s" % d
     new = [s for s, spec in users.items() if not is_rom_tileset(spec, levels)]
     lines = ["# Generated by tools/levels.py tilesets-mk from %s/ - do not edit." % d,
              "LEVEL_TILESETS := " + " ".join(users),
@@ -1259,7 +1259,7 @@ def new_tilesets_c(levels, build_dir):
     its new data with: an 8bpp (BG0) set as a tag-0x00 raw tagged asset
     (`{size << 8}`, then the tiles; its size from the built
     `tilesets/<set>.bin`), a 4bpp (BG1-3) set as its LZ77 stream, like
-    the ROM's (src/game/level/data/level_tilesets_*.cpp, level_bg_tiles.cpp)."""
+    the ROM's (engine/src/game/level/data/level_tilesets_*.cpp, level_bg_tiles.cpp)."""
     defs = []
     for symbol, spec in new_tilesets(levels):
         defs.append("/* new tile set, %dbpp */" % spec["bpp"])
@@ -1275,7 +1275,7 @@ def new_tilesets_c(levels, build_dir):
 
 
 # ---------------------------------------------------------------------------
-# The level table (src/game/level/data/level_table.cpp, docs/levels.md, "The
+# The level table (engine/src/game/level/data/level_table.cpp, docs/levels.md, "The
 # level table")
 #
 # - gLevelTable: per level of levels.json's "levels" (in id order) a
@@ -1299,7 +1299,7 @@ def new_tilesets_c(levels, build_dir):
 # shrinks the table in place, and the ROM data after it moves
 # (docs/shifting.md).
 
-# The record kinds (ROOM_KIND_*, include/constants/rooms.h); a room's
+# The record kinds (ROOM_KIND_*, engine/include/constants/rooms.h); a room's
 # "kind" is one of the first three.
 ROOM_KINDS = ["ON_FOOT", "UNDERWATER", "HOVER", "CATEGORY"]
 # gLevelTable (struct level_info, 0x24 bytes) and the ROM's room table.
@@ -1366,7 +1366,7 @@ class LevelTable:
             sys.exit("%s: %s plays %s, which isn't in \"rooms\"" % (LEVELS_JSON, where, e))
         rec = self.records[e].get("record")
         if rec is None:
-            sys.exit("data/levels/%s/room.json: no \"record\" (the room's struct level_room: its symbol, "
+            sys.exit("games/xs/data/levels/%s/room.json: no \"record\" (the room's struct level_room: its symbol, "
                      "\"kind\" and \"blend\")" % e)
         return rec["symbol"]
 
@@ -1379,15 +1379,15 @@ class LevelTable:
         rec = self.records[r]["record"]
         sym = self.records[r]["symbols"]
         if rec.get("kind") not in ROOM_KINDS[:3]:
-            sys.exit("data/levels/%s/room.json: \"record\" \"kind\" is one of %s" % (r, ", ".join(ROOM_KINDS[:3])))
+            sys.exit("games/xs/data/levels/%s/room.json: \"record\" \"kind\" is one of %s" % (r, ", ".join(ROOM_KINDS[:3])))
         b = rec.get("blend", {})
         blend = [b.get(k, 0) for k in ("effect", "eva", "evb")]
         if not (0 <= blend[0] <= 0xFFFF and 0 <= blend[1] <= 0xFF and 0 <= blend[2] <= 0xFF):
-            sys.exit("data/levels/%s/room.json: \"blend\" is a u16 \"effect\" and u8 \"eva\", \"evb\"" % r)
+            sys.exit("games/xs/data/levels/%s/room.json: \"blend\" is a u16 \"effect\" and u8 \"eva\", \"evb\"" % r)
         return ["extern const struct level_room %s = {" % rec["symbol"],
                 "    %s, &%s, ROOM_KIND_%s, 0, { { %d, %d, %d } }" % (member(self.records[r], "palette"), sym["desc"],
                                                                      rec["kind"], *blend),
-                "}; /* data/levels/%s */" % r]
+                "}; /* games/xs/data/levels/%s */" % r]
 
     @staticmethod
     def stage_record(name, number):
@@ -1419,7 +1419,7 @@ class LevelTable:
     def level_table_c(self, data):
         """The colour cycles' lists, gLevelTable, gLevelRoomLists and
         gThemeMusicCues (level_table.inc)."""
-        out = ["/* Generated by tools/levels.py from data/levels/levels.json - do not edit. */", ""]
+        out = ["/* Generated by tools/levels.py from games/xs/data/levels/levels.json - do not edit. */", ""]
         out += palette_cycles_c(data) + [""]
         out += ["extern const struct level_room_list gLevelRoomLists[LEVEL_COUNT];"]
         out += self.externs(arrays=self.all_arrays(), records=self.all_records()) + [""]
@@ -1453,7 +1453,7 @@ class LevelTable:
                 if key not in seen:
                     seen.add(key)
                     played.append(e)
-        out = ["/* Generated by tools/levels.py from data/levels/ - do not edit. */", ""]
+        out = ["/* Generated by tools/levels.py from games/xs/data/levels/ - do not edit. */", ""]
         out += self.externs(rooms=extras + [e for e in played if isinstance(e, str)],
                             records=[self.ref(e, "table") for e in played]) + [""]
         out.append("/* The extra rooms' records. */")
@@ -1487,9 +1487,9 @@ def table_c(which, out_path):
 # A level's "theme" is the index of levels.json's "themes". Everything the
 # game picks by theme is a field of the theme:
 #
-# - "song": its music, the song (sound/gax_manifest.json's song_table) of
+# - "song": its music, the song (games/xs/sound/gax_manifest.json's song_table) of
 #   its entry of gThemeMusicCues (PlayRoomMusic);
-# - "picture": its level-select picture (graphics/manifest.json's entry,
+# - "picture": its level-select picture (games/xs/graphics/manifest.json's entry,
 #   by path), its entry of gLevelSelectPictures (ZoomBg::SetPicture). A
 #   theme without one has no entry: its levels may not be on the level
 #   select's grid (mega-mix's);
@@ -1509,8 +1509,8 @@ def table_c(which, out_path):
 # ROM's; `extract` reads the songs, the pictures and the cycles' entries
 # back from the ROM.
 
-GAX_MANIFEST = Path("sound/gax_manifest.json")
-GFX_MANIFEST = Path("graphics/manifest.json")
+GAX_MANIFEST = Path("games/xs/sound/gax_manifest.json")
+GFX_MANIFEST = Path("games/xs/graphics/manifest.json")
 THEME_KEYS = ["constant", "name", "song"]
 THEME_OPTIONAL_KEYS = ["picture", "palette_cycle", "first_room_exit_zone"]
 # The ROM's theme tables: the colour cycles' entry lists (back to back,
@@ -1529,7 +1529,7 @@ def song_names():
 
 
 def level_select_picture_classes():
-    """graphics/manifest.json's level-select pictures: path -> its entry."""
+    """games/xs/graphics/manifest.json's level-select pictures: path -> its entry."""
     assets = read_json(GFX_MANIFEST)["assets"]
     return {e["path"]: e for e in assets
             if e.get("path", "").startswith("level_select/pictures/") and "class" in e}
@@ -1626,14 +1626,14 @@ def level_select_pictures_c(data):
     its levels are off the level select's grid (level_themes)."""
     themes = level_themes(data)
     classes = level_select_picture_classes()
-    out = ["/* Generated by tools/levels.py from data/levels/levels.json - do not edit. */", "",
+    out = ["/* Generated by tools/levels.py from games/xs/data/levels/levels.json - do not edit. */", "",
            "/* Per level theme its {palette, tiles} pair (levels.json's \"themes\" \"picture\"):",
            " * ZoomBg::Update (zoom_bg.cpp) loads both through LoadTaggedAsset. */",
            "extern const struct image_pair gLevelSelectPictures[LEVEL_SELECT_PICTURE_COUNT] = {"]
     for t in themes[:level_select_picture_count(themes)]:
         if "picture" in t:
             cls = "Engine::Gfx::" + classes[t["picture"]]["class"]
-            out.append("    { %s::palette, %s::tiles }, /* %s: graphics/%s */" % (cls, cls, t["constant"],
+            out.append("    { %s::palette, %s::tiles }, /* %s: games/xs/graphics/%s */" % (cls, cls, t["constant"],
                                                                                  t["picture"]))
         else:
             out.append("    { 0, 0 }, /* %s: no picture (off the grid) */" % t["constant"])
@@ -1646,11 +1646,11 @@ def theme_palette_cycles_h(data):
     cycle in "palette_cycles" order, each labelled with the themes that
     name it. A theme with no cycle takes RunRoom's default case."""
     themes = level_themes(data)
-    out = ["/* Generated by tools/levels.py from data/levels/levels.json. Do not edit. */",
+    out = ["/* Generated by tools/levels.py from games/xs/data/levels/levels.json. Do not edit. */",
            "#ifndef GUARD_THEME_PALETTE_CYCLES_H", "#define GUARD_THEME_PALETTE_CYCLES_H", "",
            "/*",
            " * The level themes' colour cycles (levels.json's \"palette_cycles\", docs/levels.md",
-           " * \"Themes\"): the palette-entry lists (src/game/level/data/level_table.cpp), and",
+           " * \"Themes\"): the palette-entry lists (engine/src/game/level/data/level_table.cpp), and",
            " * RunRoom's cases (play_room.cpp), each starting the cycles of a theme",
            " * (levels.json's \"themes\" \"palette_cycle\") on BG palette RAM through FX_CYCLE",
            " * (AddPaletteCycle: lists, rate, count, direction).",
@@ -1719,7 +1719,7 @@ def themes_from_rom(rom, kept):
 #   categories of a type all share them);
 # - "sky" (optional): the BG1 picture (bgPicture), one of the jetpack
 #   skies (CATEGORY_SKIES); none for the polar stages;
-# - "spawns": its spawn list, data/levels/spawns/<name>.json;
+# - "spawns": its spawn list, games/xs/data/levels/spawns/<name>.json;
 # - "mask_assist_deaths", "bonus_kind_deaths", "retry_boss_deaths",
 #   "boss_level", "retry_boss_level": the descriptor's numbers.
 #
@@ -1738,7 +1738,7 @@ def themes_from_rom(rom, kept):
 CATEGORY_KEYS = ["constant", "name", "type", "spawns", "mask_assist_deaths", "bonus_kind_deaths",
                  "retry_boss_deaths", "boss_level", "retry_boss_level"]
 SPAWNS_DIR = LEVELS_DIR / "spawns"
-ACTOR_KINDS_H = Path("include/constants/actor_kinds.h")
+ACTOR_KINDS_H = Path("engine/include/constants/actor_kinds.h")
 # Per type: the family of its actor kinds, the BG0 cell animation and its
 # size, the OBJ palette, the animation table, the sprite sheet, and the
 # boss levels its boss has (Yeti::chargeParams[6]; Airship::attacks[6],
@@ -1755,11 +1755,11 @@ CATEGORY_TYPES = {
                    "sprite_sheet": "gJetpackSpriteSheet", "boss_levels": 2},
 }
 CATEGORY_TYPE_NAMES = ["POLAR", "JETPACK", "HOVERCRAFT"]  # CATEGORY_TYPE_*, the vtables' order
-# The BG1 skies (graphics/vehicles/jetpack/skies/<name>.png).
+# The BG1 skies (games/xs/graphics/vehicles/jetpack/skies/<name>.png).
 CATEGORY_SKIES = {"rocket_racket": "gCategory3BgPicture", "blimp_bonanza": "gCategory4BgPicture",
                   "no_fly_zone": "gCategory5BgPicture"}
 # A category's own graphics (docs/levels.md, "Category graphics"): the
-# optional keys naming them, by their path under graphics/, and the
+# optional keys naming them, by their path under games/xs/graphics/, and the
 # manifest kind each must be. "sky" can also be one of CATEGORY_SKIES. A
 # category's "sprite_sheet" goes with its "anim_table" (category_anim).
 CATEGORY_GRAPHIC_KEYS = {"cell_anim": "cell_anim", "sky": "bg_picture", "palette": "category_palette",
@@ -1865,7 +1865,7 @@ _category_gfx = {}
 
 
 def category_graphic_entries():
-    """graphics/manifest.json's category graphics: path -> entry."""
+    """games/xs/graphics/manifest.json's category graphics: path -> entry."""
     if not _category_gfx:
         import gfx_manifest
         _category_gfx.update(gfx_manifest.category_graphics())
@@ -1903,7 +1903,7 @@ def category_graphics(c):
             continue
         e = entries.get(v)
         if e is None or e["kind"] != kind:
-            fail("\"%s\" %s isn't a %s of graphics/manifest.json (by its path under graphics/)%s"
+            fail("\"%s\" %s isn't a %s of games/xs/graphics/manifest.json (by its path under games/xs/graphics/)%s"
                  % (key, json.dumps(v), kind, ", or one of " + ", ".join(CATEGORY_SKIES) if key == "sky" else ""))
         out[key] = (e["symbol"], e, None)
     cols, rows = CELL_ANIM_GEOMETRY[c["type"]]
@@ -1914,7 +1914,7 @@ def category_graphics(c):
                  % (sym, "has" if e["banks"] else "has no", c["type"].lower(), "has" if not e["banks"] else "hasn't"))
         w, h = png_size(GFX_MANIFEST.parent / e["path"])
         if (w, h) != (cols * 8, rows * 8 * e["frames"]):
-            fail("its cell animation graphics/%s is %dx%d: %d frames of the %s type's %dx%d cells are %dx%d"
+            fail("its cell animation games/xs/graphics/%s is %dx%d: %d frames of the %s type's %dx%d cells are %dx%d"
                  % (e["path"], w, h, e["frames"], c["type"].lower(), cols, rows, cols * 8, rows * 8 * e["frames"]))
         cells = cols * rows
         frame = cells * 32 + ((cells + 7) // 8 * 4 if e["banks"] else 0)
@@ -1927,7 +1927,7 @@ def category_graphics(c):
         ntiles = th // 8
         base = cols * rows * 2 + 1
         if (w, h) != (bc * 8, br * 8) or tw != 8 or th % 8:
-            fail("its sky graphics/%s is %dx%d and its tile set %dx%d: a sky is %dx%d (%dx%d cells), its tile set "
+            fail("its sky games/xs/graphics/%s is %dx%d and its tile set %dx%d: a sky is %dx%d (%dx%d cells), its tile set "
                  "an 8-pixel-wide strip" % (e["paths"][0], w, h, tw, th, bc * 8, br * 8, bc, br))
         if base - 0x200 + ntiles > 0x400 or (base + ntiles) * 32 > 0xD000:
             fail("its sky's %d tiles don't fit after the cell animation (tiles %d-%d; the BG1 map reaches tile "
@@ -1938,7 +1938,7 @@ def category_graphics(c):
         import jasc_pal
         n = len(jasc_pal.read_jasc(GFX_MANIFEST.parent / e["path"]))
         if n != 256:
-            fail("its palette graphics/%s has %d colours, an OBJ palette 256" % (e["path"], n))
+            fail("its palette games/xs/graphics/%s has %d colours, an OBJ palette 256" % (e["path"], n))
     out["palette_cycle"] = category_palette_cycle(c, out["palette_cycle"], fail)
     return out
 
@@ -1959,7 +1959,7 @@ def category_palette_cycle(c, cycle, fail):
              "(ActorCategory::Init enables it for CATEGORY_TYPE_POLAR)" % c["type"].lower())
     if "rom" in e:
         return (None, None, None)
-    errors = gfx_manifest.palette_cycle_errors(e, "its palette cycle %s" % sym, GFX_MANIFEST.parent.parent)
+    errors = gfx_manifest.palette_cycle_errors(e, "its palette cycle %s" % sym, Path("."))
     if errors:
         fail(errors[0])
     return cycle
@@ -1972,7 +1972,7 @@ def category_palette_cycles_h(data):
     ROM's; otherwise the current category's, from the table
     actor_categories.inc defines (ActorPaletteCycle::categoryFrames)."""
     own = [c["constant"] for c in level_categories(data) if category_graphics(c)["palette_cycle"][0]]
-    out = ["/* Generated by tools/levels.py from data/levels/levels.json. Do not edit. */",
+    out = ["/* Generated by tools/levels.py from games/xs/data/levels/levels.json. Do not edit. */",
            "#ifndef GUARD_CATEGORY_PALETTE_CYCLES_H", "#define GUARD_CATEGORY_PALETTE_CYCLES_H", "",
            "/*",
            " * The BG palette cycle frames ActorPaletteCycle::Update DMAs (a polar category's,",
@@ -2016,7 +2016,7 @@ def new_category_graphics_c(cats):
             out.append("")
             if key == "cell_anim":
                 cells = extra["cols"] * extra["rows"]
-                out += ["/* graphics/%s: %s's BG0 cell animation, %dx%d cells, %d frames%s (new) */"
+                out += ["/* games/xs/graphics/%s: %s's BG0 cell animation, %dx%d cells, %d frames%s (new) */"
                         % (e["path"], c["constant"], extra["cols"], extra["rows"], e["frames"],
                            ", with its cells' palette banks" if e["banks"] else ""),
                         "struct category_cell_anim_%s {" % sym, "    struct cell_anim_header header;",
@@ -2035,7 +2035,7 @@ def new_category_graphics_c(cats):
                 # the header, the map (a whole number of words), the tiles and
                 # the banks' nibbles, in words (the header's tile count)
                 size = (0x208 + 2 * (cells + (cells & 1)) + 32 * extra["tiles"] + (cells + 1) // 2 + 3) & ~3
-                out += ["/* graphics/%s: %s's BG1 picture, %dx%d cells, %d tiles (new) */"
+                out += ["/* games/xs/graphics/%s: %s's BG1 picture, %dx%d cells, %d tiles (new) */"
                         % (e["paths"][0], c["constant"], extra["cols"], extra["rows"], extra["tiles"]),
                         "struct category_bg_picture_%s {" % sym, "    struct bg_picture_header header;",
                         "    u16 map[%d];" % (cells + (cells & 1)), "    u8 tiles[%d * 32];" % extra["tiles"],
@@ -2049,16 +2049,16 @@ def new_category_graphics_c(cats):
                         "    {", "#include \"%s_tiles.img.inc\"" % stem, "    },",
                         "    {", "#include \"%s_banks.inc\"" % stem, "    },", "};"]
             elif key == "sprite_sheet":
-                out += ["/* graphics/%s: %s's sprite sheet, LZ77 (new) */" % (e["path"], c["constant"]),
+                out += ["/* games/xs/graphics/%s: %s's sprite sheet, LZ77 (new) */" % (e["path"], c["constant"]),
                         "extern const u8 %s[] __attribute__((aligned(4))) = {" % sym,
                         "#include \"%s.bin.lz.inc\"" % e["path"].rstrip("/"), "};"]
             elif key == "palette_cycle":
-                out += ["/* graphics/%s: %s's BG palette cycle, %d frames of BG palettes 0-13 (new) */"
+                out += ["/* games/xs/graphics/%s: %s's BG palette cycle, %d frames of BG palettes 0-13 (new) */"
                         % (e["path"], c["constant"], e["frames"]),
                         "extern const u16 %s[%d][14 * 16] = {" % (sym, e["frames"]),
                         "#include \"%s.bin.inc\"" % e["path"].rstrip("/"), "};"]
             else:
-                out += ["/* graphics/%s: %s's OBJ palette, 256 colours (new) */" % (e["path"], c["constant"]),
+                out += ["/* games/xs/graphics/%s: %s's OBJ palette, 256 colours (new) */" % (e["path"], c["constant"]),
                         "extern const u16 %s[256] = {" % sym, "#include \"%s.gbapal.inc\"" % stem, "};"]
     return out
 
@@ -2119,7 +2119,7 @@ def category_palette_warnings(data):
             base, _ = png_palette(path(by_symbol[t["cell_anim"]]))
             bad = [i for i in used if i < PALETTE_CYCLE_BANKS * 16 and pal[i] != base[i]]
             if bad:
-                warn("%s: its cell animation graphics/%s uses colours of its own in banks 0-%d (indices %s). The polar "
+                warn("%s: its cell animation games/xs/graphics/%s uses colours of its own in banks 0-%d (indices %s). The polar "
                      "palette cycle replaces banks 0-%d every moving frame (ActorPaletteCycle::Update), so they "
                      "won't show: recolour through the pixels (the banks' indices), put them in banks %d-15, or "
                      "give the category its own \"palette_cycle\" (docs/levels.md, \"Category graphics\")"
@@ -2132,7 +2132,7 @@ def category_palette_warnings(data):
         spal, _ = png_palette(path(se or by_symbol[sky]))
         bad = [i for i in used if pal[i] != spal[i]]
         if bad:
-            warn("%s: its cell animation graphics/%s has colours its sky's palette (graphics/%s) doesn't (indices %s). "
+            warn("%s: its cell animation games/xs/graphics/%s has colours its sky's palette (games/xs/graphics/%s) doesn't (indices %s). "
                  "The sky's palette replaces the cell animation's (LoadBgPicture), so the sky's show: give the "
                  "sky the same colours at those indices (docs/levels.md, \"Category graphics\")"
                  % (c["constant"], e["path"], (se or by_symbol[sky])["paths"][0], colours(bad)))
@@ -2148,7 +2148,7 @@ _spawn_lists = {}
 
 
 def spawn_list(name):
-    """data/levels/spawns/<name>.json, checked."""
+    """games/xs/data/levels/spawns/<name>.json, checked."""
     if name in _spawn_lists:
         return _spawn_lists[name]
     path = SPAWNS_DIR / ("%s.json" % name)
@@ -2208,7 +2208,7 @@ def spawn_table_c(name):
     """A spawn list's C definition (ACTOR_SPAWN_TABLE, actor.h)."""
     s = spawn_list(name)
     f = s["family"]
-    out = ["/* data/levels/spawns/%s.json */" % name,
+    out = ["/* games/xs/data/levels/spawns/%s.json */" % name,
            # C linkage: the table's struct type has no name, and a C++
            # variable of an unnamed type is local to its file on a modern
            # compiler (the pc platform, #1093).
@@ -2229,7 +2229,7 @@ def spawns_inc(slot):
     nothing if no category has it."""
     if slot not in ROM_SPAWN_TABLES:
         sys.exit("levels.py spawns: %s isn't one of %s" % (slot, ", ".join(ROM_SPAWN_TABLES)))
-    out = ["/* Generated by tools/levels.py from data/levels/ - do not edit. */"]
+    out = ["/* Generated by tools/levels.py from games/xs/data/levels/ - do not edit. */"]
     lists = {spawn_list(c["spawns"])["symbol"]: c["spawns"] for c in level_categories(read_json(LEVELS_JSON))}
     if slot in lists:
         out += spawn_table_c(lists[slot])
@@ -2244,7 +2244,7 @@ def actor_categories_inc(data):
     names = list(dict.fromkeys(c["spawns"] for c in cats))
     rom = [n for n in names if spawn_list(n)["symbol"] in ROM_SPAWN_TABLES]
     new = [n for n in names if n not in rom]
-    out = ["/* Generated by tools/levels.py from data/levels/levels.json - do not edit. */", ""]
+    out = ["/* Generated by tools/levels.py from games/xs/data/levels/levels.json - do not edit. */", ""]
     out += ["extern const u8 %s[];" % spawn_list(n)["symbol"] for n in rom]
     if new:
         out += ["", "/* The spawn lists that aren't the ROM's. */"]
@@ -2252,7 +2252,7 @@ def actor_categories_inc(data):
             out += spawn_table_c(n)
     graphics = new_category_graphics_c(cats)
     if graphics:
-        out += ["", "/* The new graphics the categories name (graphics/manifest.json entries with no",
+        out += ["", "/* The new graphics the categories name (games/xs/graphics/manifest.json entries with no",
                 " * ROM address; docs/levels.md \"Category graphics\"). */"] + graphics
     tables = new_anim_tables_c(cats)
     if tables:
@@ -2359,7 +2359,7 @@ def categories_from_rom(rom, kept):
 # Animation tables (docs/levels.md, "Animation tables")
 #
 # A type's animation table (category_descriptor.anim_table, struct
-# anim_table_record, actor_anim.h) is data/levels/anim_tables/<name>.json:
+# anim_table_record, actor_anim.h) is games/xs/data/levels/anim_tables/<name>.json:
 # its records, one per actor kind (the spawner indexes the table with the
 # kind), and the arrays they point at, the keyframes (table_A) and the
 # frames (table_B), in the order they are defined, with "table" where the
@@ -2385,7 +2385,7 @@ def categories_from_rom(rom, kept):
 
 ANIM_TABLES_DIR = LEVELS_DIR / "anim_tables"
 # Per family: its ROM table (by name), its sprite sheet (a framed_sheet
-# of graphics/manifest.json, by path; a table's "sheet" by default), the
+# of games/xs/graphics/manifest.json, by path; a table's "sheet" by default), the
 # compressed player frames' class and offsets
 # (RLE_SPRITES_<name>_FRAME_<nnn>), their PNG and frame height in pixels,
 # and the length of its tables (the kinds the code indexes).
@@ -2410,7 +2410,7 @@ _sheet_frames = {}
 
 
 def sheet_frames(sheet):
-    """A framed sheet's frames (graphics/<sheet>, by entity folder in its
+    """A framed sheet's frames (games/xs/graphics/<sheet>, by entity folder in its
     sheet.json's order, each folder's PNGs in name order): "entity/NN" ->
     byte offset in its decompressed data, as tools/framed_gfx.py header."""
     return sheet_layout(sheet)[0]
@@ -2437,7 +2437,7 @@ def sheet_layout(sheet):
 
 
 def framed_sheet(sheet):
-    """The framed_sheet entry of graphics/manifest.json at path `sheet`,
+    """The framed_sheet entry of games/xs/graphics/manifest.json at path `sheet`,
     or None."""
     e = category_graphic_entries().get(sheet)
     return e if e is not None and e["kind"] == "framed_sheet" else None
@@ -2479,7 +2479,7 @@ _anim_tables = {}
 
 
 def anim_table(name):
-    """data/levels/anim_tables/<name>.json, checked. A table that isn't the
+    """games/xs/data/levels/anim_tables/<name>.json, checked. A table that isn't the
     ROM's has no player frames of its own, and its records can point at
     the keyframes and player frames of its family's ROM table, and at its
     frames if it is of the same sheet."""
@@ -2502,7 +2502,7 @@ def anim_table(name):
     if fam is None:
         fail("\"family\" is POLAR or JETPACK (the kinds of constants/actor_kinds.h that index it)")
     if "sheet" in t and framed_sheet(t["sheet"]) is None:
-        fail("\"sheet\" %s isn't a framed_sheet of graphics/manifest.json (by its path under graphics/)"
+        fail("\"sheet\" %s isn't a framed_sheet of games/xs/graphics/manifest.json (by its path under games/xs/graphics/)"
              % json.dumps(t["sheet"]))
     arrays = t.get("arrays")
     if not isinstance(arrays, list) or arrays.count("table") != 1:
@@ -2540,10 +2540,10 @@ def anim_table(name):
                 what = "[duration, frame, loop end, loop start, OAM attribute]"
             elif kind == "frames":
                 ok = isinstance(v, str) and v in frames
-                what = "a frame of graphics/%s, \"entity/NN\"" % sheet
+                what = "a frame of games/xs/graphics/%s, \"entity/NN\"" % sheet
             else:
                 ok = isinstance(v, int) and 0 <= v < players
-                what = "a frame of graphics/%s, 0-%d" % (fam["player_png"], players - 1)
+                what = "a frame of games/xs/graphics/%s, 0-%d" % (fam["player_png"], players - 1)
             if not ok:
                 fail("%s[%d] %s isn't %s" % (sym, n, json.dumps(v), what))
     records = t.get("records")
@@ -2602,7 +2602,7 @@ def anim_table_c(name):
     first = {}
     for k, v in actor_kinds()[t["family"]].items():
         first.setdefault(v, k)
-    out = ["/* data/levels/anim_tables/%s.json */" % name]
+    out = ["/* games/xs/data/levels/anim_tables/%s.json */" % name]
     out += [anim_array_decl(a) for a in t["arrays"] if a != "table"]
     if name not in ROM_ANIM_TABLES:
         out.append("extern const struct anim_table_record %s[%d];" % (t["symbol"], len(t["records"])))
@@ -2642,7 +2642,7 @@ def anim_table_inc(name):
     animation table NAME (ROM_ANIM_TABLES) #includes."""
     if name not in ROM_ANIM_TABLES:
         sys.exit("levels.py anim-table: %s isn't one of %s" % (name, ", ".join(ROM_ANIM_TABLES)))
-    out = ["/* Generated by tools/levels.py from data/levels/anim_tables/ - do not edit. */", ""]
+    out = ["/* Generated by tools/levels.py from games/xs/data/levels/anim_tables/ - do not edit. */", ""]
     return "\n".join(out + anim_table_c(name)) + "\n"
 
 
@@ -2698,19 +2698,19 @@ def category_anim(c):
     sheet = c.get("sprite_sheet", fam["sheet"])
     if sheet != anim_table_sheet(table):
         if "anim_table" in c:
-            fail("its sprite sheet is graphics/%s, its animation table %s's frames graphics/%s's"
+            fail("its sprite sheet is games/xs/graphics/%s, its animation table %s's frames games/xs/graphics/%s's"
                  % (sheet, name, anim_table_sheet(table)))
         own, rom = sheet_frames(sheet), sheet_frames(fam["sheet"])
         diff = next((k for k in list(rom) + list(own) if own.get(k) != rom.get(k)), None)
         if diff is not None:
             what = "has no %s" % diff if diff not in own else "has a %s the type's hasn't" % diff \
                 if diff not in rom else "has %s at 0x%x, the type's at 0x%x" % (diff, own[diff], rom[diff])
-            fail("its sprite sheet graphics/%s %s: with the type's animation table, a sheet has the type's "
-                 "frames (graphics/%s's folders, frames and sizes); one with others has its own \"anim_table\""
+            fail("its sprite sheet games/xs/graphics/%s %s: with the type's animation table, a sheet has the type's "
+                 "frames (games/xs/graphics/%s's folders, frames and sizes); one with others has its own \"anim_table\""
                  % (sheet, what, fam["sheet"]))
     size, top = sheet_size(sheet), sheet_size(fam["sheet"])
     if size > top:
-        fail("its sprite sheet graphics/%s is 0x%x bytes unpacked, more than the type's 0x%x (the stage "
+        fail("its sprite sheet games/xs/graphics/%s is 0x%x bytes unpacked, more than the type's 0x%x (the stage "
              "unpacks it into the EWRAM heap)" % (sheet, size, top))
     return name, table["symbol"]
 
@@ -2738,7 +2738,7 @@ def write_anim_table(path, t):
 
 
 def anim_tables_from_rom(rom):
-    """extract: the ROM's animation tables (data/levels/anim_tables/), each
+    """extract: the ROM's animation tables (games/xs/data/levels/anim_tables/), each
     with the kept JSON's arrays (their symbols, lengths, kinds and
     comments, in their order); the rest from the ROM. The arrays are laid
     out back to back around the table."""
@@ -2871,7 +2871,7 @@ def level_bosses_h(data):
     """level_bosses.h: per boss kind, the case labels of its levels
     (LEVEL_BOSS_CASES_<KIND>), for GetBossIndex and GetBossHealth."""
     kinds = level_boss_kinds(data)
-    out = ["/* Generated by tools/levels.py from data/levels/levels.json. Do not edit. */",
+    out = ["/* Generated by tools/levels.py from games/xs/data/levels/levels.json. Do not edit. */",
            "#ifndef GUARD_LEVEL_BOSSES_H", "#define GUARD_LEVEL_BOSSES_H", "",
            "#include \"constants/levels.h\"", "",
            "/*",
@@ -2912,9 +2912,9 @@ def level_bosses_h(data):
 ON_CLEAR_KEYS = ["power", "open_world", "cutscene", "mark_cleared", "next_level", "credits"]
 NEXT_LEVEL_KEYS = ["if_completion_over", "cutscene", "level"]
 # The cutscenes LevelState::PlayCutscene plays by index (gCutscenes), from
-# data/cutscenes.json (#1092): an "on_clear" cutscene is an index or a
+# games/xs/data/cutscenes.json (#1092): an "on_clear" cutscene is an index or a
 # cutscene's constant.
-CUTSCENES_JSON = Path("data/cutscenes.json")
+CUTSCENES_JSON = Path("games/xs/data/cutscenes.json")
 # The ROM's rewards, which extract checks the kept "on_clear"s give.
 ROM_ON_CLEAR = {
     "LEVEL_DINGODILE": {"power": "SUPER_BODY_SLAM", "open_world": True, "cutscene": 4},
@@ -3053,7 +3053,7 @@ def level_on_clear_h(data):
     """level_on_clear.h: UpdateGameFrame's cases on the cleared level
     (LEVEL_ON_CLEAR_CASES), one per level with an "on_clear"."""
     on_clear = level_on_clear(data)
-    out = ["/* Generated by tools/levels.py from data/levels/levels.json. Do not edit. */",
+    out = ["/* Generated by tools/levels.py from games/xs/data/levels/levels.json. Do not edit. */",
            "#ifndef GUARD_LEVEL_ON_CLEAR_H", "#define GUARD_LEVEL_ON_CLEAR_H", "",
            "#include \"constants/levels.h\"", "",
            "/*",
@@ -3132,13 +3132,13 @@ LEVEL_SELECT_ENTRY_WORLD_ANIMS = 0x0816C624
 # the boss before them.
 ROM_WORLD_RULES = [None, {"power": "SUPER_BODY_SLAM"}, {"power": "DOUBLE_JUMP"}, {"power": "TORNADO_SPIN"}]
 # What the values can name: bank 47's 13 animations, the 5 entries of
-# gLevelSelectEntryBoxAnims and bank 51's 5 animations (src/engine/gfx/
-# data/sprite_banks_39_55.cpp, src/game/ui/data/level_select_anims.cpp).
+# gLevelSelectEntryBoxAnims and bank 51's 5 animations (engine/src/engine/gfx/
+# data/sprite_banks_39_55.cpp, engine/src/game/ui/data/level_select_anims.cpp).
 WORLD_KEY_LIMITS = {"page_title": 13, "entry_box": 5, "boss_icon": 5}
 # A numbered level's entry shows step `level id` of bank 51's animation 0
 # (LevelSelectEntry::SetLevel): the ROM's 20 number icons, then the steps
 # its bank.json's "new_steps" adds (docs/graphics.md, "New frames").
-LEVEL_ICONS_BANK = Path("graphics/sprites/bank51_level_select_icons/bank.json")
+LEVEL_ICONS_BANK = Path("games/xs/graphics/sprites/bank51_level_select_icons/bank.json")
 LEVEL_ICONS_ROM_STEPS = 20
 
 
@@ -3311,13 +3311,13 @@ def level_select_worlds_h(data):
     IsNextWorldOpen's cases (LEVEL_SELECT_NEXT_WORLD_CASES), one per world
     after the first, under the case of the world before it."""
     worlds = level_select_worlds(data)
-    out = ["/* Generated by tools/levels.py from data/levels/levels.json. Do not edit. */",
+    out = ["/* Generated by tools/levels.py from games/xs/data/levels/levels.json. Do not edit. */",
            "#ifndef GUARD_LEVEL_SELECT_WORLDS_H", "#define GUARD_LEVEL_SELECT_WORLDS_H", "",
            "/*",
            " * The level select's worlds (levels.json's \"worlds\", docs/levels.md \"Level-select",
            " * pages\"): per world, the page title's animation (bank 47, gLevelSelectWorldAnims),",
            " * the entries' box (gLevelSelectWorldEntryBoxAnims) and the boss icon's animation",
-           " * (bank 51, gLevelSelectEntryWorldAnims), src/game/ui/data/level_select_layout.cpp and",
+           " * (bank 51, gLevelSelectEntryWorldAnims), engine/src/game/ui/data/level_select_layout.cpp and",
            " * level_select_anims.cpp; and LevelSelect::IsNextWorldOpen's cases",
            " * (level_select_pages.cpp): on page `world`, whether page `world + 1` is open.",
            " */", ""]
@@ -3855,8 +3855,8 @@ def extract_rooms_from_table(rom_path, table):
     that isn't a level), into LEVELS_DIR (`--levels-dir`). The folders are
     <level>/<slot>: the level's name from levels.json's "level_names" (one
     per level, hand-written and kept, as XS's names; level<NN> by its index
-    without them) and the slot as in data/levels; the tile sets are named
-    by levels.json's "tileset_names" (kept too). The slots are as in data/levels:
+    without them) and the slot as in games/xs/data/levels; the tile sets are named
+    by levels.json's "tileset_names" (kept too). The slots are as in games/xs/data/levels:
     main (or part1, part2, ... for several played rooms), bonus (extra1),
     gem_path (extra2). The rooms are numbered (gRoomNN) in the order of
     their struct level_room in the ROM. Writes each room (extract_rooms),
@@ -4032,7 +4032,7 @@ def define_lines(rows):
 # (LevelSelect::items[6], `world <= 2`), the `i < 20` loops and the
 # pause menu's totals (20 crystals, 28 gems, 20 relics) of
 # GameProgress, GetCompletionPercent's divisor 72 and the 70 strings of
-# each gUiText table (ui_text.cpp, text/). And the 11 level themes
+# each gUiText table (ui_text.cpp, games/xs/text/). And the 11 level themes
 # (gThemeMusicCues), of which ZoomBg's "no picture" 11 is one past the last, and
 # the 10 level-select pictures (gLevelSelectPictures).
 ROM_COUNTS = {
@@ -4260,7 +4260,7 @@ def constants_h(which):
  *
  * Enemy kinds: `part_ctrl.kind`, the kind an enemy spawner gives the
  * shared enemy controller (CreateEnemyCtrl, UpdateEnemyCtrl). It is the
- * number of the enemy's sprite bank (graphics/sprites/).
+ * number of the enemy's sprite bank (games/xs/graphics/sprites/).
  */"""
         ents = [("ENTITY_" + t["name"], "0x%02X" % t["type"],
                  t["spawner"] + ("; " + t["comment"] if "comment" in t else ""))

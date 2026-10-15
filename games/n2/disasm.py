@@ -106,10 +106,11 @@ LOCAL = re.compile(r'^(_([0-9A-F]{8})):')
 
 
 def object_path(src):
-    """A source's object, under the build directory: games/n2/src/<path>
-    builds src/<path>'s object (game.mk)."""
-    if src.startswith('games/n2/src/'):
-        src = src[len('games/n2/'):]
+    """A source's object, under the build directory: engine/src/<path>
+    builds engine/src/<path>'s object, and so does games/n2/src/<path> (game.mk)."""
+    for root in ('engine/', 'games/n2/'):
+        if src.startswith(root + 'src/'):
+            src = src[len(root):]
     return src.rsplit('.', 1)[0]
 
 

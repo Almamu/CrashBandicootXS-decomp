@@ -38,7 +38,7 @@ only in the stack slot holding the value:
   computed well before the fill (the same function's word fill), when
   the value is a struct field (`LevelState::PlayCutscene`'s `f.fill`),
   or when a macro reuses a caller's variable (`CLEAR_OAM`,
-  include/game/ui/frontend.hpp).
+  engine/include/game/ui/frontend.hpp).
 - `DmaClear16/32` copies the destination and size into locals first,
   which can move registers around (`SaveData::Validate`, where
   `DmaFill16` swaps three of them).

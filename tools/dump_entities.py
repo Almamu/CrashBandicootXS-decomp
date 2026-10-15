@@ -12,11 +12,11 @@
 # these JSON files are the data half - real ROM addresses, keyframe
 # sequences, and (for records whose table_B holds small offsets rather
 # than absolute ROM addresses) a direct reference to the already-split
-# graphics/vehicles/<family>/sprite_sheet/<folder>/*.png frames, so the frame pixel
+# games/xs/graphics/vehicles/<family>/sprite_sheet/<folder>/*.png frames, so the frame pixel
 # data doesn't need to be re-derived from raw hex again.
 #
 # Re-run any time to regenerate from baserom.gba + the current split
-# graphics/ sources (this only reads them, never writes to graphics/).
+# games/xs/graphics/ sources (this only reads them, never writes to games/xs/graphics/).
 
 import glob
 import json
@@ -25,7 +25,7 @@ import sys
 import struct
 
 ROM_PATH = os.path.join(os.path.dirname(__file__), '..', 'baserom.gba')
-GRAPHICS_ROOT = os.path.join(os.path.dirname(__file__), '..', 'graphics', 'vehicles')
+GRAPHICS_ROOT = os.path.join(os.path.dirname(__file__), '..', 'games', 'xs', 'graphics', 'vehicles')
 DOCS_ROOT = os.path.join(os.path.dirname(__file__), '..', 'docs', 'entities')
 sys.path.insert(0, os.path.dirname(__file__))
 from framed_gfx import entity_order  # noqa: E402
@@ -48,8 +48,8 @@ def hx(v):
 
 
 def graphics_dir(sheet_dir):
-    """A sheet's folder as the repo path, graphics/vehicles/<family>/sprite_sheet."""
-    return 'graphics/vehicles/' + os.path.relpath(sheet_dir, GRAPHICS_ROOT).replace(os.sep, '/')
+    """A sheet's folder as the repo path, games/xs/graphics/vehicles/<family>/sprite_sheet."""
+    return 'games/xs/graphics/vehicles/' + os.path.relpath(sheet_dir, GRAPHICS_ROOT).replace(os.sep, '/')
 
 
 def lz77_decompress(data):
@@ -297,7 +297,7 @@ def dump_family(sheet_rom_addr, decompressed_size, sheet_dir, anim_table_base,
     }
 
 
-# Each record's actor kind (include/constants/actor_kinds.h): the record's
+# Each record's actor kind (engine/include/constants/actor_kinds.h): the record's
 # slot is the kind's number.
 FAMILY1_LABELS = {
     0: 'POLAR_KIND_PLAYER',

@@ -1,6 +1,6 @@
 # Matching techniques
 
-This is the reference for the techniques that make the C in `src/` and
+This is the reference for the techniques that make the C in `engine/src/` and
 `lib/` compile to the ROM's exact bytes with agbcc (gcc 2.9). The
 matching phase worked them out pass by pass; the per-pass logs are in
 [docs/matching/archive/](./matching/archive/) (frozen), and this page
@@ -13,7 +13,7 @@ the same bytes, and a workaround stays only if a clean rebuild shows the
 plainer version doesn't.
 
 - The workaround idioms that fit in a macro have a named form in
-  [include/match.h](../include/match.h) (see [The match.h macros](#the-matchh-macros)).
+  [engine/include/match.h](../engine/include/match.h) (see [The match.h macros](#the-matchh-macros)).
 - [tools/match_idioms.py](../tools/match_idioms.py) counts every idiom
   by kind and file (`--kind K --show` lists the sites), checks that the
   macros expand to the spellings they replace (`--check-macros`),
@@ -76,7 +76,7 @@ plainer version doesn't.
 ## Writing new matching code
 
 - **Use the macros.** Spell a pin, an empty asm or a register/memory
-  clobber with its [match.h](../include/match.h) macro
+  clobber with its [match.h](../engine/include/match.h) macro
   ([table](#the-matchh-macros)), not by hand: write
   `MATCH_HOLD_REG(s32, k, r6)`, not `register s32 k asm("r6")`, and
   `MATCH_USE(x)`, not `asm("" : : "r"(x))`. Give each use a comment
@@ -238,19 +238,19 @@ programmer did, not by workarounds. The recurring ones:
 - **`goto` loops.** A `label: ... if (++i < n) goto label;` loop has no
   loop notes, so loop.c hoists and reduces nothing in it. That's the fix
   when the ROM hoists nothing ([per-file-flags-investigation.md](./matching/per-file-flags-investigation.md),
-  `ResetLogoPieces`; `src/game/ui/title_screen.cpp`).
+  `ResetLogoPieces`; `engine/src/game/ui/title_screen.cpp`).
 - **Hoisting.** If gcc hoists an invariant the ROM recomputes in the
   loop, put a `MATCH_KEEP_VOLATILE(base)` at the use
   ([sub_8009150-loop-invariant-hoist-matched.md](./matching/archive/sub_8009150-loop-invariant-hoist-matched.md),
   `LinkCrateToActiveBucket` in its C; the C++ in
-  `src/game/crates/crate_list_update.cpp` needs none).
+  `engine/src/game/crates/crate_list_update.cpp` needs none).
 - **Insn counts.** loop.c's decision to move an invariant depends on the
   loop's insn count; `MATCH_BARRIER()`s in the body change it
-  (`src/game/ui/company_logos.cpp`).
+  (`engine/src/game/ui/company_logos.cpp`).
 - **`do { } while (0)` is a loop** to agbcc: it gets loop notes and
   loop-weighted register priorities. Statement macros use
   `if (1) { ... } else (void)0` instead (`CLAMP_SPEED`,
-  `src/game/vehicles/jetpack/jetpack_player_update.cpp`).
+  `engine/src/game/vehicles/jetpack/jetpack_player_update.cpp`).
 
 Cases: [big-naked-retry-3.md](./matching/archive/big-naked-retry-3.md)
 (rotation, `SpawnRoomEntities`),
@@ -375,7 +375,7 @@ an `index > 0` calls virtual slot `index - 1` of the vtable at
 `this + vtableOffset`, anything else calls `fn` directly. The call goes
 through `_call_via_rN` with the pointer in the first free argument
 register. `ACTOR_PMF_CALL(self, table)` and `ACTOR_VCALL(obj, m, arg)`
-in include/actor_self.h reproduced it with no pins (both went when the
+in engine/include/actor_self.h reproduced it with no pins (both went when the
 actors became C++ classes, #664). See [pmf-dispatch-retry.md](./matching/archive/pmf-dispatch-retry.md)
 (21 functions, e.g. `RunPolarPlayerState`) and
 [issue-57-0x0802fbf0-actor.md](./matching/archive/issue-57-0x0802fbf0-actor.md).
@@ -394,10 +394,10 @@ both compile to these exact sequences.
   load-both, store-both copy.
 - **One-byte stack arguments.** A `u8` parameter past r3 is stored with
   a word `str`. The ROM's `add rN, sp, #K; strb` comes from a packed
-  one-byte struct, `struct byte_arg` ([include/byte_arg.h](../include/byte_arg.h)).
+  one-byte struct, `struct byte_arg` ([engine/include/byte_arg.h](../engine/include/byte_arg.h)).
   A packed struct literal is built in a register before the slot address;
   adding `u8 pad[0]` makes it BLKmode and stores it address-first
-  (`RunRoom`, `src/game/level/play_room.cpp`;
+  (`RunRoom`, `engine/src/game/level/play_room.cpp`;
   [hard-register-hold-retry.md](./matching/archive/hard-register-hold-retry.md)).
   See [issue-55-naked-retry.md](./matching/archive/issue-55-naked-retry.md).
 
@@ -414,7 +414,7 @@ instead of computing it in locals. The spelling matters: in `DrawPlayer`
 to put an `add r0, sp, #K` after the other arguments, compute those in a
 block before the call. See
 [inline-arg-order-retry.md](./matching/archive/inline-arg-order-retry.md)
-and `src/game/crash/player_update.cpp`.
+and `engine/src/game/crash/player_update.cpp`.
 
 ### Asm-label aliases
 
@@ -458,8 +458,8 @@ gcc picks. An initialiser follows the macro as it would the declarator:
 
 A macro whose pins differ per call site takes the registers as
 parameters and passes them on to `MATCH_HOLD_REG` as bare names, as
-`src/game/bosses/cortex.c`'s `SET_FRAME_R(part, 1, r3, r4)` and `MARK_GONE`
-and `include/game/level/entity_bits.h`'s `ENTITY_SET_GONE_BIT_PINNED(t, r2, r4)` did
+`engine/src/game/bosses/cortex.c`'s `SET_FRAME_R(part, 1, r3, r4)` and `MARK_GONE`
+and `engine/include/game/level/entity_bits.h`'s `ENTITY_SET_GONE_BIT_PINNED(t, r2, r4)` did
 (#667; they went when cortex.c became C++, #664 part 7i). A macro argument is expanded before it is substituted, so
 `MATCH_HOLD_REG`'s `#reg` sees `r4`, not the parameter's name. No pin is
 written out as `register T x asm(R)` any more; `tools/match_idioms.py
@@ -493,7 +493,7 @@ model registers the ROM leaves unused. See
 [hard-register-hold-retry.md](./matching/archive/hard-register-hold-retry.md)
 (`InitSaveMenuIcons`, `DrawPauseMenu`),
 [huge-naked-retry-3.md](./matching/archive/huge-naked-retry-3.md)
-(the round-robin wrapping), and `src/game/level/play_room.cpp`.
+(the round-robin wrapping), and `engine/src/game/level/play_room.cpp`.
 
 ### Spill-slot order
 
@@ -555,7 +555,7 @@ gcc 2.9:
 
 Cases: [near-miss-polish-3.md](./matching/archive/near-miss-polish-3.md)
 (constant-init), [sp-box-retry.md](./matching/archive/sp-box-retry.md)
-(`"+r"` vs `"=r"/"0"`), `src/engine/actor/actor_category_select.cpp` (use).
+(`"+r"` vs `"=r"/"0"`), `engine/src/engine/actor/actor_category_select.cpp` (use).
 `EndSpin`'s `MATCH_CONST` opaque copy went in #662 round 4 (a `u16`
 mask: thumb's movhi takes only 0-255, so reload builds the constant and
 copies it, the ROM's copy).
@@ -567,7 +567,7 @@ The rarer forms, a few sites each:
 | Spelling | Macro | Sites | What it does |
 |---|---|---|---|
 | `asm("" : : "r"(a), "r"(b))` | `MATCH_USE2(a, b)`, `MATCH_USE2_VOLATILE(a, b)` | 0 | `MATCH_USE` of two values in one insn. Not the same as two `MATCH_USE`s, which are two insns. |
-| `asm("" : : : "r5")` | `MATCH_CLOBBER(r5)`, `MATCH_CLOBBER_VOLATILE(r4)` | 2 | Tells gcc the register is clobbered, so the prologue saves it even though nothing uses it, as the ROM does ([issue-9-raw-asm-pass.md](./matching/archive/issue-9-raw-asm-pass.md), `UpdateEnemyBob`; `src/game/enemies/enemy_ctrl.cpp`); it also forces a reload of whatever the register held. |
+| `asm("" : : : "r5")` | `MATCH_CLOBBER(r5)`, `MATCH_CLOBBER_VOLATILE(r4)` | 2 | Tells gcc the register is clobbered, so the prologue saves it even though nothing uses it, as the ROM does ([issue-9-raw-asm-pass.md](./matching/archive/issue-9-raw-asm-pass.md), `UpdateEnemyBob`; `engine/src/game/enemies/enemy_ctrl.cpp`); it also forces a reload of whatever the register held. |
 | `asm volatile("" ::: "memory")` | `MATCH_MEMORY_BARRIER()` | 0 | Makes gcc forget memory and acts as a barrier. It does not stop address CSE, which is what it was usually tried for. No site needs it any more. |
 | `asm("" : "+m"(x))` | `MATCH_KEEP_MEM(x)` | 2 | `x` is in memory here with an unknown value, so a later read is a real load (the `ldm r1!` re-read in `ConvertAirshipTiles`). |
 | `asm("" : : "m"(x))` | `MATCH_USE_MEM(x)` | 0 | `x` must be in memory here: kept a value in its stack slot across a call (`SpawnFlamethrowerLabAssistant` until #662 round 4); `GaxHuffUnComp`'s dead stores of its two arguments until they became `"m"` inputs of its `swi` asm (#662). |
@@ -669,7 +669,7 @@ address when it can
 5 asm statements emit real instructions (from 253 when the #576 survey
 counted them). None is a workaround (`itoa_arm`'s `swi` went with it
 into `asm/itoa_arm.s`, #662). `DivMod`'s `svc` call
-(`src/engine/sys/bios_util.cpp`), with its `push {r2}`/`pop {r2}` and its
+(`engine/src/engine/sys/bios_util.cpp`), with its `push {r2}`/`pop {r2}` and its
 r0/r1 register variables, is the SWI wrapper as its source wrote it, the
 same classification as `GaxHuffUnComp`'s (`ORIGINAL_SOURCE`, #662). Four
 are GAX2's own
@@ -700,14 +700,14 @@ them free of any other warning. The silencers they had (two self-inits
 and a `MATCH_HOLD`) changed no code. A `& 0xFFFF0000` on garbage before ORing in
 BGxCNT bits is a `union bgcnt` local (`graphics_package.hpp`) instead:
 agbcc pads the union to a word, `cnt.raw = 0` clears only its low half,
-and `-Wuninitialized` doesn't check aggregates (`src/game/ui/starfield.cpp`,
+and `-Wuninitialized` doesn't check aggregates (`engine/src/game/ui/starfield.cpp`,
 `TitleScreen::LoadBg`; #662 step 3, formerly self-inits,
 [issue-65-naked-retry.md](./matching/archive/issue-65-naked-retry.md)).
 How to handle a warning is in CONTRIBUTING.md's "Compiler warnings".
 
 ## NON_MATCHING
 
-`include/core.h` defaults `NON_MATCHING` to 0; `make NON_MATCHING=1`
+`engine/include/core.h` defaults `NON_MATCHING` to 0; `make NON_MATCHING=1`
 defines it for C (`-D`) and assembly (`--defsym`). A function that
 can't be matched yet keeps its C draft under `#if NON_MATCHING` and the
 checked-in `NAKED` transcription under `#else`; the progress report
@@ -743,7 +743,7 @@ compiles to the ROM's code, and use that object as `target.o`.
 
 ## The match.h macros
 
-[include/match.h](../include/match.h) gives each one-statement idiom a
+[engine/include/match.h](../engine/include/match.h) gives each one-statement idiom a
 name. Each macro is exactly the spelling it replaces, token for token
 (`tools/match_idioms.py --check-macros` checks this, comparing the
 preprocessed tokens; `::` counts as two `:`, as it does to agbcc's C
@@ -789,7 +789,7 @@ How it decides, in short (the tool's docstring has the details):
   directory mirrors the file's own one with symlinks, holding the trial
   version of the file in place of its link. So each object gets the
   ROM build's compiler and flags (old_agbcc, agbcp, agbcp_arm_patched,
-  `-fno-implement-inlines`, ...), and build/ and src/ are never written.
+  `-fno-implement-inlines`, ...), and build/ and engine/src/ are never written.
   A site in a preprocessor arm the ROM build doesn't compile is found
   by preprocessing through the same rule and is not tried.
 - **Compare:** the two `.o` files are equal if their sections (other
@@ -813,7 +813,7 @@ name a removed macro are listed: check them by hand, along with
 function-header comments that describe a removed pin. Commit
 the result like any other change, after the full clean checks.
 
-On main at the time of #662 step 1, the dry run over src/ (510 sites in
+On main at the time of #662 step 1, the dry run over engine/src/ (510 sites in
 the .c/.cpp files; headers aren't tried) found 206 removable, all of
 them alone (no pair or bundle was needed), among them 184 of 357
 `MATCH_HOLD_REG` pins. Applying all 206 at once kept
@@ -1089,7 +1089,7 @@ Round 2 in bosses/, enemies/ and actor/ (C++):
   the 0x104 reload; the unused saved registers of `UpdateBob` and
   `UpdateOscillateY`.
 
-**Round 3, lib/gax, src/iwram, src/engine/util.** 15 functions -> 14:
+**Round 3, lib/gax, engine/src/iwram, engine/src/engine/util.** 15 functions -> 14:
 
 - **One result variable that the test also uses.** `FindSubstring`'s
   four opaque lowercase blocks become an inline `ToLower` that computes
@@ -1117,7 +1117,7 @@ Round 2 in bosses/, enemies/ and actor/ (C++):
     takes volatile. A one-armed clamp lets cse1 carry `row * 28` across
     the join.
 
-**Round 3, src/game/level and src/game/crash.** 12 functions -> 8:
+**Round 3, engine/src/game/level and engine/src/game/crash.** 12 functions -> 8:
 
 - **A compound literal for a `struct vec2` in a register pair.**
   `point = (struct vec2){x, y};` is one DImode pseudo set word by word.
@@ -1188,7 +1188,7 @@ compiled with `-da` and its RTL dumps read pass by pass:
   expanded with a QImode constant, which cse can't replace with the
   tests' SImode register).
 
-**Round 3, src/game/bosses, src/game/enemies, src/actor (C++).** 13 functions ->
+**Round 3, engine/src/game/bosses, engine/src/game/enemies, engine/src/actor (C++).** 13 functions ->
 13: no function loses its last workaround, two lose one each.
 
 - **A global's real type gives a re-read.** `ConvertAirshipTiles` and
@@ -1219,7 +1219,7 @@ compiled with `-da` and its RTL dumps read pass by pass:
   `-flive-range`, the aliasing, inlining and scheduling switches) was
   tried on each plain function, under both compilers, and none matches.
 
-**Round 4, src/game/enemies and src/game/bosses (C++), from the compiler source.**
+**Round 4, engine/src/game/enemies and engine/src/game/bosses (C++), from the compiler source.**
 9 functions -> 9; each site's comment now names the code path. A
 private old_agbcp printed local-alloc's quantity order, global-alloc's
 ranking, reload's spill choices and every insn flow2 deletes after
@@ -1294,7 +1294,7 @@ from the `-da` dumps first:
   for `DrawWrappedText`'s r1 hold (under `-fno-rerun-loop-opt` the
   hold-free code is two reload registers off, nothing else).
 
-**Round 4, src/game/crash, src/game/level and src/engine/text (C++).** 9 functions -> 5,
+**Round 4, engine/src/game/crash, engine/src/game/level and engine/src/engine/text (C++).** 9 functions -> 5,
 from the passes' source (an instrumented private old_agbcp printed
 local-alloc's quantity order):
 
@@ -1369,7 +1369,7 @@ source.** 10 functions -> 5. One mechanism was behind five of them:
   register), `PlatformMover::Update` and `SelectActorCategory`
   (global-alloc priorities 0.83/0.74 and 0.129/0.133).
 
-**Round 4, lib/gax, src/iwram and the two ConvertTiles (from the
+**Round 4, lib/gax, engine/src/iwram and the two ConvertTiles (from the
 compiler source).** No function loses its last workaround; two lose
 sites:
 
@@ -1458,7 +1458,7 @@ source (8 functions -> 5):
   `LinkSession::HandleSerial` (`rf = &this->ring` does give a second
   register, through gcse's PRE, but in the wrong place).
 
-**Round 5, src/game/enemies and src/game/bosses (C++), looking outside the
+**Round 5, engine/src/game/enemies and engine/src/game/bosses (C++), looking outside the
 function body.** 11 functions -> 3. Round 4 had proved that no edit of
 these bodies reaches the ROM; what does is a helper the bodies didn't
 use, and one libcall:

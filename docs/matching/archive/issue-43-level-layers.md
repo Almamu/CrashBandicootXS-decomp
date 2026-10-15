@@ -6,9 +6,9 @@ and `ProbeSolidFloorHeight` were already matched before this pass. Of the remain
 narrow inline-asm anchors, described below). Nothing parked, nothing left
 raw.
 
-- `src/game/level/level_layers.c` - 11 functions, the whole of the former
+- `engine/src/game/level/level_layers.c` - 11 functions, the whole of the former
   `asm/code_3_2_17_266bc.s`.
-- `src/game/level/tile_slot_pool.c` - 8 functions, the former tail of
+- `engine/src/game/level/tile_slot_pool.c` - 8 functions, the former tail of
   `asm/code_3_2_17_25fc8.s` (which now ends at `nullsub_26`, part of
   issue #42).
 

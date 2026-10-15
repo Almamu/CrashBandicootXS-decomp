@@ -1,6 +1,6 @@
 {
- "description": "Triage of every raw (baserom.gba incbin) blob in data/data.s. See docs/data_map.md.",
- "generated_from": "data/data.s at the commit this file was added in; addresses are ROM addresses",
+ "description": "Triage of every raw (baserom.gba incbin) blob in games/xs/data/data.s. See docs/data_map.md.",
+ "generated_from": "games/xs/data/data.s at the commit this file was added in; addresses are ROM addresses",
  "blobs": [
   {
    "address": "0x0803B8B0",
@@ -29,7 +29,7 @@
      "format": "BG0 cell animation: u16 palette[256] (0x200), s16 cols=19 @+0x200, s16 rows=13 @+0x202, then 60 frames x 8028 B (19*13 4bpp tiles = 7904 B + 124 B of per-frame side data handed to the gDrawMirroredTilemapFunc callback, present because type-0 categories set the flag)",
      "effort": "medium",
      "notes": "size 0x204 + 60*8028 = 0x75B94 exactly, matching descriptor field +0x08",
-     "status": "converted: src/game/vehicles/polar/data/polar_cell_anim.cpp (graphics/vehicles/polar/ice_wall.png)"
+     "status": "converted: engine/src/game/vehicles/polar/data/polar_cell_anim.cpp (games/xs/graphics/vehicles/polar/ice_wall.png)"
     },
     {
      "address": "0x080B1444",
@@ -39,7 +39,7 @@
      "element_size": 20,
      "element_count": 164,
      "effort": "easy",
-     "status": "converted: src/game/vehicles/polar/data/polar_cell_anim.cpp"
+     "status": "converted: engine/src/game/vehicles/polar/data/polar_cell_anim.cpp"
     }
    ]
   },
@@ -79,7 +79,7 @@
      "element_size": 20,
      "element_count": 175,
      "effort": "easy",
-     "status": "converted: src/game/vehicles/polar/data/polar_spawn_tables.cpp"
+     "status": "converted: engine/src/game/vehicles/polar/data/polar_spawn_tables.cpp"
     },
     {
      "address": "0x080C19F0",
@@ -89,7 +89,7 @@
      "element_size": 20,
      "element_count": 171,
      "effort": "easy",
-     "status": "converted: src/game/vehicles/polar/data/polar_spawn_tables.cpp"
+     "status": "converted: engine/src/game/vehicles/polar/data/polar_spawn_tables.cpp"
     },
     {
      "address": "0x080C2758",
@@ -97,7 +97,7 @@
      "format": "compressed OBJ frame set A (old 'rotation strip A'): 152 back-to-back frames {w=8,h=8,0x30,0} + u16 zero/literal run stream, decoded by the IWRAM hook gUnpackRleSpriteFrameFunc (0x03000634); addressed by the 152 absolute pointers in table_B gPolarPlayerFrames (categories 0-2, anim record 0, 148 distinct)",
      "effort": "medium",
      "notes": "the frames do not overlap: the old 'sliding window' reading assumed w*h*32 raw bytes per frame",
-     "status": "converted: src/game/vehicles/polar/data/polar_rle_sprites.cpp (graphics/vehicles/polar/player.png, tools/rle_sprites.py)"
+     "status": "converted: engine/src/game/vehicles/polar/data/polar_rle_sprites.cpp (games/xs/graphics/vehicles/polar/player.png, tools/rle_sprites.py)"
     },
     {
      "address": "0x080DA1D8",
@@ -105,21 +105,21 @@
      "format": "compressed OBJ frame set B (old 'rotation strip B'): 112 back-to-back frames {w=10,h=10,0x30,0} + run stream, addressed by the 123 pointers in gYetiFrames (table_B of the CreateYeti singleton)",
      "effort": "medium",
      "notes": "the last frame ends exactly at 0x080FF1B0",
-     "status": "converted: src/game/vehicles/polar/data/polar_rle_sprites.cpp (graphics/vehicles/polar/yeti.png, tools/rle_sprites.py)"
+     "status": "converted: engine/src/game/vehicles/polar/data/polar_rle_sprites.cpp (games/xs/graphics/vehicles/polar/yeti.png, tools/rle_sprites.py)"
     },
     {
      "address": "0x080FF1B0",
      "size": 255876,
      "format": "BG0 cell animation B (categories 3-6, descriptor +0x04/+0x08): palette[256], cols=38, rows=10, 21 frames x 12160 B",
      "effort": "medium",
-     "status": "converted: src/game/vehicles/jetpack/data/jetpack_cell_anim.cpp (graphics/vehicles/jetpack/clouds.png)"
+     "status": "converted: engine/src/game/vehicles/jetpack/data/jetpack_cell_anim.cpp (games/xs/graphics/vehicles/jetpack/clouds.png)"
     },
     {
      "address": "0x0813D934",
      "size": 13464,
      "format": "BG1 picture for category 3 (descriptor +0x0C, LoadBgPicture): palette[256], s16 cols=38, rows=16, u32 tiles=357, u16 map[cols*rows], tiles*32 B 4bpp, palette-bank nibbles",
      "effort": "medium",
-     "status": "converted: src/game/vehicles/jetpack/data/jetpack_cell_anim.cpp (graphics/vehicles/jetpack/skies/rocket_racket*.png)"
+     "status": "converted: engine/src/game/vehicles/jetpack/data/jetpack_cell_anim.cpp (games/xs/graphics/vehicles/jetpack/skies/rocket_racket*.png)"
     },
     {
      "address": "0x08140DCC",
@@ -129,7 +129,7 @@
      "element_size": 20,
      "element_count": 121,
      "effort": "easy",
-     "status": "converted: src/game/vehicles/jetpack/data/jetpack_cell_anim.cpp"
+     "status": "converted: engine/src/game/vehicles/jetpack/data/jetpack_cell_anim.cpp"
     }
    ],
    "status": "converted (every region)"
@@ -165,7 +165,7 @@
      "size": 9624,
      "format": "BG1 picture for category 4 (38x16, 237 tiles)",
      "effort": "medium",
-     "status": "converted: src/game/vehicles/jetpack/data/jetpack_sky_pictures.cpp (graphics/vehicles/jetpack/skies/blimp_bonanza*.png)"
+     "status": "converted: engine/src/game/vehicles/jetpack/data/jetpack_sky_pictures.cpp (games/xs/graphics/vehicles/jetpack/skies/blimp_bonanza*.png)"
     },
     {
      "address": "0x0815405C",
@@ -175,14 +175,14 @@
      "element_size": 20,
      "element_count": 230,
      "effort": "easy",
-     "status": "converted: src/game/vehicles/jetpack/data/jetpack_sky_pictures.cpp"
+     "status": "converted: engine/src/game/vehicles/jetpack/data/jetpack_sky_pictures.cpp"
     },
     {
      "address": "0x08155260",
      "size": 14008,
      "format": "BG1 picture shared by categories 5 and 6 (38x16, 374 tiles)",
      "effort": "medium",
-     "status": "converted: src/game/vehicles/jetpack/data/jetpack_sky_pictures.cpp (graphics/vehicles/jetpack/skies/no_fly_zone*.png)"
+     "status": "converted: engine/src/game/vehicles/jetpack/data/jetpack_sky_pictures.cpp (games/xs/graphics/vehicles/jetpack/skies/no_fly_zone*.png)"
     },
     {
      "address": "0x08158918",
@@ -192,7 +192,7 @@
      "element_size": 20,
      "element_count": 295,
      "effort": "easy",
-     "status": "converted: src/game/vehicles/jetpack/data/jetpack_sky_pictures.cpp"
+     "status": "converted: engine/src/game/vehicles/jetpack/data/jetpack_sky_pictures.cpp"
     },
     {
      "address": "0x0815A030",
@@ -202,7 +202,7 @@
      "element_size": 20,
      "element_count": 1,
      "effort": "easy",
-     "status": "converted: src/game/vehicles/jetpack/data/jetpack_sky_pictures.cpp"
+     "status": "converted: engine/src/game/vehicles/jetpack/data/jetpack_sky_pictures.cpp"
     },
     {
      "address": "0x0815A050",
@@ -210,7 +210,7 @@
      "format": "compressed OBJ frame set C (old 'rotation strip C'): 80 back-to-back frames {w=8,h=8,0x30,0} + run stream, addressed by table_B gJetpackPlayerFrames (categories 3-6, anim record 0, 80 pointers)",
      "effort": "medium",
      "notes": "the last frame ends exactly at 0x08167AD4",
-     "status": "converted: src/game/vehicles/jetpack/data/jetpack_rle_sprites.cpp (graphics/vehicles/jetpack/player.png, tools/rle_sprites.py)"
+     "status": "converted: engine/src/game/vehicles/jetpack/data/jetpack_rle_sprites.cpp (games/xs/graphics/vehicles/jetpack/player.png, tools/rle_sprites.py)"
     }
    ],
    "status": "converted (every region)"
@@ -240,7 +240,7 @@
    "effort": "easy",
    "confidence": "high",
    "notes": "",
-   "status": "converted: src/game/bosses/data/boss_pictures.cpp"
+   "status": "converted: engine/src/game/bosses/data/boss_pictures.cpp"
   },
   {
    "address": "0x08167CD4",
@@ -265,7 +265,7 @@
    "effort": "medium",
    "confidence": "medium",
    "notes": "",
-   "status": "converted: src/game/bosses/data/boss_pictures.cpp"
+   "status": "converted: engine/src/game/bosses/data/boss_pictures.cpp"
   },
   {
    "address": "0x08169AE8",
@@ -292,7 +292,7 @@
    "effort": "easy",
    "confidence": "high",
    "notes": "",
-   "status": "converted: src/game/bosses/data/boss_pictures.cpp"
+   "status": "converted: engine/src/game/bosses/data/boss_pictures.cpp"
   },
   {
    "address": "0x08169CE8",
@@ -314,7 +314,7 @@
    "effort": "medium",
    "confidence": "medium",
    "notes": "",
-   "status": "converted: src/game/bosses/data/boss_pictures.cpp"
+   "status": "converted: engine/src/game/bosses/data/boss_pictures.cpp"
   },
   {
    "address": "0x0816A810",
@@ -335,7 +335,7 @@
    "format": "table (element layout: see consumers); 2 word(s) look like ROM pointers",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/bosses/data/boss_pictures.cpp"
+   "status": "converted: engine/src/game/bosses/data/boss_pictures.cpp"
   },
   {
    "address": "0x0816A820",
@@ -391,7 +391,7 @@
    "effort": "easy",
    "confidence": "high",
    "notes": "Generated-looking; could even be produced by a script, but a literal C array is simplest.",
-   "status": "converted: src/game/bosses/data/boss_pictures.cpp"
+   "status": "converted: engine/src/game/bosses/data/boss_pictures.cpp"
   },
   {
    "address": "0x0816AA20",
@@ -416,7 +416,7 @@
    "effort": "easy",
    "confidence": "high",
    "notes": "Written as gGaxMusicData + GAX_SONG_<NAME>; tools/gax_audio.py generates the offsets (build/crashbandicootxs/sound/gax_songs.h).",
-   "status": "converted: src/engine/audio/data/song_table.cpp"
+   "status": "converted: engine/src/engine/audio/data/song_table.cpp"
   },
   {
    "address": "0x0816AF10",
@@ -443,7 +443,7 @@
    "effort": "easy",
    "confidence": "high",
    "notes": "Link-cable packet checksum (MakeLinkHandshakeId, seed 0x1234).",
-   "status": "converted: src/engine/link/data/link_crc_table.cpp"
+   "status": "converted: engine/src/engine/link/data/link_crc_table.cpp"
   },
   {
    "address": "0x0816B138",
@@ -464,7 +464,7 @@
    "format": "small constant (3e00)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/ui/data/menu_tables.cpp"
+   "status": "converted: engine/src/game/ui/data/menu_tables.cpp"
   },
   {
    "address": "0x0816B13A",
@@ -488,7 +488,7 @@
    "format": "table of u16; 1 word(s) look like ROM pointers",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/menu_tables.cpp"
+   "status": "converted: engine/src/game/ui/data/menu_tables.cpp"
   },
   {
    "address": "0x0816B15A",
@@ -512,7 +512,7 @@
    "format": "BGR555 palette(s): 1 x 16 colours",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/menu_tables.cpp"
+   "status": "converted: engine/src/game/ui/data/menu_tables.cpp"
   },
   {
    "address": "0x0816B17A",
@@ -536,7 +536,7 @@
    "format": "table of u16",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/menu_tables.cpp"
+   "status": "converted: engine/src/game/ui/data/menu_tables.cpp"
   },
   {
    "address": "0x0816B19A",
@@ -560,7 +560,7 @@
    "format": "table of u16",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/menu_tables.cpp"
+   "status": "converted: engine/src/game/ui/data/menu_tables.cpp"
   },
   {
    "address": "0x0816B1BC",
@@ -584,7 +584,7 @@
    "format": "table of s32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/menu_tables.cpp"
+   "status": "converted: engine/src/game/ui/data/menu_tables.cpp"
   },
   {
    "address": "0x0816B1D0",
@@ -608,7 +608,7 @@
    "format": "table of void*",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/menu_tables.cpp"
+   "status": "converted: engine/src/game/ui/data/menu_tables.cpp"
   },
   {
    "address": "0x0816B1E4",
@@ -634,7 +634,7 @@
    "format": "table of struct icon_pos",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/menu_tables.cpp"
+   "status": "converted: engine/src/game/ui/data/menu_tables.cpp"
   },
   {
    "address": "0x0816B1EC",
@@ -658,7 +658,7 @@
    "format": "BGR555 palette(s): 1 x 16 colours",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/menu_tables.cpp"
+   "status": "converted: engine/src/game/ui/data/menu_tables.cpp"
   },
   {
    "address": "0x0816B20C",
@@ -682,7 +682,7 @@
    "format": "table of u32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/menu_tables.cpp"
+   "status": "converted: engine/src/game/ui/data/menu_tables.cpp"
   },
   {
    "address": "0x0816B21C",
@@ -708,7 +708,7 @@
    "format": "table of struct icon_pos",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/menu_tables.cpp"
+   "status": "converted: engine/src/game/ui/data/menu_tables.cpp"
   },
   {
    "address": "0x0816B244",
@@ -732,7 +732,7 @@
    "format": "table of u32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/menu_tables.cpp"
+   "status": "converted: engine/src/game/ui/data/menu_tables.cpp"
   },
   {
    "address": "0x0816B258",
@@ -758,7 +758,7 @@
    "format": "table of struct icon_pos",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/menu_tables.cpp"
+   "status": "converted: engine/src/game/ui/data/menu_tables.cpp"
   },
   {
    "address": "0x0816B270",
@@ -783,7 +783,7 @@
    "format": "table of u32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/menu_tables.cpp"
+   "status": "converted: engine/src/game/ui/data/menu_tables.cpp"
   },
   {
    "address": "0x0816B27C",
@@ -809,7 +809,7 @@
    "format": "table of struct icon_pos",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/menu_tables.cpp"
+   "status": "converted: engine/src/game/ui/data/menu_tables.cpp"
   },
   {
    "address": "0x0816B284",
@@ -850,7 +850,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/ui/data/pause_menu_rows.cpp"
+   "status": "converted: engine/src/game/ui/data/pause_menu_rows.cpp"
   },
   {
    "address": "0x0816B2C0",
@@ -871,7 +871,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/ui/data/pause_menu_rows.cpp"
+   "status": "converted: engine/src/game/ui/data/pause_menu_rows.cpp"
   },
   {
    "address": "0x0816B2E0",
@@ -893,7 +893,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/engine/gfx/data/obj_piece_sizes.cpp"
+   "status": "converted: engine/src/engine/gfx/data/obj_piece_sizes.cpp"
   },
   {
    "address": "0x0816B2EC",
@@ -915,7 +915,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/engine/gfx/data/obj_piece_sizes.cpp"
+   "status": "converted: engine/src/engine/gfx/data/obj_piece_sizes.cpp"
   },
   {
    "address": "0x0816B2F8",
@@ -943,7 +943,7 @@
    "format": "all zero (zero-initialised table)",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/engine/gfx/data/obj_piece_sizes.cpp"
+   "status": "converted: engine/src/engine/gfx/data/obj_piece_sizes.cpp"
   },
   {
    "address": "0x0816B300",
@@ -970,7 +970,7 @@
    "format": "all zero (zero-initialised table)",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/engine/gfx/data/obj_piece_sizes.cpp"
+   "status": "converted: engine/src/engine/gfx/data/obj_piece_sizes.cpp"
   },
   {
    "address": "0x0816B304",
@@ -998,7 +998,7 @@
    "format": "table of struct anim_rec",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/crash/data/motion_records.cpp"
+   "status": "converted: engine/src/game/crash/data/motion_records.cpp"
   },
   {
    "address": "0x0816B61C",
@@ -1024,7 +1024,7 @@
    "format": "table of struct pctrl_anim",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/crash/data/motion_records.cpp"
+   "status": "converted: engine/src/game/crash/data/motion_records.cpp"
   },
   {
    "address": "0x0816B8C0",
@@ -1045,7 +1045,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/crash/data/motion_records.cpp"
+   "status": "converted: engine/src/game/crash/data/motion_records.cpp"
   },
   {
    "address": "0x0816B92C",
@@ -1106,7 +1106,7 @@
    "format": "table (element layout: see consumers); 1 word(s) look like ROM pointers",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/crash/data/input_ctrl_motion_set.cpp"
+   "status": "converted: engine/src/game/crash/data/input_ctrl_motion_set.cpp"
   },
   {
    "address": "0x0816B98C",
@@ -1151,7 +1151,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/enemies/data/enemy_anim_maps.cpp"
+   "status": "converted: engine/src/game/enemies/data/enemy_anim_maps.cpp"
   },
   {
    "address": "0x0816B9AC",
@@ -1175,7 +1175,7 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 16,
-   "status": "converted: src/game/enemies/data/enemy_anim_maps.cpp"
+   "status": "converted: engine/src/game/enemies/data/enemy_anim_maps.cpp"
   },
   {
    "address": "0x0816B9CC",
@@ -1199,7 +1199,7 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 16,
-   "status": "converted: src/game/enemies/data/enemy_anim_maps.cpp"
+   "status": "converted: engine/src/game/enemies/data/enemy_anim_maps.cpp"
   },
   {
    "address": "0x0816B9EC",
@@ -1223,7 +1223,7 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 16,
-   "status": "converted: src/game/enemies/data/enemy_anim_maps.cpp"
+   "status": "converted: engine/src/game/enemies/data/enemy_anim_maps.cpp"
   },
   {
    "address": "0x0816BA0C",
@@ -1244,7 +1244,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/enemies/data/enemy_anim_maps.cpp"
+   "status": "converted: engine/src/game/enemies/data/enemy_anim_maps.cpp"
   },
   {
    "address": "0x0816BA2C",
@@ -1265,7 +1265,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/enemies/data/enemy_anim_maps.cpp"
+   "status": "converted: engine/src/game/enemies/data/enemy_anim_maps.cpp"
   },
   {
    "address": "0x0816BA4C",
@@ -1286,7 +1286,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/enemies/data/enemy_anim_maps.cpp"
+   "status": "converted: engine/src/game/enemies/data/enemy_anim_maps.cpp"
   },
   {
    "address": "0x0816BA6C",
@@ -1307,7 +1307,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/enemies/data/enemy_anim_maps.cpp"
+   "status": "converted: engine/src/game/enemies/data/enemy_anim_maps.cpp"
   },
   {
    "address": "0x0816BA8C",
@@ -1328,7 +1328,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/enemies/data/enemy_anim_maps.cpp"
+   "status": "converted: engine/src/game/enemies/data/enemy_anim_maps.cpp"
   },
   {
    "address": "0x0816BAAC",
@@ -1352,7 +1352,7 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 16,
-   "status": "converted: src/game/enemies/data/enemy_anim_maps.cpp"
+   "status": "converted: engine/src/game/enemies/data/enemy_anim_maps.cpp"
   },
   {
    "address": "0x0816BACC",
@@ -1373,7 +1373,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/enemies/data/enemy_anim_maps.cpp"
+   "status": "converted: engine/src/game/enemies/data/enemy_anim_maps.cpp"
   },
   {
    "address": "0x0816BAEC",
@@ -1397,7 +1397,7 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 16,
-   "status": "converted: src/game/enemies/data/enemy_anim_maps.cpp"
+   "status": "converted: engine/src/game/enemies/data/enemy_anim_maps.cpp"
   },
   {
    "address": "0x0816BB0C",
@@ -1419,7 +1419,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/enemies/data/enemy_anim_maps.cpp"
+   "status": "converted: engine/src/game/enemies/data/enemy_anim_maps.cpp"
   },
   {
    "address": "0x0816BB2C",
@@ -1441,7 +1441,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/enemies/data/enemy_anim_maps.cpp"
+   "status": "converted: engine/src/game/enemies/data/enemy_anim_maps.cpp"
   },
   {
    "address": "0x0816BB4C",
@@ -1465,7 +1465,7 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 16,
-   "status": "converted: src/game/enemies/data/enemy_anim_maps.cpp"
+   "status": "converted: engine/src/game/enemies/data/enemy_anim_maps.cpp"
   },
   {
    "address": "0x0816BB6C",
@@ -1486,7 +1486,7 @@
    "format": "table (element layout: see consumers); 1 word(s) look like ROM pointers",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/crates/data/crate_tables.cpp"
+   "status": "converted: engine/src/game/crates/data/crate_tables.cpp"
   },
   {
    "address": "0x0816BB94",
@@ -1509,7 +1509,7 @@
    "format": "small constant (281e140a)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/crates/data/crate_tables.cpp"
+   "status": "converted: engine/src/game/crates/data/crate_tables.cpp"
   },
   {
    "address": "0x0816BB98",
@@ -1532,7 +1532,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/crates/data/crate_tables.cpp"
+   "status": "converted: engine/src/game/crates/data/crate_tables.cpp"
   },
   {
    "address": "0x0816BBAE",
@@ -1557,7 +1557,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/crates/data/crate_tables.cpp"
+   "status": "converted: engine/src/game/crates/data/crate_tables.cpp"
   },
   {
    "address": "0x0816BBC4",
@@ -1586,7 +1586,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/crates/data/crate_tables.cpp"
+   "status": "converted: engine/src/game/crates/data/crate_tables.cpp"
   },
   {
    "address": "0x0816BBDA",
@@ -1608,7 +1608,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/crates/data/crate_tables.cpp"
+   "status": "converted: engine/src/game/crates/data/crate_tables.cpp"
   },
   {
    "address": "0x0816BBF0",
@@ -1632,7 +1632,7 @@
    "format": "table of s32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/crates/data/crate_tables.cpp"
+   "status": "converted: engine/src/game/crates/data/crate_tables.cpp"
   },
   {
    "address": "0x0816BC98",
@@ -1657,7 +1657,7 @@
    "format": "table of s32[7]",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/crates/data/crate_tables.cpp"
+   "status": "converted: engine/src/game/crates/data/crate_tables.cpp"
   },
   {
    "address": "0x0816BF00",
@@ -1678,7 +1678,7 @@
    "format": "small constant (0000010000000000)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/crates/data/crate_tables.cpp"
+   "status": "converted: engine/src/game/crates/data/crate_tables.cpp"
   },
   {
    "address": "0x0816BF08",
@@ -1702,7 +1702,7 @@
    "format": "table of s32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/crates/data/crate_tables.cpp"
+   "status": "converted: engine/src/game/crates/data/crate_tables.cpp"
   },
   {
    "address": "0x0816BF14",
@@ -1726,7 +1726,7 @@
    "format": "table of struct three_words",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/crates/data/crate_tables.cpp"
+   "status": "converted: engine/src/game/crates/data/crate_tables.cpp"
   },
   {
    "address": "0x0816BF20",
@@ -1801,7 +1801,7 @@
    "format": "table of struct speed_table",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/crash/data/swim_speeds.cpp"
+   "status": "converted: engine/src/game/crash/data/swim_speeds.cpp"
   },
   {
    "address": "0x0816C250",
@@ -1892,7 +1892,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/bosses/data/boss_motion_tables.cpp"
+   "status": "converted: engine/src/game/bosses/data/boss_motion_tables.cpp"
   },
   {
    "address": "0x0816C308",
@@ -1914,7 +1914,7 @@
    "format": "small constant (040100)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/bosses/data/boss_motion_tables.cpp"
+   "status": "converted: engine/src/game/bosses/data/boss_motion_tables.cpp"
   },
   {
    "address": "0x0816C30B",
@@ -1935,7 +1935,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/bosses/data/boss_motion_tables.cpp"
+   "status": "converted: engine/src/game/bosses/data/boss_motion_tables.cpp"
   },
   {
    "address": "0x0816C358",
@@ -1956,7 +1956,7 @@
    "format": "small constant (100e0a20)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/bosses/data/boss_motion_tables.cpp"
+   "status": "converted: engine/src/game/bosses/data/boss_motion_tables.cpp"
   },
   {
    "address": "0x0816C35C",
@@ -1977,7 +1977,7 @@
    "format": "small constant (181612)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/bosses/data/boss_motion_tables.cpp"
+   "status": "converted: engine/src/game/bosses/data/boss_motion_tables.cpp"
   },
   {
    "address": "0x0816C35F",
@@ -1998,7 +1998,7 @@
    "format": "small constant (040404)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/bosses/data/boss_motion_tables.cpp"
+   "status": "converted: engine/src/game/bosses/data/boss_motion_tables.cpp"
   },
   {
    "address": "0x0816C362",
@@ -2019,7 +2019,7 @@
    "format": "small constant (020202000000)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/bosses/data/boss_motion_tables.cpp"
+   "status": "converted: engine/src/game/bosses/data/boss_motion_tables.cpp"
   },
   {
    "address": "0x0816C368",
@@ -2043,7 +2043,7 @@
    "format": "table of s32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/bosses/data/boss_motion_tables.cpp"
+   "status": "converted: engine/src/game/bosses/data/boss_motion_tables.cpp"
   },
   {
    "address": "0x0816C378",
@@ -2067,7 +2067,7 @@
    "format": "table of s32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/bosses/data/boss_motion_tables.cpp"
+   "status": "converted: engine/src/game/bosses/data/boss_motion_tables.cpp"
   },
   {
    "address": "0x0816C390",
@@ -2091,7 +2091,7 @@
    "format": "table of s32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/bosses/data/boss_motion_tables.cpp"
+   "status": "converted: engine/src/game/bosses/data/boss_motion_tables.cpp"
   },
   {
    "address": "0x0816C3A0",
@@ -2115,7 +2115,7 @@
    "format": "table of s32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/bosses/data/boss_motion_tables.cpp"
+   "status": "converted: engine/src/game/bosses/data/boss_motion_tables.cpp"
   },
   {
    "address": "0x0816C3B8",
@@ -2142,7 +2142,7 @@
    "format": "table of s32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/bosses/data/boss_motion_tables.cpp"
+   "status": "converted: engine/src/game/bosses/data/boss_motion_tables.cpp"
   },
   {
    "address": "0x0816C3E8",
@@ -2163,7 +2163,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/bosses/data/boss_motion_tables.cpp"
+   "status": "converted: engine/src/game/bosses/data/boss_motion_tables.cpp"
   },
   {
    "address": "0x0816C3F4",
@@ -2184,7 +2184,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/bosses/data/boss_motion_tables.cpp"
+   "status": "converted: engine/src/game/bosses/data/boss_motion_tables.cpp"
   },
   {
    "address": "0x0816C418",
@@ -2255,7 +2255,7 @@
    "format": "table of struct vec3",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/objects/data/platform_mover_motion.cpp"
+   "status": "converted: engine/src/game/objects/data/platform_mover_motion.cpp"
   },
   {
    "address": "0x0816C484",
@@ -2305,7 +2305,7 @@
    "format": "table of struct xy_pair",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/level_select_layout.cpp"
+   "status": "converted: engine/src/game/ui/data/level_select_layout.cpp"
   },
   {
    "address": "0x0816C4A0",
@@ -2329,7 +2329,7 @@
    "format": "table of struct xy_pair",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/level_select_layout.cpp"
+   "status": "converted: engine/src/game/ui/data/level_select_layout.cpp"
   },
   {
    "address": "0x0816C4A8",
@@ -2353,7 +2353,7 @@
    "format": "table of struct xy_pair",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/level_select_layout.cpp"
+   "status": "converted: engine/src/game/ui/data/level_select_layout.cpp"
   },
   {
    "address": "0x0816C4B0",
@@ -2377,7 +2377,7 @@
    "format": "table of struct xy_pair",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/level_select_layout.cpp"
+   "status": "converted: engine/src/game/ui/data/level_select_layout.cpp"
   },
   {
    "address": "0x0816C4B8",
@@ -2401,7 +2401,7 @@
    "format": "table of struct xy_pair",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/level_select_layout.cpp"
+   "status": "converted: engine/src/game/ui/data/level_select_layout.cpp"
   },
   {
    "address": "0x0816C4C0",
@@ -2426,7 +2426,7 @@
    "format": "table of struct xy_pair",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/level_select_layout.cpp"
+   "status": "converted: engine/src/game/ui/data/level_select_layout.cpp"
   },
   {
    "address": "0x0816C4C8",
@@ -2450,7 +2450,7 @@
    "format": "table of struct xy_pair",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/level_select_layout.cpp"
+   "status": "converted: engine/src/game/ui/data/level_select_layout.cpp"
   },
   {
    "address": "0x0816C4D0",
@@ -2474,7 +2474,7 @@
    "format": "table of struct xy_pair",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/level_select_layout.cpp"
+   "status": "converted: engine/src/game/ui/data/level_select_layout.cpp"
   },
   {
    "address": "0x0816C4D8",
@@ -2499,7 +2499,7 @@
    "format": "table of struct xy_pair",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/level_select_layout.cpp"
+   "status": "converted: engine/src/game/ui/data/level_select_layout.cpp"
   },
   {
    "address": "0x0816C508",
@@ -2524,7 +2524,7 @@
    "format": "table of struct xy_pair",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/level_select_layout.cpp"
+   "status": "converted: engine/src/game/ui/data/level_select_layout.cpp"
   },
   {
    "address": "0x0816C538",
@@ -2549,7 +2549,7 @@
    "format": "table of u32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/level_select_layout.cpp"
+   "status": "converted: engine/src/game/ui/data/level_select_layout.cpp"
   },
   {
    "address": "0x0816C548",
@@ -2575,7 +2575,7 @@
    "format": "table of u32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/level_select_layout.cpp"
+   "status": "converted: engine/src/game/ui/data/level_select_layout.cpp"
   },
   {
    "address": "0x0816C558",
@@ -2599,7 +2599,7 @@
    "format": "table of u32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/level_select_layout.cpp"
+   "status": "converted: engine/src/game/ui/data/level_select_layout.cpp"
   },
   {
    "address": "0x0816C56C",
@@ -2620,7 +2620,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/ui/data/level_select_layout.cpp"
+   "status": "converted: engine/src/game/ui/data/level_select_layout.cpp"
   },
   {
    "address": "0x0816C58C",
@@ -2687,7 +2687,7 @@
    "format": "table of struct xy_pair",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/level_select_anims.cpp"
+   "status": "converted: engine/src/game/ui/data/level_select_anims.cpp"
   },
   {
    "address": "0x0816C610",
@@ -2711,7 +2711,7 @@
    "format": "table of u32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/level_select_anims.cpp"
+   "status": "converted: engine/src/game/ui/data/level_select_anims.cpp"
   },
   {
    "address": "0x0816C624",
@@ -2735,7 +2735,7 @@
    "format": "table of u32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/level_select_anims.cpp"
+   "status": "converted: engine/src/game/ui/data/level_select_anims.cpp"
   },
   {
    "address": "0x0816C634",
@@ -2759,7 +2759,7 @@
    "format": "table of u32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/level_select_anims.cpp"
+   "status": "converted: engine/src/game/ui/data/level_select_anims.cpp"
   },
   {
    "address": "0x0816C644",
@@ -2784,7 +2784,7 @@
    "format": "table of s32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/level_select_anims.cpp"
+   "status": "converted: engine/src/game/ui/data/level_select_anims.cpp"
   },
   {
    "address": "0x0816C674",
@@ -2809,7 +2809,7 @@
    "format": "table of s32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/level_select_anims.cpp"
+   "status": "converted: engine/src/game/ui/data/level_select_anims.cpp"
   },
   {
    "address": "0x0816C6A4",
@@ -2857,7 +2857,7 @@
    "format": "u16[5] palette-entry list of a level-start colour cycle (AddPaletteCycle lists argument)",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/level/data/level_table.cpp"
+   "status": "converted: engine/src/game/level/data/level_table.cpp"
   },
   {
    "address": "0x0816C81E",
@@ -2881,7 +2881,7 @@
    "format": "u16[9] palette-entry list of a level-start colour cycle",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/level/data/level_table.cpp"
+   "status": "converted: engine/src/game/level/data/level_table.cpp"
   },
   {
    "address": "0x0816C830",
@@ -2905,7 +2905,7 @@
    "format": "u16[9] palette-entry list of a level-start colour cycle",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/level/data/level_table.cpp"
+   "status": "converted: engine/src/game/level/data/level_table.cpp"
   },
   {
    "address": "0x0816C842",
@@ -2929,7 +2929,7 @@
    "format": "u16[16] palette-entry list of a level-start colour cycle (entries 0x20-0x2F; not a palette)",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/level/data/level_table.cpp"
+   "status": "converted: engine/src/game/level/data/level_table.cpp"
   },
   {
    "address": "0x0816C862",
@@ -2953,7 +2953,7 @@
    "format": "u16[5] palette-entry list of a level-start colour cycle",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/level/data/level_table.cpp"
+   "status": "converted: engine/src/game/level/data/level_table.cpp"
   },
   {
    "address": "0x0816C86C",
@@ -3008,8 +3008,8 @@
    "format": "level table: 25 x 0x24 struct level_info (name text id, theme, 3 time-trial thresholds, 2 words for SetMaskAssistDeaths/SetCrateAssistDeaths, a flag, room list), then 25 x 0x10 struct level_room_list {count, rooms**, extra1, extra2}",
    "effort": "medium",
    "confidence": "high",
-   "notes": "The first word (1) is record 0's name text id, not a header. The five local struct views in src are listed on struct level_info (include/game/level/level_data.h).",
-   "status": "converted: src/game/level/data/level_table.cpp"
+   "notes": "The first word (1) is record 0's name text id, not a header. The five local struct views in src are listed on struct level_info (engine/include/game/level/level_data.h).",
+   "status": "converted: engine/src/game/level/data/level_table.cpp"
   },
   {
    "address": "0x0816CD80",
@@ -3030,8 +3030,8 @@
    "format": "u8[11] theme music cues (+1 B pad), 17 extra-room records (struct level_room, 0x14), the per-level room pointer arrays (31 pointers), 31 room records (24 rooms + 7 actor-category stages); the last 0x2C bytes are the English cutscene text table (label gCutsceneTextEnglish)",
    "effort": "medium",
    "confidence": "high",
-   "notes": "Room records point at the palettes and level_desc objects of src/game/level/data/level_rooms_*.cpp by symbol.",
-   "status": "converted (0x0816CD80-0x0816D1C8): src/game/level/data/level_table.cpp"
+   "notes": "Room records point at the palettes and level_desc objects of engine/src/game/level/data/level_rooms_*.cpp by symbol.",
+   "status": "converted (0x0816CD80-0x0816D1C8): engine/src/game/level/data/level_table.cpp"
   },
   {
    "address": "0x0816D1F4",
@@ -3056,7 +3056,7 @@
    "effort": "medium",
    "confidence": "high",
    "notes": "The language tables (English at 0x0816D1C8, then 0x0816D36C, 0x0816D398, 0x0816D3C4, 0x0816D3F0, 0x0816D41C) are referenced from the IWRAM image (gCutsceneTexts).",
-   "status": "converted: src/game/ui/data/cutscenes.cpp"
+   "status": "converted: engine/src/game/ui/data/cutscenes.cpp"
   },
   {
    "address": "0x081725A8",
@@ -3080,7 +3080,7 @@
    "format": "table of struct terrain_type",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/level/data/terrain_types.cpp"
+   "status": "converted: engine/src/game/level/data/terrain_types.cpp"
   },
   {
    "address": "0x081725AC",
@@ -3102,7 +3102,7 @@
    "format": "small constant (ffffffffffffffff)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/level/data/terrain_types.cpp"
+   "status": "converted: engine/src/game/level/data/terrain_types.cpp"
   },
   {
    "address": "0x081725B4",
@@ -3123,7 +3123,7 @@
    "format": "small constant (ffffffffffffffff)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/level/data/terrain_types.cpp"
+   "status": "converted: engine/src/game/level/data/terrain_types.cpp"
   },
   {
    "address": "0x081725BC",
@@ -3144,7 +3144,7 @@
    "format": "small constant (ffffffffffffffff)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/level/data/terrain_types.cpp"
+   "status": "converted: engine/src/game/level/data/terrain_types.cpp"
   },
   {
    "address": "0x081725C4",
@@ -3166,7 +3166,7 @@
    "effort": "medium",
    "confidence": "medium",
    "notes": "",
-   "status": "converted: src/game/level/data/terrain_types.cpp, src/game/ui/data/ui_text.cpp"
+   "status": "converted: engine/src/game/level/data/terrain_types.cpp, engine/src/game/ui/data/ui_text.cpp"
   },
   {
    "address": "0x08174BE0",
@@ -3191,7 +3191,7 @@
    "format": "table of u32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/hud_font_tables.cpp"
+   "status": "converted: engine/src/game/ui/data/hud_font_tables.cpp"
   },
   {
    "address": "0x08174C6C",
@@ -3220,7 +3220,7 @@
    "format": "table of struct hud_pos",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/hud_font_tables.cpp"
+   "status": "converted: engine/src/game/ui/data/hud_font_tables.cpp"
   },
   {
    "address": "0x08174D84",
@@ -3241,7 +3241,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/ui/data/hud_font_tables.cpp"
+   "status": "converted: engine/src/game/ui/data/hud_font_tables.cpp"
   },
   {
    "address": "0x08174DD4",
@@ -3262,7 +3262,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/ui/data/hud_font_tables.cpp"
+   "status": "converted: engine/src/game/ui/data/hud_font_tables.cpp"
   },
   {
    "address": "0x08175188",
@@ -3283,7 +3283,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/ui/data/hud_font_tables.cpp"
+   "status": "converted: engine/src/game/ui/data/hud_font_tables.cpp"
   },
   {
    "address": "0x081751D4",
@@ -3304,7 +3304,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/ui/data/hud_font_tables.cpp"
+   "status": "converted: engine/src/game/ui/data/hud_font_tables.cpp"
   },
   {
    "address": "0x08175558",
@@ -3415,7 +3415,7 @@
    "effort": "easy",
    "confidence": "high",
    "notes": "",
-   "status": "converted: src/engine/actor/data/actor_palette_cycle_frames.cpp"
+   "status": "converted: engine/src/engine/actor/data/actor_palette_cycle_frames.cpp"
   },
   {
    "address": "0x08178F60",
@@ -3439,7 +3439,7 @@
    "format": "table of s32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/engine/actor/data/actor_palette_cycle_frames.cpp"
+   "status": "converted: engine/src/engine/actor/data/actor_palette_cycle_frames.cpp"
   },
   {
    "address": "0x08178F70",
@@ -3463,7 +3463,7 @@
    "format": "table of s32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/engine/actor/data/actor_palette_cycle_frames.cpp"
+   "status": "converted: engine/src/engine/actor/data/actor_palette_cycle_frames.cpp"
   },
   {
    "address": "0x08178F80",
@@ -3484,8 +3484,8 @@
    "format": "categories 0-2 family data: 16-colour palettes, keyframe tables (table_A), anim table gCategoryFamily0AnimTable (41 x 0x28) and table_B arrays (absolute ROM pointers or sheet offsets)",
    "effort": "medium",
    "confidence": "high",
-   "notes": "Layout already documented in include/engine/actor/actor_anim.h and docs/entities/polar.json; split into typed tables.",
-   "status": "converted: src/game/vehicles/polar/data/polar_anim_family.cpp"
+   "notes": "Layout already documented in engine/include/engine/actor/actor_anim.h and docs/entities/polar.json; split into typed tables.",
+   "status": "converted: engine/src/game/vehicles/polar/data/polar_anim_family.cpp"
   },
   {
    "address": "0x0817A6B8",
@@ -3537,7 +3537,7 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 16,
-   "status": "converted: src/game/vehicles/polar/data/polar_palettes_boxes.cpp"
+   "status": "converted: engine/src/game/vehicles/polar/data/polar_palettes_boxes.cpp"
   },
   {
    "address": "0x0817A748",
@@ -3561,7 +3561,7 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 16,
-   "status": "converted: src/game/vehicles/polar/data/polar_palettes_boxes.cpp"
+   "status": "converted: engine/src/game/vehicles/polar/data/polar_palettes_boxes.cpp"
   },
   {
    "address": "0x0817A768",
@@ -3582,7 +3582,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/vehicles/polar/data/polar_palettes_boxes.cpp"
+   "status": "converted: engine/src/game/vehicles/polar/data/polar_palettes_boxes.cpp"
   },
   {
    "address": "0x0817A774",
@@ -3603,7 +3603,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/vehicles/polar/data/polar_palettes_boxes.cpp"
+   "status": "converted: engine/src/game/vehicles/polar/data/polar_palettes_boxes.cpp"
   },
   {
    "address": "0x0817A780",
@@ -3624,7 +3624,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/vehicles/polar/data/polar_palettes_boxes.cpp"
+   "status": "converted: engine/src/game/vehicles/polar/data/polar_palettes_boxes.cpp"
   },
   {
    "address": "0x0817A78C",
@@ -3645,7 +3645,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/vehicles/polar/data/polar_palettes_boxes.cpp"
+   "status": "converted: engine/src/game/vehicles/polar/data/polar_palettes_boxes.cpp"
   },
   {
    "address": "0x0817A798",
@@ -3669,7 +3669,7 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 16,
-   "status": "converted: src/game/vehicles/polar/data/polar_palettes_boxes.cpp"
+   "status": "converted: engine/src/game/vehicles/polar/data/polar_palettes_boxes.cpp"
   },
   {
    "address": "0x0817A7B8",
@@ -3693,7 +3693,7 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 16,
-   "status": "converted: src/game/vehicles/polar/data/polar_palettes_boxes.cpp"
+   "status": "converted: engine/src/game/vehicles/polar/data/polar_palettes_boxes.cpp"
   },
   {
    "address": "0x0817A7D8",
@@ -3717,7 +3717,7 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 16,
-   "status": "converted: src/game/vehicles/polar/data/polar_palettes_boxes.cpp"
+   "status": "converted: engine/src/game/vehicles/polar/data/polar_palettes_boxes.cpp"
   },
   {
    "address": "0x0817A7F8",
@@ -3739,7 +3739,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/vehicles/polar/data/polar_palettes_boxes.cpp"
+   "status": "converted: engine/src/game/vehicles/polar/data/polar_palettes_boxes.cpp"
   },
   {
    "address": "0x0817A840",
@@ -3784,7 +3784,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/vehicles/polar/data/yeti_keyframes.cpp"
+   "status": "converted: engine/src/game/vehicles/polar/data/yeti_keyframes.cpp"
   },
   {
    "address": "0x0817A880",
@@ -3832,7 +3832,7 @@
    "format": "BGR555 palette(s): 1 x 16 colours",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/vehicles/jetpack/data/jetpack_anim_family.cpp"
+   "status": "converted: engine/src/game/vehicles/jetpack/data/jetpack_anim_family.cpp"
   },
   {
    "address": "0x0817AA8C",
@@ -3853,7 +3853,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/vehicles/jetpack/data/jetpack_anim_family.cpp"
+   "status": "converted: engine/src/game/vehicles/jetpack/data/jetpack_anim_family.cpp"
   },
   {
    "address": "0x0817AA98",
@@ -3875,7 +3875,7 @@
    "effort": "medium",
    "confidence": "high",
    "notes": "",
-   "status": "converted: src/game/vehicles/jetpack/data/jetpack_anim_family.cpp"
+   "status": "converted: engine/src/game/vehicles/jetpack/data/jetpack_anim_family.cpp"
   },
   {
    "address": "0x0817C1C0",
@@ -3925,7 +3925,7 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 48,
-   "status": "converted: src/game/vehicles/jetpack/data/jetpack_flash_palettes.cpp"
+   "status": "converted: engine/src/game/vehicles/jetpack/data/jetpack_flash_palettes.cpp"
   },
   {
    "address": "0x0817C260",
@@ -4024,7 +4024,7 @@
    "format": "table of struct airship_attack",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/vehicles/jetpack/data/airship_attacks.cpp"
+   "status": "converted: engine/src/game/vehicles/jetpack/data/airship_attacks.cpp"
   },
   {
    "address": "0x0817C378",
@@ -4050,7 +4050,7 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 48,
-   "status": "converted: src/game/vehicles/jetpack/data/airship_attacks.cpp"
+   "status": "converted: engine/src/game/vehicles/jetpack/data/airship_attacks.cpp"
   },
   {
    "address": "0x0817C3D8",
@@ -4079,7 +4079,7 @@
    "format": "table of s16",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/vehicles/jetpack/data/airship_attacks.cpp"
+   "status": "converted: engine/src/game/vehicles/jetpack/data/airship_attacks.cpp"
   },
   {
    "address": "0x0817C3E4",
@@ -4103,7 +4103,7 @@
    "format": "table of struct anim_frame_record",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/vehicles/jetpack/data/airship_attacks.cpp"
+   "status": "converted: engine/src/game/vehicles/jetpack/data/airship_attacks.cpp"
   },
   {
    "address": "0x0817C3FC",
@@ -4197,7 +4197,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/vehicles/jetpack/data/jetpack_rocket_box.cpp"
+   "status": "converted: engine/src/game/vehicles/jetpack/data/jetpack_rocket_box.cpp"
   },
   {
    "address": "0x0817C450",
@@ -4246,7 +4246,7 @@
    "format": "table of struct hovercraft_attack",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/bosses/data/hovercraft_attacks.cpp"
+   "status": "converted: engine/src/game/bosses/data/hovercraft_attacks.cpp"
   },
   {
    "address": "0x0817C4B0",
@@ -4270,7 +4270,7 @@
    "format": "table of s16",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/bosses/data/hovercraft_attacks.cpp"
+   "status": "converted: engine/src/game/bosses/data/hovercraft_attacks.cpp"
   },
   {
    "address": "0x0817C4BC",
@@ -4291,7 +4291,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/bosses/data/hovercraft_attacks.cpp"
+   "status": "converted: engine/src/game/bosses/data/hovercraft_attacks.cpp"
   },
   {
    "address": "0x0817C4C8",
@@ -4386,7 +4386,7 @@
    "format": "small constant (3e00)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/ui/data/continue_prompt_palettes.cpp"
+   "status": "converted: engine/src/game/ui/data/continue_prompt_palettes.cpp"
   },
   {
    "address": "0x0817C512",
@@ -4410,7 +4410,7 @@
    "format": "table of u16; 1 word(s) look like ROM pointers",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/continue_prompt_palettes.cpp"
+   "status": "converted: engine/src/game/ui/data/continue_prompt_palettes.cpp"
   },
   {
    "address": "0x0817C532",
@@ -4434,7 +4434,7 @@
    "format": "BGR555 palette(s): 1 x 16 colours",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/continue_prompt_palettes.cpp"
+   "status": "converted: engine/src/game/ui/data/continue_prompt_palettes.cpp"
   },
   {
    "address": "0x0817C552",
@@ -4458,7 +4458,7 @@
    "format": "table of u16",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/continue_prompt_palettes.cpp"
+   "status": "converted: engine/src/game/ui/data/continue_prompt_palettes.cpp"
   },
   {
    "address": "0x0817C572",
@@ -4482,7 +4482,7 @@
    "format": "table of u16",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/continue_prompt_palettes.cpp"
+   "status": "converted: engine/src/game/ui/data/continue_prompt_palettes.cpp"
   },
   {
    "address": "0x0817C594",
@@ -4564,7 +4564,7 @@
    "effort": "medium",
    "confidence": "high",
    "notes": "",
-   "status": "converted: src/game/ui/data/credits_text.cpp"
+   "status": "converted: engine/src/game/ui/data/credits_text.cpp"
   },
   {
    "address": "0x0817CF3C",
@@ -4585,7 +4585,7 @@
    "format": "all zero (zero-initialised table)",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/credits_text.cpp"
+   "status": "converted: engine/src/game/ui/data/credits_text.cpp"
   },
   {
    "address": "0x0817CF40",
@@ -4653,7 +4653,7 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 32,
-   "status": "converted: src/game/ui/data/title_screen_gfx.cpp"
+   "status": "converted: engine/src/game/ui/data/title_screen_gfx.cpp"
   },
   {
    "address": "0x0817D034",
@@ -4674,7 +4674,7 @@
    "format": "table (element layout: see consumers); 1 word(s) look like ROM pointers",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/ui/data/title_screen_gfx.cpp"
+   "status": "converted: engine/src/game/ui/data/title_screen_gfx.cpp"
   },
   {
    "address": "0x0817D054",
@@ -4698,7 +4698,7 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 16,
-   "status": "converted: src/game/ui/data/title_screen_gfx.cpp"
+   "status": "converted: engine/src/game/ui/data/title_screen_gfx.cpp"
   },
   {
    "address": "0x0817D074",
@@ -4719,7 +4719,7 @@
    "format": "table (element layout: see consumers); 12 word(s) look like ROM pointers",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/ui/data/title_screen_gfx.cpp"
+   "status": "converted: engine/src/game/ui/data/title_screen_gfx.cpp"
   },
   {
    "address": "0x0817D0E4",
@@ -4744,7 +4744,7 @@
    "effort": "easy",
    "confidence": "high",
    "notes": "",
-   "status": "converted: src/game/ui/data/title_screen_gfx.cpp"
+   "status": "converted: engine/src/game/ui/data/title_screen_gfx.cpp"
   },
   {
    "address": "0x0817D698",
@@ -4765,7 +4765,7 @@
    "format": "table (element layout: see consumers); 2 word(s) look like ROM pointers",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/game/ui/data/title_screen_gfx.cpp"
+   "status": "converted: engine/src/game/ui/data/title_screen_gfx.cpp"
   },
   {
    "address": "0x0817D6C0",
@@ -4867,7 +4867,7 @@
    "effort": "medium",
    "confidence": "medium",
    "notes": "",
-   "status": "converted: src/game/ui/data/universal_vv_logo_motions.cpp"
+   "status": "converted: engine/src/game/ui/data/universal_vv_logo_motions.cpp"
   },
   {
    "address": "0x0817E714",
@@ -4914,7 +4914,7 @@
    "format": "table of u16; 1 word(s) look like ROM pointers",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/language_select_palettes.cpp"
+   "status": "converted: engine/src/game/ui/data/language_select_palettes.cpp"
   },
   {
    "address": "0x0817E74C",
@@ -4938,7 +4938,7 @@
    "format": "BGR555 palette(s): 1 x 16 colours",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/language_select_palettes.cpp"
+   "status": "converted: engine/src/game/ui/data/language_select_palettes.cpp"
   },
   {
    "address": "0x0817E76C",
@@ -4962,7 +4962,7 @@
    "format": "table of u16",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/game/ui/data/language_select_palettes.cpp"
+   "status": "converted: engine/src/game/ui/data/language_select_palettes.cpp"
   },
   {
    "address": "0x0817E78C",
@@ -5025,8 +5025,8 @@
      "size": 153808,
      "format": "per-room level data block 1 (33 rooms): per room the entity parameter records + offsets, u16 chunk grids, the 256-colour BG palette, per-type entity counts, entity links, level_desc (0x30), the entity list header, level_layer_desc (0x20 each), entity groups, entities",
      "effort": "hard",
-     "notes": "fully typed: include/game/level/level_data.h, docs/levels.md",
-     "status": "converted: src/game/level/data/level_rooms_main_bonus.cpp (generated by tools/levels.py from data/levels/)"
+     "notes": "fully typed: engine/include/game/level/level_data.h, docs/levels.md",
+     "status": "converted: engine/src/game/level/data/level_rooms_main_bonus.cpp (generated by tools/levels.py from games/xs/data/levels/)"
     },
     {
      "address": "0x08270F08",
@@ -5045,7 +5045,7 @@
      "size": 24400,
      "format": "per-room level data block 2 (8 rooms), same layout as block 1",
      "effort": "hard",
-     "status": "converted: src/game/level/data/level_rooms_bosses_gem_paths.cpp (generated by tools/levels.py from data/levels/)"
+     "status": "converted: engine/src/game/level/data/level_rooms_bosses_gem_paths.cpp (generated by tools/levels.py from games/xs/data/levels/)"
     },
     {
      "address": "0x082BF120",
@@ -5083,7 +5083,7 @@
    "format": "composite: sprite-bank (animation) table + GAX2 sound-effect bank",
    "effort": "medium",
    "confidence": "high",
-   "notes": "Part 1 (to 0x084C0006) is the sprite-bank animation system: a 16-byte header, 56 bank records, and per-bank animation/frame/piece records, now typed C (include/engine/gfx/sprite_bank.h). Part 2 (from 0x084C0006) is the GAX2 sound-effect data set (instruments, 8-bit PCM samples, sample table, SFX voice handler type), now built by tools/gax_audio.py --sfx.",
+   "notes": "Part 1 (to 0x084C0006) is the sprite-bank animation system: a 16-byte header, 56 bank records, and per-bank animation/frame/piece records, now typed C (engine/include/engine/gfx/sprite_bank.h). Part 2 (from 0x084C0006) is the GAX2 sound-effect data set (instruments, 8-bit PCM samples, sample table, SFX voice handler type), now built by tools/gax_audio.py --sfx.",
    "consumers_indirect": [
     "RunPauseMenu",
     "InitLevelState",
@@ -5100,7 +5100,7 @@
      "size": 16,
      "format": "struct sprite_bank_table {banks=0x084A5610, tileBase=0x082BF120, palettes=0x084A4660, bankCount=56, paletteCount=125}",
      "effort": "easy",
-     "status": "converted: src/engine/gfx/data/sprite_banks_00_09.cpp"
+     "status": "converted: engine/src/engine/gfx/data/sprite_banks_00_09.cpp"
     },
     {
      "address": "0x084A5610",
@@ -5109,7 +5109,7 @@
      "element_size": 12,
      "element_count": 56,
      "effort": "easy",
-     "status": "converted: src/engine/gfx/data/sprite_banks_00_09.cpp (gSpriteBanks)"
+     "status": "converted: engine/src/engine/gfx/data/sprite_banks_00_09.cpp (gSpriteBanks)"
     },
     {
      "address": "0x084A58B0",
@@ -5117,7 +5117,7 @@
      "format": "per-bank data, bank by bank: struct sprite_anim[animCount] (0x1C: u16 *seq, 2 boxes, +0x14 tile-record id, +0x15 duration, +0x16 frame count, +0x17 flags), u16 seq[] per animation, the frame pointer array, the frames (12-byte struct sprite_frame {pos*, pieces*, u32 count<<24|tileOffset} plus 0-3 8-byte boxes and an optional 4-byte anchor, chosen by the layout type in the high nibble of the first piece byte), s16x2 piece positions, u8 piece bytes",
      "effort": "medium",
      "notes": "all 56 banks / 330 animations / 2429 frames walk with nothing in between but zero alignment padding (57 holes of 1-3 B); the only overlap is 3 zero-piece frames, 12-byte headers directly followed by the next frame",
-     "status": "converted: src/engine/gfx/data/sprite_banks_{00_09,10_21,22_38,39_55}.cpp (tools/sprite_banks.py)"
+     "status": "converted: engine/src/engine/gfx/data/sprite_banks_{00_09,10_21,22_38,39_55}.cpp (tools/sprite_banks.py)"
     },
     {
      "address": "0x084C0006",
@@ -5131,7 +5131,7 @@
      "size": 15136,
      "format": "GAX2 SFX instruments: 88 x (envelope + 12-byte unknown block + rows + 0x8C header), 0xAC each",
      "effort": "medium",
-     "status": "converted: sound/gax_sfx_manifest.json (tools/gax_audio.py --sfx)"
+     "status": "converted: games/xs/sound/gax_sfx_manifest.json (tools/gax_audio.py --sfx)"
     },
     {
      "address": "0x084C3B28",
@@ -5147,7 +5147,7 @@
      "size": 621872,
      "format": "GAX2 SFX samples: 87 signed 8-bit PCM samples (byte-aligned, lengths from the sample table, not deduplicated; 3 B zero pad at the end)",
      "effort": "medium",
-     "status": "converted: sound/sfx_samples/01-87.wav (tools/gax_audio.py --sfx)"
+     "status": "converted: games/xs/sound/sfx_samples/01-87.wav (tools/gax_audio.py --sfx)"
     },
     {
      "address": "0x0855B9B8",
@@ -5684,7 +5684,7 @@
    "effort": "easy",
    "confidence": "high",
    "notes": "",
-   "status": "converted: lib/agb_eeprom/data/eeprom_data.c (u16[3] timeout + gEepromLibraryAddresses) and src/game/ui/data/cutscene_pictures.cpp (palette)"
+   "status": "converted: lib/agb_eeprom/data/eeprom_data.c (u16[3] timeout + gEepromLibraryAddresses) and engine/src/game/ui/data/cutscene_pictures.cpp (palette)"
   },
   {
    "address": "0x085ADBD1",
@@ -5698,11 +5698,11 @@
    "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 01)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (engine/src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gCutscenes (slide packages)"
    ],
-   "status": "converted: src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture01)"
+   "status": "converted: engine/src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture01)"
   },
   {
    "address": "0x085B34E1",
@@ -5716,11 +5716,11 @@
    "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 02)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (engine/src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gCutscenes (slide packages)"
    ],
-   "status": "converted: src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture02)"
+   "status": "converted: engine/src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture02)"
   },
   {
    "address": "0x085B82BC",
@@ -5734,11 +5734,11 @@
    "format": "256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 03)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (engine/src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gCutscenes (slide packages)"
    ],
-   "status": "converted: src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture03)"
+   "status": "converted: engine/src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture03)"
   },
   {
    "address": "0x085BC6E8",
@@ -5752,11 +5752,11 @@
    "format": "256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 04)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (engine/src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gCutscenes (slide packages)"
    ],
-   "status": "converted: src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture04)"
+   "status": "converted: engine/src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture04)"
   },
   {
    "address": "0x085C1936",
@@ -5770,11 +5770,11 @@
    "format": "2 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 05)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (engine/src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gCutscenes (slide packages)"
    ],
-   "status": "converted: src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture05)"
+   "status": "converted: engine/src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture05)"
   },
   {
    "address": "0x085C674D",
@@ -5788,11 +5788,11 @@
    "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 06)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (engine/src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gCutscenes (slide packages)"
    ],
-   "status": "converted: src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture06)"
+   "status": "converted: engine/src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture06)"
   },
   {
    "address": "0x085CB15D",
@@ -5806,11 +5806,11 @@
    "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 07)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (engine/src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gCutscenes (slide packages)"
    ],
-   "status": "converted: src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture07)"
+   "status": "converted: engine/src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture07)"
   },
   {
    "address": "0x085CFECA",
@@ -5824,11 +5824,11 @@
    "format": "2 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 08)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (engine/src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gCutscenes (slide packages)"
    ],
-   "status": "converted: src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture08)"
+   "status": "converted: engine/src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture08)"
   },
   {
    "address": "0x085D6531",
@@ -5842,11 +5842,11 @@
    "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 09)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (engine/src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gCutscenes (slide packages)"
    ],
-   "status": "converted: src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture09)"
+   "status": "converted: engine/src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture09)"
   },
   {
    "address": "0x085DB765",
@@ -5860,11 +5860,11 @@
    "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 10)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (engine/src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gCutscenes (slide packages)"
    ],
-   "status": "converted: src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture10)"
+   "status": "converted: engine/src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture10)"
   },
   {
    "address": "0x085DFABC",
@@ -5878,11 +5878,11 @@
    "format": "256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 11)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (engine/src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gCutscenes (slide packages)"
    ],
-   "status": "converted: src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture11)"
+   "status": "converted: engine/src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture11)"
   },
   {
    "address": "0x085E550B",
@@ -5896,11 +5896,11 @@
    "format": "1 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 12)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (engine/src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gCutscenes (slide packages)"
    ],
-   "status": "converted: src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture12)"
+   "status": "converted: engine/src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture12)"
   },
   {
    "address": "0x085EAC44",
@@ -5914,11 +5914,11 @@
    "format": "256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 13)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (engine/src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gCutscenes (slide packages)"
    ],
-   "status": "converted: src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture13)"
+   "status": "converted: engine/src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture13)"
   },
   {
    "address": "0x085F0367",
@@ -5932,11 +5932,11 @@
    "format": "1 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 14)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (engine/src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gCutscenes (slide packages)"
    ],
-   "status": "converted: src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture14)"
+   "status": "converted: engine/src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture14)"
   },
   {
    "address": "0x085F4CC1",
@@ -5950,11 +5950,11 @@
    "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 15)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (engine/src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gCutscenes (slide packages)"
    ],
-   "status": "converted: src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture15)"
+   "status": "converted: engine/src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture15)"
   },
   {
    "address": "0x085FA1D2",
@@ -5968,11 +5968,11 @@
    "format": "2 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 16)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (engine/src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gCutscenes (slide packages)"
    ],
-   "status": "converted: src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture16)"
+   "status": "converted: engine/src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture16)"
   },
   {
    "address": "0x085FF779",
@@ -5986,11 +5986,11 @@
    "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 17)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (engine/src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gCutscenes (slide packages)"
    ],
-   "status": "converted: src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture17)"
+   "status": "converted: engine/src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture17)"
   },
   {
    "address": "0x086039B2",
@@ -6004,11 +6004,11 @@
    "format": "2 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 18)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (engine/src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gCutscenes (slide packages)"
    ],
-   "status": "converted: src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture18)"
+   "status": "converted: engine/src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture18)"
   },
   {
    "address": "0x08608A50",
@@ -6022,11 +6022,11 @@
    "format": "256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 19)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (engine/src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gCutscenes (slide packages)"
    ],
-   "status": "converted: src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture19)"
+   "status": "converted: engine/src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture19)"
   },
   {
    "address": "0x0860D577",
@@ -6040,11 +6040,11 @@
    "format": "1 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 20)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (engine/src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gCutscenes (slide packages)"
    ],
-   "status": "converted: src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture20)"
+   "status": "converted: engine/src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture20)"
   },
   {
    "address": "0x08611BD9",
@@ -6058,11 +6058,11 @@
    "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 21)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (engine/src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gCutscenes (slide packages)"
    ],
-   "status": "converted: src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture21)"
+   "status": "converted: engine/src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture21)"
   },
   {
    "address": "0x08616360",
@@ -6076,11 +6076,11 @@
    "format": "256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 22)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (engine/src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gCutscenes (slide packages)"
    ],
-   "status": "converted: src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture22)"
+   "status": "converted: engine/src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture22)"
   },
   {
    "address": "0x08619F51",
@@ -6094,11 +6094,11 @@
    "format": "3 B zero pad (alignment after the previous bitmap) + 256-colour BGR555 palette of the following Mode 4 bitmap (cutscene picture 23)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "A cutscene slide (src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
+   "notes": "A cutscene slide (engine/src/game/ui/data/cutscenes.cpp) points at the palette; ShowSlidePicture reads the bitmap at +0x200. Written out in C because a PNG palette cannot hold bit 15.",
    "consumers_indirect": [
     "gCutscenes (slide packages)"
    ],
-   "status": "converted: src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture23)"
+   "status": "converted: engine/src/game/ui/data/cutscene_pictures.cpp (gCutscenePicture23)"
   },
   {
    "address": "0x0861BF2E",
@@ -6980,7 +6980,7 @@
    "format": "raw (unpacked) level asset for room 0x0825E7DC: u16 chunk offset table + chunk token streams (custom RLE/delta, DecodeLayerChunk/DecodeCollisionChunk)",
    "effort": "medium",
    "confidence": "high",
-   "notes": "level_desc 0x0825E7DC has asset=0x086C127C, assetPacked=0; the other 34 rooms point at LZ77 copies of the same format (formerly graphics/tileset1/27-60.bin, now built from data/levels/ too).",
+   "notes": "level_desc 0x0825E7DC has asset=0x086C127C, assetPacked=0; the other 34 rooms point at LZ77 copies of the same format (formerly games/xs/graphics/tileset1/27-60.bin, now built from games/xs/data/levels/ too).",
    "consumers_indirect": [
     "LoadRoom",
     "SetCollisionSource",
@@ -6994,10 +6994,10 @@
      "size": 100912,
      "format": "level asset (room 0x0825E7DC)",
      "effort": "medium",
-     "status": "converted: built from data/levels/jungle_jam/main by tools/levels.py (data.s incbins the build output)"
+     "status": "converted: built from games/xs/data/levels/jungle_jam/main by tools/levels.py (data.s incbins the build output)"
     }
    ],
-   "status": "converted: built from data/levels/jungle_jam/main by tools/levels.py (data.s incbins the build output)"
+   "status": "converted: built from games/xs/data/levels/jungle_jam/main by tools/levels.py (data.s incbins the build output)"
   },
   {
    "address": "0x086E044B",
@@ -7088,42 +7088,42 @@
      "size": 111748,
      "format": "level asset (room 0x082BDF98)",
      "effort": "medium",
-     "status": "converted: built from data/levels/temple_of_boom/gem_path by tools/levels.py"
+     "status": "converted: built from games/xs/data/levels/temple_of_boom/gem_path by tools/levels.py"
     },
     {
      "address": "0x08708158",
      "size": 193896,
      "format": "level asset (room 0x08260768)",
      "effort": "medium",
-     "status": "converted: built from data/levels/temple_of_boom/main by tools/levels.py"
+     "status": "converted: built from games/xs/data/levels/temple_of_boom/main by tools/levels.py"
     },
     {
      "address": "0x087376C0",
      "size": 112260,
      "format": "level asset (room 0x0825BCDC)",
      "effort": "medium",
-     "status": "converted: built from data/levels/shark_attack/main by tools/levels.py"
+     "status": "converted: built from games/xs/data/levels/shark_attack/main by tools/levels.py"
     },
     {
      "address": "0x08752D44",
      "size": 229476,
      "format": "level asset (room 0x0825A390)",
      "effort": "medium",
-     "status": "converted: built from data/levels/ruined/main by tools/levels.py"
+     "status": "converted: built from games/xs/data/levels/ruined/main by tools/levels.py"
     },
     {
      "address": "0x0878ADA8",
      "size": 201620,
      "format": "level asset (room 0x0824E104)",
      "effort": "medium",
-     "status": "converted: built from data/levels/down_the_hole/main by tools/levels.py"
+     "status": "converted: built from games/xs/data/levels/down_the_hole/main by tools/levels.py"
     },
     {
      "address": "0x087BC13C",
      "size": 162480,
      "format": "level asset (room 0x0825233C)",
      "effort": "medium",
-     "status": "converted: built from data/levels/star_to_finish/main by tools/levels.py"
+     "status": "converted: built from games/xs/data/levels/star_to_finish/main by tools/levels.py"
     }
    ],
    "status": "converted (every region)"

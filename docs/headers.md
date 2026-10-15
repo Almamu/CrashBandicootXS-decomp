@@ -21,43 +21,43 @@ page, with the tools that check it (`tools/extern_audit.py`,
 ## Who owns a symbol
 
 1. A function or global defined in a source file belongs to the header of
-   that file's subsystem: `include/<area>/<namespace>/<subsystem>.h` or
-   `.hpp`, in the directory that mirrors its `src/` one
+   that file's subsystem: `engine/include/<area>/<namespace>/<subsystem>.h` or
+   `.hpp`, in the directory that mirrors its `engine/src/` one
    (`game/crates/crates.h`, `game/level/level.h`,
    `game/crash/player.hpp`, ...; docs/file_layout.md). A
    class's methods are declared in the class's header. When a function
    sits in a neighbour's file only for ROM order, it goes with its
    subject: `DestroyLargeFont`/`DestroySmallFont` are defined in
-   `src/engine/util/aabb_setters.cpp` but declared in `text.h`.
-2. A symbol defined only in data (`src/*/data/`, the generated level and
+   `engine/src/engine/util/aabb_setters.cpp` but declared in `text.h`.
+2. A symbol defined only in data (`engine/src/*/data/`, the generated level and
    graphics sources) or in the linker script (`games/xs/sym_*.txt`, the IWRAM/EWRAM
    globals) goes in the header of the subsystem that uses it most, unless
    the subsystem it belongs to is clearer: `gSmallFont`/`gLargeFont` are
    mostly used by menus, but they are the text subsystem's fonts, so they
    are in `text.h`.
 3. A data or linker-script symbol that **three or more subsystems** use
-   goes in `include/globals.h` (`gPlayer`, `gLevelState`, `gKeys`,
+   goes in `engine/include/globals.h` (`gPlayer`, `gLevelState`, `gKeys`,
    `gAudioContext`, ...).
-4. References from one `src/*/data/` table to another (or to a `data/`
+4. References from one `engine/src/*/data/` table to another (or to a `games/xs/data/`
    label) stay in the data files. They are address-only and many are
    generated, so a header adds nothing.
 5. `_call_via_r0`..`_call_via_r7` are not declared at all. They are
    libgcc's register-call thunks, which the compiler calls on its own for
    an indirect call; the code writes that call as a call through a typed
    function pointer, a virtual call or a member function call (#1021).
-   Nothing in `src/`, `include/` or `lib/gax/` names them.
+   Nothing in `engine/src/`, `engine/include/` or `lib/gax/` names them.
 
 Other homes:
 
 - GAX engine internals (what one GAX object calls in another):
   `lib/gax/src/gax_internal.h`. The libraries' public headers are in each
-  library's `include/` (docs/libraries.md); libgcc's division routines are
+  library's `engine/include/` (docs/libraries.md); libgcc's division routines are
   in `lib/libgcc/include/libgcc.h`.
 - The hardware (registers, memory map, DMA macros, the integer types) and
   the BIOS calls: the platform's headers, `platform/gba/include/gba/*.h`
   and `platform/gba/lib/libagbsyscall/include/agb_syscall.h`
   ([platforms.md](platforms.md), #1093). They are on the -I path, not
-  under `include/`: a port supplies its own under `platform/<name>/`.
+  under `engine/include/`: a port supplies its own under `platform/<name>/`.
   Include them by their name from the platform's include directory
   (`#include "gba/io_reg.h"`, `<agb_syscall.h>`), never with a relative
   path, and don't put a header named `gba/...` anywhere else: a quoted
@@ -70,7 +70,7 @@ Other homes:
 - A struct that one file uses, and that no header needs, stays in that
   file. A struct defined twice (in two files, or in a file and a header)
   is a copy: merge it into one definition.
-- `src/*/data/` has no header of its own: data is declared where it is
+- `engine/src/*/data/` has no header of its own: data is declared where it is
   used. A data file includes the header that declares its tables, so the
   compiler checks the definition against the declaration.
 
@@ -124,7 +124,7 @@ code. Rebuild and compare before assuming a change is neutral:
 
 A declaration of something defined elsewhere stays in a source file only
 for one of these reasons. `tools/extern_audit.py` sorts the declarations
-in the `.c` files (`src/` data tables and `lib/`) by these kinds; anything
+in the `.c` files (`engine/src/` data tables and `lib/`) by these kinds; anything
 else is "remaining" and must move to a header ("remaining" is 0). It
 doesn't read the C++ files, so their aliases are only in the table below.
 
@@ -134,7 +134,7 @@ doesn't read the C++ files, so their aliases are only in the table below.
 | `_call_via_r0`..`_call_via_r7` | none are left (rule 5 above) |
 | Data-to-data references | rule 4 above |
 | Library-internal | a library's own internal symbol, declared inside that library where its original source declares it (libgcc2.c's `__div0` and `__clz_tab`) |
-| Documented | `src/engine/gfx/asset.cpp`'s one-argument `LZ77UnCompVram`/`RLUnCompVram` (docs/libraries.md); the `DOCUMENTED` set in `tools/extern_audit.py` |
+| Documented | `engine/src/engine/gfx/asset.cpp`'s one-argument `LZ77UnCompVram`/`RLUnCompVram` (docs/libraries.md); the `DOCUMENTED` set in `tools/extern_audit.py` |
 
 ## Codegen exceptions
 
@@ -157,24 +157,24 @@ its row when a later change makes the header's type match.
 
 | File | Symbol | Local form | Header form | Why |
 |---|---|---|---|---|
-| src/game/ui/title_screen.cpp | `RandRange` | `s32 RandRange_s32(s32 max)` | `u16 RandRange(s32 max)` (util.h) | with the `u16` return, DrawLogoPieces's two stack slots swap |
-| src/game/ui/level_select.cpp | `gLevelSelectGemPos`, `gLevelSelectTrialIconPos` | `struct vec2 gLevelSelectGemPos_rw` (and `_rw` for the other) | `const struct vec2` (menus.hpp) | the constructor reads each twice across calls and the ROM loads it again each time; through the `const` object gcc keeps the first loads in registers |
-| src/engine/text/font.cpp | `GetPaletteSlot` | `s32 GetPaletteSlot_s32(u8 *cache, s32 recordId)` | `u8 PaletteCache::GetSlot(s32 id)` (sprite_obj.hpp) | ResetPalette uses the slot as a word; through the `u8` return the shift is `lsl #0x18; lsr #0x14` for the ROM's `lsl #4` |
-| src/game/level/play_room.cpp | `AddPaletteCycle` | `void AddPaletteCycle_fx(..., struct fx_direction direction)` | `PaletteCycles::Add(..., struct byte_arg direction)` (part_list.hpp) | RunRoom passes the direction as a one-byte struct stored with `strb`; `fx_direction`'s zero-length pad makes it BLKmode, so the slot address (`add rN, sp, #4`) comes before the constant as in the ROM, where a `byte_arg` or `u8` is built in a register first |
-| src/game/bosses/dingodile.cpp | `GetSpriteAttackBox` | `struct aabb GetSpriteAttackBox_s(void *part)` | explicit destination (objects.h) | assigned to a box that already holds the body box, the struct return fills a temporary and copies it, as the ROM's frame and its `ldmia`/`stmia` copy do |
-| src/engine/actor/actor_category_init.cpp, src/engine/actor/actor_category_stats.cpp | `SetCheckpointAtPlayer` | `void SetCheckpointAtPlayer_1(void *self)` | `LevelState::SetCheckpointAtPlayer(u8 checkpointFlags)` (level_state.hpp) | these callers pass the state only and leave r1 as it is; the definition stores the flag |
+| engine/src/game/ui/title_screen.cpp | `RandRange` | `s32 RandRange_s32(s32 max)` | `u16 RandRange(s32 max)` (util.h) | with the `u16` return, DrawLogoPieces's two stack slots swap |
+| engine/src/game/ui/level_select.cpp | `gLevelSelectGemPos`, `gLevelSelectTrialIconPos` | `struct vec2 gLevelSelectGemPos_rw` (and `_rw` for the other) | `const struct vec2` (menus.hpp) | the constructor reads each twice across calls and the ROM loads it again each time; through the `const` object gcc keeps the first loads in registers |
+| engine/src/engine/text/font.cpp | `GetPaletteSlot` | `s32 GetPaletteSlot_s32(u8 *cache, s32 recordId)` | `u8 PaletteCache::GetSlot(s32 id)` (sprite_obj.hpp) | ResetPalette uses the slot as a word; through the `u8` return the shift is `lsl #0x18; lsr #0x14` for the ROM's `lsl #4` |
+| engine/src/game/level/play_room.cpp | `AddPaletteCycle` | `void AddPaletteCycle_fx(..., struct fx_direction direction)` | `PaletteCycles::Add(..., struct byte_arg direction)` (part_list.hpp) | RunRoom passes the direction as a one-byte struct stored with `strb`; `fx_direction`'s zero-length pad makes it BLKmode, so the slot address (`add rN, sp, #4`) comes before the constant as in the ROM, where a `byte_arg` or `u8` is built in a register first |
+| engine/src/game/bosses/dingodile.cpp | `GetSpriteAttackBox` | `struct aabb GetSpriteAttackBox_s(void *part)` | explicit destination (objects.h) | assigned to a box that already holds the body box, the struct return fills a temporary and copies it, as the ROM's frame and its `ldmia`/`stmia` copy do |
+| engine/src/engine/actor/actor_category_init.cpp, engine/src/engine/actor/actor_category_stats.cpp | `SetCheckpointAtPlayer` | `void SetCheckpointAtPlayer_1(void *self)` | `LevelState::SetCheckpointAtPlayer(u8 checkpointFlags)` (level_state.hpp) | these callers pass the state only and leave r1 as it is; the definition stores the flag |
 
 Not aliases, but kept for the same reason, next to the real declaration
 in the header:
 
-- `include/game/crates/crate_list.hpp`'s `struct CrateGridNodeInit`, an untyped view
+- `engine/include/game/crates/crate_list.hpp`'s `struct CrateGridNodeInit`, an untyped view
   of the grid nodes that ResetGrid zeroes them through: through the real
   `CrateGridNode *` fields gcc takes the zeroing stores as possible writes
   to the list's `nodes` and reloads it (docs/casts/crate_grid.md).
-- `include/game/crates/crate.hpp`'s `ApplyCrateCollision`, `Crate::ApplyCollision`
+- `engine/include/game/crates/crate.hpp`'s `ApplyCrateCollision`, `Crate::ApplyCollision`
   under its C name, with the three flags as one-byte structs so they are
   stored with `strb`, as CollisionQueue::Resolve does in the ROM.
 
-`src/engine/util/string.cpp`'s `CopyString`/`StringLength` are asm labels too,
+`engine/src/engine/util/string.cpp`'s `CopyString`/`StringLength` are asm labels too,
 but on the definitions (`strcpy`/`strlen` under other C names, to avoid
 gcc's built-in prototypes), not codegen aliases.

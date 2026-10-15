@@ -2,7 +2,7 @@
 """`tools/magic_numbers.py --fixed`: the literals and shifts on values that
 hold fixed-point quantities (#916, docs/fixed_point.md).
 
-Scans the game code (src/ without src/.../data/, and include/) for:
+Scans the game code (engine/src/ without engine/src/.../data/, and engine/include/) for:
 
   literal  an integer literal assigned to, compared with, added to or
            subtracted from a value (`velX = 0x200`, `y >= 0x800`,
@@ -15,10 +15,10 @@ Scans the game code (src/ without src/.../data/, and include/) for:
   spelled  a site that already says what it is: INT_TO_Q8(...),
            Q8_TO_INT(...), Q8(...), Q8_FRAC(...) and the other
            math_util.h helpers, and the named tuning constants (an
-           object-like #define in include/ whose value is spelled with
+           object-like #define in engine/include/ whose value is spelled with
            one of them: PLAYER_GRAVITY, ...)
 
-and, in the speed-ramp tables of src/.../data (`struct speed_ramp`: start,
+and, in the speed-ramp tables of engine/src/.../data (`struct speed_ramp`: start,
 step, target; docs/fixed_point.md), every record's three values
 (kind `table`).
 
@@ -133,10 +133,10 @@ INT_LOCALS = [
 ]
 # The directories whose positions are screen pixels (2D layouts), unless
 # the code shows they are Q8.
-UI = re.compile(r"src/(game/ui|engine/save|engine/text)/|src/game/level/game_progress\.")
+UI = re.compile(r"engine/src/(game/ui|engine/save|engine/text)/|engine/src/game/level/game_progress\.")
 
 # The spelled forms: math_util.h's fixed-point helpers (and the named
-# constants, CONSTANTS, loaded from include/).
+# constants, CONSTANTS, loaded from engine/include/).
 SPELLED = {
     "INT_TO_Q8": "Q8",
     "Q8_TO_INT": "Q8",
@@ -161,10 +161,10 @@ CONSTANTS = {}
 
 def load_constants():
     """The named fixed-point constants: every object-like #define in
-    include/ whose value is spelled with a fixed-point helper
+    engine/include/ whose value is spelled with a fixed-point helper
     (`#define PLAYER_GRAVITY Q8_FRAC(0, 0x33)`)."""
     helper = re.compile(r"\b(?:INT_TO_(Q\d+)|(Q\d+)(?:_FRAC)?)\s*\(")
-    for dirpath, _, filenames in os.walk(os.path.join(ROOT, "include")):
+    for dirpath, _, filenames in os.walk(os.path.join(ROOT, "engine", "include")):
         for fn in filenames:
             if not fn.endswith((".h", ".hpp")) or fn == "math_util.h":
                 continue
@@ -533,7 +533,7 @@ class Protos:
     """The parameter names of the functions, by name: from their C++
     definitions (FixedScan's function scopes: the parameter is then a
     local of a known file, with its own evidence) and from every
-    declaration in src/ and include/ (C prototypes, methods declared in
+    declaration in engine/src/ and engine/include/ (C prototypes, methods declared in
     a class). A parameter is known when every definition and declaration
     with the call's argument count agrees on its name."""
 
@@ -583,11 +583,11 @@ def source_files():
 
 
 def scan_tables():
-    """Every `struct speed_ramp` record in src/.../data: start, step, target."""
+    """Every `struct speed_ramp` record in engine/src/.../data: start, step, target."""
     out = []
     for path in mn.source_files():
         rel = os.path.relpath(path, ROOT)
-        if "data" not in rel.split(os.sep)[1:-1] or not rel.startswith("src"):
+        if "data" not in rel.split(os.sep)[1:-1] or not rel.startswith(os.path.join("engine", "src")):
             continue
         raw = open(path, encoding="utf-8", errors="replace").read()
         text = mn.strip_comments(raw)

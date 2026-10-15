@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """List the magic numbers left at known call sites and fields (#655).
 
-Scans the sources under src/ and include/ (the game's C++, .cpp/.hpp,
+Scans the sources under engine/src/ and engine/include/ (the game's C++, .cpp/.hpp,
 and the C that is left, .c/.h) for integer literals in places where the
 game has named values: sound and song IDs, level-flag bits, mask levels,
 event IDs, action-controller states, entity, crate, enemy and attack
@@ -11,7 +11,7 @@ topic. A value that is already a name (`SFX_CRATE_BREAK`,
 `LEVEL_FLAG_CRATE_GEM`, ...) isn't a literal, so it isn't listed: the
 counts go down as literals are replaced.
 
-When a constants header (include/constants/, or one the build generates
+When a constants header (engine/include/constants/, or one the build generates
 into build/include/constants/, e.g. songs.h and sfx.h: run make first)
 already has a define with the literal's value and the site's prefix, the
 listing shows it (`-> NAME`), so the remaining sites of a topic that has
@@ -44,7 +44,7 @@ parameters of a ruled method's definition. A function that passes a
 parameter straight on as a ruled argument gets the rule for that
 parameter (crate_break.cpp's `Sfx(id)`, ActionCtrl::SetModeAnimNow), so
 its callers are checked too. The C rules (C_FIELDS, the vtable-slot
-macros) are kept for the C files (src/.../data/, lib/).
+macros) are kept for the C files (engine/src/.../data/, lib/).
 
 Each hit has a confidence:
   high    the receiver's (or the field's owner's) class is known and its
@@ -134,21 +134,21 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SCAN_DIRS = ("src", "include", "platform")
+SCAN_DIRS = (os.path.join("engine", "src"), os.path.join("engine", "include"), "platform")
 C_EXTS = (".c", ".h")
 CXX_EXTS = (".cpp", ".hpp")
 CXX_SYMBOLS = os.path.join(ROOT, "cxx_symbols.txt")
 # The constants headers: hand-written ones, and the ones make generates
 # from the data (build/include, e.g. the entity types, crate kinds, songs
 # and sound effects).
-CONSTANTS_DIRS = (os.path.join(ROOT, "include", "constants"), os.path.join(ROOT, "build", "include", "constants"))
+CONSTANTS_DIRS = (os.path.join(ROOT, "engine", "include", "constants"), os.path.join(ROOT, "build", "include", "constants"))
 
 CONFIDENCES = ("high", "medium", "low")
 
 LIT = r"(?:0[xX][0-9a-fA-F]+|[0-9]+)[uUlL]*"
 LIT_RE = re.compile(r"^-?\s*" + LIT + r"$")
 
-# Topic -> (description, prefixes of its names in include/constants/).
+# Topic -> (description, prefixes of its names in engine/include/constants/).
 TOPICS = collections.OrderedDict(
     [
         ("sfx", ("PlaySfx/PlayAmbientSfx/StopSfx sound-effect IDs", ("SFX_",))),
@@ -237,25 +237,25 @@ FIELDS = [
 
 # C only: the C code's field spellings. `->state` is a common field
 # name, so only the player's action controller's is counted (the swim
-# and input controllers in src/game/crash/ have their own states). Its
+# and input controllers in engine/src/game/crash/ have their own states). Its
 # set-mode method is vtable slot 0x20 (`m20`, `mgr[4]`).
 C_FIELDS = [
     (
         "action_state",
         r"(?:->|\.)(?:state|prevState)\s*(?:==|!=)\s*(?P<v>" + LIT + r")\b",
-        os.path.join("src", "game", "crash", "action_ctrl"),
+        os.path.join("engine", "src", "game", "crash", "action_ctrl"),
         None,
     ),
     (
         "action_state",
         r"(?:\bACT_V?CALL1\s*\(\s*\w+\s*,\s*m20\s*,|\bm20\.thisOffset\s*,|\bmgr\[4\]\.delta\s*,)"
         r"\s*(?:\(void \*\))?(?P<v>" + LIT + r")\b",
-        os.path.join("src", "game", "crash", ""),
+        os.path.join("engine", "src", "game", "crash", ""),
         None,
     ),
-    # level topic: room kinds (src/game/level/'s only ->kind tests) and the
+    # level topic: room kinds (engine/src/game/level/'s only ->kind tests) and the
     # level id. Before "kind".
-    ("level", r"->kind\s*(?:==|!=)\s*(?P<v>" + LIT + r")\b", os.path.join("src", "game", "level", ""), ("ROOM_KIND_",)),
+    ("level", r"->kind\s*(?:==|!=)\s*(?P<v>" + LIT + r")\b", os.path.join("engine", "src", "game", "level", ""), ("ROOM_KIND_",)),
     ("level", r"\bself->level\s*" + CMP + r"\s*(?P<v>" + LIT + r")\b", None, ("LEVEL_",)),
     ("kind", r"(?:->|\.)kind\s*(?:==|!=)\s*(?P<v>" + LIT + r")\b", None, None),
 ]
@@ -1518,7 +1518,7 @@ def source_files():
     for d in SCAN_DIRS:
         for dirpath, dirnames, filenames in os.walk(os.path.join(ROOT, d)):
             dirnames.sort()
-            if os.path.relpath(dirpath, ROOT).startswith(os.path.join("include", "constants")):
+            if os.path.relpath(dirpath, ROOT).startswith(os.path.join("engine", "include", "constants")):
                 continue
             for f in sorted(filenames):
                 if f.endswith(C_EXTS + CXX_EXTS):
@@ -1590,6 +1590,8 @@ def names_for(names, hit):
 
 def directory(rel):
     parts = rel.split(os.sep)
+    if parts[:2] == ["engine", "src"]:
+        parts = parts[1:]
     if parts[0] == "src" and len(parts) > 2:
         return os.path.join(*parts[:2]) if parts[1] != "vehicle" or len(parts) < 4 else os.path.join(*parts[:3])
     return parts[0]

@@ -40,7 +40,7 @@ register-allocation chase with uncertain payoff.
 ## `GAX_fx` - UNUSED near-twin of `GAX_fx_ex`
 
 No caller anywhere in the ROM (checked every `asm/*.s`, `expected/
-code_3.s`, `expected/legacy.s`, and every matched `src/*.c` file).
+code_3.s`, `expected/legacy.s`, and every matched `engine/src/*.c` file).
 Structurally it's `GAX_fx_ex`'s unconditional "scan every row for the
 lowest `+0x4c` priority" path, standalone: walks `handler->+0x14`
 array entries from `handler->+8 + (subObj->+0xc << 2)`, tracks the

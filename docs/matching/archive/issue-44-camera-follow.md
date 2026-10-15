@@ -3,7 +3,7 @@
 `sub_8026C80`/`sub_8026C8C` were already matched (`terrain.c`) before
 this pass. The remaining eight functions - the whole of the former
 `asm/code_3_2_17_26bf8.s` - are now all byte-exact matched in the new
-`src/game/level/camera.c`. Nothing parked, nothing left raw.
+`engine/src/game/level/camera.c`. Nothing parked, nothing left raw.
 
 ## What the block is
 

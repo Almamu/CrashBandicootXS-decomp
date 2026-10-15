@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Audit the extern declarations, prototypes and local structs in .c files (#574).
 
-Parses every .c file under src/ and lib/ (and, for reference, every header
-under include/ and lib/*/include/) with a light, regex-based parser that
+Parses every .c file under engine/src/ and lib/ (and, for reference, every header
+under engine/include/ and lib/*/include/) with a light, regex-based parser that
 only looks at file scope. It does not run the preprocessor: both arms of an
 `#if NON_MATCHING` are read, and a symbol declared twice in one file counts
 once for that file.
@@ -12,7 +12,7 @@ or a plain function prototype) it reports:
 
   * where the symbol is defined: a C file (function or global definition,
     or a label/.set inside a top-level asm() block), an assembly file
-    (`asm/`, `data/`, `lib/**/*.s`), the linker script (`games/xs/ldscript.txt`,
+    (`asm/`, `games/xs/data/`, `lib/**/*.s`), the linker script (`games/xs/ldscript.txt`,
     `games/xs/sym_*.txt`), or `?` when nothing defines it;
   * how many .c files declare it, and which headers already do;
   * whether the declarations agree:
@@ -576,6 +576,8 @@ class Layout:
 
 def subsystem_of(path):
     parts = path.split('/')
+    if parts[0] == 'engine' and len(parts) > 1:
+        parts = parts[1:]
     if parts[0] == 'src' and len(parts) > 3 and parts[1] in ('engine', 'game'):
         return parts[1] + '/' + parts[2]
     if parts[0] == 'src' and len(parts) > 2:
@@ -681,7 +683,7 @@ def scan_asm_defs():
     """Symbols defined outside C: .s files, the linker script and games/xs/sym_*.txt."""
     out = {}
     s_files = sorted(set(glob.glob('asm/**/*.s', root_dir=ROOT, recursive=True)
-                         + glob.glob('data/**/*.s', root_dir=ROOT, recursive=True)
+                         + glob.glob('games/xs/data/**/*.s', root_dir=ROOT, recursive=True)
                          + glob.glob('lib/**/*.s', root_dir=ROOT, recursive=True)
                          + glob.glob('platform/**/*.s', root_dir=ROOT, recursive=True)))
     for p in s_files:
@@ -704,14 +706,14 @@ def scan_asm_defs():
 # "What stays local"). Anything else is "remaining" work for a header.
 DOCUMENTED = {
     # the one-argument SWI wrappers asset.cpp calls (docs/libraries.md)
-    ('src/engine/gfx/asset.cpp', 'LZ77UnCompVram'),
-    ('src/engine/gfx/asset.cpp', 'RLUnCompVram'),
+    ('engine/src/engine/gfx/asset.cpp', 'LZ77UnCompVram'),
+    ('engine/src/engine/gfx/asset.cpp', 'RLUnCompVram'),
 }
 
 
 def is_data_path(p):
-    return (p.startswith(('build/', 'data/'))
-            or (p.startswith('src/') and '/data/' in p)
+    return (p.startswith(('build/', 'games/xs/data/'))
+            or (p.startswith('engine/src/') and '/data/' in p)
             or re.match(r'lib/[^/]+/data/', p) is not None)
 
 
@@ -750,8 +752,8 @@ def main():
     args = ap.parse_args()
 
     os.chdir(ROOT)
-    c_files = sorted(glob.glob('src/**/*.c', recursive=True) + glob.glob('lib/**/*.c', recursive=True))
-    h_files = sorted(glob.glob('include/**/*.h', recursive=True) + glob.glob('lib/**/*.h', recursive=True)
+    c_files = sorted(glob.glob('engine/src/**/*.c', recursive=True) + glob.glob('lib/**/*.c', recursive=True))
+    h_files = sorted(glob.glob('engine/include/**/*.h', recursive=True) + glob.glob('lib/**/*.h', recursive=True)
                      + glob.glob('platform/**/*.h', recursive=True))
 
     scans = {p: scan_c(p) for p in c_files}
@@ -828,7 +830,7 @@ def main():
         elif sym in asm_defs:
             dfiles = [asm_defs[sym]]
             dsrc = asm_defs[sym]
-            owner = 'ldscript' if dsrc.endswith('.txt') else ('asm' if dsrc.startswith(('asm/', 'data/')) else subsystem_of(dsrc))
+            owner = 'ldscript' if dsrc.endswith('.txt') else ('asm' if dsrc.startswith(('asm/', 'games/xs/data/')) else subsystem_of(dsrc))
         else:
             dfiles, dsrc, owner = [], '?', '?'
         users = collections.Counter(subsystem_of(p) for p in files)
@@ -935,7 +937,7 @@ def main():
         ), f, indent=1)
 
     # --- summary ----------------------------------------------------------
-    print('Files: %d .c (src/ + lib/), %d headers' % (len(c_files), len(h_files)))
+    print('Files: %d .c (engine/src/ + lib/), %d headers' % (len(c_files), len(h_files)))
     print('Declarations in .c files: %d (externs + prototypes of functions defined elsewhere)' % total_decls)
     print('  kept by policy: %d codegen aliases, %d _call_via_rN, %d data-to-data, %d library-internal, %d documented'
           % (kept['alias'], kept['call_via'], kept['data'], kept['library'], kept['documented']))

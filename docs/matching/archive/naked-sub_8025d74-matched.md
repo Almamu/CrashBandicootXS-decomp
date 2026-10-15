@@ -1,6 +1,6 @@
 # `InitBgLayer` converted from NAKED transcription to real matched C
 
-`InitBgLayer` (`src/level/bg_layer_init.c`, a BG-scroll-layer hardware-
+`InitBgLayer` (`engine/src/level/bg_layer_init.c`, a BG-scroll-layer hardware-
 register/bitfield initializer) had been parked as a byte-correct NAKED
 asm transcription - see
 [issue-41-game-loop-25894.md](./issue-41-game-loop-25894.md) for the

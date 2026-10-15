@@ -19,7 +19,7 @@ drawn, is left as-is rather than retroactively re-filed.
 
 This batch closes - as byte-exact NAKED transcriptions, not real
 matches - every function that was previously parked under
-`#if NON_MATCHING` across `src/game/ui/power_dialog_draw.c`, `graphics.c`,
+`#if NON_MATCHING` across `engine/src/game/ui/power_dialog_draw.c`, `graphics.c`,
 `sprite.c`, `sprite_obj.c`
 and `sprite_anim.c`/the new `part_collide.c`:
 `DrawPowerDialog`, `DrawSpritePieces`, `GetSpriteBounds`, `GetSpriteHitbox`,
@@ -53,7 +53,7 @@ converted to a `NAKED` function whose body is a single `asm()` block
 transcribing the real ROM disassembly instruction-for-instruction, the
 same technique already used for `CheckSpritePickup`
 (`naked-sub_8007dbc.md`) and several functions in
-`src/engine/link/link_handshake.c`/`lib/gax/src/gax_swi.c`. Since this is a
+`engine/src/engine/link/link_handshake.c`/`lib/gax/src/gax_swi.c`. Since this is a
 literal byte-for-byte transcription rather than a derived
 reconstruction, it reproduces the ROM's own register choices, operand
 order, and padding directly and needs no register-allocation coaxing
@@ -91,7 +91,7 @@ real ROM address isn't contiguous with that file's other functions
 `docs/workflow.md` step 4):
 
 - `CollidePartWithObject` moved out of `sprite_anim.c` into a new
-  `src/objects/part_collide.c` - its real ROM address, `0x08008D80`,
+  `engine/src/objects/part_collide.c` - its real ROM address, `0x08008D80`,
   sits after `part_list_cull.c`'s `CullPartList`/`ClearPartList`/
   `CollidePartsOfClass`, not right after `CollidePartWithPlayer` the way the old
   `#if NON_MATCHING` C draft's position in the file implied (that
@@ -166,10 +166,10 @@ is still NAKED, with a C draft 18 halfwords off. See [issue-9-naked-retry.md](./
 ## Later pass (strag1)
 
 `DrawSpritePieces` is now real C. It moved out of `graphics.c` into
-`src/gfx/sprite_pieces.c` (old_agbcc, on `OLD_AGBCC_OBJS`), written
+`engine/src/gfx/sprite_pieces.c` (old_agbcc, on `OLD_AGBCC_OBJS`), written
 in the same shape as its matched affine sibling `DrawAffineSpritePieces`. See
 [strag1-naked-retry.md](strag1-naked-retry.md).
 
 ## Later pass (strag3): DrawPowerDialog matched
 
-`DrawPowerDialog` is now real C in `src/game/ui/power_dialog_draw.c` (agbcc). It uses an inline position setter, with the centered X computed into a local first. See [strag3-naked-retry.md](strag3-naked-retry.md).
+`DrawPowerDialog` is now real C in `engine/src/game/ui/power_dialog_draw.c` (agbcc). It uses an inline position setter, with the centered X computed into a local first. See [strag3-naked-retry.md](strag3-naked-retry.md).

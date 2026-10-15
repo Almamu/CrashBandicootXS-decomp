@@ -16,7 +16,7 @@ sudo apt update
 sudo apt install build-essential binutils-arm-none-eabi gcc-arm-none-eabi libpng-dev zlib1g-dev python3-pil gettext
 ```
 
-`gettext` provides msgfmt, which compiles the game's text (`text/*.po`, see
+`gettext` provides msgfmt, which compiles the game's text (`games/xs/text/*.po`, see
 [docs/text.md](docs/text.md)), and msgcmp/msgmerge for its checks.
 
 ## MacOS
@@ -40,8 +40,8 @@ Once those packages are installed you'll need to provide agbcc, which is the com
    git clone -b cp https://github.com/notyourav/agbcc path/to/agbcc-cp
    tools/build_agbccpp.sh path/to/agbcc-cp
    ```
-   This copies the checkout, applies `tools/agbcc_patches/agbcp_agbcc_options.patch` (agbcc's `-fprologue-bugfix` and old-compiler switches) and installs `tools/agbcc/bin/agbcp` and `tools/agbcc/bin/old_agbcp`. The game objects written as C++ (`src/*/*.cpp`) need them; see [docs/cplusplus.md](docs/cplusplus.md).
-   It also builds the branch's ARM C++ compiler (`g++_arm`) with `tools/agbcc_patches/agbcc_arm_prologue_return.patch` applied and installs it as `tools/agbcc/bin/agbcp_arm_patched`, the compiler of the IWRAM image's ARM code (`src/iwram/*_arm.cpp`). Three of its functions need the patch: the ROM's ARM compiler was a later build than agbcc_arm, and the patch adds opt-in options that reproduce its return code and two of its jump-pass rules (`-minterwork-return-lr`, `-mno-cond-return`, `-mstrict-cross-jump`; a fourth, `-mleaf-no-lr-save`, was for itoa_arm, assembly since #662; see [docs/matching/iwram-image.md](docs/matching/iwram-image.md), "Seventh pass" and "Ninth step"). A checkout that already has the patches applied works too.
+   This copies the checkout, applies `tools/agbcc_patches/agbcp_agbcc_options.patch` (agbcc's `-fprologue-bugfix` and old-compiler switches) and installs `tools/agbcc/bin/agbcp` and `tools/agbcc/bin/old_agbcp`. The game objects written as C++ (`engine/src/*/*.cpp`) need them; see [docs/cplusplus.md](docs/cplusplus.md).
+   It also builds the branch's ARM C++ compiler (`g++_arm`) with `tools/agbcc_patches/agbcc_arm_prologue_return.patch` applied and installs it as `tools/agbcc/bin/agbcp_arm_patched`, the compiler of the IWRAM image's ARM code (`engine/src/iwram/*_arm.cpp`). Three of its functions need the patch: the ROM's ARM compiler was a later build than agbcc_arm, and the patch adds opt-in options that reproduce its return code and two of its jump-pass rules (`-minterwork-return-lr`, `-mno-cond-return`, `-mstrict-cross-jump`; a fourth, `-mleaf-no-lr-save`, was for itoa_arm, assembly since #662; see [docs/matching/iwram-image.md](docs/matching/iwram-image.md), "Seventh pass" and "Ninth step"). A checkout that already has the patches applied works too.
 5. Build the ROM with `make compare`
 6. A crashbandicootxs.gba file should be created and the message `crashbandicootxs.gba: OK` should appear
 

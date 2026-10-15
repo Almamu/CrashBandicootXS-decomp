@@ -20,7 +20,7 @@ variant by disassembly-diff lines and can print a register-agnostic
 diff). Scoring by diff lines instead of differing halfwords helps
 because one inserted instruction shifts every later halfword.
 
-Shared header changes (`include/crate.h`), all layout-preserving:
+Shared header changes (`engine/include/crate.h`), all layout-preserving:
 `crate_vtable.m60`, `crate.animDone`, `crate.trialKind`,
 `phys_flag_bits.bit4` plus `PHYS_FLAG4`, the `PhysSetFrame` inline, and
 `struct phys_player` extended with the player fields `ApplyCrateCollision`

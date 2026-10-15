@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Audit struct and class layouts from the compiler's own debug info (#656).
 
-Every game translation unit (every .c and .cpp under src/, at any
+Every game translation unit (every .c and .cpp under engine/src/, at any
 depth) is compiled again with -g, by the Makefile's own rules,
 into a temporary directory: the same compiler (agbcc, old_agbcc,
 agbcc_arm(_patched), agbcp, old_agbcp) and the same per-object flags as
@@ -55,7 +55,7 @@ Subcommands:
                       them, agree on the name or point at (or hold)
                       structs or functions the same way. A view of a base
                       class is reported once, not again for each class
-                      derived from it. Pairs of src/.../data/ layouts (one
+                      derived from it. Pairs of engine/src/.../data/ layouts (one
                       struct per data table, such as the level rooms'
                       parameter blocks) are left out unless --data.
                       NAMEs restrict the report to pairs with one of them.
@@ -76,9 +76,9 @@ Subcommands:
   show NAME           one layout, flattened.
 
 A NAME is a struct/class name (`Entity`), optionally with a file suffix to
-pick one definition (`actor@include/engine/actor/actor.h`, `actor@actor.h`), or a full
-key (`cutscene_player@include/cutscene.h#2`). An ambiguous NAME lists the
-candidates. A file shown as `src/.../data/x.c?` is a guess: an object with no
+pick one definition (`actor@engine/include/engine/actor/actor.h`, `actor@actor.h`), or a full
+key (`cutscene_player@engine/include/cutscene.h#2`). An ambiguous NAME lists the
+candidates. A file shown as `engine/src/.../data/x.c?` is a guess: an object with no
 code has no line-number file table, so a layout only such objects define
 is attributed to the first of them.
 
@@ -133,7 +133,7 @@ AGGREGATE_TAGS = {
 # spells a g++ pointer to member function as a struct.
 LOOSE = ('array', 'pmf')
 
-DATA_DIR = 'src/'  # with '/data/' in the path: is_data_file()
+DATA_DIR = 'engine/src/'  # with '/data/' in the path: is_data_file()
 
 
 def is_data_file(f):
@@ -162,18 +162,19 @@ def compile_objects(workdir, include_lib, jobs):
     with open(log, 'w') as f:
         rc = subprocess.run(cmd, cwd=ROOT, stdout=f, stderr=subprocess.STDOUT).returncode
     sources = []
-    for top in ('src',) + (('lib',) if include_lib else ()):
+    for top in ('engine/src',) + (('lib',) if include_lib else ()):
         for dirpath, _, files in os.walk(os.path.join(ROOT, top)):
             for fn in files:
                 if fn.endswith(('.c', '.cpp')):
                     sources.append(os.path.relpath(os.path.join(dirpath, fn), ROOT))
     out, missing = [], []
     for src in sorted(sources):
-        if src.startswith('src/') and src.count('/') < 2:
+        if src.startswith('engine/src/') and src.count('/') < 3:
             continue
         if src.startswith('lib/') and not re.match(r'lib/[^/]+/(src|data)/[^/]+\.c$', src):
             continue
-        obj = os.path.join(objdir, os.path.splitext(src)[0] + '.o')
+        # engine/src/<path> builds <objdir>/src/<path>.o
+        obj = os.path.join(objdir, os.path.splitext(src)[0].removeprefix('engine/') + '.o')
         if os.path.exists(obj):
             out.append((src, obj))
         else:
@@ -719,7 +720,7 @@ def find_views(L, min_match, only=None, data=False):
     A ~ B is dropped when every match is a field B gets from one embedded
     struct or base class C and A ~ C is reported itself (A ~ Sprite, not
     A ~ each class derived from Sprite), and the same the other way round.
-    Pairs of src/.../data/ layouts (one struct per data table instance, like
+    Pairs of engine/src/.../data/ layouts (one struct per data table instance, like
     the level_params_roomNN) are left out unless data is set.
     """
     index = collections.defaultdict(list)
@@ -952,7 +953,7 @@ def main():
     p.add_argument('names', nargs='*', help='only pairs involving these')
     p.add_argument('--min', type=int, default=4, help='matching fields needed (default 4)')
     p.add_argument('--data', action='store_true',
-                   help='also pair src/.../data/ layouts with each other')
+                   help='also pair engine/src/.../data/ layouts with each other')
     p.add_argument('-v', '--verbose', action='store_true',
                    help='also list the fields the other layout leaves as padding')
     p.set_defaults(func=cmd_views)
@@ -970,7 +971,7 @@ def main():
     p.add_argument('names', nargs='*', help='only the families of these')
     p.add_argument('--min', type=int, default=4, help='matching fields needed (default 4)')
     p.add_argument('--data', action='store_true',
-                   help='also pair src/.../data/ layouts with each other')
+                   help='also pair engine/src/.../data/ layouts with each other')
     p.set_defaults(func=cmd_names)
 
     p = sub.add_parser('show', help='one layout, flattened')

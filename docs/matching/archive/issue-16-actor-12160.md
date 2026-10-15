@@ -19,10 +19,10 @@ usage) were left raw again, still out of scope.
 `asm/code_3_2_17_11bd4.s` is trimmed to just `ActionCtrlHandleEvent` (unchanged
 start address, 0x08011BD4-0x08012160). `KillPlayer`/`UpdateActionCtrlSkidAnim`/
 `UpdatePlayerFacing` (contiguous, 0x08012160-0x08012420) move to a new
-`src/player/kill_player.c`. A new `asm/code_3_2_17_12420.s` picks up
+`engine/src/player/kill_player.c`. A new `asm/code_3_2_17_12420.s` picks up
 `UpdateActionCtrl`/`TryActionCtrlDoubleJump`/`HandleActionCtrlAirInput` (0x08012420-0x08012A7C).
 `CheckActionCtrlLeftGround` alone (0x08012A7C-0x08012AF4, not ROM-adjacent to either
-matched group) moves to a new `src/player/action_ctrl_left_ground.c`. A final
+matched group) moves to a new `engine/src/player/action_ctrl_left_ground.c`. A final
 new `asm/code_3_2_17_12af4.s` picks up `ApplyActionCtrlMotion` onward - this file
 is much wider than issue #16's own range, since `code_3_2_17_11bd4.s`
 already covered everything through `ActionCtrlStateStandUp-1` before this pass

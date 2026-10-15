@@ -12,12 +12,12 @@ NAKED transcriptions, not real decompiled C (see "Why NAKED" below).
 
 `asm/code_3_2_17_11bd4.s` (just `ActionCtrlHandleEvent`, 0x08011BD4-0x08012160)
 is removed entirely - its function moves to a new
-`src/game/crash/action_ctrl_event.c`. `asm/code_3_2_17_12420.s`
+`engine/src/game/crash/action_ctrl_event.c`. `asm/code_3_2_17_12420.s`
 (`UpdateActionCtrl`/`TryActionCtrlDoubleJump`/`HandleActionCtrlAirInput`, 0x08012420-0x08012A7C) is
-also removed entirely, moving to a new `src/game/crash/action_ctrl_update.c`.
+also removed entirely, moving to a new `engine/src/game/crash/action_ctrl_update.c`.
 `asm/code_3_2_17_12af4.s` is trimmed to drop its leading
 `ApplyActionCtrlMotion`/`ActionCtrlStateIdle` span (0x08012AF4-0x08012FBC, which moves to
-a new `src/player/action_ctrl_idle.c`), now starting at `ActionCtrlStateRun`
+a new `engine/src/player/action_ctrl_idle.c`), now starting at `ActionCtrlStateRun`
 (0x08012FBC) - the rest of that file was already out of this issue's
 scope per the prior pass's writeup. `ldscript.txt` and
 `tools/report_units.py`'s `UNITS` list were updated to place all three
@@ -113,7 +113,7 @@ particular is the single widest jump-table dispatcher attempted in this
 codebase so far - 25 outer cases plus two independent 7-case inner
 tables), every one was transcribed instruction-for-instruction from the
 ROM disassembly instead, the same escape hatch used for
-`MakeLinkHandshakeId`/`ResetLinkSessionState` (`src/engine/link/link_handshake.c`) and
+`MakeLinkHandshakeId`/`ResetLinkSessionState` (`engine/src/engine/link/link_handshake.c`) and
 `ActionCtrlStateCrawl` (`action_ctrl_states.c`).
 
 To keep a function this size transcription-error-free, `ActionCtrlHandleEvent`
@@ -157,7 +157,7 @@ CONTRIBUTING.md's "Opening the PR").
 
 `ActionCtrlStateIdle` (action_ctrl_idle.c) and `HandleActionCtrlAirInput` (action_ctrl_update.c) are
 real C now, under old_agbcc (both files moved to `OLD_AGBCC_OBJS`), on
-the `struct act` player/action object from `include/game/crash/action_input.h`.
+the `struct act` player/action object from `engine/include/game/crash/action_input.h`.
 `ApplyActionCtrlMotion`, `UpdateActionCtrl` and `TryActionCtrlDoubleJump` have old_agbcc drafts
 under `NON_MATCHING`; `ActionCtrlHandleEvent` wasn't attempted. See
 [issue-15-16-naked-retry.md](issue-15-16-naked-retry.md).

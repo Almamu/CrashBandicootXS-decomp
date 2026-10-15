@@ -1,7 +1,7 @@
 # Issue #23: 0x080188D0-0x0801967C (25 functions)
 
 All 25 functions of the former `asm/code_3_2_17_188d0.s` now live in
-`src/game/bosses/cortex.c` (file retired; `ldscript.txt` links
+`engine/src/game/bosses/cortex.c` (file retired; `ldscript.txt` links
 `cortex.o` in its place). **All 25 are real C**, 0 NAKED, 0
 left raw. Full clean `make compare` passes; `make NON_MATCHING=1 report`
 builds with no warnings for this file.
@@ -142,7 +142,7 @@ Fixes, all plain C plus pins/barriers unless noted:
   stack argument to a word `str`, and a packed one-byte struct always
   materializes the 0 before the `mov r1, sp` slot address (the reverse
   of the ROM) under either compiler. What matches is the idiom
-  `CreatePlatform` uses (`include/mover_new.h`): write both stack slots
+  `CreatePlatform` uses (`engine/include/mover_new.h`): write both stack slots
   through `volatile` stores into a `struct mover_stack_args` local (the
   only thing in the frame, so it *is* the outgoing-argument area) and
   call through a 4-argument function-pointer view (`MOVER_NEW`). A

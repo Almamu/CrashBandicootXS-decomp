@@ -9,7 +9,7 @@ One now matches as real C:
 
 | Function | File | Compiler | Was | Technique |
 |---|---|---|---|---|
-| `ConvertAirshipTiles` | `src/bosses/airship_graphics.c` | both | 56 | the `ConvertHovercraftTiles` fixes, ported unchanged |
+| `ConvertAirshipTiles` | `engine/src/bosses/airship_graphics.c` | both | 56 | the `ConvertHovercraftTiles` fixes, ported unchanged |
 
 `airship_graphics.c` holds only this function and isn't on
 `OLD_AGBCC_OBJS`. The C matches under both compilers, so no Makefile

@@ -4,9 +4,9 @@ All 41 functions of the former `asm/code_3_2_17_188d0_1da38.s` (issue #28,
 25 functions) and `asm/code_3_2_17_188d0_1dfec.s` (issue #29, 16
 functions) are now **real C**, with no NAKED or NON_MATCHING code:
 
-- `src/menus/level_select_widgets.c`: `DestroyZoomBg`-`DestroyLevelSelectEntry`
-- `src/menus/level_select_widgets.c`: `CreateLevelSelectEntry`-`DestroyLevelSelectCursor`
-- `include/level_select_parts.h`: the structs, macros and inlines the two
+- `engine/src/menus/level_select_widgets.c`: `DestroyZoomBg`-`DestroyLevelSelectEntry`
+- `engine/src/menus/level_select_widgets.c`: `CreateLevelSelectEntry`-`DestroyLevelSelectCursor`
+- `engine/include/level_select_parts.h`: the structs, macros and inlines the two
   files share
 
 Both files are on the Makefile's `OLD_AGBCC_OBJS` list (they are built
@@ -54,7 +54,7 @@ screen in `level_select.c` (issue #26):
   `SetLevelSelectEntrySelected`) and `SetLevelSelectEntryBox`, which sets the box animation.
 - **`struct cursor_panel`** (`level_menu.panel`, 0x54 bytes): the
   cursor. Its first member is a `struct bresenham_line`
-  (`include/engine/util/line_util.h`), and `GlideLevelSelectCursor` takes two steps along it per
+  (`engine/include/engine/util/line_util.h`), and `GlideLevelSelectCursor` takes two steps along it per
   frame toward the target `MoveLevelSelectCursor` sets. `MoveLevelSelectCursor` also derives
   the zoom speed from half the major-axis distance. `UpdateLevelSelectCursor` runs an
   idle animation cycle (`gLevelSelectCursorAnims`) at random intervals
@@ -66,7 +66,7 @@ screen in `level_select.c` (issue #26):
   panel's own OAM attributes (`+0x34`) with `AddOamEntry`.
 
 UNUSED: `IsLevelSelectCursorHidden`, `IsLevelSelectCursorGrowing` and `MoveLevelSelectCursorTo` have no
-`bl`/`.4byte` reference in `asm/`, `data/` or `src/`, and no Thumb pointer
+`bl`/`.4byte` reference in `asm/`, `games/xs/data/` or `engine/src/`, and no Thumb pointer
 anywhere in the ROM. `ParkLevelSelectCursor` contains an inlined copy of
 `MoveLevelSelectCursorTo`. All three are matched anyway.
 

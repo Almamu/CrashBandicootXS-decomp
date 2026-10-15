@@ -1,9 +1,9 @@
 # The extra life's and the wumpa's `state`, `mode` and `phase` (#843)
 
-ExtraLife and Wumpa (include/game/objects/pickups.hpp; extra_life.cpp, wumpa.cpp,
+ExtraLife and Wumpa (engine/include/game/objects/pickups.hpp; extra_life.cpp, wumpa.cpp,
 wumpa_update.cpp) have the same three bytes after Sprite's fields:
 `state` (+0x48), `mode` (+0x4A) and `phase` (+0x4B). The names sit in
-include/game/objects/pickups.hpp: `EXTRA_LIFE_STATE_*` and `WUMPA_STATE_*` next to each
+engine/include/game/objects/pickups.hpp: `EXTRA_LIFE_STATE_*` and `WUMPA_STATE_*` next to each
 class, and the shared `PICKUP_MODE_*`, `WUMPA_MODE_PAYOUT` and
 `PICKUP_PHASE_*` before ExtraLife.
 

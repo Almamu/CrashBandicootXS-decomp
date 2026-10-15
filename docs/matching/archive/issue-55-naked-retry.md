@@ -4,7 +4,7 @@ The first pass over this gap
 ([issue-54-issue-56-gap-e0a4.md](issue-54-issue-56-gap-e0a4.md))
 matched 4 of its 25 functions and parked the other 21 as NAKED
 transcriptions, mostly without trying them as C. This pass tried every
-one of them and closed all 21. `src/vehicle/jetpack_spawn.c` now has
+one of them and closed all 21. `engine/src/vehicle/jetpack_spawn.c` now has
 no NAKED functions left.
 
 **Compiler:** old_agbcc. `DrawJetpackPlayer` only matches under it, and every

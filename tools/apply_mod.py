@@ -79,16 +79,16 @@ class Tree:
 
     @contextmanager
     def levels(self):
-        """Edits data/levels/levels.json, written back in levels.py's layout."""
+        """Edits games/xs/data/levels/levels.json, written back in levels.py's layout."""
         import levels as L
         data = L.read_json(L.LEVELS_JSON)
         yield data
         L.write_levels_json(data)
 
     def add_graphics(self, *entries):
-        """Appends entries to graphics/manifest.json's "assets", one per
+        """Appends entries to games/xs/graphics/manifest.json's "assets", one per
         line as the manifest has them."""
-        p = self.path("graphics/manifest.json")
+        p = self.path("games/xs/graphics/manifest.json")
         lines = p.read_text(encoding="utf-8").split("\n")
         end = lines.index('  "objects": [') if '  "objects": [' in lines else len(lines)
         k = max(i for i, s in enumerate(lines[:end]) if s.startswith("    {"))
@@ -100,9 +100,9 @@ class Tree:
         p.write_text("\n".join(lines), encoding="utf-8")
 
     def copy_room(self, src, dst, rename):
-        """Copies the room folder data/levels/<src> to <dst>, renaming the
+        """Copies the room folder games/xs/data/levels/<src> to <dst>, renaming the
         symbols of its room.json (docs/levels.md, "Adding a room")."""
-        s, d = self.path("data/levels") / src, self.path("data/levels") / dst
+        s, d = self.path("games/xs/data/levels") / src, self.path("games/xs/data/levels") / dst
         shutil.copytree(s, d)
         p = d / "room.json"
         text = p.read_text(encoding="utf-8")
@@ -111,7 +111,7 @@ class Tree:
         p.write_text(text, encoding="utf-8")
 
     def _text_files(self):
-        return [("", self.path("text/crashxs.pot"))] + [(c, self.path("text/%s.po" % c)) for c in LANGUAGES]
+        return [("", self.path("games/xs/text/crashxs.pot"))] + [(c, self.path("games/xs/text/%s.po" % c)) for c in LANGUAGES]
 
     def _insert_after_last(self, prefix, entries):
         """Inserts each file's entry after the last entry whose key starts
@@ -127,7 +127,7 @@ class Tree:
             p.write_text(s[:end] + add + ("\n" if end < len(s) else "") + s[end:], encoding="utf-8")
 
     def ui_count(self):
-        s = self.path("text/crashxs.pot").read_text(encoding="utf-8")
+        s = self.path("games/xs/text/crashxs.pot").read_text(encoding="utf-8")
         return len(re.findall(r'(?m)^msgctxt "ui\.', s))
 
     def add_level_name(self, constant, names):

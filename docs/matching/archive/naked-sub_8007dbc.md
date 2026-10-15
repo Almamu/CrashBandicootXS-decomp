@@ -1,6 +1,6 @@
 # `CheckSpritePickup`: matched via NAKED asm transcription
 
-`CheckSpritePickup` (ROM `0x08007DBC`, `src/game/entities/sprite.c`) is the
+`CheckSpritePickup` (ROM `0x08007DBC`, `engine/src/game/entities/sprite.c`) is the
 `part`-vs-player collision handler documented at length in
 `docs/matching.md`'s "Parked, not matched: `CheckSpritePickup`" entry: two
 `part->flags` bit tests gate an AABB collision test against the player
@@ -35,7 +35,7 @@ Rather than keep chasing one register, `CheckSpritePickup` was converted to
 a `NAKED` function with its body written as a single `asm()` block
 transcribing the real ROM disassembly (`asm/code_3_2_3.s`)
 instruction-for-instruction, the same technique already used for
-several functions in `src/engine/link/link_handshake.c` and
+several functions in `engine/src/engine/link/link_handshake.c` and
 `lib/gax/src/gax_swi.c`'s `GaxHuffUnComp`. The transcription:
 
 - Uses GNU-as local numeric labels (`1:`/`1f`/`1b`, ...) in the exact

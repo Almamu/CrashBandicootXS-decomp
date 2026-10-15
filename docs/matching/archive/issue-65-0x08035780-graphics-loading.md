@@ -6,7 +6,7 @@ listed 22 raw functions in `0x080354E0`-`0x08037110`. An earlier pass
 covered the first three - `InitTitleScreen` (matched, real C),
 `LoadTitleScreenBg` (NAKED), `LoadTitleScreenObjTiles` (matched, real C,
 register-pinning + opaque asm islands) - all three now living in
-`src/frontend/title_screen_init.c`. This is the write-up for the
+`engine/src/frontend/title_screen_init.c`. This is the write-up for the
 remaining 19 functions, `UpdateTitleLogoPieces` through `DrawLogoActor`, the whole
 former contents of `asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s`
 (confirmed by re-listing that file's functions with
@@ -74,7 +74,7 @@ Two distinct object shapes turned out to be involved, not one:
     package's pointer lives entirely in the static table).
 
 - **The unrelated `struct anim_part_instance`-shaped actor-part object**
-  (`src/actor/actor_anim.c`/`polar_player_actions.c`'s already-documented
+  (`engine/src/actor/actor_anim.c`/`polar_player_actions.c`'s already-documented
   "self", state at `+0x28`, frame accumulator at `+8`, table index at
   `+0xc`, frame halfword/byte at `+0x10`/`+0x12`, counter at `+0x44`):
   - `InitLogoActor` constructs one via `InitActorPart`, sets its vtable
@@ -91,7 +91,7 @@ Two distinct object shapes turned out to be involved, not one:
 
 ## Matched (1 function, full clean `make compare` passing)
 
-- **`HashTitleCheatInput`** (`src/frontend/title_screen_init.c`) - the
+- **`HashTitleCheatInput`** (`engine/src/frontend/title_screen_init.c`) - the
   standalone rotate-then-multiply-by-521 hash update. Every operation
   matched a plain-C reconstruction immediately except the rotate itself:
   the natural `(v << 1) | (v >> 31)` idiom gets folded by agbcc's
@@ -193,7 +193,7 @@ of "off by one instruction" mismatches for the rest of the function)
 and fixed before integrating.
 
 After integrating all 19 functions into
-`src/frontend/title_screen_init.c` (replacing the now-fully-
+`engine/src/frontend/title_screen_init.c` (replacing the now-fully-
 consumed `asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s`, which is
 deleted), a second, whole-file version of the same check was run:
 compiling the finished `.c` file with the real `cpp`+`agbcc`+`as`
@@ -212,7 +212,7 @@ matching the chunk's own address range precisely.
 
 `asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s` is deleted (its entire
 remaining content - all 19 functions - is now covered).
-`src/frontend/title_screen_init.c` holds all 19 functions: 18
+`engine/src/frontend/title_screen_init.c` holds all 19 functions: 18
 `NAKED`, 1 (`HashTitleCheatInput`) real C. `ldscript.txt`'s
 `code_3_2_20_28568_c99c_31784_33ef4_355e0.o` line is replaced with
 `title_screen_init.o` in the same link position.

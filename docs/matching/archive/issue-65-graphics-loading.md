@@ -21,13 +21,13 @@ behavior. This pass worked those three:
 - **`InitTitleScreen`**: the per-level setup entry point (`UpdateGameFrame`,
   `asm/code_3_2_17_225a0.s`, calls it with a freshly-allocated 0x220-byte
   scratch object). Stashes `gSmallFont` (the `struct bitmap_font *`
-  already established by GitHub issue #46's chunk, `include/engine/text/bitmap_font.h`)
+  already established by GitHub issue #46's chunk, `engine/include/engine/text/bitmap_font.h`)
   into the scratch object's `+0xc` field; resets the OAM shadow buffer
   (`gOamBuffer`, `struct oam_shadow_buffer *`) via
   `ResetOamBuffer`/`HideUnusedOamEntries`/`WaitForVBlank`/`CommitOamBuffer`; clears
   `REG_BLDCNT`/`REG_BLDALPHA` (one 32-bit store), sets `REG_BLDY` to
   `0x10`, and clears `REG_DISPCNT`; calls `FontSetPalette` (the icon-manager
-  accessor from issue #46, `src/engine/text/font.c`) with `0xe`;
+  accessor from issue #46, `engine/src/engine/text/font.c`) with `0xe`;
   sets the icon manager's `field_108` to `0x200` and fires its
   `record->slots[6]` trampoline via `_call_via_r1` (the same
   `(u8 *)obj + slot->offset, slot->ptr` pattern already established
@@ -36,14 +36,14 @@ behavior. This pass worked those three:
   at `0x050003A0`/`_C0`/`_E0`; calls `LoadTitleScreenBg`/
   `LoadTitleScreenObjTiles`; allocates and constructs a 0x14-byte object via
   `InitStarfield(OperatorNew(0x14))` (the exact same allocate-then-construct
-  pairing already confirmed in `src/game/ui/language_select_setup.c`'s
+  pairing already confirmed in `engine/src/game/ui/language_select_setup.c`'s
   `self->field_10 = InitStarfield(OperatorNew(0x14))`) into the scratch
   object's `+0x208` field; runs a fixed fade/audio-reset sequence
   (`SetObjMapping1D`/`ShowObj`/`SetDispcntMode(1)`/`CommitDispcnt` - the same
-  quartet already matched in `src/engine/sys/display.cpp`); zeroes
+  quartet already matched in `engine/src/engine/sys/display.cpp`); zeroes
   the scratch object's first two words; and starts song `0xb` via
   `StartSong(gAudioContext, 0xb)` (`gAudioContext` is the
-  `struct AudioContext *` from `include/audio.h`/`src/engine/audio/audio.c`).
+  `struct AudioContext *` from `engine/include/audio.h`/`engine/src/engine/audio/audio.c`).
   Returns the same scratch object pointer it was given.
 
   The 0x220-byte scratch object stays a raw `u32 *` rather than a named
@@ -82,11 +82,11 @@ behavior. This pass worked those three:
 
 ## Matched (1 function, full clean `make compare` passing - "La suma coincide")
 
-- **`InitTitleScreen`** (`src/frontend/title_screen_init.c`)
+- **`InitTitleScreen`** (`engine/src/frontend/title_screen_init.c`)
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
-- **`LoadTitleScreenBg`** (`src/frontend/title_screen_init.c`, real bytes in
+- **`LoadTitleScreenBg`** (`engine/src/frontend/title_screen_init.c`, real bytes in
   `asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s`) - loads BG2's
   palette/tileset/tilemap from the 5-field `gTitleScreenBg`
   package (`struct bg_package`: `width`/`height`/`paletteAsset`/
@@ -119,7 +119,7 @@ behavior. This pass worked those three:
   behavior, not a permuter shortcut (see the negative-constant
   bit-clear idiom in `docs/matching.md`), reproduced faithfully rather
   than "cleaned up" into an initialized local.
-- **`LoadTitleScreenObjTiles`** (`src/frontend/title_screen_init.c`, real bytes
+- **`LoadTitleScreenObjTiles`** (`engine/src/frontend/title_screen_init.c`, real bytes
   in the same new asm file) - uploads the 4 `struct bg_package` entries
   in `gTitleObjPackages` into OBJ VRAM (`0x06010000` on) and OBJ palette
   RAM (`0x05000200` on, one 16-color bank per package), remapping each
@@ -149,7 +149,7 @@ wasn't confirmed function-by-function. Left for a follow-up pass.
 
 `asm/code_3_2_20_28568_c99c_31784_33ef4.s` truncated to end right before
 `InitTitleScreen` (still holds the actor-region functions before this
-chunk's range, out of scope here). New `src/frontend/title_screen_init.c`
+chunk's range, out of scope here). New `engine/src/frontend/title_screen_init.c`
 holds `InitTitleScreen` (matched, unconditional) plus
 `LoadTitleScreenBg`/`LoadTitleScreenObjTiles` (guarded `#if NON_MATCHING`).
 New `asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s` holds those same two
@@ -191,7 +191,7 @@ grepping the isolated `.s` output for `push`/`pop`: still
 `push {r4, r5, r6, lr}` / `pop {r4, r5, r6}`, no `r7`). This reconfirms
 the conclusion already reached for `FitScaledSprite`
 (issue-30-graphics-loading.md's "Seventh pass") and `SetupRoomBlend`
-(`src/level/room_frame.c`): this compiler's callee-save prologue list is
+(`engine/src/level/room_frame.c`): this compiler's callee-save prologue list is
 built from a first (pressure-counting) allocator pass that can reserve a
 register slot never used by the time the second (assignment) pass
 actually runs, and no inline-asm-based hint - bare clobber or dummy

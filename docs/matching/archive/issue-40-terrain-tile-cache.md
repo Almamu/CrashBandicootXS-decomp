@@ -39,7 +39,7 @@ issue is where they got turned into (attempted) byte-exact C.
   out of scope for this issue).
 - **`DestroyTileCache`** is the exact same "`flags & 1` -> forward to
   `OperatorDelete`" shape already matched as `DestroySpriteBankSet` in
-  `src/gfx/graphics.c`.
+  `engine/src/gfx/graphics.c`.
 - **`SetBitmapBit`/`ClearBitmapBit`** are a floor-divide-by-32 bitmap
   set/clear pair on an arbitrary `void *self` array - unrelated to the
   tile cache, just adjacent in ROM.
@@ -49,11 +49,11 @@ issue is where they got turned into (attempted) byte-exact C.
 
 ## Matched (20 functions, full clean `make compare` passing)
 
-`src/game/level/bg_layer_base.c`: `ScrollBgLayerBase`, `ResetBgLayerBase`, `SetBgLayerSource`,
+`engine/src/game/level/bg_layer_base.c`: `ScrollBgLayerBase`, `ResetBgLayerBase`, `SetBgLayerSource`,
 `IsBgLayerEnabled`, `GetBgLayerY`, `GetBgLayerX`, `GetBgLayerHeightTiles`,
 `GetBgLayerWidthTiles`, `GetBgLayerHeight`, `GetBgLayerWidth`.
-`src/game/level/tile_cache.c`: `DestroyTileCache`, `InitTileCache`.
-`src/level/collision_map.c`: `GetCollisionCell`, `SetCollisionSource`, `SetBitmapBit`,
+`engine/src/game/level/tile_cache.c`: `DestroyTileCache`, `InitTileCache`.
+`engine/src/level/collision_map.c`: `GetCollisionCell`, `SetCollisionSource`, `SetBitmapBit`,
 `ClearBitmapBit`, `ClearBitmap`, `InitBitmap`.
 
 ## Closed as NAKED - 6 functions
@@ -148,7 +148,7 @@ issue is where they got turned into (attempted) byte-exact C.
   `GetSolidTerrainHeights`/`GetSolidTerrainModeValue` were closed, so once this one closed too
   the file's contents were empty and it (plus its `ldscript.txt` entry)
   were removed rather than kept as a zero-function husk.
-- **`GetTerrainType`** (`src/game/level/tile_cache.c`) - the last of
+- **`GetTerrainType`** (`engine/src/game/level/tile_cache.c`) - the last of
   `GetCollisionChunk`'s `(x, y)`-tile-lookup consumers: returns the raw
   decoded halfword directly (no bounds check, no terrain-table lookup),
   while also writing the cell's top nibble out through `hiOut`. Same

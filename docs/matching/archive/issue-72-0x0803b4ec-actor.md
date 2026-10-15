@@ -1,7 +1,7 @@
 # Issue #72: 0x0803B4EC-0x0803B884 (actor)
 
 19 labelled functions, ~0.9 KB, `asm/code_3_3.s` - the whole remaining
-file. Directly contiguous with `src/actor/actor_anim.c`'s existing
+file. Directly contiguous with `engine/src/actor/actor_anim.c`'s existing
 coverage (issue #71 ended exactly at `0x0803B4EC`, where this chunk
 starts), so all of it landed in that same file rather than a new one,
 keeping ROM contiguity per `docs/workflow.md` step 4. `asm/code_3_3.s`
@@ -45,14 +45,14 @@ their bytes to the preceding labelled function:
   `self->field_54` getter.
 - **`DamageActor`** (0x0803B5E0, 2 bytes, 2-byte aligned pad after) -
   `bx lr` alone, a genuinely empty stub (same shape as `ResetStopwatch` in
-  `src/game/objects/wumpa.c`) - next available `nullsub_N`, since
+  `engine/src/game/objects/wumpa.c`) - next available `nullsub_N`, since
   `_call_via_lr` was already taken.
 - **`IsJetpackPlayerUnshootable`** (0x0803B5E4, 4 bytes) - between `DamageActor`'s
   padding and `DestroyJetpackShot`. `movs r0,#0; bx lr` - a trivial "return
   false"/"return 0" stub.
 
 None of these seven have a direct `bl`/`.4byte` reference anywhere in
-`asm/*.s`/`expected/*.s`/`src/*.c` - same as every one of the 20 "kind"
+`asm/*.s`/`expected/*.s`/`engine/src/*.c` - same as every one of the 20 "kind"
 teardown handlers already matched in this file for issue #71, which are
 also grep-invisible (whatever installs one of these as an object's
 "destroy" vtable slot does so from a still-unsymbolized raw pointer
@@ -62,7 +62,7 @@ dead, just unconfirmed-live.
 
 ## Matched (all 19 labelled + 7 hidden = 26 functions)
 
-All in `src/actor/actor_anim.c`, in ROM order:
+All in `engine/src/actor/actor_anim.c`, in ROM order:
 
 - **`UpdateJetpackCheckpointText`** - advances the animation frame accumulator, or
   fires the `+0x50` trampoline record instead when the "held" flag

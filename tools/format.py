@@ -48,17 +48,17 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # The paths kept formatted: all the C (#572).
 FORMATTED = [
-    "include",
+    "engine/include",
+    "engine/src",
     "lib",
     "platform",
-    "src",
 ]
 
 # ...except the data: tool-emitted ROM-order tables whose one-entry-per-line
 # layout is their documentation. clang-format would pack them into columns
 # (fnmatch patterns, skipped while walking a directory).
 UNFORMATTED = [
-    "src/*/data",
+    "engine/src/*/data",
     "lib/*/data",
 ]
 

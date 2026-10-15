@@ -1,0 +1,736 @@
+#include "game/ui/save_menu.hpp"
+#include "engine/link/link_session.hpp"
+#include "engine/gfx/graphics_package.hpp"
+#include "engine/sys/key_input.hpp"
+#include "game/ui/menus.hpp"
+#include "engine/sys/frame_limiter.hpp"
+
+extern "C" {
+#include "core.h"
+#include "engine/actor/actor.h"
+#include "game/entities/objects.h"
+#include "engine/text/text.h"
+#include "engine/link/link.h"
+#include "engine/save/save.h"
+#include "engine/util/util.h"
+#include "engine/sys/system.h"
+#include "engine/gfx/gfx.h"
+#include "globals.h"
+#include "engine/util/math_util.h"
+}
+
+using Engine::Gfx::BgSetup;
+using Engine::Link::LinkSession;
+using Engine::Save::LinkRecord;
+using Engine::Save::SaveData;
+using Engine::Save::SaveTransfer;
+using Engine::Sys::FrameLimiter;
+using Engine::Text::Font;
+using Game::Entities::Sprite;
+using Game::Entities::UiSprite;
+using Game::Level::GameProgress;
+using Game::Ui::SaveMenu;
+
+/* SaveMenu's link exchange, slot list drawing, setup helpers and per-state
+ * draw routines (engine/include/game/ui/save_menu.hpp, #664's final cleanup). The second
+ * half, from LoadBg on, was save_menu_ui.cpp until #771.
+ *
+ * The first half (ROM 0x08003B40-0x080041BC) were NAKED transcriptions
+ * until the issue #4/#6/#8 retry
+ * (docs/matching/archive/issue-4-6-8-naked-retry.md); DrawYesNoPrompt
+ * followed in docs/matching/archive/early-rom-naked-retry.md, and
+ * InitIcons in docs/matching/archive/hard-register-hold-retry.md. Built
+ * with old_agbcc, now old_agbcp (Makefile OLD_AGBCC_OBJS), because
+ * InitIcons only matches under it; the first half's other functions
+ * compile identically under both compilers. */
+
+/* State 3's link exchange: `new`s a save transfer (struct
+ * save_transfer, 0x220 bytes) sending cartSave, then loops
+ * VBlank-waiting while polling input (B cancels: 3), the link-reset flag
+ * gLinkSessionReset and LinkSession::Update (the link-connection/handshake
+ * driver, docs/rom_map.md's SIO/link-cable section) until the transfer's
+ * state (SaveTransfer::Poll) settles. Returns that state; on 0 (done) it
+ * copies the received save into linkSave.
+ *
+ * A 64 Kbit build (SAVE_LINK_VIEW, a constant condition: not the ROM's)
+ * sends a LinkRecord packed from cartSave, made in linkSave, and unpacks
+ * the received one into linkSave, returning 2 ("connection failed") if
+ * its checksum fails (save_data.hpp; docs/levels.md, "The link cable").
+ *
+ * When both are 64 Kbit builds of the same level data (the view says so:
+ * LinkRecord::SendsWhole), they then exchange the whole records too, in
+ * two more transfers (ExchangeWholeRecords), so a slot loads with all of
+ * its levels.
+ *
+ * Once a NAKED transcription; it matches as plain C under both
+ * compilers. The cancel test is `(u16)(keys & 2)`, whose known-zero
+ * value the ROM reuses to clear `gLinkSessionReset`, and the
+ * `SaveTransfer::GetData` result is taken before `linkSave` is loaded. */
+
+/* Runs a transfer until it settles: SaveTransfer::Poll's 0 (done) or 2
+ * (no player id), or 3 if B cancels. */
+static inline s32 RunLinkTransfer(SaveTransfer *spinner)
+{
+    s32 result;
+
+    do {
+        FrameLimiter::WaitForVBlank();
+        gInput->Update();
+        if ((u16)(gKeys.all & B_BUTTON)) {
+            result = 3;
+        } else {
+            if (gLinkSessionReset) {
+                gLinkSessionReset = 0;
+                spinner->Reset();
+            }
+            gLinkSession->Update();
+            result = spinner->Poll();
+        }
+    } while (result == 1);
+    return result;
+}
+
+/* Sends `sent` whole and receives the other console's into `received`,
+ * after the LinkRecords (a 64 Kbit build of the same level data on both
+ * sides): its first SAVE_LINK_SIZE bytes, then its last, which cover
+ * the record. Returns RunLinkTransfer's result, or 2 if the received
+ * record's checksum fails. */
+static inline s32 ExchangeWholeRecords(SaveTransfer *spinner, SaveData *sent, SaveData *received)
+{
+    s32 result = 0;
+    s32 part;
+
+    for (part = 0; part <= 1 && result == 0; part++) {
+        s32 offset = part * (SAVE_DATA_SIZE - SAVE_LINK_SIZE);
+
+        spinner->SetRecord((SaveData *)((u8 *)sent + offset));
+        spinner->Reset();
+        result = RunLinkTransfer(spinner);
+        if (result == 0) {
+            MemCopy32((u8 *)received + offset, spinner->GetData(), SAVE_LINK_SIZE);
+        }
+    }
+    if (result == 0 && !received->CheckChecksum()) {
+        result = 2;
+    }
+    return result;
+}
+
+/* The two parts cover the record. */
+COMPILE_TIME_ASSERT(save_menu_draw_cpp, SAVE_DATA_SIZE <= 2 * SAVE_LINK_SIZE);
+
+s32 SaveMenu::LinkExchange()
+{
+    SaveTransfer *spinner = new SaveTransfer;
+    s32 result;
+
+    if (SAVE_LINK_VIEW) {
+        /* linkSave is free until the exchange is over */
+        LinkRecord *sent = (LinkRecord *)linkSave;
+
+        sent->Pack(cartSave);
+        spinner->SetRecord((SaveData *)sent);
+    } else {
+        spinner->SetRecord(cartSave);
+    }
+    spinner->Reset();
+    result = RunLinkTransfer(spinner);
+    if (result == 0) {
+        /* `data` is needed: inlined, the code is 1 instruction longer */
+        intptr_t data = (intptr_t)spinner->GetData();
+
+        if (!SAVE_LINK_VIEW) {
+            MemCopy32(linkSave, (void *)data, SAVE_LINK_SIZE);
+        } else if (!((LinkRecord *)data)->Unpack(linkSave)) {
+            result = 2;
+        } else if (((LinkRecord *)data)->SendsWhole()) {
+            result = ExchangeWholeRecords(spinner, cartSave, linkSave);
+        }
+    }
+    delete spinner;
+    return result;
+}
+
+/* Draws `label1` (if non-zero) centered at Y=0x87, then `label2` (if
+ * non-zero) centered at Y=0x91, both into gSmallFont.
+ *
+ * Once a NAKED transcription; it matches as plain C under both
+ * compilers once the centre X gets its own local (`x = (DISPLAY_WIDTH -
+ * w) >> 1`),
+ * which is what puts it in r3 and the Y constant in ip. */
+void SaveMenu::DrawMessageLines(const u8 *label1, const u8 *label2)
+{
+    screen_w_t w;
+    screen_x_t x;
+
+    gSmallFont->SetPalette(0);
+    if (label1) {
+        w = gSmallFont->MeasureText(label1);
+        x = (DISPLAY_WIDTH - w) >> 1;
+        gSmallFont->SetPos(x, DISPLAY_ART_Y + 0x87);
+        gSmallFont->DrawText(label1);
+    }
+    if (label2) {
+        w = gSmallFont->MeasureText(label2);
+        x = (DISPLAY_WIDTH - w) >> 1;
+        gSmallFont->SetPos(x, DISPLAY_ART_Y + 0x91);
+        gSmallFont->DrawText(label2);
+    }
+}
+
+/* The "cancel" entry: label 0x23 centred at Y=0x87 in gSmallFont, in the
+ * blink palette when highlighted.
+ *
+ * Once a NAKED transcription; it matches as plain C under both
+ * compilers (same shape as DrawEmptySlotLabel, below). */
+void SaveMenu::DrawCancel(u8 highlight)
+{
+    if (highlight)
+        gSmallFont->SetPalette(IsBlinkOn() ? 1 : 2);
+    else
+        gSmallFont->SetPalette(0);
+    gSmallFont->SetPos((DISPLAY_WIDTH - gSmallFont->MeasureText(GetUiText(0x23))) >> 1,
+                       DISPLAY_ART_Y + 0x87);
+    gSmallFont->DrawText(GetUiText(0x23));
+}
+
+/* Draws `value`'s label centered at Y=0x87, then draws a
+ * highlighted/plain pair of fixed labels (0x29/0x2a, purpose
+ * unconfirmed) swapping Y=0x87 vs Y=0x91 depending on `cursor`
+ * - each pair member's slot gets a `gMenuCursorText` draw at its
+ * *previous* position right before the real label, which reads as a
+ * clear/overwrite step rather than a width probe (the return value is
+ * never used).
+ *
+ * Once a NAKED transcription. The ROM keeps the record offset 0x130 in
+ * r8 and the Y constant 0x87 in sb; with the 0x87 written as a constant
+ * (`DISPLAY_ART_Y + 0x87`) at each SetPos, as here, gcc shares it the
+ * ROM's way (the C kept it in a `y` pinned to r9; #662 round 2). */
+void SaveMenu::DrawYesNoPrompt(s32 value)
+{
+    gSmallFont->SetPalette(0);
+    gSmallFont->SetPos(DISPLAY_ART_X + 0xa0 - gSmallFont->MeasureText(GetUiText(value)),
+                       DISPLAY_ART_Y + 0x87);
+    gSmallFont->DrawText(GetUiText(value));
+    /* spelled out: IsBlinkOn() here swaps r8 and sb in the rest of the
+     * function (#843) */
+    gSmallFont->SetPalette(((flags >> SAVE_MENU_BLINK_BIT) & 1) ? 1 : 2);
+    if (!cursor) {
+        gSmallFont->SetPos(DISPLAY_ART_X + 0xa8, DISPLAY_ART_Y + 0x87);
+        gSmallFont->DrawText(gMenuCursorText);
+        gSmallFont->SetPos(DISPLAY_ART_X + 0xb0, DISPLAY_ART_Y + 0x87);
+        gSmallFont->DrawText(GetUiText(0x29));
+    } else {
+        gSmallFont->SetPos(DISPLAY_ART_X + 0xa8, DISPLAY_ART_Y + 0x91);
+        gSmallFont->DrawText(gMenuCursorText);
+        gSmallFont->SetPos(DISPLAY_ART_X + 0xb0, DISPLAY_ART_Y + 0x91);
+        gSmallFont->DrawText(GetUiText(0x2a));
+    }
+    gSmallFont->SetPalette(0);
+    if (!cursor) {
+        gSmallFont->SetPos(DISPLAY_ART_X + 0xb0, DISPLAY_ART_Y + 0x91);
+        gSmallFont->DrawText(GetUiText(0x2a));
+    } else {
+        gSmallFont->SetPos(DISPLAY_ART_X + 0xb0, DISPLAY_ART_Y + 0x87);
+        gSmallFont->DrawText(GetUiText(0x29));
+    }
+}
+
+/* Moves a slot list icon to (x, y) (whole pixels) and draws it. */
+static inline void place_row_obj(Sprite *o, s32 x, s32 y)
+{
+    o->x = INT_TO_Q8(x);
+    o->y = INT_TO_Q8(y);
+    o->DrawWithOffset(0, 0);
+}
+
+/* The shared highlight/dim state call: selected rows draw in the
+ * palette `flags` bit 2 picks (1 or 2), others in palette 0. */
+#define SET_HIGHLIGHT(mgrExpr, flag)                                            \
+    if (flag)                                                                   \
+        (mgrExpr)->SetPalette(IsBlinkOn() ? 1 : 2);                      \
+    else                                                                        \
+        (mgrExpr)->SetPalette(0)
+
+/* Draws this settings row's three numeric stat values -
+ * `statPtr->gems`/`crystals`/`relics` of the row's own `struct
+ * settings_row_stats` (`statPtr` is `(&currentStats)[rowIdx]`,
+ * i.e. `currentStats` and `rowStats[0..3]` read as one contiguous
+ * 5-element array - RefreshSlotSummaries/SummarizeProgress,
+ * below in this file, already establish `rowStats` as
+ * this same array shape) - as plain decimal strings into
+ * `rowObjA[rowIdx]`/`rowObjC[rowIdx]`/`rowObjB[rowIdx]`
+ * respectively (each drawn with gSmallFont's DrawText, and each preceded
+ * by the same highlight/dim SetPalette call this file's other row-label
+ * functions
+ * establish - DrawSlots's own `flag` parameter selects which row
+ * is "selected", matching that shared idiom). A fourth value
+ * (`statPtr->percent`) is formatted as `"NN%"` by `itoa`-ing then
+ * manually scanning for the NUL terminator and overwriting it with a
+ * literal `%` byte (re-terminating one byte later) - measured once via
+ * gLargeFont's MeasureText to get its pixel width, then drawn
+ * with its DrawText, right-aligned against `label1` using the measured
+ * width (`posX = label1 - width + 0x1f`) - the standard
+ * "measure, then right-align" idiom this ROM region uses throughout.
+ *
+ * Once a NAKED transcription; it matches as plain C under both
+ * compilers. The fifth argument is a packed one-byte struct
+ * (`struct byte_arg`): the callee reads it with `ldrb` and the caller
+ * stores it with `strb`. Each block keeps running `x`/`y` locals, and
+ * the third block re-derives `y` the same way the second does, which
+ * reproduces the ROM spilling it. See docs/matching/archive/issue-4-6-8-naked-retry.md. */
+void SaveMenu::DrawSlotStats(s32 label1, s32 label2, s32 rowIdx, struct byte_arg flagArg)
+{
+    u8 flag = flagArg.v;
+    u8 buf[8];
+    struct settings_row_stats *stats = &(&currentStats)[rowIdx];
+    s32 x, y, i;
+    /* `w` is needed: inlined, the code is 2 instructions shorter */
+    s32 w;
+
+    x = label1 + 0x2b;
+    y = label2 + 5;
+    place_row_obj(rowObjA[rowIdx], x, y);
+    x += 0xd;
+    y = label2;
+    itoa(stats->gems, buf, 10);
+    SET_HIGHLIGHT(gSmallFont, flag);
+    gSmallFont->SetPos(x, y);
+    gSmallFont->DrawText(buf);
+
+    x = label1 + 7;
+    y = label2 + 0x1e;
+    place_row_obj(rowObjC[rowIdx], x, y);
+    x += 9;
+    y -= 7;
+    itoa(stats->crystals, buf, 10);
+    SET_HIGHLIGHT(gSmallFont, flag);
+    gSmallFont->SetPos(x, y);
+    gSmallFont->DrawText(buf);
+
+    x = label1 + 0x2b;
+    y = label2 + 0x1e;
+    place_row_obj(rowObjB[rowIdx], x, y);
+    x += 0xd;
+    y -= 7;
+    itoa(stats->relics, buf, 10);
+    SET_HIGHLIGHT(gSmallFont, flag);
+    gSmallFont->SetPos(x, y);
+    gSmallFont->DrawText(buf);
+
+    itoa(stats->percent, buf, 10);
+    i = 0;
+    y = label2 - 2;
+    for (; i < 7; i++) {
+        if (buf[i] == 0) {
+            buf[i] = '%';
+            buf[i + 1] = 0;
+            break;
+        }
+    }
+    w = gLargeFont->MeasureText(buf);
+    SET_HIGHLIGHT(gLargeFont, flag);
+    gLargeFont->SetPos(label1 - w + 0x1f, y);
+    gLargeFont->DrawText(buf);
+}
+
+/* An inlined copy of DrawEmptySlotLabel (below in this file): the
+ * row's highlighted/dimmed 0x25 glyph centred at (x + 0x1d, y + 0xc). */
+static inline void draw_row_mark(SaveMenu *self, s32 x, s32 y, u8 highlight)
+{
+    /* `centerX` is needed: inlined, the instructions differ */
+    s32 centerX = x + 0x1d;
+    /* `textY` is needed: inlined, the code is 8 instructions shorter */
+    s32 textY = y + 0xc;
+
+    if (highlight)
+        gSmallFont->SetPalette(self->IsBlinkOn() ? 1 : 2);
+    else
+        gSmallFont->SetPalette(0);
+    gSmallFont->SetPos(centerX - gSmallFont->MeasureText(GetUiText(0x25)) / 2, textY);
+    gSmallFont->DrawText(GetUiText(0x25));
+}
+
+#define DRAW_ROW(i, labelX, labelY)                                             \
+    if (handle->IsSlotEmpty((i))) {                                             \
+        draw_row_mark(this, (labelX), (labelY), selectedIndex == (i));          \
+    } else {                                                                    \
+        struct byte_arg sel;                                                    \
+        sel.v = selectedIndex == (i);                                           \
+        DrawSlotStats((labelX), (labelY), (i) + 1, sel);                    \
+    }
+
+/* Per docs/rom_map.md's "narrowed down which screen overlay_ui is"
+ * section: one of 4 settings rows, `handle`/`selectedIndex` from the
+ * 6-wrapper-caller family (DrawConfirmDelete etc.,
+ * below). When `handle->IsSlotEmpty(i)`
+ * reports row `i` selected, draws a highlighted numeric glyph
+ * (label 0x25) centered at the row's fixed position; otherwise draws
+ * the row's normal label pair via DrawSlotStats (above in this file),
+ * flagged if `selectedIndex == i`. The four rows' fixed anchors: row 0
+ * = (0x43,0x2d)/labels(0x26,0x21)/idx 1; row 1 = (0x43,0x5f)/
+ * (0x26,0x53)/idx 2; row 2 = (0xa3,0x2d)/(0x86,0x21)/idx 3; row 3 =
+ * (0xa3,0x5f)/(0x86,0x53)/idx 4.
+ *
+ * Once a NAKED transcription; it matches as plain C under both
+ * compilers. The "selected" branch is an inlined copy of DrawEmptySlotLabel
+ * (below), `draw_row_mark` above. */
+void SaveMenu::DrawSlots(SaveData *handle, s32 selectedIndex)
+{
+    DRAW_ROW(0, DISPLAY_ART_X + 0x26, DISPLAY_ART_Y + 0x21);
+    DRAW_ROW(1, DISPLAY_ART_X + 0x26, DISPLAY_ART_Y + 0x53);
+    DRAW_ROW(2, DISPLAY_ART_X + 0x86, DISPLAY_ART_Y + 0x21);
+    DRAW_ROW(3, DISPLAY_ART_X + 0x86, DISPLAY_ART_Y + 0x53);
+}
+
+/* Reserves a font's tiles in OBJ VRAM (as power_dialog.cpp's). */
+static inline void IconReserve(Font **m)
+{
+    gObjVramCursor->Reserve((*m)->tileCount << 5);
+}
+
+#define SET_ROW_OBJ_POS(objExpr, px, py)                                        \
+    {                                                                           \
+        Sprite *_o = (objExpr);                                                 \
+        _o->x = (px) << 8;                                                      \
+        _o->y = (py) << 8;                                                      \
+    }
+
+/* The animation number as a value: an inline call, so the store's value
+ * is computed before its address (the ROM's `movs r0, #1` ahead of
+ * `adds r1, r4, #0x2d`); a plain `frame` is loaded after the address. */
+static inline s32 Opaque(s32 v)
+{
+    return v;
+}
+
+static inline void new_row_icon(UiSprite **slot, u32 bank, u32 frame)
+{
+    UiSprite *icon;
+
+    icon = new UiSprite;
+    *slot = icon;
+    icon->bank = gSpriteBankSet->Bank(bank);
+    icon->tag = Opaque(frame);
+    icon->ResetFrameTimer();
+    icon->ResetFrameIndex();
+    icon->SetAnimDone(0);
+
+    s32 lo = (*slot)->GetAnimPaletteSlot();
+    /* the palette nibble's byte, the one after `mirror` (0x29 on the GBA) */
+    u8 *p = &(*slot)->mirror + 1;
+    s32 m = -16;
+
+    lo &= 15;
+    *p = (*p & m) | lo;
+
+    /* `half` is needed: inlined, the instructions differ */
+    u16 half = 0x80;
+
+    (*slot)->affine = half;
+}
+
+/* The screen's graphics setup (InitSaveMenuIcons): resets the OAM shadow
+ * buffer and the tile cache, loads four 16-colour palettes into cache
+ * slots 0-3, uploads both fonts' tiles (the same SetTileBase/IconReserve
+ * sequence as PowerDialog::Show), builds the three 5-entry icon arrays
+ * `rowObjA/B/C` (`new UiSprite`s; sprite banks 32/33/37,
+ * frames 1/2/0, half size: `affine` 0x80) and places five of them.
+ *
+ * Was raw asm (asm/code_3_1_10_4.s) with a NON_MATCHING draft; closed
+ * in docs/matching/archive/hard-register-hold-retry.md.
+ * #662 round 3: `tag` is a plain field store. old_agbcp's read-modify-
+ * write byte store leaves a dead zero mask, which loop.c hoists out of
+ * the loop as a movable; that zero lives across the whole loop, gets no
+ * register (r4-r10 are taken) and is rematerialized by reload at frame
+ * 0's store, after the address, into r1: the ROM's frame-0 sequence, and
+ * the reload that moves the reload-register rotation on to r3 for the
+ * 15's copy from sl. The C had a `u8 *` store with the frame-0 address
+ * pinned to r0 and an r1 hold for that rotation. The 0x80 is a `u16`
+ * local, which puts its load (r9) right after the 15's in the loop
+ * pre-header, ahead of the rowObj pointers' copies, as in the ROM;
+ * `affine = 0x80` loads it after them. */
+void SaveMenu::InitIcons()
+{
+    u16 (*pal)[16];
+    UiSprite **a, **b, **c;
+    s32 i;
+
+    gOamBuffer->Reset();
+    gOamBuffer->HideUnused();
+    FrameLimiter::WaitForVBlank();
+    gOamBuffer->Commit();
+    gPaletteCache->FreeUnlockedSlots();
+    gPaletteCache->ClaimSlot(0);
+    gPaletteCache->ClaimSlot(1);
+    gPaletteCache->ClaimSlot(2);
+    gPaletteCache->ClaimSlot(3);
+    pal = (u16 (*)[16])gPaletteCache->slots;
+    for (i = 0; i < 16; i++) {
+        pal[0][i] = gSaveMenuPalette0[i];
+        pal[1][i] = gSaveMenuPalette1[i];
+        pal[2][i] = gSaveMenuPalette2[i];
+        pal[3][i] = gSaveMenuPalette3[i];
+    }
+    gSmallFont->SetPalette(0);
+    gLargeFont->SetPalette(0);
+    gObjVramCursor->baseTile = 0;
+    gObjVramCursor->Reset();
+    gObjVramCursor->Reset();
+    gSmallFont->SetTileBase(0);
+    IconReserve(&gSmallFont);
+
+    /* `v` is needed: inlined, the code is 1 instruction longer */
+    u32 v = gSmallFont->tileCount;
+
+    gLargeFont->SetTileBase(v);
+    IconReserve(&gLargeFont);
+    gObjVramCursor->Mark();
+
+    a = rowObjA;
+    b = rowObjB;
+    c = rowObjC;
+    for (i = 0; i < (s32)ARRAY_COUNT(rowObjA); i++) {
+        new_row_icon(&a[i], 32, 1);
+        new_row_icon(&b[i], 33, 2);
+        new_row_icon(&c[i], 37, 0);
+    }
+    SET_ROW_OBJ_POS(rowObjA[0], DISPLAY_ART_X + 0x14, DISPLAY_ART_Y + 0x28);
+    SET_ROW_OBJ_POS(rowObjB[0], DISPLAY_ART_X + 0x14, DISPLAY_ART_Y + 0x50);
+    SET_ROW_OBJ_POS(rowObjB[1], DISPLAY_ART_X + 0x14, DISPLAY_ART_Y + 0x3c);
+    SET_ROW_OBJ_POS(rowObjB[2], DISPLAY_ART_X + 0x14, DISPLAY_ART_Y + 0x4b);
+    SET_ROW_OBJ_POS(rowObjC[0], DISPLAY_ART_X + 0x78, DISPLAY_ART_Y + 0x50);
+}
+
+/* SaveMenu's setup helpers and draw routines (save_menu_ui.cpp until
+ * #771). Built with old_agbcp (the C was agbcc): under it LoadBg matches
+ * without the C's r1 pin. */
+
+/* Same shape as LoadLanguageSelectBg (engine/src/game/ui/language_select_setup.cpp) - reset
+ * the DISPCNT shadow (`dispcnt`) and set its fields (mode 1, 1D OBJ
+ * mapping, BG0 and OBJ on; each byte is read, masked and written back),
+ * request a BG tile/map graphics package, set BG0's
+ * control register from it - plus zeroing `frame`, which LoadLanguageSelectBg's
+ * language_select doesn't have. */
+void SaveMenu::LoadBg()
+{
+    u32 zero = 0;
+
+    dispcnt.raw = zero;
+    dispcnt.bits.objMap1D = 1;
+    dispcnt.bits.mode = DISPCNT_MODE_1;
+    dispcnt.bits.bg0 = 1;
+    dispcnt.bits.bg1 = 0;
+    dispcnt.bits.obj = 1;
+
+    BgSetup buf(2, 0x1e, 1, 3);
+    buf.Load(&gMenuSkyBg);
+    frame = 0;
+    REG_BG0CNT = buf.GetControl();
+    *(vu32 *)REG_ADDR_BG0HOFS = zero;
+}
+
+/* Refreshes each of the 4 settings rows' aggregate stats from `handle`,
+ * skipping any row SaveData::IsSlotEmpty reports as inactive/hidden. */
+void SaveMenu::RefreshSlotSummaries(SaveData *handle)
+{
+    struct settings_row_stats *row;
+    struct save_slot buf;
+    s32 i;
+
+    i = 0;
+    row = &rowStats[0];
+    do {
+        if (!handle->IsSlotEmpty(i)) {
+            handle->ReadSlot(i, &buf);
+            row->gems = buf.progress.CountClearGems();
+            row->relics = buf.progress.CountRelics();
+            row->lives = buf.progress.GetLives();
+            row->crystals = buf.progress.CountCrystals();
+            row->percent = buf.progress.GetCompletionPercent();
+        }
+        row++;
+        i++;
+    } while (i < (s32)ARRAY_COUNT(rowStats));
+}
+
+void SaveMenu::LoadData()
+{
+    if ((u32)(cartSave->Load() - 1) <= 3) {
+        cartSave->Reset();
+        cartSave->Store();
+    }
+}
+
+/* Fills `dest` from `src` using the same five-function battery as the
+ * loop in RefreshSlotSummaries above - `this` is passed but never used,
+ * matching the ROM exactly. */
+void SaveMenu::SummarizeProgress(struct settings_row_stats *dest, const GameProgress *src)
+{
+    dest->gems = src->CountClearGems();
+    dest->relics = src->CountRelics();
+    dest->lives = src->GetLives();
+    dest->crystals = src->CountCrystals();
+    dest->percent = src->GetCompletionPercent();
+}
+
+/* The next two (ROM 0x08004914-0x08004A50) were NAKED transcriptions
+ * until the issue #4/#6/#8 retry
+ * (docs/matching/archive/issue-4-6-8-naked-retry.md). */
+
+/* `x`/`y` are plain coordinate values here (not pointers - the
+ * ROM does raw integer arithmetic on them, `x+0x1d`/`y+0xc`),
+ * used as the on-screen anchor for a centered numeric glyph (label
+ * 0x25) into gSmallFont.
+ *
+ * The C wrote the draws as `record->slots[n]` calls (`ICON_TEXT_CALL`);
+ * they are Font's virtual MeasureText and DrawText. */
+void SaveMenu::DrawEmptySlotLabel(s32 x, s32 y, u8 highlight)
+{
+    /* `centerX`, `textY` are needed: inlined, the instructions differ */
+    s32 centerX = x + 0x1d;
+    s32 textY = y + 0xc;
+
+    if (highlight)
+        gSmallFont->SetPalette(IsBlinkOn() ? 1 : 2);
+    else
+        gSmallFont->SetPalette(0);
+    gSmallFont->SetPos(centerX - gSmallFont->MeasureText(GetUiText(0x25)) / 2, textY);
+    gSmallFont->DrawText(GetUiText(0x25));
+}
+
+/* Draws a centred title (a GetUiText label) at Y=6 in gLargeFont; `this`
+ * is unused. The same centred-label shape as PowerDialog::Draw's
+ * (engine/src/game/ui/power_dialog_draw.cpp), for a single label. */
+void SaveMenu::DrawTitle(s32 labelIndex)
+{
+    gLargeFont->SetPalette(0);
+    gLargeFont->SetPos((DISPLAY_WIDTH - gLargeFont->MeasureText(GetUiText(labelIndex))) >> 1,
+                       DISPLAY_ART_Y + 6);
+    gLargeFont->DrawText(GetUiText(labelIndex));
+}
+
+/* The highlight's blink: palette 1 or 2, by bit 2 of the frame counter
+ * `flags` (IsBlinkOn; the other draws test it themselves). */
+s32 SaveMenu::GetBlinkPalette()
+{
+    if (IsBlinkOn()) {
+        return 1;
+    }
+    return 2;
+}
+
+/* `this` is never read, but LinkInput passes it (the ROM's call sets it
+ * up in r0). */
+void SaveMenu::EndLinkTransfer()
+{
+    LinkSession *p = gLinkSession;
+    p->Reset();
+    p->enabled = 0;
+}
+
+void SaveMenu::BeginLinkTransfer()
+{
+    gLinkSession->Reset();
+    gLinkSession->enabled = 1;
+    linkSave->Reset();
+}
+
+void SaveMenu::DrawConfirmDelete()
+{
+    DrawTitle(0x1d);
+    DrawSlots(cartSave, pendingSlot);
+    DrawYesNoPrompt(0x26);
+}
+
+void SaveMenu::DrawDelete()
+{
+    DrawTitle(0x1d);
+    DrawSlots(cartSave, cursor);
+    DrawCancel(cursor == 4);
+}
+
+void SaveMenu::DrawOverwrite()
+{
+    DrawTitle(0x1e);
+    DrawSlots(cartSave, pendingSlot);
+    DrawYesNoPrompt(0x27);
+}
+
+void SaveMenu::DrawSave()
+{
+    DrawTitle(0x1e);
+    DrawSlots(cartSave, cursor);
+    DrawCancel(cursor == 4);
+}
+
+void SaveMenu::DrawMessage()
+{
+    DrawTitle(0x1c);
+    DrawMessageLines(messageLine1, messageLine2);
+}
+
+void SaveMenu::DrawLoadLink()
+{
+    DrawTitle(0x1c);
+    DrawSlots(linkSave, cursor);
+    DrawCancel(cursor == 4);
+}
+
+void SaveMenu::DrawLoad()
+{
+    DrawTitle(0x1b);
+    DrawSlots(cartSave, cursor);
+    DrawCancel(cursor == 4);
+}
+
+void SaveMenu::Draw()
+{
+    gOamBuffer->Reset();
+    gObjVramCursor->Rewind();
+    if (state <= SAVE_MENU_STATE_UNK10) {
+        switch (state) {
+        case SAVE_MENU_STATE_MAIN:
+            DrawMain();
+            break;
+        case SAVE_MENU_STATE_LOAD:
+            DrawLoad();
+            break;
+        case SAVE_MENU_STATE_LOAD_LINK:
+            DrawLoadLink();
+            break;
+        case SAVE_MENU_STATE_LINK_TRANSFER:
+        case SAVE_MENU_STATE_MESSAGE:
+            DrawMessage();
+            break;
+        case SAVE_MENU_STATE_SAVE:
+            DrawSave();
+            break;
+        case SAVE_MENU_STATE_DELETE:
+            DrawDelete();
+            break;
+        case SAVE_MENU_STATE_CONFIRM_OVERWRITE:
+            DrawOverwrite();
+            break;
+        case SAVE_MENU_STATE_CONFIRM_DELETE:
+            DrawConfirmDelete();
+            break;
+        case SAVE_MENU_STATE_UNK8:
+        case SAVE_MENU_STATE_UNK10:
+        default:
+            break;
+        }
+    }
+    gOamBuffer->HideUnused();
+}
+
+void SaveMenu::DeleteSlot(s32 row)
+{
+    u8 buf[sizeof(struct save_slot)];
+
+    cartSave->ReadSlot(row, buf);
+    cartSave->EraseSlot(row);
+    if (cartSave->Store()) {
+        cartSave->WriteSlot(row, buf);
+    }
+}

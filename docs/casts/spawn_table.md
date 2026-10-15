@@ -57,7 +57,7 @@ Two places keep a shape for the match, without casts:
 
 ## The data
 
-The seven tables (src/game/vehicles/polar/data/polar_cell_anim.cpp, polar_spawn_tables.cpp,
+The seven tables (engine/src/game/vehicles/polar/data/polar_cell_anim.cpp, polar_spawn_tables.cpp,
 jetpack_cell_anim.cpp, jetpack_sky_pictures.cpp) are now
 `ACTOR_SPAWN_TABLE(n)`: the course length, the count, `n` entries
 `{ { kind, altKind, bonusKind, unk_03, x, y, depth }, next }`, and the
@@ -72,4 +72,4 @@ same.
   CreateActor/CreateJetpackActor cast the `actor_spawn *` they are
   handed to it. Merging the two changes the constructors' mangled names.
 - actor_categories.cpp declares the tables as `const u8 []` and
-  casts them in gActorCategories' initializers. That is src/*/data.
+  casts them in gActorCategories' initializers. That is engine/src/*/data.

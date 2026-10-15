@@ -64,7 +64,7 @@ HOST_CFLAGS := $(HOST_FLAGS) -std=gnu99
 $(C_BUILDDIR)/game/entities/entity.o: HOST_CXXFLAGS += -fkeep-inline-functions
 
 # Units: a file platform/pc/units/<path>.cpp is built in place of
-# src/<path>.cpp, into the same object (so the shared dependencies and
+# engine/src/<path>.cpp, into the same object (so the shared dependencies and
 # flags of that object still apply). For a unit the host can't compile
 # as it is: bios_util.cpp, whose DivMod is an inline ARM `svc`.
 PLATFORM_UNITS := $(shell find $(PLATFORM_DIR)/units -name '*.cpp')
@@ -74,7 +74,7 @@ PLATFORM_UNIT_OBJS := $(patsubst $(PLATFORM_DIR)/units/%.cpp,$(C_BUILDDIR)/%.o,$
 # calls, startup and IRQ dispatch, the audio output and GAX2's ARM
 # routines in C, AgbEeprom's API (which replaces lib/agb_eeprom),
 # lib/libgcc's division helpers the game and GAX2 call by name (the rest
-# of libgcc is the host compiler's), and the sound blocks of data/data.s.
+# of libgcc is the host compiler's), and the sound blocks of games/xs/data/data.s.
 PLATFORM_SRCS := $(wildcard $(PLATFORM_DIR)/src/*.c $(PLATFORM_DIR)/src/*.S)
 PLATFORM_OBJS := $(patsubst $(PLATFORM_DIR)/src/%,$(PLATFORM_BUILDDIR)/src/%.o,$(basename $(PLATFORM_SRCS)))
 

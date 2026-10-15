@@ -120,19 +120,19 @@ needs to be unconditionally compiled (not itself guarded), extracting
 these three raw bodies required splitting that one file into four:
 
 - `asm/code_3_2_13.s` (trimmed to just `InitCrateList`'s guard)
-- new `src/crates/crate_grid_unlink.c` (`UnlinkCrateFromGrid`)
+- new `engine/src/crates/crate_grid_unlink.c` (`UnlinkCrateFromGrid`)
 - `asm/code_3_2_13_9150.s` (`LinkCrateToActiveBucket`'s guard)
-- new `src/game/crates/crate_list_update.c` (`UpdateCrateList`)
+- new `engine/src/game/crates/crate_list_update.c` (`UpdateCrateList`)
 - `asm/code_3_2_13_944c.s` (`DrawCrateList`/`CollideCrateGrid`/`CollideCrateGridPartWithPlayer`'s
   guards)
-- new `src/crates/crate_player_collide.c` (`CollidePlayerWithCrates`)
+- new `engine/src/crates/crate_player_collide.c` (`CollidePlayerWithCrates`)
 - `asm/code_3_2_13_9914.s` (`ResetCrateList`/`CollideCrateGridPartWithObject`'s guards)
 
 `ldscript.txt` places each new object exactly where its raw block used
 to sit in link order. `asm/code_3_2_14.s` held only `ProbeHitboxEdgeTerrain` and
 nothing else, so it's retired entirely (same "retire an emptied split"
 convention as earlier batches) in favor of a new
-`src/objects/step_probe.c`, inserted between `crate_list.o` and
+`engine/src/objects/step_probe.c`, inserted between `crate_list.o` and
 `player_contact.o` in `ldscript.txt`.
 
 Full clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba

@@ -16,7 +16,7 @@
 Question: besides the old_agbcc/agbcc split, did the original build
 also use different `-O2` sub-flags for some translation units? The lead
 came from issue #65's retry pass (`issue-65-naked-retry.md`): three NAKED
-functions in `src/frontend/title_screen_init.c` (`InitVvLogoPieces`,
+functions in `engine/src/frontend/title_screen_init.c` (`InitVvLogoPieces`,
 `ResetTitleLogoPieces`, `RunTitleScreen`) were all stuck on the same "seed loop".
 The ROM keeps an up-counting loop counter, leaves some address
 arithmetic unsimplified and does not hoist 0/-1 out of the loop. Both

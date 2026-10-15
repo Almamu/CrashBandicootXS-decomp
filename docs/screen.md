@@ -4,10 +4,10 @@ The GBA's screen is 240x160. `platform/gba/include/gba/defines.h` has it as
 `DISPLAY_WIDTH` x `DISPLAY_HEIGHT` (a port's own `gba/defines.h` can set
 another size, a widescreen 426x240 say; docs/platforms.md). Every value the game derives
 from the screen size is spelled with these, through the names in
-`include/screen.h`, so that changing the defines changes the game
+`engine/include/screen.h`, so that changing the defines changes the game
 consistently (#979). `core.h` includes `screen.h`.
 
-## The macros (`include/screen.h`)
+## The macros (`engine/include/screen.h`)
 
 | Macro | GBA value | What |
 |---|---|---|
@@ -66,7 +66,7 @@ is measured from an anchor, never from the screen's (0,0):
   `-panelSlideX + ...`) take their anchor from the position they are
   measured from, and stay as they are.
 
-The position tables in src/*/data (`gLevelSelect*Pos`, `gPause*IconPos`,
+The position tables in engine/src/*/data (`gLevelSelect*Pos`, `gPause*IconPos`,
 `gHudPartPositions`, the logo pieces' motions) are anchored the same
 way, in their initializers. On the GBA every anchor is 0 or folds into
 the ROM's constant (`DISPLAY_ART_Y + 0x87` is 0x87), so the code and the
@@ -90,7 +90,7 @@ pieces 1-19 start at x 248 (240 for piece 19), just past its right
 border, and the title logo's piece 0 at y 160 and piece 1 at (-96, 160),
 below and left of it. On the GBA that is just off screen; on a bigger
 screen it is on it. So those steps come from `LOGO_FLY_IN_STEP`
-(include/game/ui/logo_fly_in.h), which lengthens the step backwards through the
+(engine/include/game/ui/logo_fly_in.h), which lengthens the step backwards through the
 screen's margin around the art (`DISPLAY_ART_MARGIN_LEFT/TOP/RIGHT/BOTTOM`,
 screen.h):
 
@@ -146,8 +146,8 @@ instructions and register allocation (#855).
 ### The narrow ones that stay
 
 A survey of the `u8`/`s8`/`s16`/`u16` fields, parameters and locals in
-the drawing code (src/game/ui, src/engine/save, src/engine/text,
-src/engine/gfx, the sprite classes) finds these screen values
+the drawing code (engine/src/game/ui, engine/src/engine/save, engine/src/engine/text,
+engine/src/engine/gfx, the sprite classes) finds these screen values
 narrower than `s32`. Each keeps its type, because the ROM reads or
 writes it with a byte or halfword access, and says so where it is
 declared:
@@ -171,8 +171,8 @@ the level select's slide and icon offsets, `Sprite::DrawWithOffset`,
 
 ## The inventory: `tools/magic_numbers.py --screen`
 
-`tools/magic_screen.py` scans the game code and its data tables (src/,
-src/*/data/ included, and include/; comments and strings blanked) for the
+`tools/magic_screen.py` scans the game code and its data tables (engine/src/,
+engine/src/*/data/ included, and engine/include/; comments and strings blanked) for the
 literals a 240x160 screen leaves behind and classifies each one with a
 hand-made table (`CLASSES`, and `LAYOUT_CLASSES` for the layouts):
 
@@ -189,7 +189,7 @@ hand-made table (`CLASSES`, and `LAYOUT_CLASSES` for the layouts):
 tools/magic_numbers.py --screen [--show]           # every site: kind, value, category, reason
 tools/magic_numbers.py --screen --report OUT       # Markdown: per kind and directory, the sites
 tools/magic_numbers.py --screen --category screen  # what is left to convert
-tools/magic_numbers.py --screen --json --path src/game/ui
+tools/magic_numbers.py --screen --json --path engine/src/game/ui
 ```
 
 The kinds it looks for: 240/160 (`size`), 239/159 (`last`), 120/80
@@ -201,11 +201,11 @@ column (`tiles`), `& 0x1FF`/`& 0xFF` on a coordinate (`mask`), 512/256
 added to or compared with a coordinate (`wrap`), 128 next to the OAM
 (`oam`) and VCOUNT scanline counts (`scanline`). The `layout` kind is the
 layouts' fixed positions (see "Layouts" above): in the UI code
-(src/game/ui, src/engine/save, src/engine/text, game_progress.cpp), an argument of a
+(engine/src/game/ui, engine/src/engine/save, engine/src/engine/text, game_progress.cpp), an argument of a
 position call (`SetPos`, `Move`, `SetPixelPos`, `SetEntityPixelPos`,
 `SetAabbPos`, the save menu's `SET_ROW_OBJ_POS`/`DRAW_ROW`/`DrawSlotStats`),
 a local `x`/`y` or a sprite's Q8 position that adds a literal to nothing
-but measured sizes and counters; in src/*/data, the `{ x, y }` entries of
+but measured sizes and counters; in engine/src/*/data, the `{ x, y }` entries of
 the position tables and the logo pieces' motions. A converted site isn't a
 literal any more, and a literal added to a screen.h anchor
 (`DISPLAY_ART_Y + 0x87`, `DISPLAY_RIGHT(0x14)`) is an offset from it, so
@@ -224,7 +224,7 @@ has the rest.
    32x32 screen blocks and the streamer's 64x32 ring are fixed sizes
    (see "Platform-layer limits" below). The game has no per-scanline
    (HBlank) table; its only VCOUNT use is the music's interrupt
-   (src/engine/audio/, out of scope).
+   (engine/src/engine/audio/, out of scope).
 2. **Coordinate wrapping and culling.** The game culls with explicit
    on-screen tests (`x <= DISPLAY_WIDTH - 1`, `x + w >= 0`) before it
    writes an OAM entry; nothing relies on the OBJ wrap at 512/256. The
@@ -250,7 +250,7 @@ has the rest.
 6. **Sprite count.** `OAM_ENTRY_COUNT` (128 on the GBA; a port's `gba/defines.h` can have more)
    sizes the OAM shadow buffer.
 7. **A compile check.** `make screen-check` compiles every game object
-   (src/, and the src/*/data/ tables that spell a `DISPLAY_` name or a
+   (engine/src/, and the engine/src/*/data/ tables that spell a `DISPLAY_` name or a
    logo fly-in's `_FLY_IN`: the layouts' position tables, the logo
    pieces' motions and their seeds) with another screen size,
    `SCREEN_CHECK_WIDTH` x `SCREEN_CHECK_HEIGHT` (426x240, a widescreen size, by

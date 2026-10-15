@@ -21,7 +21,7 @@ closed 12 of the 19.
   `InitSaveMenuIcons` draft at the end of the file is 5 halfwords off under
   old_agbcc and 23 under agbcc. The ROM loads that function's nibble
   mask before the byte it combines with, which is old_agbcc's tell.
-- `src/engine/link/link_handshake.c` is on `OLD_AGBCC_OBJS` for the same
+- `engine/src/engine/link/link_handshake.c` is on `OLD_AGBCC_OBJS` for the same
   reason. Its one matched function, `LinkStop`, compiles the same
   under both. The `MakeLinkHandshakeId` and `ResetLinkSessionState` drafts are closer
   under old_agbcc, and the ROM's `MakeLinkHandshakeId` has the
@@ -47,7 +47,7 @@ NON_MATCHING build, where the C draft replaces them.
   first compile. Their old notes described a "last mile" register gap
   that doesn't exist once the calls are written this way.
 - **`ShowPowerDialog`** uses the `IconSetup`/`IconReserve` inline helpers
-  from `RunLevelSelect` (`src/game/ui/level_select.c`), which has the
+  from `RunLevelSelect` (`engine/src/game/ui/level_select.c`), which has the
   same display/icon-manager setup sequence. It needed one more fix:
   `FontResetPalette` takes one argument. The old two-argument declaration
   added a `movs r1, #0` before each call.

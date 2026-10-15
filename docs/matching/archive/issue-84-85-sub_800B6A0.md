@@ -1,7 +1,7 @@
 # Issues #84/#85: `SetCtrlTargetMotionY`/`StartCtrlTargetMotionY`
 
 Two `parked-function` issues, both against the same pair of sibling
-functions in `src/player/player_flags.c` (real bytes previously in
+functions in `engine/src/player/player_flags.c` (real bytes previously in
 the now-removed `asm/code_3_2_18.s`). Both matched in the same pass,
 since they share the exact same gap and fix.
 

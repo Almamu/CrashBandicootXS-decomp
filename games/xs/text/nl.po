@@ -1,0 +1,1531 @@
+# Crash Bandicoot XS: the game's text in Dutch (docs/text.md).
+msgid ""
+msgstr ""
+"Project-Id-Version: crashbandicootxs\n"
+"Report-Msgid-Bugs-To: https://github.com/Almamu/CrashBandicootXS-decomp/"
+"issues\n"
+"POT-Creation-Date: 2026-10-14 00:00+0000\n"
+"PO-Revision-Date: 2026-10-14 00:00+0000\n"
+"Last-Translator: the original game's translators (extracted from the ROM)\n"
+"Language-Team: Dutch\n"
+"Language: nl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Text id 0 (0x00). The label before the level's number on the pause menu's
+#. info page.
+#. Widest shipped text: 46 px in the small font; the screen is 240 px wide.
+msgctxt "ui.pause.level"
+msgid "level"
+msgstr "level"
+
+#. Text id 1 (0x01). A level's name (LEVEL_JUNGLE_JAM): the level select's
+#. title (large font) and the pause menu's info page.
+#. Widest shipped text: 117 px in the small font, 177 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.jungle_jam"
+msgid "jungle jam"
+msgstr "jungle jam"
+
+#. Text id 2 (0x02). A level's name (LEVEL_SHIPWRECKED): the level select's
+#. title (large font) and the pause menu's info page.
+#. Widest shipped text: 81 px in the small font, 118 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.shipwrecked"
+msgid "shipwrecked"
+msgstr "schipbreuk"
+
+#. Text id 3 (0x03). A level's name (LEVEL_TEMPLE_OF_BOOM): the level select's
+#. title (large font) and the pause menu's info page.
+#. Widest shipped text: 106 px in the small font, 162 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.temple_of_boom"
+msgid "temple of boom"
+msgstr "de tempel"
+
+#. Text id 4 (0x04). A level's name (LEVEL_FROSTBITE_CAVERN): the level
+#. select's title (large font) and the pause menu's info page.
+#. Widest shipped text: 120 px in the small font, 178 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.frostbite_cavern"
+msgid "frostbite cavern"
+msgstr "ijzige grot"
+
+#. Text id 5 (0x05). A level's name (LEVEL_JUST_IN_SLIME): the level select's
+#. title (large font) and the pause menu's info page.
+#. Widest shipped text: 114 px in the small font, 167 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.just_in_slime"
+msgid "just in slime"
+msgstr "slijmerig"
+
+#. Text id 6 (0x06). A level's name (LEVEL_SNOW_CRASH): the level select's
+#. title (large font) and the pause menu's info page.
+#. Widest shipped text: 113 px in the small font, 177 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.snow_crash"
+msgid "snow crash"
+msgstr "in de sneeuw"
+
+#. Text id 7 (0x07). A level's name (LEVEL_ROCKET_RACKET): the level select's
+#. title (large font) and the pause menu's info page.
+#. Widest shipped text: 110 px in the small font, 170 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.rocket_racket"
+msgid "rocket racket"
+msgstr "rocket racket"
+
+#. Text id 8 (0x08). A level's name (LEVEL_JUST_HANGIN): the level select's
+#. title (large font) and the pause menu's info page.
+#. Widest shipped text: 110 px in the small font, 160 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.just_hangin"
+msgid "just hangin'"
+msgstr "even hangen"
+
+#. Text id 9 (0x09). A level's name (LEVEL_SHARK_ATTACK): the level select's
+#. title (large font) and the pause menu's info page.
+#. Widest shipped text: 114 px in the small font, 180 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.shark_attack"
+msgid "shark attack"
+msgstr "agressieve haai"
+
+#. Text id 10 (0x0A). A level's name (LEVEL_RUINED): the level select's title
+#. (large font) and the pause menu's info page.
+#. Widest shipped text: 111 px in the small font, 162 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.ruined"
+msgid "ruined"
+msgstr "ruïne"
+
+#. Text id 11 (0x0B). A level's name (LEVEL_SNOW_JOB): the level select's title
+#. (large font) and the pause menu's info page.
+#. Widest shipped text: 109 px in the small font, 160 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.snow_job"
+msgid "snow job"
+msgstr "ingesneeuwd"
+
+#. Text id 12 (0x0C). A level's name (LEVEL_ACE_OF_SPACE): the level select's
+#. title (large font) and the pause menu's info page.
+#. Widest shipped text: 98 px in the small font, 147 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.ace_of_space"
+msgid "ace of space"
+msgstr "in de ruimte"
+
+#. Text id 13 (0x0D). A level's name (LEVEL_SUNKEN_CITY): the level select's
+#. title (large font) and the pause menu's info page.
+#. Widest shipped text: 109 px in the small font, 162 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.sunken_city"
+msgid "sunken city"
+msgstr "verzonken stad"
+
+#. Text id 14 (0x0E). A level's name (LEVEL_DOWN_THE_HOLE): the level select's
+#. title (large font) and the pause menu's info page.
+#. Widest shipped text: 110 px in the small font, 166 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.down_the_hole"
+msgid "down the hole"
+msgstr "door het gat"
+
+#. Text id 15 (0x0F). A level's name (LEVEL_BLIMP_BONANZA): the level select's
+#. title (large font) and the pause menu's info page.
+#. Widest shipped text: 114 px in the small font, 175 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.blimp_bonanza"
+msgid "blimp bonanza"
+msgstr "zeppelinfeest"
+
+#. Text id 16 (0x10). A level's name (LEVEL_STAR_TO_FINISH): the level select's
+#. title (large font) and the pause menu's info page.
+#. Widest shipped text: 106 px in the small font, 159 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.star_to_finish"
+msgid "star to finish"
+msgstr "op naar de finish"
+
+#. Text id 17 (0x11). A level's name (LEVEL_AIR_SUPPLY): the level select's
+#. title (large font) and the pause menu's info page.
+#. Widest shipped text: 106 px in the small font, 152 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.air_supply"
+msgid "air supply"
+msgstr "luchttoevoer"
+
+#. Text id 18 (0x12). A level's name (LEVEL_NO_FLY_ZONE): the level select's
+#. title (large font) and the pause menu's info page.
+#. Widest shipped text: 110 px in the small font, 159 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.no_fly_zone"
+msgid "no-fly zone"
+msgstr "no-fly zone"
+
+#. Text id 19 (0x13). A level's name (LEVEL_DRIP_DRIP_DRIP): the level select's
+#. title (large font) and the pause menu's info page.
+#. Widest shipped text: 110 px in the small font, 163 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.drip_drip_drip"
+msgid "drip, drip, drip"
+msgstr "drup, drup, drup"
+
+#. Text id 20 (0x14). A level's name (LEVEL_FINAL_COUNTDOWN): the level
+#. select's title (large font) and the pause menu's info page.
+#. Widest shipped text: 116 px in the small font, 173 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.final_countdown"
+msgid "final countdown"
+msgstr "final countdown"
+
+#. Text id 21 (0x15). A level's name (LEVEL_TINY): the level select's title
+#. (large font) and the pause menu's info page.
+#. Widest shipped text: 25 px in the small font, 36 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.tiny"
+msgid "tiny"
+msgstr "tiny"
+
+#. Text id 22 (0x16). A level's name (LEVEL_DINGODILE): the level select's
+#. title (large font) and the pause menu's info page.
+#. Widest shipped text: 57 px in the small font, 81 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.dingodile"
+msgid "dingodile"
+msgstr "dingodile"
+
+#. Text id 23 (0x17). A level's name (LEVEL_N_GIN): the level select's title
+#. (large font) and the pause menu's info page.
+#. Widest shipped text: 31 px in the small font, 46 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.n_gin"
+msgid "n. gin"
+msgstr "n. gin"
+
+#. Text id 24 (0x18). A level's name (LEVEL_NEO_CORTEX): the level select's
+#. title (large font) and the pause menu's info page.
+#. Widest shipped text: 67 px in the small font, 97 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.neo_cortex"
+msgid "neo cortex"
+msgstr "neo cortex"
+
+#. Text id 25 (0x19). A level's name (LEVEL_MEGA_MIX): the level select's title
+#. (large font) and the pause menu's info page.
+#. Widest shipped text: 52 px in the small font, 86 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.level.mega_mix"
+msgid "mega-mix"
+msgstr "mega-mix"
+
+#. Text id 26 (0x1A). Title screen menu item.
+#. Widest shipped text: 99 px in the small font; the screen is 240 px wide.
+msgctxt "ui.title.new_game"
+msgid "new game"
+msgstr "nieuw spel"
+
+#. Text id 27 (0x1B). Title screen menu item, and the save menu's first option
+#. and the title of its screen (large font).
+#. Widest shipped text: 92 px in the small font, 147 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.menu.load_game"
+msgid "load game"
+msgstr "spel laden"
+
+#. Text id 28 (0x1C). Save menu option, and the title of its screen (large
+#. font).
+#. Widest shipped text: 109 px in the small font, 165 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.save.load_link_game"
+msgid "load link game"
+msgstr "link-spel laden"
+
+#. Text id 29 (0x1D). Save menu option, and the title of its screen (large
+#. font).
+#. Widest shipped text: 106 px in the small font, 164 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.save.delete_game"
+msgid "delete game"
+msgstr "spel verwijderen"
+
+#. Text id 30 (0x1E). Save menu option, and the title of its screen (large
+#. font).
+#. Widest shipped text: 120 px in the small font, 185 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.save.save_game"
+msgid "save game"
+msgstr "spel opslaan"
+
+#. Text id 31 (0x1F). Menu label.
+#. Widest shipped text: 63 px in the small font; the screen is 240 px wide.
+msgctxt "ui.menu.quit"
+msgid "quit"
+msgstr "stoppen"
+
+#. Text id 32 (0x20). Save menu option: leave the save menu.
+#. Widest shipped text: 60 px in the small font; the screen is 240 px wide.
+msgctxt "ui.save.exit"
+msgid "exit"
+msgstr "afsluiten"
+
+#. Text id 33 (0x21). Save menu message.
+#. Widest shipped text: 169 px in the small font; the screen is 240 px wide.
+msgctxt "ui.save.error_saving"
+msgid "error saving data"
+msgstr "fout bij gegevensopslag"
+
+#. Text id 34 (0x22). Save menu message.
+#. Widest shipped text: 92 px in the small font; the screen is 240 px wide.
+msgctxt "ui.save.save_ok"
+msgid "save ok"
+msgstr "opslaan ok"
+
+#. Text id 35 (0x23). Save menu: the cancel label.
+#. Widest shipped text: 63 px in the small font; the screen is 240 px wide.
+msgctxt "ui.save.cancel"
+msgid "cancel"
+msgstr "annuleren"
+
+#. Text id 36 (0x24). Save menu: a save slot's completion.
+#. Widest shipped text: 56 px in the small font; the screen is 240 px wide.
+msgctxt "ui.save.complete"
+msgid "complete"
+msgstr "voltooid"
+
+#. Text id 37 (0x25). Save menu: an empty save slot.
+#. Widest shipped text: 35 px in the small font; the screen is 240 px wide.
+msgctxt "ui.save.empty"
+msgid "empty"
+msgstr "vrij"
+
+#. Text id 38 (0x26). Save menu question before deleting a save.
+#. Widest shipped text: 80 px in the small font; the screen is 240 px wide.
+msgctxt "ui.save.delete_prompt"
+msgid "delete?"
+msgstr "verwijderen?"
+
+#. Text id 39 (0x27). Save menu question before overwriting a save.
+#. Widest shipped text: 94 px in the small font; the screen is 240 px wide.
+msgctxt "ui.save.overwrite_prompt"
+msgid "overwrite?"
+msgstr "overschrijven?"
+
+#. Text id 40 (0x28). The continue prompt's question (after a game over).
+#. Widest shipped text: 76 px in the small font; the screen is 240 px wide.
+msgctxt "ui.continue.prompt"
+msgid "continue?"
+msgstr "doorgaan?"
+
+#. Text id 41 (0x29). Answer to the save menu's and the continue prompt's
+#. questions.
+#. Widest shipped text: 21 px in the small font; the screen is 240 px wide.
+msgctxt "ui.common.yes"
+msgid "yes"
+msgstr "ja"
+
+#. Text id 42 (0x2A). Answer to the save menu's and the continue prompt's
+#. questions.
+#. Widest shipped text: 25 px in the small font; the screen is 240 px wide.
+msgctxt "ui.common.no"
+msgid "no"
+msgstr "nee"
+
+#. Text id 43 (0x2B). Link cable transfer message (first line).
+#. Widest shipped text: 155 px in the small font; the screen is 240 px wide.
+msgctxt "ui.link.transferring"
+msgid "transferring data"
+msgstr "gegevensoverdracht"
+
+#. Text id 44 (0x2C). Link cable transfer message (first line).
+#. Widest shipped text: 162 px in the small font; the screen is 240 px wide.
+msgctxt "ui.link.transfer_error"
+msgid "error transferring data"
+msgstr "fout gegevensoverdracht"
+
+#. Text id 45 (0x2D). Link cable transfer message (second line). "B" draws the
+#. B button.
+#. Widest shipped text: 191 px in the small font; the screen is 240 px wide.
+msgctxt "ui.link.abort_hint"
+msgid "b button to abort"
+msgstr "b-knop: afbreken"
+
+#. Text id 46 (0x2E). Second line of the link messages, and the power dialog's
+#. prompt.
+#. Widest shipped text: 209 px in the small font; the screen is 240 px wide.
+msgctxt "ui.common.push_start"
+msgid "push start to continue"
+msgstr "start: doorgaan"
+
+#. Text id 47 (0x2F). Level select hint: START opens the save menu.
+#. Widest shipped text: 154 px in the small font; the screen is 240 px wide.
+msgctxt "ui.level_select.load_save_hint"
+msgid "start:  load-save"
+msgstr "laden-opslaan: start"
+
+#. Text id 48 (0x30). Pause menu row: the music volume.
+#. Widest shipped text: 46 px in the small font; the screen is 240 px wide.
+msgctxt "ui.pause.music"
+msgid "music"
+msgstr "muziek"
+
+#. Text id 49 (0x31). Pause menu row: the sound effects volume.
+#. Widest shipped text: 39 px in the small font; the screen is 240 px wide.
+msgctxt "ui.pause.sound"
+msgid "sound"
+msgstr "geluid"
+
+#. Text id 50 (0x32). Pause menu row.
+#. Widest shipped text: 70 px in the small font; the screen is 240 px wide.
+msgctxt "ui.pause.resume"
+msgid "resume"
+msgstr "hervatten"
+
+#. Text id 51 (0x33). Pause menu row: quit the level for the warp room (the
+#. level select).
+#. Widest shipped text: 82 px in the small font; the screen is 240 px wide.
+msgctxt "ui.pause.warp_room"
+msgid "warp room"
+msgstr "zapkamer"
+
+#. Text id 52 (0x34). Pause menu row: restart the time trial.
+#. Widest shipped text: 85 px in the small font; the screen is 240 px wide.
+msgctxt "ui.pause.restart_trial"
+msgid "restart trial"
+msgstr "race opnieuw"
+
+#. Text id 53 (0x35). Pause menu page title.
+#. Widest shipped text: 78 px in the small font; the screen is 240 px wide.
+msgctxt "ui.pause.powers"
+msgid "powers"
+msgstr "krachten"
+
+#. Text id 54 (0x36). Pause menu page title.
+#. Widest shipped text: 67 px in the small font; the screen is 240 px wide.
+msgctxt "ui.pause.crystals"
+msgid "crystals"
+msgstr "kristallen"
+
+#. Text id 55 (0x37). Pause menu page title.
+#. Widest shipped text: 70 px in the small font; the screen is 240 px wide.
+msgctxt "ui.pause.gems"
+msgid "gems"
+msgstr "edelstenen"
+
+#. Text id 56 (0x38). Pause menu page title.
+#. Widest shipped text: 64 px in the small font; the screen is 240 px wide.
+msgctxt "ui.pause.relics"
+msgid "relics"
+msgstr "relikwieen"
+
+#. Text id 57 (0x39). Pause menu page title.
+#. Widest shipped text: 84 px in the small font; the screen is 240 px wide.
+msgctxt "ui.pause.time_trial"
+msgid "time trial"
+msgstr "tegen de tijd"
+
+#. Text id 58 (0x3A). Pause menu: shown on a page with nothing collected yet.
+#. Widest shipped text: 56 px in the small font; the screen is 240 px wide.
+msgctxt "ui.pause.none"
+msgid "none"
+msgstr "geen"
+
+#. Text id 59 (0x3B). Title screen menu item.
+#. Widest shipped text: 82 px in the small font; the screen is 240 px wide.
+msgctxt "ui.title.credits"
+msgid "credits"
+msgstr "credits"
+
+#. Text id 60 (0x3C). A power's name: the power dialog's title (large font).
+#. Widest shipped text: 123 px in the small font, 185 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.power.super_body_slam"
+msgid "super body slam"
+msgstr "super body slam"
+
+#. Text id 61 (0x3D). A power's name: the power dialog's title (large font).
+#. Widest shipped text: 84 px in the small font, 122 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.power.double_jump"
+msgid "double jump"
+msgstr "double jump"
+
+#. Text id 62 (0x3E). A power's name: the power dialog's title (large font).
+#. Widest shipped text: 113 px in the small font, 175 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.power.tornado_spin"
+msgid "tornado spin"
+msgstr "tornado spin"
+
+#. Text id 63 (0x3F). A power's name: the power dialog's title (large font).
+#. Widest shipped text: 84 px in the small font, 132 px in the large font; the
+#. screen is 240 px wide.
+msgctxt "ui.power.turbo_run"
+msgid "turbo run"
+msgstr "turbo run"
+
+#. Text id 64 (0x40). The power dialog's text, word-wrapped. "R" draws the R
+#. button.
+#. Widest shipped text: 493 px in the small font; the screen is 240 px wide.
+msgctxt "ui.power.super_body_slam.help"
+msgid ""
+"push R in mid-air to super body slam.  this destroys crates and nearby "
+"enemies."
+msgstr ""
+"druk in de lucht op R: super body slam maakt dozen kapot en vijanden af"
+
+#. Text id 65 (0x41). The power dialog's text, word-wrapped. "A" draws the A
+#. button.
+#. Widest shipped text: 278 px in the small font; the screen is 240 px wide.
+msgctxt "ui.power.double_jump.help"
+msgid "push A in mid-air to jump higher."
+msgstr "druk in de lucht op A voor een hogere sprong"
+
+#. Text id 66 (0x42). The power dialog's text, word-wrapped. "B" draws the B
+#. button.
+#. Widest shipped text: 403 px in the small font; the screen is 240 px wide.
+msgctxt "ui.power.tornado_spin.help"
+msgid "push B repeatedly to spin longer and temporarily float."
+msgstr "druk herhaaldelijk op B voor langer draaien en tijdelijk zweven"
+
+#. Text id 67 (0x43). The power dialog's text, word-wrapped. "L" draws the L
+#. button.
+#. Widest shipped text: 299 px in the small font; the screen is 240 px wide.
+msgctxt "ui.power.turbo_run.help"
+msgid "hold L for a burst of speed."
+msgstr "houd L ingedrukt voor snelheidsinjectie"
+
+#. Text id 68 (0x44). No GetUiText call with this id has been found yet.
+#. Widest shipped text: 35 px in the small font; the screen is 240 px wide.
+msgctxt "ui.misc.bonus"
+msgid "bonus"
+msgstr "bonus"
+
+#. Text id 69 (0x45). No GetUiText call with this id has been found yet.
+#. Widest shipped text: 35 px in the small font; the screen is 240 px wide.
+msgctxt "ui.misc.pause"
+msgid "pause"
+msgstr "pause"
+
+#. Cutscene 1, page 0 (over games/xs/graphics/cutscenes/00_space_station.png).
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene01.page0.0"
+msgid "on a mysterious space station orbiting high above the earth ..."
+msgstr "op een geheimzinnig ruimtestation, in een baan hoog boven de aarde ..."
+
+#. Cutscene 1, page 1 (over
+#. games/xs/graphics/cutscenes/01_uka_uka_and_cortex.png).
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene01.page1.0"
+msgid ""
+"uka uka:  cortex, remind me why i keep you around.  you have failed me one "
+"too many times."
+msgstr ""
+"uka uka: cortex, ik snap zelf niet waarom ik je niet wegstuur! nu heb je me "
+"voor het laatst teleurgesteld!"
+
+#. Cutscene 1, page 2 (over games/xs/graphics/cutscenes/02_cortex.png).
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene01.page2.0"
+msgid ""
+"cortex:  uka uka!  forgive me ...  i've been wasting all these years trying "
+"to vanquish that brainless bandicoot!  he is of no importance to us ...  we "
+"want to take over the world!"
+msgstr ""
+"cortex: uka uka! vergeef me ... ik heb jaren verspild aan het uitschakelen "
+"van die stompzinnige bandicoot! maar hij is niet belangrijk ... wij zullen "
+"over de wereld heersen!"
+
+#. Cutscene 1, page 3 (over
+#. games/xs/graphics/cutscenes/01_uka_uka_and_cortex.png), string 1 of 2.
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene01.page3.0"
+msgid ""
+"uka uka:  i've heard it all before, little scientist!  what is so different "
+"this time?"
+msgstr ""
+"uka uka:  ach professortje, dat heb ik al zo vaak gehoord!  waarom zou ik je "
+"nu geloven?"
+
+#. Cutscene 1, page 3 (over
+#. games/xs/graphics/cutscenes/01_uka_uka_and_cortex.png), string 2 of 2.
+msgctxt "cutscene01.page3.1"
+msgid ""
+"cortex:  trust me uka, i have a little plan to bring earth's puny "
+"inhabitants down to size ..."
+msgstr ""
+"cortex: vertrouw me nu maar, uka, ik heb een duivels plan ontwikkeld om de "
+"aardebewoners een kopje kleiner te maken ..."
+
+#. Cutscene 2, page 0 (over games/xs/graphics/cutscenes/00_space_station.png).
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene02.page0.0"
+msgid "cortex:  at last, my planetary minimizer is complete!"
+msgstr "cortex: eindelijk is mijn planetenverkleiner klaar!"
+
+#. Cutscene 2, page 1 (over
+#. games/xs/graphics/cutscenes/03_cortex_hologram.png).
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene02.page1.0"
+msgid "cortex: earthlings will bow to my superior intellect!"
+msgstr ""
+"cortex: de bewoners van de aarde zullen het afleggen tegen mijn superieure "
+"intellect!"
+
+#. Cutscene 2, page 2 (over
+#. games/xs/graphics/cutscenes/04_minimizer_console.png).
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene02.page2.0"
+msgid "cortex:  muahahahahaha!"
+msgstr "cortex: muahahahahaha!"
+
+#. Cutscene 2, page 5 (over
+#. games/xs/graphics/cutscenes/07_cortex_on_monitors.png).
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene02.page5.0"
+msgid ""
+"cortex:  finally, after all these years of abuse, the tables have turned!  "
+"who's the little guy now?  i, neo cortex, am your ruler.  you will look up "
+"to me!  hahaha!"
+msgstr ""
+"cortex: na vele jaren ellende ben ik nu eindelijk de baas! wie is nu de "
+"zwakkeling? ik, neo cortex, ben je heerser. je zult tegen mij opkijken!  "
+"hahaha!"
+
+#. Cutscene 2, page 7 (over
+#. games/xs/graphics/cutscenes/08_aku_aku_crash_and_coco.png), string 1 of 2.
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene02.page7.0"
+msgid ""
+"aku:  crash, coco, the world needs your help.  cortex has shrunk our planet "
+"to the size of a grapefruit.  we must stop him."
+msgstr ""
+"aku: crash, coco, de wereld heeft jullie nodig.  cortex heeft onze planeet "
+"verkleind tot het formaat van een grapefruit.  we moeten hem tegenhouden."
+
+#. Cutscene 2, page 7 (over
+#. games/xs/graphics/cutscenes/08_aku_aku_crash_and_coco.png), string 2 of 2.
+msgctxt "cutscene02.page7.1"
+msgid ""
+"coco:  it looks as if cortex is using the crystals to power his shrinking "
+"machine ...  crash, if you can find the proper crystals from around the "
+"world, i think i can build a device to reverse the effects."
+msgstr ""
+"coco:  het lijkt erop dat cortex de kristallen gebruikt als brandstof voor "
+"zijn verkleiningsmachine. crash, als jij de juiste kristallen die over de "
+"wereld verspreid zijn op kunt halen, kan ik een machine bouwen om het effect "
+"tegen te gaan."
+
+#. Cutscene 2, page 6 (over
+#. games/xs/graphics/cutscenes/09_cortex_holding_earth.png).
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene02.page6.0"
+msgid ""
+"cortex:  i have finally won!  now nothing can stop me, not even that little "
+"bandicoot!"
+msgstr ""
+"cortex: eindelijk heb ik gewonnen!  niemand kan me nu meer stoppen, zelfs "
+"die kleine bandicoot niet!"
+
+#. Cutscene 2, page 8 (over games/xs/graphics/cutscenes/10_aku_aku.png).
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene02.page8.0"
+msgid ""
+"aku:  good luck crash.  you must find the crystals so we can put an end to "
+"cortex's evil scheme."
+msgstr ""
+"aku: succes, crash.  we moeten de kristallen zoeken, zodat we een stokje "
+"kunnen steken voor de plannen van cortex."
+
+#. Cutscene 3, page 0 (over
+#. games/xs/graphics/cutscenes/11_cortex_on_screen.png).
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene03.page0.0"
+msgid ""
+"cortex:  i know what you are trying to do bandicoot - but it's not going to "
+"work.  my minions will be ready for you!"
+msgstr ""
+"cortex:  ik begrijp best wat je probeert te doen, bandicoot, maar het lukt "
+"je toch niet. mijn helpers staan al op je te wachten!"
+
+#. Cutscene 4, page 0 (over
+#. games/xs/graphics/cutscenes/11_cortex_on_screen.png).
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene04.page0.0"
+msgid ""
+"cortex:  meddling marsupial!  you got lucky this time ...  my henchmen won't "
+"be so easy on you in the future."
+msgstr ""
+"cortex: vervelend buideldier! je hebt gewoon geluk gehad, de volgende keer "
+"zullen mijn handlangers het je niet zo gemakkelijk maken."
+
+#. Cutscene 5, page 0 (over games/xs/graphics/cutscenes/12_coco_on_screen.png).
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene05.page0.0"
+msgid ""
+"coco:  great job crash!  i have half the crystals.  now bring me the rest of "
+"them, so i can finish my machine - but be careful, cortex is watching you!"
+msgstr ""
+"coco:  prima, crash!  ik heb nu de helft van de kristallen. ga je de rest "
+"even zoeken, dan kan ik mijn machine afmaken. maar wees wel voorzichtig, "
+"want cortex houdt je in de gaten!"
+
+#. Cutscene 6, page 0 (over
+#. games/xs/graphics/cutscenes/01_uka_uka_and_cortex.png).
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene06.page0.0"
+msgid ""
+"uka:  cortex, i knew this would happen!  crash has defeated three of your "
+"stooges!  he must be stopped.  i will not tolerate another failure."
+msgstr ""
+"uka: cortex, ik wist dat dit zou gebeuren!  crash heeft drie van je knechten "
+"verslagen. we moeten hem tegenhouden. ik accepteer geen nederlaag meer."
+
+#. Cutscene 6, page 1 (over games/xs/graphics/cutscenes/02_cortex.png).
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene06.page1.0"
+msgid ""
+"cortex:  uka ...  i'm sorry!  however, do not be overly concerned - my "
+"planetary minimizer will stop him!"
+msgstr ""
+"cortex: uka ... het spijt me, maar maak je niet al te veel zorgen, mijn "
+"planetenvernietiger maakt hem wel een kopje kleiner."
+
+#. Cutscene 7, page 0 (over games/xs/graphics/cutscenes/12_coco_on_screen.png).
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene07.page0.0"
+msgid ""
+"coco:  okay crash, i have all of the crystals, but i need you to destroy the "
+"shrinking machine before i can return earth to its original state.  i'll use "
+"the enlarger to make you big enough to take on cortex!"
+msgstr ""
+"coco:  oké crash, ik heb alle kristallen, maar ik kan de aarde pas "
+"herstellen als je de verkleiningsmachine hebt vernietigd. ik zal de "
+"vergroter gebruiken, zodat je groot genoeg bent om het tegen cortex op te "
+"nemen!"
+
+#. Cutscene 10, page 0 (over
+#. games/xs/graphics/cutscenes/13_minimizer_overload.png).
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene10.page0.0"
+msgid "cortex:  you fool!  it will take me forever to fix this mess!"
+msgstr ""
+"cortex: idioot!  ik heb jaren nodig om dat allemaal weer recht te trekken!"
+
+#. Cutscene 8, page 0 (over
+#. games/xs/graphics/cutscenes/13_minimizer_overload.png).
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene08.page0.0"
+msgid ""
+"cortex:  you idiot!  what have you done?  you have destroyed the stabilizer "
+"crystals!  the unrestrained power of the minimizer is highly unpredictable!"
+msgstr ""
+"cortex: stomkop!  wat heb je gedaan?!  je hebt de stabiliserende kristallen "
+"vernietigd! nu is de kracht van de verkleiner totaal onvoorspelbaar!"
+
+#. Cutscene 8, page 1 (over games/xs/graphics/cutscenes/14_bosses_shocked.png).
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene08.page1.0"
+msgid "arrgh!  ahhh!!!"
+msgstr "arrgh!  ahhh!!!"
+
+#. Cutscene 8, page 2 (over games/xs/graphics/cutscenes/15_monster.png).
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene08.page2.0"
+msgid "monster:  what have you done to us?"
+msgstr "monster: wat heb je met ons gedaan?!"
+
+#. Cutscene 8, page 3 (over
+#. games/xs/graphics/cutscenes/16_monster_and_crash.png).
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene08.page3.0"
+msgid "monster:  you will pay little bandicoot!"
+msgstr "monster: daar zul je voor boeten, kleine bandicoot!"
+
+#. Cutscene 9, page 1 (over
+#. games/xs/graphics/cutscenes/18_coco_at_enlarger.png).
+#. Also shown as cutscene 10's page 2.
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene09.page1.0"
+msgid ""
+"coco:  super!  you got all the crystals!  let's hope there's enough power in "
+"these to reverse cortex's dirty work."
+msgstr ""
+"coco:  wauw! je hebt alle kristallen! nou maar hopen dat ze krachtig genoeg "
+"zijn om de acties van cortex ongedaan te maken ..."
+
+#. Cutscene 9, page 5 (over games/xs/graphics/cutscenes/22_reversed_beam.png).
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene09.page5.0"
+msgid "the end?!"
+msgstr "the end?!"
+
+#. Cutscene 10, page 5 (over games/xs/graphics/cutscenes/10_aku_aku.png).
+#. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
+#. box (3 lines) under the picture; longer text goes on after a key press.
+msgctxt "cutscene10.page5.0"
+msgid ""
+"aku:  crash, you've done well ...  but cortex is still a threat to us, as "
+"his space station and planetary minimizer have not been destroyed.  you must "
+"go back and retrieve the gems and relics from each location."
+msgstr ""
+"aku: crash, prima ... maar we zijn nog niet van cortex af, want we hebben "
+"zijn ruimtestation en de planetenverkleiner nog niet vernietigd. je moet "
+"teruggaan en alle edelstenen ophalen."
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.developed_by"
+msgid "developed by"
+msgstr "developed by"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.executive_producers"
+msgid "executive producers"
+msgstr "executive producers"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.executive_producers.names"
+msgid ""
+"karthik bala\n"
+"tobi saulnier"
+msgstr ""
+"karthik bala\n"
+"tobi saulnier"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.project_managers"
+msgid "project managers"
+msgstr "project managers"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.project_managers.names"
+msgid ""
+"karthik bala\n"
+"jesse booth\n"
+"mike meischeid"
+msgstr ""
+"karthik bala\n"
+"jesse booth\n"
+"mike meischeid"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.game_design"
+msgid "game design"
+msgstr "game design"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.game_design.names"
+msgid ""
+"luis barriga\n"
+"karthik bala"
+msgstr ""
+"luis barriga\n"
+"karthik bala"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.additional_game_design"
+msgid "additional game design"
+msgstr "additional game design"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.additional_game_design.names"
+msgid ""
+"theodore bialek\n"
+"christopher winters\n"
+"chris degnan\n"
+"benjamin raymond\n"
+"jonathan russell"
+msgstr ""
+"theodore bialek\n"
+"christopher winters\n"
+"chris degnan\n"
+"benjamin raymond\n"
+"jonathan russell"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.programming"
+msgid "programming"
+msgstr "programming"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.programming.names"
+msgid ""
+"nate trost\n"
+"robert trevellyan\n"
+"alex rybakov\n"
+"jesse raymond\n"
+"chris pruett\n"
+"jesse booth\n"
+"viktor kuzmin"
+msgstr ""
+"nate trost\n"
+"robert trevellyan\n"
+"alex rybakov\n"
+"jesse raymond\n"
+"chris pruett\n"
+"jesse booth\n"
+"viktor kuzmin"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.graphics"
+msgid "graphics"
+msgstr "graphics"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.graphics.names"
+msgid ""
+"steve derrick\n"
+"theodore bialek\n"
+"christopher winters\n"
+"mei he\n"
+"jason harlow\n"
+"carl schell\n"
+"jim powell\n"
+"wes merritt\n"
+"jorge diaz\n"
+"florian freisleder"
+msgstr ""
+"steve derrick\n"
+"theodore bialek\n"
+"christopher winters\n"
+"mei he\n"
+"jason harlow\n"
+"carl schell\n"
+"jim powell\n"
+"wes merritt\n"
+"jorge diaz\n"
+"florian freisleder"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.audio"
+msgid "audio"
+msgstr "audio"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.audio.names"
+msgid ""
+"manfred linzner\n"
+"todd masten"
+msgstr ""
+"manfred linzner\n"
+"todd masten"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.vv_thanks"
+msgid ""
+"vicarious visions\n"
+"would like to thank"
+msgstr ""
+"vicarious visions\n"
+"would like to thank"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.thanks.red_eye_studios"
+msgid ""
+"red eye studios\n"
+"for aiding and abetting\n"
+"in graphics, animation\n"
+"and design"
+msgstr ""
+"red eye studios\n"
+"for aiding and abetting\n"
+"in graphics, animation\n"
+"and design"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.thanks.cosmigo"
+msgid ""
+"cosmigo\n"
+"for nefarious\n"
+"coding support"
+msgstr ""
+"cosmigo\n"
+"for nefarious\n"
+"coding support"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.thanks.shinen"
+msgid ""
+"shin'en multimedia\n"
+"for composing\n"
+"killer tunes"
+msgstr ""
+"shin'en multimedia\n"
+"for composing\n"
+"killer tunes"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.and_last_but_not_least"
+msgid "and last but not least"
+msgstr "and last but not least"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.and_last_but_not_least.names"
+msgid ""
+"guha bala\n"
+"nehme frangie\n"
+"kerry coffey\n"
+"lauren costello\n"
+"\n"
+"dawn harrington\n"
+"matt conte\n"
+"eric caraszi\n"
+"team baisoku \n"
+"\n"
+"daniel suarez\n"
+"sean krankel\n"
+"phillipe erwin\n"
+"vijay lakshman\n"
+"naughty dog"
+msgstr ""
+"guha bala\n"
+"nehme frangie\n"
+"kerry coffey\n"
+"lauren costello\n"
+"\n"
+"dawn harrington\n"
+"matt conte\n"
+"eric caraszi\n"
+"team baisoku \n"
+"\n"
+"daniel suarez\n"
+"sean krankel\n"
+"phillipe erwin\n"
+"vijay lakshman\n"
+"naughty dog"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.published_by"
+msgid "published by"
+msgstr "published by"
+
+#. The credits: lines, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.publisher"
+msgid "universal interactive"
+msgstr "universal interactive"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.vice_president_of_production"
+msgid ""
+"vice president\n"
+"of production"
+msgstr ""
+"vice president\n"
+"of production"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.vice_president_of_production.names"
+msgid "vijay lakshman"
+msgstr "vijay lakshman"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.senior_producer"
+msgid "senior producer"
+msgstr "senior producer"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.senior_producer.names"
+msgid "daniel suarez"
+msgstr "daniel suarez"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.producer"
+msgid "producer"
+msgstr "producer"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.producer.names"
+msgid "sean krankel"
+msgstr "sean krankel"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.production_coordinator"
+msgid "production coordinator"
+msgstr "production coordinator"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.production_coordinator.names"
+msgid "carlos schulte"
+msgstr "carlos schulte"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.additional_production_support"
+msgid ""
+"additional\n"
+"production support"
+msgstr ""
+"additional\n"
+"production support"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.additional_production_support.names"
+msgid ""
+"sean mountain\n"
+"nick torchia"
+msgstr ""
+"sean mountain\n"
+"nick torchia"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.additional_sound_effects"
+msgid ""
+"additional\n"
+"sound effects"
+msgstr ""
+"additional\n"
+"sound effects"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.additional_sound_effects.names"
+msgid "universal sound studios"
+msgstr "universal sound studios"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.vice_president_of_global_marketing"
+msgid ""
+"vice president\n"
+"of global marketing"
+msgstr ""
+"vice president\n"
+"of global marketing"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.vice_president_of_global_marketing.names"
+msgid "torrie dorrell"
+msgstr "torrie dorrell"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.sr_product_manager"
+msgid "sr. product manager"
+msgstr "sr. product manager"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.sr_product_manager.names"
+msgid "craig howe"
+msgstr "craig howe"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.associate_product_manager"
+msgid ""
+"associate\n"
+"product manager"
+msgstr ""
+"associate\n"
+"product manager"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.associate_product_manager.names"
+msgid "marcus savino"
+msgstr "marcus savino"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.marketing_coordinator"
+msgid "marketing coordinator"
+msgstr "marketing coordinator"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.marketing_coordinator.names"
+msgid "jason covey"
+msgstr "jason covey"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.senior_manager_public_relations"
+msgid ""
+"senior manager\n"
+"public relations"
+msgstr ""
+"senior manager\n"
+"public relations"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.senior_manager_public_relations.names"
+msgid "alex skillman"
+msgstr "alex skillman"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.jr_publicist"
+msgid "jr. publicist"
+msgstr "jr. publicist"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.jr_publicist.names"
+msgid "sandra shagat"
+msgstr "sandra shagat"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.director_of_promotions"
+msgid "director of promotions"
+msgstr "director of promotions"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.director_of_promotions.names"
+msgid "chandra hill"
+msgstr "chandra hill"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.creative_services_supervisor"
+msgid ""
+"creative services\n"
+"supervisor"
+msgstr ""
+"creative services\n"
+"supervisor"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.creative_services_supervisor.names"
+msgid "michael sequeira"
+msgstr "michael sequeira"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.testing"
+msgid "testing"
+msgstr "testing"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.testing.names"
+msgid "absolute quality inc."
+msgstr "absolute quality inc."
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.localisation"
+msgid "localisation"
+msgstr "localisation"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.localisation.names"
+msgid ""
+"david hickey\n"
+"thorsten stichweh\n"
+"conor harlow\n"
+"john macguill\n"
+"james mcmanus\n"
+"fiona wilson"
+msgstr ""
+"david hickey\n"
+"thorsten stichweh\n"
+"conor harlow\n"
+"john macguill\n"
+"james mcmanus\n"
+"fiona wilson"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.special_thanks"
+msgid "special thanks"
+msgstr "special thanks"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.special_thanks.names"
+msgid ""
+"bender-helper-impact\n"
+"big sesh studios\n"
+"grace baca\n"
+"letty cadena\n"
+"\n"
+"virginia fout\n"
+"scott johnson\n"
+"neal robison\n"
+"suzan rude\n"
+"\n"
+"ricci rukavina\n"
+"marcus sanford\n"
+"charles yam\n"
+"jim wilson\n"
+"\n"
+"luc vanhal\n"
+"ken cron\n"
+"agnès touraine\n"
+"sarah rico-zager"
+msgstr ""
+"bender-helper-impact\n"
+"big sesh studios\n"
+"grace baca\n"
+"letty cadena\n"
+"\n"
+"virginia fout\n"
+"scott johnson\n"
+"neal robison\n"
+"suzan rude\n"
+"\n"
+"ricci rukavina\n"
+"marcus sanford\n"
+"charles yam\n"
+"jim wilson\n"
+"\n"
+"luc vanhal\n"
+"ken cron\n"
+"agnès touraine\n"
+"sarah rico-zager"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.kid_testers"
+msgid ""
+"vv special thanks\n"
+"to all our kid testers"
+msgstr ""
+"vv special thanks\n"
+"to all our kid testers"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.kid_testers.names"
+msgid ""
+"michael brunick\n"
+"steven brunick\n"
+"ande cappellano\n"
+"zach catel\n"
+"\n"
+"luke citriniti\n"
+"aaron costello\n"
+"erik cotch\n"
+"madison derrick\n"
+"\n"
+"morgan derrick\n"
+"emma eames\n"
+"steven eames\n"
+"lauren hagerty\n"
+"\n"
+"meghan hagerty\n"
+"michael hagerty\n"
+"joseph isaacson\n"
+"greg izzo\n"
+"\n"
+"george karathomas\n"
+"ryan kelton\n"
+"sean kelton\n"
+"dylan mac vane\n"
+"\n"
+"alaina montello\n"
+"kelsey saulnier\n"
+"ellen waggoner\n"
+"zahgyee whineglass"
+msgstr ""
+"michael brunick\n"
+"steven brunick\n"
+"ande cappellano\n"
+"zach catel\n"
+"\n"
+"luke citriniti\n"
+"aaron costello\n"
+"erik cotch\n"
+"madison derrick\n"
+"\n"
+"morgan derrick\n"
+"emma eames\n"
+"steven eames\n"
+"lauren hagerty\n"
+"\n"
+"meghan hagerty\n"
+"michael hagerty\n"
+"joseph isaacson\n"
+"greg izzo\n"
+"\n"
+"george karathomas\n"
+"ryan kelton\n"
+"sean kelton\n"
+"dylan mac vane\n"
+"\n"
+"alaina montello\n"
+"kelsey saulnier\n"
+"ellen waggoner\n"
+"zahgyee whineglass"

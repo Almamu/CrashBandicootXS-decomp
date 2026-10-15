@@ -1,0 +1,135 @@
+#include "game/level/bg_layer.hpp"
+
+extern "C" {
+#include "core.h"
+#include "engine/util/math_util.h"
+#include "game/level/level.h"
+#include "game/entities/sprite_flags.h"
+}
+
+using Game::Level::LevelLayers;
+
+/* GitHub issues #9/#10/#41's shared cross-reference: `ProbeHitboxEdgeTerrain`'s
+ * physics/collision step-probe (`engine/src/game/entities/moving_sprite_probe.cpp`, see
+ * `docs/matching/archive/naked-spatial-grid-tail.md`) and `PlayerHasRoomForAnim`'s
+ * input-action-check gate (`engine/src/game/crash/player_anim_room.c`, see
+ * `docs/matching/archive/issue-9-10-0x0800aaec-graphics.md`) both flagged this
+ * function as "still unexamined" from their own call sites.
+ * `docs/rom_map.md` (line ~2472) had already sketched it as "an
+ * umbrella 5-mode dispatcher unifying the already-documented
+ * `ProbeTerrainX`/`ProbeTerrainY` collision resolvers under one API" - this
+ * pass confirms that shape exactly (modulo it being 4 real dispatch
+ * arms, not 5 - see below) and closes it as real matched C.
+ *
+ * `mode` (a PART_DIR_* direction, sprite_flags.h; #843) selects one of two
+ * axis resolvers and the collision mode (TERRAIN_MODE_*, level.h) and,
+ * for three of the four modes, a cheap out-of-range short-circuit that
+ * skips the tile scan entirely:
+ *
+ *   - `mode == 2`: if `pos->x < 0`, clamps `*outValue = 0` and reports
+ *     a hit immediately (the probe position is already off the left
+ *     edge of the loaded region - nothing to scan). Otherwise calls
+ *     `ProbeX(pos, span, outValue, TERRAIN_MODE_LEFT)`.
+ *   - `mode == 1`: reads `self+0x10`'s pointed-to record's own `+0x10`
+ *     field (`bounds->widthPx` below - a right/loaded-region edge, plain
+ *     ints, not Q8, matching `pos`'s own units). If `pos->x` is past
+ *     it, clamps `*outValue = bound << 8` and reports a hit without
+ *     scanning. Otherwise calls `ProbeX(pos, span,
+ *     outValue, 1)`.
+ *   - `mode == 4`: always calls `ProbeY(pos, span,
+ *     outValue, 2)` - no short-circuit for this arm.
+ *   - `mode == 8`: same shape as `mode == 1` but on the Y axis
+ *     (`bounds->heightPx`, `pos->y`), calling `ProbeY(pos,
+ *     span, outValue, 0)` when not already past the bound.
+ *   - any other `mode` (in practice just `0`): returns `0` with no
+ *     side effects.
+ *
+ * `ProbeTerrainX`/`ProbeTerrainY` (both still raw, `asm/code_3_2_17_266bc.s`)
+ * are `docs/rom_map.md`'s already-documented "horizontal/vertical
+ * collision-resolver pair": each iterates a run of tiles along one axis
+ * via `GetSolidTerrainHeights` (matched, `engine/src/game/level/tile_cache.cpp`) and, on a
+ * solid hit, accumulates a `±(tile_edge_distance << 8)` push-out delta
+ * into `*outValue`. Reading their own raw bytes alongside this
+ * function confirms which axis each one actually resolves:
+ * `ProbeTerrainY` scans `pos->x` over `[x, x+span-1]>>3` at a fixed
+ * `pos->y>>3` row (a horizontal tile-row scan - floor/ceiling
+ * detection, i.e. the *vertical*-position resolver, matching this
+ * function's own `mode == 4`/`8` -> Y-axis pairing above), while
+ * `ProbeTerrainX` scans `pos->y` over the same span at a fixed
+ * `pos->x>>3` column (a vertical tile-column scan - wall detection,
+ * the *horizontal*-position resolver, matching `mode == 1`/`2` ->
+ * X-axis above). The `submode` passed as each resolver's 5th
+ * (stack) argument selects which of the two push directions along
+ * that axis to apply on a hit (`ProbeTerrainX`: `1` = push left/negative
+ * X, `3` = push right/positive X + a 1-unit epsilon; `ProbeTerrainY`:
+ * `0`/`2` are its own push-up/push-down pair, mirroring the same
+ * idiom on the Y axis) - `mode`'s four values (`1`/`2`/`4`/`8`) map to
+ * `submode` `1`/`3`/`2`/`0` respectively, a non-monotonic mapping this
+ * function's own dispatch just hard-codes per arm rather than deriving
+ * arithmetically.
+ *
+ * Confirmed against both flagged call sites: `ProbeHitboxEdgeTerrain` passes a
+ * plain-int (not Q8) `{x, y}` position it just computed via
+ * `OffsetToHitboxEdgeStart`, matching `pos`'s units here; `PlayerHasRoomForAnim` passes
+ * `self+0x28` bit 4 (mirror flag) as a `1`/`2` selector - exactly this
+ * function's `mode` values `1`/`2` (the X-axis/`ProbeTerrainX` arms) -
+ * confirming `mode` really is a small enumerated selector, not a
+ * literal bitmask combined at runtime (`mode`'s four handled values
+ * happen to be powers of two, but no caller ever ORs two together;
+ * they're four mutually exclusive probe directions, not flag bits).
+ *
+ * Real bytes formerly the middle of `asm/code_3_2_17_25fc8.s` (that
+ * file is now trimmed to end right after `SetTileSlotPoolSource`); the
+ * remainder from `LoadRoom` onward (still raw, unexamined this
+ * session, including `ProbeTerrainX`/`ProbeTerrainY` themselves) moved to
+ * the new `asm/code_3_2_17_266bc.s`. */
+
+/* `this` is gLevelLayers; the bounds are layer 0's `widthPx`/`heightPx`
+ * (BgLayerBase's), the right/lower edge of the level, compared
+ * directly against the caller's plain-int probe position, not Q8. */
+bool LevelLayers::Probe(s32 mode, struct vec2 *pos, s32 span, s32 *outValue)
+{
+    s32 hit = 0;
+
+    switch (mode) {
+    case PART_DIR_LEFT:
+        if (pos->x < 0) {
+            *outValue = 0;
+            hit = 1;
+        } else if (ProbeX(pos, span, outValue, TERRAIN_MODE_LEFT)) {
+            hit = 1;
+        }
+        break;
+    case PART_DIR_RIGHT:
+        {
+            s32 bound = layer0->widthPx;
+            if (pos->x > bound) {
+                *outValue = INT_TO_Q8(bound);
+                hit = 1;
+            } else if (ProbeX(pos, span, outValue, mode)) { // mode: TERRAIN_MODE_RIGHT
+                hit = 1;
+            }
+            break;
+        }
+    case PART_DIR_UP:
+        if (ProbeY(pos, span, outValue, TERRAIN_MODE_UP)) {
+            hit = 1;
+        }
+        break;
+    case PART_DIR_DOWN:
+        {
+            s32 bound = layer0->heightPx;
+            if (pos->y > bound) {
+                *outValue = INT_TO_Q8(bound);
+                hit = 1;
+            } else if (ProbeY(pos, span, outValue, TERRAIN_MODE_DOWN)) {
+                hit = 1;
+            }
+            break;
+        }
+    default:
+        break;
+    }
+
+    return hit;
+}

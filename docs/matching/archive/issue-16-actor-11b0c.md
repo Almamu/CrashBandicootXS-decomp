@@ -6,7 +6,7 @@ different systems by content, not by address contiguity:
 - **The leading 15 functions (`DrawWumpa`-`ResetActionCtrl`, matched
   here)** all operate on plain `struct actor` (`table@0x18`,
   `flags@0xc`, `field_08@8`, `x@0`, `y@4` - the exact layout
-  `include/engine/actor/actor.h` and the files using it already established), extended
+  `engine/include/engine/actor/actor.h` and the files using it already established), extended
   with a handful of not-yet-characterized fields beyond its own 0x1c
   bytes (`+0x38`, `+0x48`-`0x4b`, `+0x4c`-`0x50`). This is squarely
   `actor`, matching `docs/status/README.md`'s note that several
@@ -24,7 +24,7 @@ different systems by content, not by address contiguity:
 
 `asm/code_3_2_17_e560.s` is truncated to end right before `DrawWumpa`
 (0x080119A8, unchanged start address). The 15 matched functions move to
-a new `src/graphics/actor_part39.c`, now `src/game/objects/wumpa.c` (numbered
+a new `engine/src/graphics/actor_part39.c`, now `engine/src/game/objects/wumpa.c` (numbered
 `39` - the next free number after `actor_part38d.c`, this repo's highest
 existing `actor_part*.c` at the time this chunk was picked up). A new
 `asm/code_3_2_17_11bd4.s` picks up the unexamined remainder starting at

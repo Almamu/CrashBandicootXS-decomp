@@ -13,8 +13,8 @@ byte pair at `self+0x10`/`self+0x12`, an accumulator at `self+8`, a
 "part table" pointer at `self+0`, and an event/trampoline table pointer
 at `self+0x50`.
 
-New file: `src/graphics/actor_part129.c`, now
-`src/vehicle/jetpack_crates.c` (checked both the highest
+New file: `engine/src/graphics/actor_part129.c`, now
+`engine/src/vehicle/jetpack_crates.c` (checked both the highest
 `actor_part<N>.c` on disk, sorted numerically, and the highest
 `actor_part<N>.o` referenced in `ldscript.txt` before picking `129` -
 both agreed the highest in-use number was `128`).
@@ -275,5 +275,5 @@ the first half of.
 A later pass promoted `UpdateJetpackBalloonCrate`/`RunJetpackBalloonCrateState` (`jetpack_crates.c`) from NAKED to real C. The "r7 table-base"
 shape was gcc 2.x's pointer-to-member-function call
 `(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
-`include/actor_self.h` reproduces with no register pins. See
+`engine/include/actor_self.h` reproduces with no register pins. See
 [pmf-dispatch-retry.md](pmf-dispatch-retry.md).

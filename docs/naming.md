@@ -22,7 +22,7 @@ function, match *that* name's casing over generic PascalCase rules.
 ## Exception: snake_case for the memory allocator
 
 `mem_alloc`/`mem_free`/`mem_heap_init`/`mem_collect`/`mem_free_bytes` (and
-their `static` helpers) in `src/engine/sys/memory.cpp` intentionally use
+their `static` helpers) in `engine/src/engine/sys/memory.cpp` intentionally use
 snake_case, matching the `malloc`/`free`-style C standard library
 convention they mirror. This is a **deliberate exception for this specific
 subsystem**, not a general "system-level code can be snake_case" rule -
@@ -73,7 +73,7 @@ normal conventions. See [`docs/audio.md`](./audio.md#engine-api-names).
 
 A function can turn out to be genuinely dead code - nothing in the whole
 ROM (`bl`/`.4byte` reference) ever calls it, confirmed by grepping every
-`asm/*.s`/`games/xs/expected/*.s`/`src/**/*.c` for its address/symbol before
+`asm/*.s`/`games/xs/expected/*.s`/`engine/src/**/*.c` for its address/symbol before
 concluding this, not just the files nearby. This does **not** mean skip
 matching it - it still goes through the full workflow.md loop like any
 other function, since it's still real code that shipped in the ROM and its
@@ -108,7 +108,7 @@ honest placeholder, since other code and docs will start depending on it.
 1. The function's own definition and prototype.
 2. Its declaration in the owning header (see
    [`docs/headers.md`](./headers.md)), any codegen alias's
-   `asm("<name>")` label, and every reference: `src/`, `lib/`, `asm/*.s`
+   `asm("<name>")` label, and every reference: `engine/src/`, `lib/`, `asm/*.s`
    (`bl <name>`/`.4byte <name>`), `games/xs/ldscript.txt` and `games/xs/sym_*.txt`.
 3. `docs/matching.md`'s per-function entry.
 4. If the function is covered by `games/xs/expected/code_3.s` or `games/xs/expected/legacy.s`
@@ -126,18 +126,18 @@ honest placeholder, since other code and docs will start depending on it.
 # Constants
 
 Named values (sound IDs, flag bits, states, kinds, ...) are `#define`s in
-`include/constants/<topic>.h`, one header per value set (#655). The
+`engine/include/constants/<topic>.h`, one header per value set (#655). The
 subsystem header that owns the type or the function includes it
 (`audio.hpp` includes `constants/sfx.h` and `constants/songs.h`,
 `level.h` includes `constants/level_flags.h`), so a source file gets
 the names with the header it already includes. A data table in
-`src/*/data/` may include a constants header directly.
+`engine/src/*/data/` may include a constants header directly.
 
 | Header | Prefix | What |
 |---|---|---|
-| `sfx.h` (generated) | `SFX_` | sound-effect IDs (`PlaySfx`, `PlayAmbientSfx`, `StopSfx`), from `sound/sfx_table.json` |
-| `songs.h` (generated) | `SONG_` | song IDs, the `gSongTable` index (`PlaySong`, `StartSong`), from `sound/gax_manifest.json` |
-| `songs.h` (generated) | `SCREEN_SONG_` | the song a screen plays (a `SONG_` id), from `sound/music.json` ([audio.md, "Which song plays where"](./audio.md#which-song-plays-where)) |
+| `sfx.h` (generated) | `SFX_` | sound-effect IDs (`PlaySfx`, `PlayAmbientSfx`, `StopSfx`), from `games/xs/sound/sfx_table.json` |
+| `songs.h` (generated) | `SONG_` | song IDs, the `gSongTable` index (`PlaySong`, `StartSong`), from `games/xs/sound/gax_manifest.json` |
+| `songs.h` (generated) | `SCREEN_SONG_` | the song a screen plays (a `SONG_` id), from `games/xs/sound/music.json` ([audio.md, "Which song plays where"](./audio.md#which-song-plays-where)) |
 | `level_flags.h` | `LEVEL_FLAG_` | the bits of a `game_progress.levels[]` word |
 | `progress_flags.h` | `PROGRESS_FLAG_`, `PROGRESS_BIT_` | `GameProgress::flags`: the coloured gems and the powers ([docs/flags/progress.md](flags/progress.md)) |
 | `player.hpp` (next to Player) | `PLAYER_CTRL_MODE_` | `Player::ctrlMode`, the player's controller (on foot, underwater, hovering) ([docs/flags/player_ctrl_mode.md](flags/player_ctrl_mode.md)) |
@@ -160,7 +160,7 @@ the names with the header it already includes. A data table in
 | `crate.hpp` (next to `struct crate_placement` and Crate) | `CRATE_PLACEMENT_FLAG_`, `CRATE_PLACEMENT_BIT_`, `CRATE_PLACEMENT_OPTION_`, `CRATE_SLOT_FACE_`, `CRATE_BLAST_STATE_` | a crate's placement flags (bits 5-7 of the same byte) and options byte, and the slot crate's `paramA` faces ([docs/flags/entity_params.md](flags/entity_params.md)); an explosive crate's `blastState` (none, armed, blasted; [docs/flags/crate_blast.md](flags/crate_blast.md)) |
 | `level_state.hpp` (next to LevelProgress) | `CHECKPOINT_FLAG_` | `LevelProgress::checkpointFlags`, the respawn's X mirror ([docs/flags/entity_params.md](flags/entity_params.md)) |
 | `events.h` | `EVENT_` | event IDs (the event method's `case` labels, `NOTIFY`, the `handleEvent` slot calls); also the kinds that touched objects send |
-| `levels.h` (generated) | `LEVEL_` | level ids, the `gLevelTable` index, from `data/levels/levels.json` |
+| `levels.h` (generated) | `LEVEL_` | level ids, the `gLevelTable` index, from `games/xs/data/levels/levels.json` |
 | `rooms.h` | `ROOM_KIND_` | `struct level_room.kind` (on foot, underwater, hover, category stage) |
 | `rooms.h` | `ROOM_EXIT_` | how a room ended: PlayRoom's and InitActorCategory's result, UpdateGameFrame's `status` (cleared, retry, quit) ([docs/flags/room_exit.md](flags/room_exit.md)) |
 | `level_select.hpp` (next to each class) | `ZOOM_BG_STATE_`, `LEVEL_SELECT_CURSOR_STATE_` | the level select's `ZoomBg::state` (the picture's zoom) and `LevelSelectCursor::state` (idle cycle, grow, shrink) ([docs/flags/level_select.md](flags/level_select.md)) |
@@ -192,16 +192,16 @@ the names with the header it already includes. A data table in
 **Constants that describe data the repository has as source files are
 generated from those files**, not written by hand: the names live in the
 data, and the build writes the header into `build/include/constants/`,
-which is on the include path (after `include/`), so code includes it as
+which is on the include path (after `engine/include/`), so code includes it as
 `"constants/<topic>.h"` all the same. Every C object waits for the
 generated headers (an order-only prerequisite), and `-MMD` rebuilds the
 objects that include one when it changes. The entity types come from
-`data/levels/entity_types.json`, the crate kinds from
-`data/levels/crate_kinds.json` and the level ids from
-`data/levels/levels.json`'s `"levels"` list (`tools/levels.py constants`,
+`games/xs/data/levels/entity_types.json`, the crate kinds from
+`games/xs/data/levels/crate_kinds.json` and the level ids from
+`games/xs/data/levels/levels.json`'s `"levels"` list (`tools/levels.py constants`,
 see docs/levels.md). The sound-effect IDs come from the names in
-`sound/sfx_table.json` (`tools/sfx_table.py --constants`) and the song IDs
-from `sound/gax_manifest.json`'s `song_table` (`tools/gax_audio.py
+`games/xs/sound/sfx_table.json` (`tools/sfx_table.py --constants`) and the song IDs
+from `games/xs/sound/gax_manifest.json`'s `song_table` (`tools/gax_audio.py
 --constants`, see docs/audio.md). To rename one, edit the JSON.
 
 
@@ -256,7 +256,7 @@ confidence (`--json` for agents).
   plays has a name. One whose sound can't be identified from where it
   plays is `SFX_UNKNOWN_<ID>`, the ID in two upper-case hex digits
   (`SFX_UNKNOWN_2E` for 0x2E), and its `comment` in
-  `sound/sfx_table.json` says where it plays. The name doesn't depend on
+  `games/xs/sound/sfx_table.json` says where it plays. The name doesn't depend on
   any other entry, so it stays the same as other sounds get named. When
   you identify one (by ear in an emulator, say), rename it in the JSON
   and update its call sites; nothing else uses the placeholder.

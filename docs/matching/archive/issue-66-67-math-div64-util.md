@@ -25,7 +25,7 @@ happens to ship in").
   256-entry leading-zero-count table), and restores the sign on the
   64-bit quotient at the end. **UNUSED** - confirmed no caller anywhere
   in the ROM (every `asm/*.s`, `expected/code_3.s`, `expected/
-  legacy.s`, and every matched `src/*.c` file checked). Its unsigned
+  legacy.s`, and every matched `engine/src/*.c` file checked). Its unsigned
   sibling `__udivdi3` *is* called (from `GaxChannelInit`'s NAKED body) -
   plausibly both symbols shipped in the same compiled library object
   (a common `libgcc`-style shape), so pulling in the used one dragged

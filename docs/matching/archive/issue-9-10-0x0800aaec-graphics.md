@@ -15,7 +15,7 @@ see below) and closed both functions.
 
 ## Semantics
 
-### `PlayerHasRoomForAnim(void *self, s32 x)` - `src/game/crash/player_anim_room.c`
+### `PlayerHasRoomForAnim(void *self, s32 x)` - `engine/src/game/crash/player_anim_room.c`
 
 The input-action-check function the 42-slot `gActionCtrlStateTable`
 action-dispatch table's own entries (`ActionCtrlStateSlide` etc.) call for
@@ -38,14 +38,14 @@ their action codes `0xB`/`0x10` (`docs/rom_map.md` line 1713).
    `0` immediately.
 2. **Loop**: otherwise walks `gCrateList` (a `struct actor_list
    { s32 count; s32 unused_4; void **items; }`, the exact layout
-   `src/game/crates/crate_time_trial.c`'s `ConvertCratesForTimeTrial` already established) -
+   `engine/src/game/crates/crate_time_trial.c`'s `ConvertCratesForTimeTrial` already established) -
    for each `entry = items[i]`, tests `entry`'s own `+0x18`-table
    `+0x48` trampoline via `_call_via_r1(entry + *(s16*)(table+0x48),
    *(void**)(table+0x48+4))` (matched elsewhere). On state `3`, calls
    `PlayerAnimWouldTouchCrate(entry, x)`; if that returns `1`, returns `0`
    immediately. If the loop runs to completion, returns `1`.
 
-### `PlayerAnimWouldTouchCrate(void *self, s32 x)` - `src/crates/crate_touch.c`
+### `PlayerAnimWouldTouchCrate(void *self, s32 x)` - `engine/src/crates/crate_touch.c`
 
 `PlayerHasRoomForAnim`'s only callee, called once per list entry whose own
 `+0x18`-table trampoline reports state `3`.
@@ -79,7 +79,7 @@ object's own `+0x28` bits 4/5 are set (same mirror-flag convention):
   `+0x2d` - the player's hitbox *for the target action*.
 
 If AABB1 overlaps AABB2 (`AabbOverlapsInclusiveX`, the inclusive/touching-counts
-variant, `src/engine/util/aabb.cpp`), bails out and returns `0`
+variant, `engine/src/engine/util/aabb.cpp`), bails out and returns `0`
 immediately - `self`'s hitbox already overlaps the player's *current*
 hitbox, so this isn't a fresh trigger. Otherwise returns `1` only if
 AABB1 overlaps AABB3 - `self`'s hitbox overlaps the player's hitbox

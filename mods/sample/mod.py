@@ -158,7 +158,7 @@ def make_picture(path):
 # of frames 0-2 ("1"-"3").
 
 def add_number_icons(tree, numbers):
-    b = tree.path("graphics/sprites/bank51_level_select_icons")
+    b = tree.path("games/xs/graphics/sprites/bank51_level_select_icons")
     bank = json.loads((b / "bank.json").read_text())
     two = Image.open(b / "f001.png")
     steps = []
@@ -200,16 +200,16 @@ def swap_rg(v):
 
 
 def polar_obj_palette(tree):
-    src = tree.path("src/game/vehicles/polar/data/polar_anim_family.cpp").read_text()
+    src = tree.path("engine/src/game/vehicles/polar/data/polar_anim_family.cpp").read_text()
     body = src[src.index("gPolarCategoryPalette[0x200] = {"):]
     body = body[:body.index("};")]
     return [int(v, 16) for v in re.findall(r"0x([0-9A-Fa-f]{4})\b", body.split("{", 1)[1])][:256]
 
 
 def make_category_graphics(tree):
-    jasc_pal.write_jasc(tree.path("graphics/" + OBJ_PALETTE), [swap_rb(v) for v in polar_obj_palette(tree)])
-    src = tree.path("graphics/vehicles/polar/palette_cycle")
-    dst = tree.path("graphics/" + PALETTE_CYCLE)
+    jasc_pal.write_jasc(tree.path("games/xs/graphics/" + OBJ_PALETTE), [swap_rb(v) for v in polar_obj_palette(tree)])
+    src = tree.path("games/xs/graphics/vehicles/polar/palette_cycle")
+    dst = tree.path("games/xs/graphics/" + PALETTE_CYCLE)
     dst.mkdir()
     for k in range(32):
         frame = jasc_pal.read_jasc(src / ("%02d.pal" % k))
@@ -223,7 +223,7 @@ def make_category_graphics(tree):
 
 def make_room(tree):
     tree.copy_room("jungle_jam/main", ROOM, {"gRoom17": "gRoom41", "gLevelRoom17": "gLevelRoom41"})
-    p = tree.path("data/levels/" + ROOM + "/bg0.png")
+    p = tree.path("games/xs/data/levels/" + ROOM + "/bg0.png")
     img = Image.open(p)
     x0, y0 = 4 * 8, 44 * 8  # a block of ground near the start marker (31, 363)
     for y in range(y0, y0 + 8):
@@ -236,15 +236,15 @@ def make_room(tree):
 
 def apply(tree):
     # the song and the theme that plays it
-    make_xm(tree.path("sound/songs/%s.xm" % SONG))
-    tree.path("sound/songs/%s.json" % SONG).write_text(json.dumps(
+    make_xm(tree.path("games/xs/sound/songs/%s.xm" % SONG))
+    tree.path("games/xs/sound/songs/%s.json" % SONG).write_text(json.dumps(
         {"title": "sample tune", "artist": "the sample mod"}, indent=2) + "\n")
-    with tree.json("sound/gax_manifest.json") as m:
+    with tree.json("games/xs/sound/gax_manifest.json") as m:
         m["song_table"].append({"song": SONG, "comment": "the sample mod's theme (THEME_SAMPLE) and cutscene"})
 
     # the graphics: the category's colours, the cutscene picture, the icons
     make_category_graphics(tree)
-    make_picture(tree.path("graphics/" + PICTURE))
+    make_picture(tree.path("games/xs/graphics/" + PICTURE))
     tree.add_graphics(
         {"path": OBJ_PALETTE, "kind": "category_palette", "symbol": "gSampleIceCategoryPalette", "colors": 256},
         {"path": PALETTE_CYCLE, "kind": "palette_cycle", "symbol": "gSampleIcePaletteCycleFrames", "frames": 32},
@@ -254,7 +254,7 @@ def apply(tree):
     add_number_icons(tree, [21, 22, 23])
 
     # the cutscene
-    with tree.json("data/cutscenes.json") as c:
+    with tree.json("games/xs/data/cutscenes.json") as c:
         c["slides"].append({"name": "sample_crate", "picture": PICTURE, "wait": 0, "fade": 0, "fade_after": 0,
                             "buttons": 1, "duck_music": 0, "rearm_sfx": 0, "song": "SONG_SAMPLE_TUNE",
                             "sfx": "SFX_NONE"})

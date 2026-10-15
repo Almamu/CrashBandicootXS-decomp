@@ -21,13 +21,13 @@ checks it, and `tools/boottest.py` plays shifted ROMs in mGBA.
   alignment), not from where they used to be. The one place that had a
   pad worked out by hand, the 2 zero bytes in front of the GAX2
   sound-effect set at 0x084C0006, is now the linker's fill in front of
-  a `.balign 4` (`data/data.s`); `gGaxSfxData` is at 0x084C0008, where
+  a `.balign 4` (`games/xs/data/data.s`); `gGaxSfxData` is at 0x084C0008, where
   the set starts.
 - **The IWRAM image** runs at 0x03000000, and the IWRAM variables after
   it are placed by `games/xs/sym_iwram.txt` at fixed offsets, starting with
   `gIntrTable` at 0x030009E8, right after the image. crt0 copies
   `gIntrTable - IntrMain_Buffer` bytes. So the image (IntrMain, the ARM
-  routines, `src/engine/sys/iwram_data.cpp`) can't grow past 0x9E8 bytes
+  routines, `engine/src/engine/sys/iwram_data.cpp`) can't grow past 0x9E8 bytes
   without moving those variables. EWRAM is laid out the same way
   (`games/xs/sym_ewram.txt`). That is RAM, not ROM: it doesn't limit the ROM's
   data.
@@ -133,7 +133,7 @@ Nothing else stores an address as a number:
 - crt0 and IntrMain use symbols (`__iwram_lma`, `gIntrTable`,
   `IntrMain_Buffer`, `AgbMain`) and hardware addresses only;
 - the C and C++ data's pointers are all relocations (`make shiftcheck`,
-  checks 1 and 3); `src/` has no ROM address literal outside comments,
+  checks 1 and 3); `engine/src/` has no ROM address literal outside comments,
   and the build-time tools (`levels.py`, `bin2c.py`, the graphics
   tools) write symbols, not addresses (their ROM addresses are for
   `extract`, which reads `baserom.gba`);

@@ -15,7 +15,7 @@ same ROM region rather than being part of the category system itself.
   status-icon OAM row via `ConfigureHudParts`.
 - `CountCategoryCrates` (`actor_category_stats.c`) - counts how many of the current
   category's `sub_effect_table` entries (`struct sub_effect_record`,
-  `include/engine/actor/actor_anim.h`) match one of two fixed `variantA` byte sets,
+  `engine/include/engine/actor/actor_anim.h`) match one of two fixed `variantA` byte sets,
   picked by the category's `type` field.
 - `AddActorMissedNitro`/`GetActorMissedNitros`/`GetActorCheckpoint` (`actor_category_stats.c`) - trivial
   frame-tick counter accessors.

@@ -2,7 +2,7 @@
 
 | Function | File | Issue | Before | After |
 |---|---|---|---|---|
-| `QueueCratePlayerCollision` | `src/game/crates/crate_break.c` | #12 | 938 hw, size-exact | 33 hw, size-exact, still NAKED |
+| `QueueCratePlayerCollision` | `engine/src/game/crates/crate_break.c` | #12 | 938 hw, size-exact | 33 hw, size-exact, still NAKED |
 
 All numbers are for old_agbcc (`crate_break.o` is on `OLD_AGBCC_OBJS`).
 The function doesn't match yet, so it stays NAKED. The improved draft is

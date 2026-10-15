@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # Splits the two category-family framed OBJ sprite sheets (gPolarSpriteSheet,
-# gJetpackSpriteSheet) into graphics/vehicles/<family>/sprite_sheet/<name>/
+# gJetpackSpriteSheet) into games/xs/graphics/vehicles/<family>/sprite_sheet/<name>/
 # folders of one indexed PNG per frame, replacing whatever is there, and
-# writes graphics/vehicles/<family>/sprite_sheet/sheet.json (the folders in
+# writes games/xs/graphics/vehicles/<family>/sprite_sheet/sheet.json (the folders in
 # the sheet's order, which records use each folder and
 # in which palette bank).
 #
@@ -25,12 +25,12 @@
 # Only the colours change with the bank: the build reads the 4-bit indices
 # (tools/framed_gfx.py), so the bank chosen never affects the ROM. A folder
 # drawn with several banks lists the others in sheet.json. The sheet's
-# graphics/manifest.json entry can pick another of them for a folder:
+# games/xs/graphics/manifest.json entry can pick another of them for a folder:
 # "folder_banks": {"<folder>": bank} (the jetpack explosion is drawn in the
 # explosion actor's bank 4, not the bomber's 2).
 #
 # Run this BEFORE tools/dump_entities.py (which resolves keyframes to the
-# PNGs present). The animation tables' frame arrays (data/levels/anim_tables/)
+# PNGs present). The animation tables' frame arrays (games/xs/data/levels/anim_tables/)
 # name frames by folder ("<folder>/<NN>", FRAMED_<SHEET>_<NAME>_<NN> in the C),
 # so renaming a folder means renaming its uses there.
 
@@ -46,8 +46,8 @@ sys.path.insert(0, os.path.dirname(__file__))
 from dump_entities import rd, hx, lz77_decompress  # noqa: E402
 
 FRAMED_GFX = os.path.join(os.path.dirname(__file__), 'framed_gfx.py')
-GRAPHICS_ROOT = os.path.join(os.path.dirname(__file__), '..', 'graphics', 'vehicles')
-MANIFEST = os.path.join(os.path.dirname(__file__), '..', 'graphics', 'manifest.json')
+GRAPHICS_ROOT = os.path.join(os.path.dirname(__file__), '..', 'games', 'xs', 'graphics', 'vehicles')
+MANIFEST = os.path.join(os.path.dirname(__file__), '..', 'games', 'xs', 'graphics', 'manifest.json')
 RECORD_SIZE = 40
 
 PALETTES = {
@@ -58,7 +58,7 @@ PALETTES = {
 
 # Folder names, keyed by the slots of the records that use the run; a slot
 # set that owns several runs lists their names in sheet order. The names are
-# the records' actor kinds (include/constants/actor_kinds.h) and what the
+# the records' actor kinds (engine/include/constants/actor_kinds.h) and what the
 # frames show.
 POLAR_NAMES = {
     (5,): ['time_crate_1'],
@@ -101,7 +101,7 @@ JETPACK_NAMES = {
     (25,): ['time_crate_2'],
     (26,): ['time_crate_3'],
     # the bomber's, the rocket's and the explosion actor's (banks 2, 5, 4);
-    # drawn in 4 (graphics/manifest.json's folder_banks)
+    # drawn in 4 (games/xs/graphics/manifest.json's folder_banks)
     (4, 5, 6, 7, 8, 9, 28, 30, 45): ['explosion'],
     (27,): ['parachute_nitro'],
     (44,): ['collected_wumpa'],
@@ -137,7 +137,7 @@ def sheet_frames(buf):
 def read_records(anim_base, slot_count, data_end):
     """(slot, table_B address, palette bank, [frame offsets]) of every record
     whose table_B holds sheet offsets. A table_B array runs to the next
-    array (or the table) any record points at, as src/.../data/ cuts them."""
+    array (or the table) any record points at, as engine/src/.../data/ cuts them."""
     raw = []
     starts = {anim_base, anim_base + slot_count * RECORD_SIZE, data_end}
     for slot in range(slot_count):
@@ -151,7 +151,7 @@ def read_records(anim_base, slot_count, data_end):
         end = min(s for s in starts if s > table_b)
         values = struct.unpack(f'<{(end - table_b) // 4}I', rd(table_b, end - table_b))
         if values[0] >= 0x08000000:
-            continue  # the player's compressed frames (graphics/vehicles/*/player.png)
+            continue  # the player's compressed frames (games/xs/graphics/vehicles/*/player.png)
         records.append((slot, table_b, bank, values))
     return records
 
