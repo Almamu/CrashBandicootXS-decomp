@@ -309,14 +309,60 @@
       "additionalProperties": false
     },
     "param_record": {
-      "type": "array",
-      "items": {
-        "type": "integer",
-        "minimum": 0,
-        "maximum": 4294967295
-      },
-      "minItems": 1,
-      "description": "the record's 32-bit words"
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's 32-bit words (the raw form)"
+        },
+        {
+          "$ref": "#/$defs/param_flags"
+        },
+        {
+          "$ref": "#/$defs/param_patrol"
+        },
+        {
+          "$ref": "#/$defs/param_cycle"
+        },
+        {
+          "$ref": "#/$defs/param_attack_first"
+        },
+        {
+          "$ref": "#/$defs/param_range_cycle"
+        },
+        {
+          "$ref": "#/$defs/param_range_attack_first"
+        },
+        {
+          "$ref": "#/$defs/param_range_homing_y"
+        },
+        {
+          "$ref": "#/$defs/param_wave"
+        },
+        {
+          "$ref": "#/$defs/param_homing_x"
+        },
+        {
+          "$ref": "#/$defs/param_homing_xy"
+        },
+        {
+          "$ref": "#/$defs/param_platform"
+        },
+        {
+          "$ref": "#/$defs/param_crate"
+        },
+        {
+          "$ref": "#/$defs/param_iron_switch_crate"
+        },
+        {
+          "$ref": "#/$defs/param_outline_crate"
+        }
+      ]
     },
     "entity": {
       "type": "object",
@@ -360,6 +406,906 @@
         "param"
       ],
       "additionalProperties": false
+    },
+    "param_flags": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "flags"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "the flags byte only: a spawner that reads no per-type words"
+    },
+    "param_patrol": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "patrol"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "range_x": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "p.patrol: the X range either side of the spawn point (SetRangeX)"
+    },
+    "param_cycle": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "cycle"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "idle_time": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "attack_time": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "cycle_offset": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "wave_amplitude": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "wave_period": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "wave_phase": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "p.cycle: the attack cycle (SetAttackCycle), then the wave (SetWave)"
+    },
+    "param_attack_first": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "attack_first"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "attack_time": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "idle_time": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "cycle_offset": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "p.attackFirst: the attack cycle, the attack's time first"
+    },
+    "param_range_cycle": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "range_cycle"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "range_x": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "idle_time": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "attack_time": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "cycle_offset": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "p.rangeCycle: the X range and the attack cycle"
+    },
+    "param_range_attack_first": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "range_attack_first"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "range_x": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "attack_time": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "idle_time": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "cycle_offset": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "p.rangeAttackFirst: the X range and the attack cycle, the attack first"
+    },
+    "param_range_homing_y": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "range_homing_y"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "range_x": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "range_y": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "speed_y": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "accel_y": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "p.rangeHomingY: the X range, and Y homing (SetRangeYSpeed)"
+    },
+    "param_wave": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "wave"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "amplitude": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "period": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "phase": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "p.wave: SetWave's"
+    },
+    "param_homing_x": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "homing_x"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "range_x": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "speed_x": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "accel_x": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "p.homingX: X homing (SetRangeXSpeed)"
+    },
+    "param_homing_xy": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "homing_xy"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "range_y": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "speed_y": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "accel_y": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "range_x": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "speed_x": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "accel_x": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "p.homingXY: Y homing, then X homing"
+    },
+    "param_platform": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "platform"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "type": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "dist_x": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "dist_y": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "dir_x": {
+          "type": "integer",
+          "minimum": -32768,
+          "maximum": 32767
+        },
+        "dir_y": {
+          "type": "integer",
+          "minimum": -32768,
+          "maximum": 32767
+        },
+        "flag": {
+          "type": "integer",
+          "minimum": -32768,
+          "maximum": 32767
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "p.platform (Platform::Create): PLATFORM_TYPE_*, a moving platform's path and directions, and whether it is always active"
+    },
+    "param_crate": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "crate"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "ASSIST_LIFE",
+              "SLOT_MYSTERY",
+              "SLOT_LIFE",
+              "SLOT_TNT",
+              "BIT4",
+              "BIT5",
+              "BIT6",
+              "BIT7"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "unk_02": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "trial_kind": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]*$",
+              "description": "an entity type's name"
+            },
+            {
+              "type": "integer",
+              "minimum": -32768,
+              "maximum": 32767
+            }
+          ]
+        },
+        "param6": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "param7": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "struct crate_placement (Crate::Create): the flags, the options, the time-trial kind and two per-kind bytes"
+    },
+    "param_iron_switch_crate": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "iron_switch_crate"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "ASSIST_LIFE",
+              "SLOT_MYSTERY",
+              "SLOT_LIFE",
+              "SLOT_TNT",
+              "BIT4",
+              "BIT5",
+              "BIT6",
+              "BIT7"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "unk_02": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "trial_kind": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]*$",
+              "description": "an entity type's name"
+            },
+            {
+              "type": "integer",
+              "minimum": -32768,
+              "maximum": 32767
+            }
+          ]
+        },
+        "group": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "steps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "step_delay": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "an iron switch crate's placement: its outline crates' group, the step count and the step delay"
+    },
+    "param_outline_crate": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "outline_crate"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "ASSIST_LIFE",
+              "SLOT_MYSTERY",
+              "SLOT_LIFE",
+              "SLOT_TNT",
+              "BIT4",
+              "BIT5",
+              "BIT6",
+              "BIT7"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "unk_02": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "trial_kind": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]*$",
+              "description": "an entity type's name"
+            },
+            {
+              "type": "integer",
+              "minimum": -32768,
+              "maximum": 32767
+            }
+          ]
+        },
+        "group": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "step": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "solid_kind": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]*$",
+              "description": "an entity type's name"
+            },
+            {
+              "type": "integer",
+              "minimum": -32768,
+              "maximum": 32767
+            }
+          ]
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "an outline crate's placement: its group, its step and solidKind"
     }
   }
 }

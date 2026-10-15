@@ -9,10 +9,10 @@
   },
   "params": [
     [0],
-    [0, 27],
-    [0, 327707],
-    [0],
-    [0, 0, 0, 0, 0, 1]
+    {"layout": "crate", "flags": [], "options": [], "unk_02": 0, "trial_kind": "NITRO_SWITCH_CRATE", "param6": 0, "param7": 0},
+    {"layout": "crate", "flags": [], "options": [], "unk_02": 0, "trial_kind": "NITRO_SWITCH_CRATE", "param6": 5, "param7": 0},
+    {"layout": "flags", "flags": []},
+    {"layout": "platform", "flags": [], "type": 0, "dist_x": 0, "dist_y": 0, "dir_x": 0, "dir_y": 0, "flag": 1}
   ],
   "links": [
     [34, 33],

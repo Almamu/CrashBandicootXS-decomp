@@ -188,7 +188,7 @@ def _errors(s, v, path, root, out):
     if s is True or s == {}:
         return
     if s is False:
-        out.append((path, "not allowed here"))
+        out.append((path, "not allowed here", "false"))
         return
     if "$ref" in s:
         name = s["$ref"].rsplit("/", 1)[1]
@@ -201,30 +201,30 @@ def _errors(s, v, path, root, out):
         if not any(_TYPES[x](v) for x in types):
             out.append((path, "%s isn't %s" % (_show(v), " or ".join("a boolean" if x == "boolean" else
                                                                       "an " + x if x[0] in "aeiou" else "a " + x
-                                                                      for x in types))))
+                                                                      for x in types)), "type"))
             return
     if "const" in s and not _same(v, s["const"]):
-        out.append((path, "%s isn't %s" % (_show(v), _show(s["const"]))))
+        out.append((path, "%s isn't %s" % (_show(v), _show(s["const"])), "const"))
     if "enum" in s and not any(_same(v, e) for e in s["enum"]):
-        out.append((path, "%s isn't one of %s" % (_show(v), ", ".join(_show(e) for e in s["enum"]))))
+        out.append((path, "%s isn't one of %s" % (_show(v), ", ".join(_show(e) for e in s["enum"])), "other"))
     if _TYPES["number"](v):
         if "minimum" in s and v < s["minimum"] or "maximum" in s and v > s["maximum"]:
             lo, hi = s.get("minimum"), s.get("maximum")
             rng = "%s to %s" % (lo, hi) if lo is not None and hi is not None else \
                 ("at least %s" % lo if lo is not None else "at most %s" % hi)
-            out.append((path, "%s is out of range (%s)" % (v, rng)))
+            out.append((path, "%s is out of range (%s)" % (v, rng), "other"))
     if isinstance(v, str):
         if "minLength" in s and len(v) < s["minLength"]:
-            out.append((path, "%s is shorter than %d characters" % (_show(v), s["minLength"])))
+            out.append((path, "%s is shorter than %d characters" % (_show(v), s["minLength"]), "other"))
         if "maxLength" in s and len(v) > s["maxLength"]:
-            out.append((path, "%s is longer than %d characters" % (_show(v), s["maxLength"])))
+            out.append((path, "%s is longer than %d characters" % (_show(v), s["maxLength"]), "other"))
         if "pattern" in s and not re.search(s["pattern"], v):
-            out.append((path, "%s doesn't match %s" % (_show(v), s["pattern"])))
+            out.append((path, "%s doesn't match %s" % (_show(v), s["pattern"]), "other"))
     if isinstance(v, dict):
         props = s.get("properties", {})
         for k in s.get("required", []):
             if k not in v:
-                out.append((path, "no \"%s\"" % k))
+                out.append((path, "no \"%s\"" % k, "other"))
         pats = [(re.compile(p), sub) for p, sub in s.get("patternProperties", {}).items()]
         extra = s.get("additionalProperties", True)
         for k, x in v.items():
@@ -242,7 +242,7 @@ def _errors(s, v, path, root, out):
                 if extra is False:
                     known = sorted(props)
                     out.append((path + (k,), "unknown key \"%s\"%s" % (
-                        k, " (the keys are %s)" % ", ".join(known) if known and len(known) <= 16 else "")))
+                        k, " (the keys are %s)" % ", ".join(known) if known and len(known) <= 16 else ""), "other"))
                 elif extra is not True:
                     _errors(extra, x, path + (k,), root, out)
     if isinstance(v, list):
@@ -250,7 +250,7 @@ def _errors(s, v, path, root, out):
             lo, hi = s.get("minItems"), s.get("maxItems")
             want = ("%d" % lo if lo == hi else "%d to %d" % (lo, hi)) if lo is not None and hi is not None else \
                 ("at least %d" % lo if lo is not None else "at most %d" % hi)
-            out.append((path, "%d items, not %s" % (len(v), want)))
+            out.append((path, "%d items, not %s" % (len(v), want), "other"))
         prefix = s.get("prefixItems", [])
         for i, x in enumerate(v):
             if i < len(prefix):
@@ -267,14 +267,20 @@ def _errors(s, v, path, root, out):
             results.append(e)
         passing = sum(1 for e in results if not e)
         if passing == 0:
-            # the alternative that came closest (fewest errors, deepest first)
-            best = min(results, key=lambda e: (len(e), -max(len(p) for p, _ in e)))
+            # the alternative that came closest: one of the value's type,
+            # whose constants (a "layout", a "kind") it has, with the fewest
+            # errors, the deepest first
+            def rank(e):
+                return (any(k == "type" and p == path for p, _, k in e),
+                        any(k == "const" and len(p) == len(path) + 1 for p, _, k in e),
+                        len(e), -max(len(p) for p, _, _ in e))
+            best = min(results, key=rank)
             if len(s[key]) > 1 and all(len(e) == 1 and e[0][0] == path for e in results):
-                out.append((path, "; or ".join(e[0][1] for e in results)))
+                out.append((path, "; or ".join(e[0][1] for e in results), "other"))
             else:
                 out.extend(best)
         elif key == "oneOf" and passing > 1:
-            out.append((path, "%s matches more than one of the alternatives" % _show(v)))
+            out.append((path, "%s matches more than one of the alternatives" % _show(v), "other"))
 
 
 def _same(a, b):
@@ -289,7 +295,7 @@ def validate(schema, value, file=None, code="schema"):
     pointer."""
     out = []
     _errors(schema, value, (), schema, out)
-    return [D.Diagnostic(msg, file, D.pointer(path), D.ERROR, code) for path, msg in out]
+    return [D.Diagnostic(msg, file, D.pointer(path), D.ERROR, code) for path, msg, _ in out]
 
 
 def check(schema, value, file=None):

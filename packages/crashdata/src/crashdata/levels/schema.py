@@ -53,12 +53,11 @@ U16 = S.U16
 
 
 def param_record_schema():
-    """A parameter record: the raw words (crashdata.levels.room_params has
-    the named forms)."""
-    L = _levels()
-    named = getattr(L, "param_record_schema", None)
-    raw = S.array(S.integer(S.U32), min_items=1, description="the record's 32-bit words")
-    return named(raw) if named else raw
+    """A parameter record: its raw words, or a view's named fields
+    (crashdata.levels.params)."""
+    from crashdata.levels import params as P
+    raw = S.array(S.integer(S.U32), min_items=1, description="the record's 32-bit words (the raw form)")
+    return P.record_schema(S, raw)
 
 
 def room():
@@ -94,7 +93,8 @@ def room():
             "param": S.integer(S.U16, description="its parameter record, an index of \"params\""),
         }, required="all"),
     }
-    defs.update(getattr(L, "param_record_defs", lambda: {})())
+    from crashdata.levels import params as P
+    defs.update(P.record_schemas(S))
     return S.document("room.schema.json", "A room (room.json)", root, defs,
                       "games/<game>/data/levels/<level>/<slot>/room.json (docs/levels.md, \"Sources and build\")")
 
@@ -265,7 +265,9 @@ def entity_types():
         "enemy_kind": S.integer(S.U16),
         "enemy_kind_name": S.string(r"^[A-Z][A-Z0-9_]*$"),
     }
-    t.update(getattr(L, "entity_type_param_props", lambda: {})())
+    from crashdata.levels import params as P
+    t["params"] = S.enum(list(P.LAYOUTS), description="the view of its parameter records its spawner reads "
+                                                      "(crashdata.levels.params)")
     root = S.obj({"types": S.array(S.obj(t, required=["type", "name", "spawner"]),
                                    description="one per gEntitySpawnFuncs slot, in type order")},
                  required="all")

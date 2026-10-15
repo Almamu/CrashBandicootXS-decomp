@@ -9,8 +9,8 @@
   },
   "params": [
     [0],
-    [0],
-    [0, 0, 0, 0, 0, 1]
+    {"layout": "flags", "flags": []},
+    {"layout": "platform", "flags": [], "type": 0, "dist_x": 0, "dist_y": 0, "dir_x": 0, "dir_y": 0, "flag": 1}
   ],
   "links": null,
   "entities": [
