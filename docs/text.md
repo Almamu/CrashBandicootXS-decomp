@@ -3,13 +3,15 @@
 The game's text is in `text/` as gettext files (#1070): the menus, the
 level names and the other UI strings (`GetUiText`'s text ids), and the
 cutscenes' pages, in the six languages of the language select (English,
-French, German, Spanish, Italian, Dutch). The build generates the ROM's
-three string tables from them (docs/data.md, "Text tables").
+French, German, Spanish, Italian, Dutch), and the credits, in English
+only (see "The credits"). The build generates the ROM's three string
+tables and the credits from them (docs/data.md, "Text tables").
 
 | File | What |
 |---|---|
 | `text/crashxs.pot` | the template: every string's key, its English text and the translator comments |
 | `text/fr.po`, `de.po`, `es.po`, `it.po`, `nl.po` | a language's text, one entry per template entry |
+| `text/credits.pot` | the credits' text, one for every language (see "The credits") |
 | `tools/text.py` | the generator, the checks and the extractor |
 | `text.mk` | the build rules and the `text-check`/`text-update` targets |
 
@@ -183,6 +185,52 @@ Tested in scratch with a 26th level, `LEVEL_LAB` ("the lab", "le labo",
 (`UI_TEXT_COUNT` 71, `gUiText*70` in each table), and a second `make`
 does nothing. In mGBA, the level's pause menu shows its name in English,
 French and German.
+
+## The credits
+
+The credits' text is `text/credits.pot` (#1092), a template of its own
+with no `.po` files: the game has one credits text, `gCreditsText`, and
+every language shows it (`Credits::Init` reads it, not a per-language
+table, so a translation would need a code change and another ROM). An
+entry is a heading or a block of lines (`msgid` with `\n` between the
+lines, and an empty line where a block has a gap), keyed
+`credits.<heading>` and `credits.<heading>.names`:
+
+```po
+#. The credits: lines, in the small font.
+msgctxt "credits.executive_producers.names"
+msgid ""
+"karthik bala\n"
+"tobi saulnier"
+msgstr ""
+```
+
+`data/credits.json` gives the order the credits show them in, with the
+fonts and the logos:
+
+```json
+{"large": "credits.executive_producers"},
+{"small": "credits.executive_producers.names"},
+{"blank": 2},
+...
+{"picture": 1},
+```
+
+- `{"large": key}`, `{"small": key}`: the font switch, then the entry's
+  lines (the stream's 3 or 2, `CREDITS_OP_LARGE`/`SMALL`);
+- `{"text": key}`: the entry's lines in the font so far;
+- `{"picture": n}`: logo `n` (0-4, `gCreditsLogos`) on a line of its own;
+- `{"blank": n}`: `n` empty lines.
+
+`tools/text.py cpp credits_text` writes the stream from them, a line per
+string (`credits_text.cpp` #includes it). To change a name or add one,
+edit the entry; to add a heading, add its entries to the template and
+its items to the list. The build, and `make text-check`, stop on an item
+whose key the template lacks, an entry no item uses, an empty entry, a
+logo past the fifth, and a character the font the item is drawn in lacks
+(a heading's must be in the large font). `tools/text.py extract` writes
+`credits.pot` from the ROM too, keyed by `data/credits.json`, and
+`extract --check` compares it.
 
 ## How the tables are built
 

@@ -1070,10 +1070,12 @@ arrays gives the ROM's zero padding.
 
 `gCreditsText` (`src/game/ui/data/credits_text.cpp`) is the credits
 stream `UpdateCreditsText` draws line by line as floating glyphs. It is text
-with three opcodes, written as macros: `CREDITS_PICTURE_n` (1, n: popup
-glyph picture n, the logos of `credits_title_logos.cpp`), `CREDITS_SMALL`
-(2) and `CREDITS_LARGE` (3), the two HUD fonts. A zero byte ends it, and
-the code starts over there.
+with three opcodes: 1, n (popup glyph picture n, the logos of
+`credits_title_logos.cpp`), 2 and 3 (the small and the large HUD font).
+A zero byte ends it, and the code starts over there. It is generated from
+`text/credits.pot` (the text) and `data/credits.json` (the order, the
+font switches and the logos), see [text.md, "The
+credits"](./text.md#the-credits).
 
 ### Motion sequences
 
