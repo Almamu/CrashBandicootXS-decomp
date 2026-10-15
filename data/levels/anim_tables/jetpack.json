@@ -1,0 +1,249 @@
+{
+  "symbol": "gCategoryFamily1AnimTable",
+  "family": "JETPACK",
+  "records": [
+    {"keyframes": "gJetpackPlayerKeyframes", "frames": "gJetpackPlayerFrames", "palette": 0, "depth": 7168, "box": [-10, -20, -1, 20, 42, 3]},
+    {"keyframes": "gJetpackPlaneKeyframes", "frames": "gJetpackPlaneFrames", "palette": 2, "depth": 9216, "box": [-32, -16, -2, 64, 32, 4]},
+    {"keyframes": "gJetpackShotKeyframes", "frames": "gJetpackShotFrames", "palette": 1, "depth": 11264, "box": [-12, -12, -2, 24, 24, 4]},
+    {"keyframes": "gJetpackCannonballKeyframes", "frames": "gJetpackCannonballFrames", "palette": 2, "depth": 10752, "box": [-6, -6, -2, 12, 12, 4]},
+    {"keyframes": "gJetpackBomberKeyframes", "frames": "gJetpackBomberFrames", "palette": 2, "depth": 9216, "box": [-16, -16, -2, 32, 32, 4]},
+    {"keyframes": "gJetpackBomberKeyframes", "frames": "gJetpackBomberFrames", "palette": 2, "depth": 9216, "box": [-16, -16, -2, 32, 32, 4]},
+    {"keyframes": "gJetpackBomberKeyframes", "frames": "gJetpackBomberFrames", "palette": 2, "depth": 9216, "box": [-16, -16, -2, 32, 32, 4]},
+    {"keyframes": "gJetpackBomberKeyframes", "frames": "gJetpackBomberFrames", "palette": 2, "depth": 9216, "box": [-16, -16, -2, 32, 32, 4]},
+    {"keyframes": "gJetpackBomberKeyframes", "frames": "gJetpackBomberFrames", "palette": 2, "depth": 9216, "box": [-16, -16, -2, 32, 32, 4]},
+    {"keyframes": "gJetpackBomberKeyframes", "frames": "gJetpackBomberFrames", "palette": 2, "depth": 9216, "box": [-16, -16, -2, 32, 32, 4]},
+    {"keyframes": "gHovercraftCannonKeyframes", "frames": "gHovercraftCannonFrames", "palette": 10, "depth": 11264, "box": [-8, -8, -2, 16, 16, 4]},
+    {"keyframes": "gHovercraftCannonKeyframes", "frames": "gHovercraftCannonFrames", "palette": 10, "depth": 11264, "box": [-8, -8, -2, 16, 16, 4]},
+    {"keyframes": "gHovercraftLauncherKeyframes", "frames": "gHovercraftLauncherFrames", "palette": 10, "depth": 11264, "box": [-8, -8, -2, 16, 16, 4]},
+    {"keyframes": "gHovercraftSideGunKeyframes", "frames": "gHovercraftSideGunFrames", "palette": 10, "depth": 11264, "box": [-8, -8, -2, 16, 16, 4]},
+    {"keyframes": "gHovercraftCannonFlashKeyframes", "frames": "gHovercraftCannonFlashFrames", "palette": 4, "depth": 11264, "box": [-8, -8, -2, 16, 16, 4]},
+    {"index": 0, "keyframes": "gHovercraftCannonKeyframes", "frames": "gHovercraftCannonFrames", "palette": 10, "depth": 11264, "box": [-8, -8, -2, 16, 16, 4]},
+    {"keyframes": "gHovercraftCannonKeyframes", "frames": "gHovercraftCannonFrames", "palette": 10, "depth": 11264, "box": [-8, -8, -2, 16, 16, 4]},
+    {"keyframes": "gHovercraftCannonKeyframes", "frames": "gHovercraftCannonFrames", "palette": 10, "depth": 11264, "box": [-8, -8, -2, 16, 16, 4]},
+    {"keyframes": "gHovercraftCannonKeyframes", "frames": "gHovercraftCannonFrames", "palette": 10, "depth": 11264, "box": [-8, -8, -2, 16, 16, 4]},
+    {"keyframes": "gJetpackCrateKeyframes", "frames": "gJetpackQuestionCrateFrames", "palette": 7, "depth": 9216, "box": [-11, -16, -2, 22, 22, 4]},
+    {"keyframes": "gJetpackCrateKeyframes", "frames": "gJetpackQuestionCrateFrames", "palette": 7, "depth": 9216, "box": [-11, -16, -2, 22, 22, 4]},
+    {"keyframes": "gJetpackCrateKeyframes", "frames": "gJetpackQuestionCrateFrames", "palette": 7, "depth": 9216, "box": [-11, -16, -2, 22, 22, 4]},
+    {"keyframes": "gJetpackCrateKeyframes", "frames": "gJetpackQuestionCrateFrames", "palette": 7, "depth": 9216, "box": [-11, -16, -2, 22, 22, 4]},
+    {"keyframes": "gJetpackCrateKeyframes", "frames": "gJetpackQuestionCrateFrames", "palette": 7, "depth": 9216, "box": [-11, -16, -2, 22, 22, 4]},
+    {"keyframes": "gJetpackCrateKeyframes", "frames": "gJetpackTimeCrate1Frames", "palette": 5, "depth": 9216, "box": [-11, -16, -2, 22, 22, 4]},
+    {"keyframes": "gJetpackCrateKeyframes", "frames": "gJetpackTimeCrate2Frames", "palette": 5, "depth": 9216, "box": [-11, -16, -2, 22, 22, 4]},
+    {"keyframes": "gJetpackCrateKeyframes", "frames": "gJetpackTimeCrate3Frames", "palette": 5, "depth": 9216, "box": [-11, -16, -2, 22, 22, 4]},
+    {"keyframes": "gJetpackParachuteNitroKeyframes", "frames": "gJetpackParachuteNitroFrames", "palette": 8, "depth": 9216, "box": [-21, 5, -2, 32, 31, 4]},
+    {"keyframes": "gJetpackRocketKeyframes", "frames": "gJetpackRocketFrames", "palette": 5, "depth": 9216, "box": [-4, -21, -2, 8, 42, 4]},
+    {"keyframes": "gJetpackStopwatchKeyframes", "frames": "gJetpackStopwatchFrames", "palette": 5, "depth": 9216, "box": [-17, 4, -2, 25, 24, 4]},
+    {"keyframes": "gJetpackRocketKeyframes", "frames": "gJetpackRocketFrames", "palette": 5, "depth": 9216, "box": [-17, 4, -2, 25, 24, 4]},
+    {"keyframes": "gJetpackRingLeftKeyframes", "frames": "gJetpackRingFrames", "palette": 11, "depth": 7168, "box": [3, -19, -2, 50, 38, 4], "spawn_x": -7168},
+    {"keyframes": "gHovercraftCannonKeyframes", "frames": "gHovercraftCannonFrames", "palette": 10, "depth": 11264, "box": [-8, -8, -2, 16, 16, 4]},
+    {"keyframes": "gHovercraftCannonKeyframes", "frames": "gHovercraftCannonFrames", "palette": 10, "depth": 11264, "box": [-8, -8, -2, 16, 16, 4]},
+    {"keyframes": "gHovercraftCannonKeyframes", "frames": "gHovercraftCannonFrames", "palette": 10, "depth": 11264, "box": [-8, -8, -2, 16, 16, 4]},
+    {"keyframes": "gHovercraftCannonKeyframes", "frames": "gHovercraftCannonFrames", "palette": 10, "depth": 11264, "box": [-8, -8, -2, 16, 16, 4]},
+    {"keyframes": "gHovercraftCannonKeyframes", "frames": "gHovercraftCannonFrames", "palette": 10, "depth": 11264, "box": [-8, -8, -2, 16, 16, 4]},
+    {"keyframes": "gHovercraftCannonKeyframes", "frames": "gHovercraftCannonFrames", "palette": 10, "depth": 11264, "box": [-8, -8, -2, 16, 16, 4]},
+    {"keyframes": "gBossFireballKeyframes", "frames": "gBossFireballFrames", "palette": 3, "depth": 7168, "box": [-8, -8, -2, 16, 16, 4]},
+    {"keyframes": "gBossFireballKeyframes", "frames": "gBossFireballFrames", "palette": 3, "depth": 7168, "box": [-8, -8, -2, 16, 16, 4]},
+    {"keyframes": "gJetpackBalloonKeyframes", "frames": "gJetpackRedBalloonFrames", "palette": 5, "depth": 9216, "box": [-17, -38, -2, 53, 16, 4]},
+    {"keyframes": "gJetpackBalloonKeyframes", "frames": "gJetpackYellowBalloonFrames", "palette": 6, "depth": 9216, "box": [-17, -38, -2, 53, 16, 4]},
+    {"keyframes": "gJetpackBalloonKeyframes", "frames": "gJetpackRedCrossBalloonFrames", "palette": 7, "depth": 9216, "box": [-17, -38, -2, 53, 16, 4]},
+    {"keyframes": "gJetpackRingRightKeyframes", "frames": "gJetpackRingFrames", "palette": 11, "depth": 7168, "box": [0, 0, 0, 0, 0, 0], "spawn_x": 7168},
+    {"keyframes": "gJetpackCollectedWumpaKeyframes", "frames": "gJetpackCollectedWumpaFrames", "palette": 9, "depth": 7168, "box": [0, 0, 0, 0, 0, 0]},
+    {"keyframes": "gJetpackExplosionKeyframes", "frames": "gJetpackExplosionFrames", "palette": 4, "depth": 11264, "box": [0, 0, 0, 0, 0, 0]},
+    {"keyframes": "gJetpackCheckpointTextKeyframes", "frames": "gJetpackCheckpointTextFrames", "palette": 9, "depth": 11264, "box": [0, 0, 0, 0, 0, 0]}
+  ],
+  "arrays": [
+    "table",
+    {"keyframes": "gJetpackPlayerKeyframes", "list": [
+      [64, 0, 18, 0, 0],
+      [85, 18, 18, 0, 0],
+      [85, 36, 18, 0, 0],
+      [64, 54, 18, 17, 0],
+      [42, 72, 18, 17, 0],
+      [42, 72, 8, 7, 0]
+    ]},
+    {"player_frames": "gJetpackPlayerFrames", "list": [
+      18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33,
+      34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
+      50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65,
+      66, 67, 68, 69, 70, 71, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+      10, 11, 12, 13, 14, 15, 16, 17, 72, 73, 74, 75, 76, 77, 78, 79,
+      79, 79, 79, 79, 79, 79, 79, 79, 79, 79
+    ]},
+    {"keyframes": "gJetpackShotKeyframes", "list": [
+      [64, 0, 3, 0, 0]
+    ]},
+    {"frames": "gJetpackShotFrames", "list": [
+      "shot/00", "shot/01", "shot/02"
+    ]},
+    {"keyframes": "gJetpackPlaneKeyframes", "list": [
+      [64, 0, 3, 0, 0],
+      [64, 3, 6, 5, 0],
+      [64, 9, 7, 0, 0],
+      [64, 16, 3, 0, 0],
+      [64, 19, 6, 5, 0],
+      [64, 25, 7, 0, 0]
+    ]},
+    {"frames": "gJetpackPlaneFrames", "list": [
+      "plane/00", "plane/01", "plane/02", "plane/10", "plane/11", "plane/12",
+      "plane/13", "plane/14", "plane/15", "plane/03", "plane/04", "plane/05",
+      "plane/06", "plane/07", "plane/08", "plane/09", "plane/16", "plane/17",
+      "plane/18", "plane/26", "plane/27", "plane/28", "plane/29", "plane/30",
+      "plane/31", "plane/19", "plane/20", "plane/21", "plane/22", "plane/23",
+      "plane/24", "plane/25"
+    ]},
+    {"keyframes": "gJetpackBomberKeyframes", "list": [
+      [64, 0, 10, 0, 0],
+      [51, 10, 10, 9, 0]
+    ]},
+    {"frames": "gJetpackBomberFrames", "list": [
+      "bomber/00", "bomber/01", "bomber/02", "bomber/03", "bomber/04", "bomber/05",
+      "bomber/06", "bomber/07", "bomber/08", "bomber/09", "explosion/00", "explosion/01",
+      "explosion/02", "explosion/03", "explosion/04", "explosion/05", "explosion/06", "explosion/07",
+      "explosion/08", "explosion/09"
+    ]},
+    {"keyframes": "gJetpackCannonballKeyframes", "list": [
+      [64, 0, 1, 0, 0]
+    ]},
+    {"frames": "gJetpackCannonballFrames", "list": [
+      "cannonball/00"
+    ]},
+    {"keyframes": "gBossFireballKeyframes", "list": [
+      [42, 0, 8, 0, 0],
+      [42, 8, 10, 9, 0]
+    ]},
+    {"frames": "gBossFireballFrames", "list": [
+      "fireball/00", "fireball/01", "fireball/02", "fireball/03", "fireball/04", "fireball/05",
+      "fireball/06", "fireball/07", "fireball_burst/00", "fireball_burst/01", "fireball_burst/02", "fireball_burst/03",
+      "fireball_burst/04", "fireball_burst/05", "fireball_burst/06", "fireball_burst/07", "fireball_burst/08", "fireball_burst/09"
+    ]},
+    {"keyframes": "gHovercraftCannonKeyframes", "list": [
+      [64, 0, 1, 0, 0],
+      [64, 0, 11, 0, 0],
+      [64, 11, 14, 11, 0]
+    ]},
+    {"frames": "gHovercraftCannonFrames", "list": [
+      "hovercraft_cannon/00", "hovercraft_cannon/00", "hovercraft_cannon/01", "hovercraft_cannon/02", "hovercraft_cannon/03", "hovercraft_cannon/04",
+      "hovercraft_cannon/05", "hovercraft_cannon/06", "hovercraft_cannon/07", "hovercraft_cannon/08", "hovercraft_cannon/09", "hovercraft_cannon/10",
+      "hovercraft_cannon/11", "hovercraft_cannon/12", "hovercraft_cannon/13", "hovercraft_cannon/14", "hovercraft_cannon/15", "hovercraft_cannon/16",
+      "hovercraft_cannon/17", "hovercraft_cannon/18", "hovercraft_cannon/19", "hovercraft_cannon/20", "hovercraft_cannon/21", "hovercraft_cannon/22",
+      "hovercraft_cannon/23", "hovercraft_cannon/24"
+    ]},
+    {"keyframes": "gHovercraftLauncherKeyframes", "list": [
+      [64, 0, 1, 0, 0],
+      [64, 1, 8, 7, 0],
+      [64, 9, 8, 7, 0],
+      [64, 17, 14, 0, 0]
+    ]},
+    {"frames": "gHovercraftLauncherFrames", "list": [
+      "hovercraft_launcher/00", "hovercraft_launcher/00", "hovercraft_launcher/01", "hovercraft_launcher/02", "hovercraft_launcher/03", "hovercraft_launcher/04",
+      "hovercraft_launcher/05", "hovercraft_launcher/06", "hovercraft_launcher/07", "hovercraft_launcher/07", "hovercraft_launcher/06", "hovercraft_launcher/05",
+      "hovercraft_launcher/04", "hovercraft_launcher/03", "hovercraft_launcher/02", "hovercraft_launcher/01", "hovercraft_launcher/00", "hovercraft_launcher/08",
+      "hovercraft_launcher/09", "hovercraft_launcher/10", "hovercraft_launcher/11", "hovercraft_launcher/12", "hovercraft_launcher/13", "hovercraft_launcher/14",
+      "hovercraft_launcher/15", "hovercraft_launcher/16", "hovercraft_launcher/17", "hovercraft_launcher/18", "hovercraft_launcher/19", "hovercraft_launcher/20",
+      "hovercraft_launcher/21"
+    ]},
+    {"keyframes": "gHovercraftSideGunKeyframes", "list": [
+      [64, 0, 1, 0, 0],
+      [64, 0, 1, 0, 4096]
+    ]},
+    {"frames": "gHovercraftSideGunFrames", "list": [
+      "hovercraft_side_gun/00"
+    ]},
+    {"keyframes": "gHovercraftCannonFlashKeyframes", "list": [
+      [64, 0, 6, 0, 0]
+    ]},
+    {"frames": "gHovercraftCannonFlashFrames", "list": [
+      "hovercraft_cannon_flash/00", "hovercraft_cannon_flash/01", "hovercraft_cannon_flash/02", "hovercraft_cannon_flash/03", "hovercraft_cannon_flash/04", "hovercraft_cannon_flash/05"
+    ]},
+    {"keyframes": "gJetpackCrateKeyframes", "list": [
+      [42, 0, 1, 0, 0],
+      [42, 1, 8, 7, 0]
+    ]},
+    {"frames": "gJetpackQuestionCrateFrames", "list": [
+      "question_crate/00", "crate_shards/00", "crate_shards/01", "crate_shards/02", "crate_shards/03", "crate_shards/04",
+      "crate_shards/05", "crate_shards/06", "crate_shards/07"
+    ]},
+    {"frames": "gJetpackTimeCrate1Frames", "list": [
+      "time_crate_1/00", "time_crate_shards/00", "time_crate_shards/01", "time_crate_shards/02", "time_crate_shards/03", "time_crate_shards/04",
+      "time_crate_shards/05", "time_crate_shards/06", "time_crate_shards/07"
+    ]},
+    {"frames": "gJetpackTimeCrate2Frames", "list": [
+      "time_crate_2/00", "time_crate_shards/00", "time_crate_shards/01", "time_crate_shards/02", "time_crate_shards/03", "time_crate_shards/04",
+      "time_crate_shards/05", "time_crate_shards/06", "time_crate_shards/07"
+    ]},
+    {"frames": "gJetpackTimeCrate3Frames", "list": [
+      "time_crate_3/00", "time_crate_shards/00", "time_crate_shards/01", "time_crate_shards/02", "time_crate_shards/03", "time_crate_shards/04",
+      "time_crate_shards/05", "time_crate_shards/06", "time_crate_shards/07"
+    ]},
+    {"keyframes": "gJetpackParachuteNitroKeyframes", "list": [
+      [42, 0, 10, 0, 0],
+      [42, 10, 8, 7, 0]
+    ]},
+    {"frames": "gJetpackParachuteNitroFrames", "list": [
+      "parachute_nitro/00", "parachute_nitro/01", "parachute_nitro/02", "parachute_nitro/03", "parachute_nitro/04", "parachute_nitro/05",
+      "parachute_nitro/04", "parachute_nitro/03", "parachute_nitro/02", "parachute_nitro/01", "parachute_nitro/06", "parachute_nitro/07",
+      "parachute_nitro/08", "parachute_nitro/09", "parachute_nitro/10", "parachute_nitro/11", "parachute_nitro/12", "parachute_nitro/13"
+    ]},
+    {"keyframes": "gJetpackRocketKeyframes", "list": [
+      [42, 0, 5, 0, 0],
+      [34, 5, 11, 9, 0],
+      [42, 16, 10, 9, 0]
+    ]},
+    {"frames": "gJetpackRocketFrames", "list": [
+      "rocket/00", "rocket/01", "rocket/02", "rocket/03", "rocket/04", "rocket_burst/00",
+      "rocket_burst/01", "rocket_burst/02", "rocket_burst/03", "rocket_burst/04", "rocket_burst/05", "rocket_burst/06",
+      "rocket_burst/07", "rocket_burst/08", "rocket_burst/09", "rocket_burst/10", "explosion/00", "explosion/01",
+      "explosion/02", "explosion/03", "explosion/04", "explosion/05", "explosion/06", "explosion/07",
+      "explosion/08", "explosion/09"
+    ]},
+    {"keyframes": "gJetpackStopwatchKeyframes", "comment": "Record 29: the time-trial stopwatch, whole and then shattering. Kind 29 only spawns once the level's crystal is saved, and breaking it calls StartTimeTrial (jetpack_crates.cpp).", "list": [
+      [42, 0, 1, 0, 0],
+      [42, 1, 5, 4, 0]
+    ]},
+    {"frames": "gJetpackStopwatchFrames", "list": [
+      "stopwatch/00", "stopwatch/01", "stopwatch/02", "stopwatch/03", "stopwatch/04", "stopwatch/05"
+    ]},
+    {"keyframes": "gJetpackBalloonKeyframes", "list": [
+      [42, 0, 1, 0, 0],
+      [42, 1, 5, 4, 0]
+    ]},
+    {"frames": "gJetpackRedBalloonFrames", "list": [
+      "balloon_red/00", "balloon_red/01", "balloon_red/02", "balloon_red/03", "balloon_red/04", "balloon_red/05"
+    ]},
+    {"frames": "gJetpackRedCrossBalloonFrames", "list": [
+      "balloon_red_cross/00", "balloon_red_cross/01", "balloon_red_cross/02", "balloon_red_cross/03", "balloon_red_cross/04", "balloon_red_cross/05"
+    ]},
+    {"frames": "gJetpackYellowBalloonFrames", "list": [
+      "balloon_yellow/00", "balloon_yellow/01", "balloon_yellow/02", "balloon_yellow/03", "balloon_yellow/04", "balloon_yellow/05"
+    ]},
+    {"keyframes": "gJetpackRingLeftKeyframes", "comment": "Records 31/43: the left half of a ring and its mirrored (hflip) right half, which JetpackPlayer::CreateActor spawns with it.", "list": [
+      [42, 0, 6, 0, 0]
+    ]},
+    {"keyframes": "gJetpackRingRightKeyframes", "list": [
+      [42, 0, 6, 0, 4096]
+    ]},
+    {"frames": "gJetpackRingFrames", "list": [
+      "ring/00", "ring/00", "ring/00", "ring/01", "ring/02", "ring/03"
+    ]},
+    {"keyframes": "gJetpackCollectedWumpaKeyframes", "list": [
+      [85, 0, 14, 0, 0]
+    ]},
+    {"frames": "gJetpackCollectedWumpaFrames", "list": [
+      "collected_wumpa/00", "collected_wumpa/01", "collected_wumpa/02", "collected_wumpa/03", "collected_wumpa/04", "collected_wumpa/05",
+      "collected_wumpa/06", "collected_wumpa/07", "collected_wumpa/08", "collected_wumpa/09", "collected_wumpa/10", "collected_wumpa/11",
+      "collected_wumpa/12", "collected_wumpa/13"
+    ]},
+    {"keyframes": "gJetpackExplosionKeyframes", "list": [
+      [51, 0, 10, 9, 0]
+    ]},
+    {"frames": "gJetpackExplosionFrames", "list": [
+      "explosion/00", "explosion/01", "explosion/02", "explosion/03", "explosion/04", "explosion/05",
+      "explosion/06", "explosion/07", "explosion/08", "explosion/09"
+    ]},
+    {"keyframes": "gJetpackCheckpointTextKeyframes", "list": [
+      [8, 0, 3, 0, 0]
+    ]},
+    {"frames": "gJetpackCheckpointTextFrames", "list": [
+      "checkpoint_text/00", "checkpoint_text/00", "checkpoint_text/00"
+    ]}
+  ]
+}

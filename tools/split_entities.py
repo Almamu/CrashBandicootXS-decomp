@@ -30,9 +30,9 @@
 # explosion actor's bank 4, not the bomber's 2).
 #
 # Run this BEFORE tools/dump_entities.py (which resolves keyframes to the
-# PNGs present). The pool_offset table_B arrays of src/game/vehicles/*/data/*_anim_family.cpp
-# name frames by folder (FRAMED_<SHEET>_<NAME>_<NN>), so renaming a folder
-# means renaming its uses there.
+# PNGs present). The animation tables' frame arrays (data/levels/anim_tables/)
+# name frames by folder ("<folder>/<NN>", FRAMED_<SHEET>_<NAME>_<NN> in the C),
+# so renaming a folder means renaming its uses there.
 
 import glob
 import json

@@ -48,7 +48,7 @@ COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct anim_box) == 0xC);
 
 /* gCategoryFamily0AnimTable (categories 0-2, 41 slots) and gCategoryFamily1AnimTable
  * (categories 3-6, 47 slots) - one record per animation clip, defined in
- * src/game/vehicles/polar/data/polar_anim_family.cpp / jetpack_anim_family.cpp. Several slots
+ * data/levels/anim_tables/polar.json / jetpack.json (docs/levels.md). Several slots
  * share another slot's table_A/table_B arrays (see "duplicate_of_slot"
  * in docs/entities/), and slots 32-34 of the first table are all zero. */
 struct anim_table_record {
@@ -248,7 +248,8 @@ COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct category_vtable) == 0x34);
  * palette-cycle frames of src/engine/actor/data/actor_palette_cycle_frames.cpp. Both are
  * ActorCategory's static data members (actor_category.hpp). */
 
-/* Defined in src/game/vehicles/polar/data/polar_anim_family.cpp and jetpack_anim_family.cpp. */
+/* Defined in src/game/vehicles/polar/data/polar_anim_family.cpp and jetpack_anim_family.cpp,
+ * generated from data/levels/anim_tables/ (docs/levels.md, "Animation tables"). */
 extern const struct anim_table_record gCategoryFamily0AnimTable[41]; // 0x081796CC, categories 0-2
 extern const struct anim_table_record gCategoryFamily1AnimTable[47]; // 0x0817B2A4, categories 3-6
 

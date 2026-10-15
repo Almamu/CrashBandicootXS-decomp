@@ -93,6 +93,11 @@ derived from those again.
                                               ActorCategory::descriptors, from
                                               levels.json's "categories", and the
                                               spawn lists that aren't the ROM's
+    tools/levels.py anim-table NAME OUT       the ROM's animation table NAME (polar,
+                                              jetpack) and its keyframes and
+                                              frames, from data/levels/
+                                              anim_tables/NAME.json, #included by
+                                              its family's *_anim_family.cpp
     tools/levels.py classes OUT               rooms.hpp: every room's class (its BG
                                               palette, chunk grids and level asset
                                               as static members), see "Room
@@ -2123,6 +2128,316 @@ def categories_from_rom(rom, kept):
 
 
 # ---------------------------------------------------------------------------
+# Animation tables (docs/levels.md, "Animation tables")
+#
+# A type's animation table (category_descriptor.anim_table, struct
+# anim_table_record, actor_anim.h) is data/levels/anim_tables/<name>.json:
+# its records, one per actor kind (the spawner indexes the table with the
+# kind), and the arrays they point at, the keyframes (table_A) and the
+# frames (table_B), in the order they are defined, with "table" where the
+# table itself goes. A record's frames are the type's sprite sheet's, by
+# entity folder and frame ("wumpa/03": FRAMED_POLAR_WUMPA_03); record 0's,
+# Crash's, are the type's compressed player frames by number
+# ("player_frames"). The ROM's two are generated in place, where their C
+# files #include them (ROM_ANIM_TABLES).
+#
+# - "symbol": the table's C name; "family": POLAR or JETPACK, the kinds it
+#   is indexed by (constants/actor_kinds.h);
+# - "records": per kind, {"keyframes", "frames", "palette" (the OBJ
+#   palette bank), "depth" (the depth at which it draws unscaled), "box"
+#   (x, y, z, w, h, d)}, with "index" (the record's first byte) when not
+#   the kind, "spawn_x" and "spawn_y" when not 0; {} for a kind with none;
+# - "arrays": each {"keyframes": symbol, "list": [[duration, frame,
+#   loop end, loop start, OAM attribute], ...]}, {"frames": symbol, "list":
+#   ["entity/NN", ...]} or {"player_frames": symbol, "list": [n, ...]},
+#   with an optional "comment"; and "table".
+
+ANIM_TABLES_DIR = LEVELS_DIR / "anim_tables"
+# Per family: its sprite sheet (a framed_sheet of graphics/manifest.json,
+# by path), whose frames the FRAMED_<prefix>_<ENTITY>_<NN> offsets
+# (tools/framed_gfx.py header) name, the compressed player frames' class
+# and offsets (RLE_SPRITES_<name>_FRAME_<nnn>), their PNG and frame height
+# in pixels, and the length of its tables (the kinds the code indexes).
+ANIM_FAMILIES = {
+    "POLAR": {"sheet": "vehicles/polar/sprite_sheet/", "prefix": "POLAR", "player_class": "PolarPlayerFrameSet",
+              "player_name": "RLE_SPRITES_POLAR_PLAYER", "player_png": "vehicles/polar/player.png",
+              "player_height": 64, "records": 41},
+    "JETPACK": {"sheet": "vehicles/jetpack/sprite_sheet/", "prefix": "JETPACK",
+                "player_class": "JetpackPlayerFrameSet", "player_name": "RLE_SPRITES_JETPACK_PLAYER",
+                "player_png": "vehicles/jetpack/player.png", "player_height": 64, "records": 47},
+}
+# The ROM's tables, by name (their C files #include them), and where they
+# are in the ROM.
+ROM_ANIM_TABLES = {"polar": 0x081796CC, "jetpack": 0x0817B2A4}
+ANIM_RECORD_SIZE = 0x28
+ANIM_KEYFRAME_SIZE = 0xC
+ANIM_RECORD_KEYS = ["index", "keyframes", "frames", "palette", "depth", "box", "spawn_x", "spawn_y"]
+
+_sheet_frames = {}
+
+
+def sheet_frames(sheet):
+    """A framed sheet's frames (graphics/<sheet>, by entity folder in its
+    sheet.json's order, each folder's PNGs in name order): "entity/NN" ->
+    byte offset in its decompressed data, as tools/framed_gfx.py header."""
+    if sheet not in _sheet_frames:
+        import framed_gfx
+
+        out, off = {}, 0
+        sheet_dir = GFX_MANIFEST.parent / sheet
+        for entity in framed_gfx.entity_order(str(sheet_dir)):
+            for p in sorted((sheet_dir / entity).glob("*.png")):
+                w, h = png_size(p)
+                out["%s/%s" % (entity, p.stem)] = off
+                off += 4 + (w // 8) * (h // 8) * 32
+        _sheet_frames[sheet] = out
+    return _sheet_frames[sheet]
+
+
+def player_frame_count(family):
+    f = ANIM_FAMILIES[family]
+    return png_size(GFX_MANIFEST.parent / f["player_png"])[1] // f["player_height"]
+
+
+def anim_array_kind(a):
+    """An "arrays" entry's kind: "keyframes", "frames" or "player_frames"."""
+    kinds = [k for k in ("keyframes", "frames", "player_frames") if k in a]
+    return kinds[0] if len(kinds) == 1 else None
+
+
+_anim_tables = {}
+
+
+def anim_table(name):
+    """data/levels/anim_tables/<name>.json, checked."""
+    if name in _anim_tables:
+        return _anim_tables[name]
+    path = ANIM_TABLES_DIR / ("%s.json" % name)
+
+    def fail(msg):
+        sys.exit("%s: %s (docs/levels.md, \"Animation tables\")" % (path, msg))
+
+    if not isinstance(name, str) or not path.exists():
+        sys.exit("%s: %s isn't an animation table of %s" % (LEVELS_JSON, json.dumps(name), ANIM_TABLES_DIR))
+    t = read_json(path)
+    unknown = [k for k in t if k not in ("symbol", "family", "records", "arrays")]
+    if unknown:
+        fail("unknown %s" % ", ".join('"%s"' % k for k in unknown))
+    if not re.fullmatch(r"g[A-Za-z0-9_]+", t.get("symbol", "")):
+        fail("\"symbol\" is its C name, gSomething")
+    fam = ANIM_FAMILIES.get(t.get("family"))
+    if fam is None:
+        fail("\"family\" is POLAR or JETPACK (the kinds of constants/actor_kinds.h that index it)")
+    arrays = t.get("arrays")
+    if not isinstance(arrays, list) or arrays.count("table") != 1:
+        fail("\"arrays\" lists the keyframes and frames, with \"table\" where the table goes")
+    frames = sheet_frames(fam["sheet"])
+    players = player_frame_count(t["family"])
+    kinds = {}
+    for i, a in enumerate(arrays):
+        if a == "table":
+            continue
+        kind = anim_array_kind(a) if isinstance(a, dict) else None
+        if kind is None or any(k not in (kind, "list", "comment") for k in a) or not isinstance(a.get("list"), list) \
+                or not a["list"]:
+            fail("array %d is {\"keyframes\"|\"frames\"|\"player_frames\": its symbol, \"list\"}, with an optional "
+                 "\"comment\"" % i)
+        sym = a[kind]
+        if not re.fullmatch(r"g[A-Za-z0-9_]+", sym if isinstance(sym, str) else "") or sym in kinds \
+                or sym == t["symbol"]:
+            fail("array %d: %s isn't a unique C name, gSomething" % (i, json.dumps(sym)))
+        kinds[sym] = (kind, len(a["list"]))
+        for n, v in enumerate(a["list"]):
+            if kind == "keyframes":
+                ok = isinstance(v, list) and len(v) == 5 and all(isinstance(x, int) for x in v) \
+                    and 0 <= v[0] < 0x10000 and all(-0x8000 <= x < 0x8000 for x in v[1:4]) and 0 <= v[4] < 0x10000
+                what = "[duration, frame, loop end, loop start, OAM attribute]"
+            elif kind == "frames":
+                ok = v in frames
+                what = "a frame of graphics/%s, \"entity/NN\"" % fam["sheet"]
+            else:
+                ok = isinstance(v, int) and 0 <= v < players
+                what = "a frame of graphics/%s, 0-%d" % (fam["player_png"], players - 1)
+            if not ok:
+                fail("%s[%d] %s isn't %s" % (sym, n, json.dumps(v), what))
+    records = t.get("records")
+    if not isinstance(records, list) or len(records) != fam["records"]:
+        fail("\"records\" has one record per %s kind the code indexes, %d" % (t["family"], fam["records"]))
+    for slot, r in enumerate(records):
+        bad = [k for k in r if k not in ANIM_RECORD_KEYS] if isinstance(r, dict) else ["?"]
+        if bad or (r and not all(k in r for k in ANIM_RECORD_KEYS[1:6])):
+            fail("record %d is {\"keyframes\", \"frames\", \"palette\", \"depth\", \"box\"}, with optional "
+                 "\"index\", \"spawn_x\", \"spawn_y\", or {} (or just its \"index\")" % slot)
+        if not (isinstance(r.get("index", slot), int) and 0 <= r.get("index", slot) < 256):
+            fail("record %d: \"index\" is a byte" % slot)
+        if "keyframes" not in r:
+            continue
+        kf, fr = kinds.get(r["keyframes"]), kinds.get(r["frames"])
+        if kf is None or kf[0] != "keyframes":
+            fail("record %d: \"keyframes\" %s isn't a keyframes array of \"arrays\"" % (slot, json.dumps(r["keyframes"])))
+        if fr is None or fr[0] == "keyframes" or (fr[0] == "player_frames") != (slot == 0):
+            fail("record %d: \"frames\" %s isn't a %s array of \"arrays\"" % (slot, json.dumps(r["frames"]),
+                                                                              "player_frames" if slot == 0 else
+                                                                              "frames"))
+        if not (isinstance(r["palette"], int) and 0 <= r["palette"] < 16):
+            fail("record %d: \"palette\" is an OBJ palette bank, 0-15" % slot)
+        if not (isinstance(r["depth"], int) and 0 <= r["depth"] < 0x80000000):
+            fail("record %d: \"depth\" is a number" % slot)
+        if not (isinstance(r["box"], list) and len(r["box"]) == 6
+                and all(isinstance(x, int) and -0x8000 <= x < 0x8000 for x in r["box"])):
+            fail("record %d: \"box\" is [x, y, z, w, h, d]" % slot)
+        for k in ("spawn_x", "spawn_y"):
+            if not (isinstance(r.get(k, 0), int) and -0x80000000 <= r.get(k, 0) < 0x80000000):
+                fail("record %d: \"%s\" is a number" % (slot, k))
+        keyframes = next(a["list"] for a in arrays if isinstance(a, dict) and a.get("keyframes") == r["keyframes"])
+        for n, k in enumerate(keyframes):
+            if k[1] < 0 or k[2] < 1 or not 0 <= k[3] < k[2] or k[1] + k[2] > fr[1]:
+                fail("record %d: keyframe %d of %s plays frames %d-%d, and loops back to %d, of %s's %d"
+                     % (slot, n, r["keyframes"], k[1], k[1] + k[2] - 1, k[1] + k[3], r["frames"], fr[1]))
+    _anim_tables[name] = t
+    return t
+
+
+def anim_table_c(name):
+    """An animation table's C definitions: the declarations of its arrays,
+    then the arrays and the table in "arrays" order."""
+    t = anim_table(name)
+    fam = ANIM_FAMILIES[t["family"]]
+    frames = sheet_frames(fam["sheet"])
+    first = {}
+    for k, v in actor_kinds()[t["family"]].items():
+        first.setdefault(v, k)
+    ctypes = {"keyframes": "const struct anim_frame_record %s[%d]", "frames": "const u32 %s[%d]",
+              "player_frames": "const u8 *const %s[%d]"}
+    out = ["/* data/levels/anim_tables/%s.json */" % name]
+    arrays = [a for a in t["arrays"] if a != "table"]
+    out += ["extern " + ctypes[anim_array_kind(a)] % (a[anim_array_kind(a)], len(a["list"])) + ";" for a in arrays]
+    for a in t["arrays"]:
+        out.append("")
+        if a == "table":
+            out.append("const struct anim_table_record %s[%d] = {" % (t["symbol"], len(t["records"])))
+            for slot, r in enumerate(t["records"]):
+                kind = " (%s_KIND_%s)" % (t["family"], first[slot]) if slot in first else ""
+                if "keyframes" not in r:
+                    out.append("    { %d }, /* %d%s: unused */" % (r.get("index", slot), slot, kind))
+                    continue
+                out += ["    /* %d%s */" % (slot, kind),
+                        "    { %d, (struct anim_frame_record *)%s, (u32 *)%s, %d, 0x%X, { %s }, %d, %d },"
+                        % (r.get("index", slot), r["keyframes"], r["frames"], r["palette"], r["depth"],
+                           ", ".join("%d" % x for x in r["box"]), r.get("spawn_x", 0), r.get("spawn_y", 0))]
+            out.append("};")
+            continue
+        kind = anim_array_kind(a)
+        if "comment" in a:
+            out.append("/* %s */" % a["comment"])
+        out.append(ctypes[kind] % (a[kind], len(a["list"])) + " = {")
+        for v in a["list"]:
+            if kind == "keyframes":
+                out.append("    { %d, %d, %d, %d, 0x%X, { 0, 0 } }," % tuple(v))
+            elif kind == "frames":
+                entity, frame = v.split("/")
+                out.append("    FRAMED_%s_%s_%s, /* 0x%x */" % (fam["prefix"], entity.upper(), frame, frames[v]))
+            else:
+                out.append("    %s::frames + %s_FRAME_%03d," % (fam["player_class"], fam["player_name"], v))
+        out.append("};")
+    return out
+
+
+def anim_table_inc(name):
+    """`levels.py anim-table NAME OUT`: what the C file of the ROM's
+    animation table NAME (ROM_ANIM_TABLES) #includes."""
+    if name not in ROM_ANIM_TABLES:
+        sys.exit("levels.py anim-table: %s isn't one of %s" % (name, ", ".join(ROM_ANIM_TABLES)))
+    out = ["/* Generated by tools/levels.py from data/levels/anim_tables/ - do not edit. */", ""]
+    return "\n".join(out + anim_table_c(name)) + "\n"
+
+
+def write_anim_table(path, t):
+    """An animation table's JSON: one record, keyframe or line of frames
+    per line."""
+    def items(lst, per):
+        return ",\n".join("      " + ", ".join(json.dumps(v) for v in lst[i:i + per]) for i in range(0, len(lst), per))
+
+    head = ",\n".join('  "%s": %s' % (k, json.dumps(t[k])) for k in ("symbol", "family"))
+    recs = ",\n".join("    " + json.dumps(r) for r in t["records"])
+    arrays = []
+    for a in t["arrays"]:
+        if a == "table":
+            arrays.append('    "table"')
+            continue
+        kind = anim_array_kind(a)
+        keys = "".join('"%s": %s, ' % (k, json.dumps(a[k])) for k in (kind, "comment") if k in a)
+        arrays.append("    {%s\"list\": [\n%s\n    ]}" % (keys, items(a["list"], {"keyframes": 1, "frames": 6,
+                                                                                    "player_frames": 16}[kind])))
+    text = "{\n%s,\n  \"records\": [\n%s\n  ],\n  \"arrays\": [\n%s\n  ]\n}\n" % (head, recs, ",\n".join(arrays))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text)
+
+
+def anim_tables_from_rom(rom):
+    """extract: the ROM's animation tables (data/levels/anim_tables/), each
+    with the kept JSON's arrays (their symbols, lengths, kinds and
+    comments, in their order); the rest from the ROM. The arrays are laid
+    out back to back around the table."""
+    import gfx_manifest
+    import rle_sprites
+
+    players = {}
+    for e in gfx_manifest.load():
+        if e["kind"] == "rle_frames":
+            pos, starts = gfx_manifest.addr(e["rom"]) - ROM_BASE, []
+            while pos < gfx_manifest.addr(e["end"]) - ROM_BASE:
+                starts.append(pos + ROM_BASE)
+                pos = rle_sprites.decode(rom.data, pos)[3]
+            players[e["path"]] = {a: n for n, a in enumerate(starts)}
+    for name, table in ROM_ANIM_TABLES.items():
+        path = ANIM_TABLES_DIR / ("%s.json" % name)
+        kept = read_json(path)
+        fam = ANIM_FAMILIES[kept["family"]]
+        offsets = {v: k for k, v in sheet_frames(fam["sheet"]).items()}
+        sizes = [ANIM_RECORD_SIZE * fam["records"] if a == "table" else
+                 (ANIM_KEYFRAME_SIZE if anim_array_kind(a) == "keyframes" else 4) * len(a["list"])
+                 for a in kept["arrays"]]
+        at = kept["arrays"].index("table")
+        a = table - sum(sizes[:at])
+        addrs = {}
+        arrays = []
+        for k, size in zip(kept["arrays"], sizes):
+            if k != "table":
+                kind = anim_array_kind(k)
+                addrs[a] = k[kind]
+                n = len(k["list"])
+                if kind == "keyframes":
+                    lst = []
+                    for i in range(n):
+                        e = a + ANIM_KEYFRAME_SIZE * i
+                        v = list(struct.unpack_from("<HhhhH", rom.data, e - ROM_BASE))
+                        assert rom.bytes(e + 10, 2) == b"\0\0", "%s[%d]: bytes 10-11 aren't 0" % (k[kind], i)
+                        lst.append(v)
+                elif kind == "frames":
+                    lst = [offsets[rom.w(a + 4 * i)] for i in range(n)]
+                else:
+                    lst = [players[fam["player_png"]][rom.w(a + 4 * i)] for i in range(n)]
+                k = dict(k, list=lst)
+            arrays.append(k)
+            a += size
+        records = []
+        for slot in range(fam["records"]):
+            r = table + ANIM_RECORD_SIZE * slot
+            f = struct.unpack_from("<BxxxIIBxxxi6hii", rom.data, r - ROM_BASE)
+            assert not any(rom.bytes(r + 1, 3) + rom.bytes(r + 0xD, 3)), "%s record %d: its padding isn't 0" \
+                % (kept["symbol"], slot)
+            rec = {} if f[0] == slot else {"index": f[0]}
+            if f[1] or any(f[2:]):
+                rec.update({"keyframes": addrs[f[1]], "frames": addrs[f[2]], "palette": f[3], "depth": f[4],
+                            "box": list(f[5:11])})
+                rec.update({k: v for k, v in (("spawn_x", f[11]), ("spawn_y", f[12])) if v})
+            records.append(rec)
+        write_anim_table(path, {"symbol": kept["symbol"], "family": kept["family"], "records": records,
+                                "arrays": arrays})
+
+
+# ---------------------------------------------------------------------------
 # Boss levels (docs/levels.md, "Boss levels")
 #
 # A level's boss is its "boss_kind" in levels.json. LevelState::GetBossIndex
@@ -2925,6 +3240,7 @@ def extract(rom_path):
               "levels": level_info, "worlds": worlds_from_rom(rom, kept)}
     levels["themes"], levels["palette_cycles"] = themes_from_rom(rom, kept)
     levels["categories"] = categories_from_rom(rom, kept)
+    anim_tables_from_rom(rom)
     # the derived counts (constants/levels.h, themes.h) are the ROM's
     check_rom_counts(levels)
     write_levels_json(levels)
@@ -3445,6 +3761,9 @@ def main():
     elif cmd == "categories":
         Path(args[1]).parent.mkdir(parents=True, exist_ok=True)
         Path(args[1]).write_text(actor_categories_inc(read_json(LEVELS_JSON)))
+    elif cmd == "anim-table":
+        Path(args[2]).parent.mkdir(parents=True, exist_ok=True)
+        Path(args[2]).write_text(anim_table_inc(args[1]))
     else:
         sys.exit("unknown command %s" % cmd)
 

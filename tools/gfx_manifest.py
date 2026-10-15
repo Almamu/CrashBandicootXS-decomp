@@ -554,6 +554,11 @@ def extract_check(rom_path):
         (root / "data/levels").mkdir(parents=True)
         for f in Path("data/levels").glob("*.json"):
             shutil.copy(f, root / "data/levels" / f.name)
+        # and the animation tables, whose arrays (their symbols, lengths and
+        # order) levels.py extract keeps
+        (root / "data/levels/anim_tables").mkdir()
+        for f in Path("data/levels/anim_tables").glob("*.json"):
+            shutil.copy(f, root / "data/levels/anim_tables" / f.name)
         # the actor kinds, which name the actor categories' spawns
         (root / "include/constants").mkdir(parents=True)
         shutil.copy("include/constants/actor_kinds.h", root / "include/constants")

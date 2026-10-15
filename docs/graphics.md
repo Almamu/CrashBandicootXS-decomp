@@ -1528,7 +1528,9 @@ order of the `"folders"` list in the sheet's `sheet.json` is the sheet's
 byte order, which is also the build's pack order (`tools/framed_gfx.py
 order`, graphics.mk's `FRAMED_ENTITIES_<family>`), so the ROM doesn't
 change. The `FRAMED_POLAR_<FOLDER>_<NN>` and `FRAMED_JETPACK_...` names
-in `src/game/vehicles/*/data/*_anim_family.cpp` follow the folders' names.
+in the animation tables (`data/levels/anim_tables/`, where a frame is
+`"<folder>/<NN>"`, docs/levels.md "Animation tables") follow the folders'
+names.
 
 `tools/dump_entities.py` writes `docs/entities/polar.json` and
 `jetpack.json` (they used to be `entities.json` beside each sheet): the
