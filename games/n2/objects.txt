@@ -7,6 +7,7 @@
 # code's then the data's.
 # games/n2/disasm.py cuts games/n2/asm/ and games/n2/data/ around them and
 # writes the linker script.
+0x08000224 0x024 engine/src/engine/sys/bios_util.cpp
 0x08000920 0x0C8 engine/src/engine/gfx/bitmap_screen.cpp
 0x080009E8 0x09C engine/src/engine/util/fixed_math.cpp
 0x08000ED8 0x078 engine/src/engine/util/line.cpp
