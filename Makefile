@@ -271,6 +271,24 @@ else
 	$(foreach g,$(DATA_CHECK_GAMES),python3 tools/data_check.py --game $(g) $(DATA_CHECK_ARGS) &&) true
 endif
 
+# `make preview LEVEL=jungle_jam [ROOM=0]` builds the PC port and plays
+# the level's room in its window from the level select on;
+# PREVIEW_ARGS=--headless writes its first picture (`--out FILE`,
+# `--screens DIR`) instead (tools/preview.py, docs/editors.md "Preview").
+# With MOD, in the mod's tree, applied first.
+LEVEL ?= 0
+ROOM ?= 0
+PREVIEW_ARGS ?=
+.PHONY: preview
+preview:
+ifneq ($(filter command line environment,$(origin MOD)),)
+	rm -rf $(MOD_TREE)
+	python3 tools/apply_mod.py $(MOD) $(MOD_TREE)
+	cd $(MOD_TREE) && python3 tools/preview.py "$(LEVEL)" "$(ROOM)" $(PREVIEW_ARGS)
+else
+	python3 tools/preview.py "$(LEVEL)" "$(ROOM)" $(PREVIEW_ARGS)
+endif
+
 schemas:
 	python3 tools/schemas.py write
 

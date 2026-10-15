@@ -12,7 +12,8 @@ and run the same tools. This page is what they can rely on (#1167 stage 3,
   format ("Errors");
 - **`make data-check`**: every check of the data, without building
   ("Checking the data");
-- **named room parameters** in room.json ("Named room parameters").
+- **named room parameters** in room.json ("Named room parameters");
+- **a preview**: the PC port started at a level's room ("Preview").
 
 Nothing here changes what the build makes: both ROMs and both .map files
 are the same with or without it.
@@ -175,3 +176,45 @@ exit status 1. A check that stops at its first problem (most of the
 model's do) reports that one; fix it and run again. CI runs it on both
 games (build.yml, "Check the data") and on the sample mod's tree
 (mods.yml, "Check the mod's data").
+
+## Preview
+
+    make preview LEVEL=jungle_jam                    # in a window, from the level select on
+    make preview LEVEL=snow_crash ROOM=1 PREVIEW_ARGS="--headless --out polar.png"
+    make preview MOD=mods/sample LEVEL=sample_grove  # a mod: applied, then previewed in its tree
+    python3 tools/preview.py LEVEL [ROOM] [--headless] [--frames N] [--every N]
+                             [--screens DIR] [--out PNG] [--keys FILE] [--sdl 0|1]
+                             [--no-build] [--json]
+
+`tools/preview.py` (buildtools.preview) builds the PC port from the
+tree's data (`make PLATFORM=pc`: with SDL2's window when pkg-config finds
+SDL2, `--sdl 0|1` to say; [platforms.md](./platforms.md)) and runs
+`build/pc/crashbandicootxs_pc` with `platform/pc/preview.keys`, which goes
+through the logos and menus to the level select, and `--level`/`--room`
+(platform/pc/src/level_pick.c), which make it start the level in the
+room. Nothing in the game changes: the same two hooks are what the host's
+mGBA comparisons use.
+
+- **LEVEL** is gLevelTable's index, a level's constant (`LEVEL_JUNGLE_JAM`
+  or `JUNGLE_JAM`), its name (`"jungle jam"`), its folder (`jungle_jam`)
+  or one of its room folders (`snow_crash/part2`: the level and the room).
+- **ROOM** is the index in the level's `"rooms"` (0 by default), or one of
+  them by folder: a stage (`{"stage": ...}`) is a room too. A bonus or
+  gem-path room isn't in `"rooms"` (the level enters it, it isn't
+  started), so it can't be previewed on its own.
+- **In a window** the game runs paced from the level select on, and the
+  keyboard or a gamepad plays it (Esc quits, F12 takes a screenshot).
+- **Headless** (`--headless`, `--out`, `--screens`, or an executable
+  built without SDL2) it runs as fast as it can and stops at `--frames`
+  (700 by default, a few frames into the level: the level select picks at
+  frame 511 and the room has loaded by then); `--screens DIR` gets every
+  `--every`'th frame's picture (`DIR/FRAME.png`), `--out FILE` the last.
+- `--no-build` runs the executable as it is; `--keys` plays another key
+  file (`FRAME KEYS` lines, platforms.md, "Running it").
+- `--json` prints one report (see "Errors") with `"preview"`: the level's
+  index and constant, the room's index and entry, the command and the
+  pictures written.
+
+For a mod, `make preview MOD=...` applies it to `MOD_TREE`
+(`build/mods/<name>`) and runs the tool there, building the mod's own PC
+port; an editor working on a mod's tree runs `tools/preview.py` in it.
