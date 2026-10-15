@@ -27,6 +27,7 @@
 0x0800A5A4 0x0DC engine/src/game/crates/crate_list_reset.cpp
 0x0800AA78 0x0C0 engine/src/game/entities/moving_sprite_probe.cpp
 0x0800E754 0x098 engine/src/game/enemies/periodic_spawner.cpp
+0x08011B34 0x14C engine/src/game/crates/crate_reset.cpp
 0x08012A30 0x2C8 engine/src/game/crates/collision_queue.cpp
 0x080250DC 0x094 engine/src/game/level/tile_cache_cell.cpp
 0x08025170 0x084 engine/src/game/level/entity_bitmap.cpp

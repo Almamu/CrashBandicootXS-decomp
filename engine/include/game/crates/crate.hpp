@@ -190,8 +190,11 @@ public:
                        //        ConvertForTimeTrial
     u8 touched;        // 0x58
     u8 groupAllocated; // 0x59 - `group` was allocated (ActivateIronSwitchCrate)
-    Crate *above;      // 0x5C - the crate stacked on this one
-    Crate *below;      // 0x60 - the crate this one stands on
+#ifdef GAME_N2
+    u8 unk_5A; // N-Tranced's Reset zeroes it (+0x7A there); XS has padding
+#endif
+    Crate *above; // 0x5C - the crate stacked on this one
+    Crate *below; // 0x60 - the crate this one stands on
 
     Crate();               // InitCrate: inline in crate_create.cpp (`new Crate`)
     virtual void Update(); // 3 UpdateCrate
