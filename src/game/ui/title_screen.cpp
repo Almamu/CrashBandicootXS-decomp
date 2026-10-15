@@ -76,7 +76,7 @@ TitleScreen::TitleScreen()
     selection = 0;
     blinkCounter = 0;
 
-    gAudioContext->StartSong(SONG_MAIN_MENU_EUROPE);
+    gAudioContext->StartSong(SCREEN_SONG_TITLE);
 }
 
 /* Loads BG2's palette, tiles and map from gTitleScreenBg, packing the
@@ -449,7 +449,7 @@ u32 TitleScreen::CheatInput(u32 pressed)
     else if (pressed & START_BUTTON)
         HashInput(0x828A048B);
     if (cheatHash == 0x3034AF3B) {
-        gAudioContext->PlaySong(SONG_MAIN_MENU_JAPAN);
+        gAudioContext->PlaySong(SCREEN_SONG_TITLE_CHEAT);
         cheatHash = 0;
     }
     return 0;

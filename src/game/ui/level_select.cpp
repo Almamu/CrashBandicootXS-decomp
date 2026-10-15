@@ -87,7 +87,7 @@ s32 LevelSelect::Run(s32 *level)
     gLargeFont->SetTileBase(v);
     IconReserve(&gLargeFont);
     gObjVramCursor->Mark();
-    gAudioContext->PlaySong(SONG_WARP_ROOM);
+    gAudioContext->PlaySong(SCREEN_SONG_LEVEL_SELECT);
 
     LevelSelect **menuAddr = &instance;
 

@@ -198,7 +198,7 @@ $(SOUND_BUILDDIR)/sfx_table.bin: sound/sfx_table.json tools/sfx_table.py
 # wait for the music block.
 GENERATED_HEADERS += $(GENERATED_INCLUDE_DIR)/constants/songs.h $(GENERATED_INCLUDE_DIR)/constants/sfx.h
 
-$(GENERATED_INCLUDE_DIR)/constants/songs.h: sound/gax_manifest.json tools/gax_audio.py
+$(GENERATED_INCLUDE_DIR)/constants/songs.h: sound/gax_manifest.json sound/music.json tools/gax_audio.py
 	@mkdir -p $(dir $@)
 	python3 tools/gax_audio.py --constants $@
 

@@ -5,7 +5,8 @@
  * Values of `level_state.maskLevel`, the number of Aku Aku masks the
  * player has (SetMaskLevel, RaiseMaskLevel). A hit with a mask takes one
  * away (PlayerHandleEvent); the third makes the player invincible: it
- * plays SONG_DRUMS (SetMaskLevel, PlayRoomMusic) and hits do nothing.
+ * plays SCREEN_SONG_INVINCIBLE, the drums (SetMaskLevel, PlayRoomMusic),
+ * and hits do nothing.
  * Packed into two bits of the save stats (GameProgress::maskLevel,
  * game_progress.hpp).
  */

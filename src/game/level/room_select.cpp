@@ -17,8 +17,8 @@ using Game::Level::LevelProgress;
  * with old_agbcp. See docs/matching/archive/issue-38-medal-results-tally.md. */
 
 /* Resolves which sound cue to play for a medal-results screen event:
- * SONG_DRUMS while `gLevelState->maskLevel` is MASK_LEVEL_INVINCIBLE,
- * SONG_BONUS_ROUND if `IsInBonusRoom` (the
+ * SCREEN_SONG_INVINCIBLE (the drums) while `gLevelState->maskLevel` is
+ * MASK_LEVEL_INVINCIBLE, SCREEN_SONG_BONUS_ROOM if `IsInBonusRoom` (the
  * item-list `extra1`-matches-cached-value check) is true, otherwise a
  * byte looked up from the per-level sound-cue-ID table
  * `gThemeMusicCues` at `gLevelTable[level]`'s `+0x04`
@@ -32,9 +32,9 @@ void LevelProgress::PlayRoomMusic()
     u32 id;
 
     if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE) {
-        id = SONG_DRUMS;
+        id = SCREEN_SONG_INVINCIBLE;
     } else if (IsInBonusRoom() != 0) {
-        id = SONG_BONUS_ROUND;
+        id = SCREEN_SONG_BONUS_ROOM;
     } else {
         u32 offset = gLevelTable[level].theme;
 
