@@ -368,7 +368,7 @@ is, by [`games/n2/levels.mk`](../games/n2/levels.mk) with
 | The 3 BG0 tile sets (8bpp) | between the regions | `level_bg0_tiles_<N>.cpp` (`levels.py tileset`) |
 | The 5 BG1-3 tile sets (4bpp, LZ77) | `0x085346AC`-`0x08544635`, in two runs | `level_bg_tiles_<N>.cpp` |
 | The 36 level assets | `0x08544638`-`0x0869B8CC` | `engine/src/game/level/data/level_assets.cpp` (shared) |
-| The level table, room lists, themes' music cues and room records | `0x081D0430`-`0x081D0E10` | `games/n2/src/game/level/data/level_table.cpp` (`levels.py table`) |
+| The themes' colour arrays, the level table, room lists, themes' music cues and room records | `0x081D03FC`-`0x081D0E10` | `games/n2/src/game/level/data/level_table.cpp` (`levels.py table`) |
 
 That's 2,313,432 bytes, 28.9% of its data. A room's parts are in another
 order than XS's (`levels.json`'s `"room_layout"`: the type counts, entity
@@ -404,11 +404,15 @@ the generator (`levels.py table`) cover:
   the atlasphere's), neither with a name yet;
 - the extra rooms' records set `unk_0C` (1).
 
-Still to do for #1113: the colour cycles' lists before the table
-(`0x081D03FC`-`0x081D0430`: its `RunRoom` cycles BG palette entries
-`f3`-`f7` for theme 0, `fb`-`ff` and `22`-`24` for themes 1 and 9, and for
-theme 2 a glow of entries `1c`-`1f` between two sets of 4 colours, an
-effect XS doesn't have), the level select, and the entity types' names.
+Before the table are the themes' colour arrays (`0x081D03FC`), which its
+`RunRoom` (still the disassembly) uses: `"palette_cycles"` as XS's, the
+BG palette entries `f3`-`f7` for theme 0 (`arabia`) and `fb`-`ff` and
+`22`-`24` for themes 1 and 9 (`egypt`), and `"palette_glows"`, an effect
+XS doesn't have: for theme 2 (`volcano`) entries `1c`-`1f` glow between
+two sets of 4 colours. Their symbols, rates and directions are what that
+code passes; `extract-table` reads the values.
+
+Still to do for #1113: the level select, and the entity types' names.
 
 ## Graphics (#1115)
 

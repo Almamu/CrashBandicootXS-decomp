@@ -32642,7 +32642,7 @@ _080234EE:
 	ldr r0, [r4]
 	movs r1, #0xa0
 	lsls r1, r1, #0x13
-	ldr r2, _08023510 @ =gUnknown_081D03FC
+	ldr r2, _08023510 @ =gThemePaletteCycle0
 	movs r3, #5
 	str r3, [sp]
 	add r3, sp, #4
@@ -32651,7 +32651,7 @@ _080234EE:
 	b _08023544
 	.align 2, 0
 _0802350C: .4byte 0x02000E78
-_08023510: .4byte gUnknown_081D03FC
+_08023510: .4byte gThemePaletteCycle0
 _08023514:
 	ldr r4, _0802354C @ =0x02000E78
 	ldr r0, [r4]
@@ -32660,7 +32660,7 @@ _08023514:
 	movs r1, #0xa0
 	lsls r1, r1, #0x13
 	mov r8, r1
-	ldr r2, _08023550 @ =gUnknown_081D0406
+	ldr r2, _08023550 @ =gThemePaletteCycle1A
 	movs r1, #5
 	str r1, [sp]
 	add r6, sp, #4
@@ -32670,7 +32670,7 @@ _08023514:
 	movs r3, #0xa
 	bl AddPaletteCycle
 	ldr r0, [r4]
-	ldr r2, _08023554 @ =gUnknown_081D0410
+	ldr r2, _08023554 @ =gThemePaletteCycle1B
 	movs r1, #3
 	str r1, [sp]
 	strb r5, [r6]
@@ -32681,8 +32681,8 @@ _08023544:
 	b _0802359A
 	.align 2, 0
 _0802354C: .4byte 0x02000E78
-_08023550: .4byte gUnknown_081D0406
-_08023554: .4byte gUnknown_081D0410
+_08023550: .4byte gThemePaletteCycle1A
+_08023554: .4byte gThemePaletteCycle1B
 _08023558:
 	ldr r0, _0802357C @ =0x02000E78
 	ldr r0, [r0]
@@ -32691,9 +32691,9 @@ _08023558:
 	mov r3, sb
 	strb r3, [r0, #0x14]
 	ldr r1, [r2]
-	ldr r0, _08023580 @ =gUnknown_081D0416
-	ldr r2, _08023584 @ =gUnknown_081D0426
-	ldr r3, _08023588 @ =gUnknown_081D041E
+	ldr r0, _08023580 @ =gThemePaletteGlow2Entries
+	ldr r2, _08023584 @ =gThemePaletteGlow2ColorsB
+	ldr r3, _08023588 @ =gThemePaletteGlow2ColorsA
 	movs r4, #4
 	str r0, [r1]
 	str r2, [r1, #4]
@@ -32704,9 +32704,9 @@ _08023558:
 	b _0802359A
 	.align 2, 0
 _0802357C: .4byte 0x02000E78
-_08023580: .4byte gUnknown_081D0416
-_08023584: .4byte gUnknown_081D0426
-_08023588: .4byte gUnknown_081D041E
+_08023580: .4byte gThemePaletteGlow2Entries
+_08023584: .4byte gThemePaletteGlow2ColorsB
+_08023588: .4byte gThemePaletteGlow2ColorsA
 _0802358C:
 	ldr r0, _08023660 @ =0x02000E78
 	ldr r0, [r0]

@@ -22,6 +22,12 @@
 0x081CFB12 gCrateKindUnbreakable
 0x081CFC04 gCrateHitResponse
 0x081D0244 gEntitySpawnFuncs  # the 110-entry spawn table, checked by hand (#1113)
+0x081D03FC gThemePaletteCycle0
+0x081D0406 gThemePaletteCycle1A
+0x081D0410 gThemePaletteCycle1B
+0x081D0416 gThemePaletteGlow2Entries
+0x081D041E gThemePaletteGlow2ColorsA
+0x081D0426 gThemePaletteGlow2ColorsB
 0x081D0430 gLevelTable
 0x081D0A14 gThemeMusicCues
 0x081D0E10 gTerrainTypes

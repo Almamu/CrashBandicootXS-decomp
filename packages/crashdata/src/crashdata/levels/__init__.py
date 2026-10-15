@@ -1603,7 +1603,7 @@ def table_c(which, out_path):
 GAX_MANIFEST = Path("games/xs/sound/gax_manifest.json")
 GFX_MANIFEST = Path("games/xs/graphics/manifest.json")
 THEME_KEYS = ["constant", "name", "song"]
-THEME_OPTIONAL_KEYS = ["picture", "palette_cycle", "first_room_exit_zone"]
+THEME_OPTIONAL_KEYS = ["picture", "palette_cycle", "first_room_exit_zone", "palette_glow"]
 # The ROM's theme tables: the colour cycles' entry lists (back to back,
 # up to gLevelTable), gLevelSelectPictures (10 {palette, tiles} pairs:
 # mega-mix, the last theme, has none) and gThemeMusicCues (a byte per
@@ -1661,6 +1661,8 @@ def level_themes(data):
                                                                                    ", ".join(cycles)))
         if not isinstance(t.get("first_room_exit_zone", False), bool):
             fail("%s: \"first_room_exit_zone\" is true or false" % t["constant"])
+        if "palette_glow" in t and t["palette_glow"] not in [g["name"] for g in data.get("palette_glows", [])]:
+            fail("%s: \"palette_glow\" %s isn't one of \"palette_glows\"" % (t["constant"], t["palette_glow"]))
     names = [c["name"] for c in data.get("palette_cycles", [])]
     if len(set(names)) != len(names):
         fail("two \"palette_cycles\" have the same name")
@@ -1673,6 +1675,13 @@ def level_themes(data):
             if not 0 < lst["rate"] <= 0xFF or lst["direction"] not in (0, 1):
                 fail("palette cycle %s: %s: \"rate\" is 1-255 frames, \"direction\" 0 or 1" % (c["name"],
                                                                                               lst["symbol"]))
+    for g in data.get("palette_glows", []):
+        arrays = [g["entries"]] + g["colors"]
+        if len(g["colors"]) != 2 or len({len(a["values"]) for a in arrays}) != 1 \
+                or not all(0 <= e <= 0xFF for e in g["entries"]["values"]) \
+                or not all(0 <= c <= 0x7FFF for a in g["colors"] for c in a["values"]):
+            fail("palette glow %s: \"entries\" (BG palette entries) and its two \"colors\" (15-bit colours) are "
+                 "arrays of one length" % g["name"])
     for lv in data["levels"]:
         if not 0 <= lv["theme"] < len(themes):
             fail("%s's theme %d isn't one of the %d \"themes\"" % (lv["constant"], lv["theme"], len(themes)))
@@ -1699,6 +1708,18 @@ def palette_cycles_c(data):
             out.append("extern const u16 %s[%d] = { %s }; /* %s: %s */"
                        % (lst["symbol"], len(lst["entries"]), ", ".join("0x%02x" % e for e in lst["entries"]),
                           c["name"], ", ".join(users) or "no theme"))
+    # a game's own (N-Tranced's RunRoom: BG palette entries glowing between
+    # two sets of colours)
+    for g in data.get("palette_glows", []):
+        users = [t["constant"] for t in data["themes"] if t.get("palette_glow") == g["name"]]
+        out.append("/* The %s glow (levels.json's \"palette_glows\": %s): its BG palette entries, and "
+                   "the two sets of colours they go between. */" % (g["name"], ", ".join(users) or "no theme"))
+        e = g["entries"]
+        out.append("extern const u16 %s[%d] = { %s };" % (e["symbol"], len(e["values"]),
+                                                       ", ".join("0x%02x" % v for v in e["values"])))
+        for c in g["colors"]:
+            out.append("extern const u16 %s[%d] = { %s };" % (c["symbol"], len(c["values"]),
+                                                           ", ".join("0x%04X" % v for v in c["values"])))
     return out
 
 
@@ -4107,6 +4128,29 @@ def extract_table(rom_path, table):
     for r in sorted(played_addrs):
         assert r == a, "played record %#x isn't at %#x" % (r, a)
         a += LEVEL_ROOM_SIZE
+    # the colour cycles' and glows' arrays, back to back before the table
+    # (their symbols, rates and directions kept: the game's code; the
+    # values from the ROM)
+    cycles, glows = data.get("palette_cycles"), data.get("palette_glows")
+    if cycles or glows:
+        sizes = [len(lst["entries"]) for c in cycles or [] for lst in c["lists"]] + \
+            [len(arr["values"]) for g in glows or [] for arr in [g["entries"]] + g["colors"]]
+        pos = table - ((2 * sum(sizes) + 3) & ~3)
+
+        def take(n):
+            nonlocal pos
+            v = [rom.h(pos + 2 * k) for k in range(n)]
+            pos += 2 * n
+            return v
+        for c in cycles or []:
+            for lst in c["lists"]:
+                lst["entries"] = take(len(lst["entries"]))
+        for g in glows or []:
+            for arr in [g["entries"]] + g["colors"]:
+                arr["values"] = take(len(arr["values"]))
+        assert (pos + 3) & ~3 == table, "the colour cycles' arrays don't run up to the table"
+        for i, t in enumerate(themes):
+            t.update({k: kept[i][k] for k in ("palette_cycle", "palette_glow") if k in kept.get(i, {})})
     out = {}
     for k, v in data.items():
         if k not in ("levels", "themes", "table"):

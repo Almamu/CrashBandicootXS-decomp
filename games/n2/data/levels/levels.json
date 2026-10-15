@@ -140,6 +140,22 @@
   },
   "room_layout": ["params", "type_counts", "entity_list", "links", "grids", "palette", "desc", "groups", "layers", "entities"],
   "entity_types": 110,
+  "palette_cycles": [
+    {
+      "name": "arabia",
+      "lists": [
+        {"symbol": "gThemePaletteCycle0", "rate": 10, "direction": 1, "entries": [243, 244, 245, 246, 247]}
+      ]
+    },
+    {
+      "name": "egypt",
+      "lists": [
+        {"symbol": "gThemePaletteCycle1A", "rate": 10, "direction": 0, "entries": [251, 252, 253, 254, 255]},
+        {"symbol": "gThemePaletteCycle1B", "rate": 10, "direction": 0, "entries": [34, 35, 36]}
+      ]
+    }
+  ],
+  "palette_glows": [{"name": "volcano", "rate": 6, "entries": {"symbol": "gThemePaletteGlow2Entries", "values": [28, 29, 30, 31]}, "colors": [{"symbol": "gThemePaletteGlow2ColorsA", "values": [287, 1662, 32599, 30564]}, {"symbol": "gThemePaletteGlow2ColorsB", "values": [223, 1758, 32767, 32675]}]}],
   "levels": [
     {
       "constant": "LEVEL_ISLAND_INTRO",
@@ -450,16 +466,16 @@
     }
   ],
   "themes": [
-    {"constant": "THEME_ARABIA", "name": "Arabia", "song": 1},
-    {"constant": "THEME_EGYPT", "name": "Egypt", "song": 2},
-    {"constant": "THEME_VOLCANO", "name": "volcano", "song": 3},
+    {"constant": "THEME_ARABIA", "name": "Arabia", "song": 1, "palette_cycle": "arabia"},
+    {"constant": "THEME_EGYPT", "name": "Egypt", "song": 2, "palette_cycle": "egypt"},
+    {"constant": "THEME_VOLCANO", "name": "volcano", "song": 3, "palette_glow": "volcano"},
     {"constant": "THEME_SPACE", "name": "space", "song": 6},
     {"constant": "THEME_OCEAN", "name": "ocean (the jet ski)", "song": 4},
     {"constant": "THEME_ISLAND", "name": "the island (the intro)", "song": 0},
     {"constant": "THEME_ATLASPHERE", "name": "the atlasphere", "song": 7},
     {"constant": "THEME_EVIL_CRUNCH", "name": "Evil Crunch", "song": 10},
     {"constant": "THEME_EVIL_COCO", "name": "Evil Coco", "song": 11},
-    {"constant": "THEME_FAKE_CRASH", "name": "Fake Crash", "song": 12},
+    {"constant": "THEME_FAKE_CRASH", "name": "Fake Crash", "song": 12, "palette_cycle": "egypt"},
     {"constant": "THEME_N_TRANCE", "name": "N. Trance", "song": 13},
     {"constant": "THEME_N_TROPY", "name": "N. Tropy", "song": 14}
   ],
