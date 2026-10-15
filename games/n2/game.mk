@@ -92,6 +92,7 @@ $(C_BUILDDIR)/%.o : $(N2_SRC)/%.cpp cxx_symbols.txt
 
 include compile.mk
 include $(N2_DIR)/levels.mk
+include $(N2_DIR)/graphics.mk
 
 $(GFX):
 	$(MAKE) -C tools/gbagfx

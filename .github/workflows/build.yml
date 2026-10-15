@@ -52,6 +52,11 @@ jobs:
     - name: Check the graphics manifest
       run: python3 tools/gfx_manifest.py check
 
+    # N-Tranced's (docs/n_tranced.md, "Graphics"); its sources against its
+    # ROM in the N-Tranced steps below.
+    - name: Check N-Tranced's graphics manifest
+      run: python3 tools/gfx_manifest.py --graphics-dir games/n2/graphics check
+
     # The C style (.clang-format, CONTRIBUTING.md "Code style"), checked on
     # all the C but the data tables (FORMATTED/UNFORMATTED in
     # tools/format.py). The clang-format version is pinned: other versions
@@ -125,6 +130,10 @@ jobs:
     - name: Build and compare N-Tranced
       if: env.HAS_N2_ROM == 'true'
       run: make GAME=n2 compare
+
+    - name: Check N-Tranced's graphics against its ROM
+      if: env.HAS_N2_ROM == 'true'
+      run: python3 tools/gfx_manifest.py --graphics-dir games/n2/graphics extract baserom_n2.gba --check
 
     # N-Tranced's progress for its decompilati.onl project, on main
     # (games/n2/progress.py, docs/n_tranced.md "Progress"): its own report,
