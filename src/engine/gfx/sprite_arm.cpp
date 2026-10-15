@@ -48,7 +48,7 @@ void UnpackNibbleTiles(u16 *src, s32 lowBlock)
 
     while (dst != end) {
         u32 n = *src++;
-        DmaFill16(3, 0, dst, n * 4);
+        DmaFill16(3, 0, dst, n * sizeof(*dst));
         dst += n;
         if (dst == end)
             break;
@@ -190,12 +190,12 @@ void UnpackRleSpriteFrame(u16 *dst, struct rle_frame *frame)
 
     while (dst != end) {
         u32 n = *src++;
-        DmaFill16(3, 0, dst, n * 2);
+        DmaFill16(3, 0, dst, n * sizeof(*dst));
         dst += n;
         if (dst == end)
             break;
         n = *src++;
-        DmaCopy16(3, src, dst, n * 2);
+        DmaCopy16(3, src, dst, n * sizeof(*dst));
         src += n;
         dst += n;
     }

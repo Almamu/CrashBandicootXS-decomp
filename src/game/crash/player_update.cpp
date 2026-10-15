@@ -156,7 +156,7 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
             struct vec2 *h = maskTrail;
             s32 i;
 
-            for (i = 7; i >= 0; i--)
+            for (i = ARRAY_COUNT(maskTrail) - 1; i >= 0; i--)
                 *h++ = Pos();
         }
         mode = gLevelState->maskLevel;

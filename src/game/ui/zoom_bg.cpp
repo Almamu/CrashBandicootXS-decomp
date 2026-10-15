@@ -81,7 +81,7 @@ ZoomBg::ZoomBg(s32 charBlock, s32 screenBlock)
     affine.scrX = x;
     affine.scrY = y;
     affine.angle = 0;
-    for (i = 0; i <= 3; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(twinkles); i++) {
         twinkles[i].part = new UiSprite;
         SetBankNow(twinkles[i].part, gSpriteBankSet->Bank(50));
         SetMode(twinkles[i].part, OAM_OBJ_MODE_SEMI_TRANSPARENT);

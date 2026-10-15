@@ -72,7 +72,7 @@ void HostSha1Update(struct HostSha1 *s, const void *data, u32 n)
 
     s->length += n;
     while (n != 0) {
-        u32 k = 64 - s->used;
+        u32 k = sizeof(s->block) - s->used;
 
         if (k > n) {
             k = n;
@@ -81,7 +81,7 @@ void HostSha1Update(struct HostSha1 *s, const void *data, u32 n)
         s->used += k;
         p += k;
         n -= k;
-        if (s->used == 64) {
+        if (s->used == sizeof(s->block)) {
             Block(s, s->block);
             s->used = 0;
         }
@@ -97,13 +97,13 @@ void HostSha1Final(struct HostSha1 *s, u8 digest[20])
 
     HostSha1Update(s, &pad, 1);
     pad = 0;
-    while (s->used != 56) {
+    while (s->used != sizeof(s->block) - sizeof(len)) {
         HostSha1Update(s, &pad, 1);
     }
-    for (i = 0; i < 8; i++) {
+    for (i = 0; i < (s32)sizeof(len); i++) {
         len[i] = (u8)(bits >> (56 - 8 * i));
     }
-    HostSha1Update(s, len, 8);
+    HostSha1Update(s, len, sizeof(len));
     for (i = 0; i < 20; i++) {
         digest[i] = (u8)(s->h[i / 4] >> (24 - 8 * (i % 4)));
     }

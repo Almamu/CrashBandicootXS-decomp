@@ -53,7 +53,7 @@ void GaxChannelStepInstrumentSeq(struct GaxChannelState *self, struct GaxInfoHan
     }
     self->volStep17 = 0;
     self->noteStep = 0;
-    for (i = 0; i < 2; i++) {
+    for (i = 0; i < (s32)(sizeof(e->fx) / sizeof(e->fx[0])); i++) {
         u32 cmd = e->fx[i] >> 8;
         u32 param = e->fx[i] & 0xff;
 

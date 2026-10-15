@@ -12,7 +12,7 @@ void HostDmaSet(int channel, uintptr_t src, uintptr_t dest, uint32_t control)
     vu32 *regs = (vu32 *)(REG_BASE + REG_OFFSET_DMA0SAD + 12 * channel);
     u32 cnt = control >> 16;
     u32 count = control & 0xFFFF;
-    u32 unit = (cnt & DMA_32BIT) ? 4 : 2;
+    u32 unit = (cnt & DMA_32BIT) ? sizeof(u32) : sizeof(u16);
     s32 srcStep;
     s32 destStep;
     u32 i;

@@ -10,11 +10,11 @@ s32 GaxFindMixRate(u32 value)
     u32 i = 0;
     const u8 *p = (const u8 *)gGaxMixRates;
 
-    for (; i <= 0xb; i++) {
+    for (; i < sizeof(gGaxMixRates) / sizeof(gGaxMixRates[0]); i++) {
         if (*(const u32 *)p >= value) {
             return i;
         }
-        p += 8;
+        p += sizeof(gGaxMixRates[0]);
     }
-    return 0xb;
+    return sizeof(gGaxMixRates) / sizeof(gGaxMixRates[0]) - 1;
 }

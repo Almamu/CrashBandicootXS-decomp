@@ -132,7 +132,7 @@ void PaletteFade::Darken(s32 factor)
 {
     s32 i;
 
-    for (i = 0; i <= 0x1FF; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(backup); i++) {
         union darken_color color;
 
         color.raw.value = backup[i];

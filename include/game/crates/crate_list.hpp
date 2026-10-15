@@ -210,7 +210,7 @@ public:
         CrateGridLink **head = &freeHead;
         CrateGridLink **fl;
 
-        for (i = 0; i < 256; i++) {
+        for (i = 0; i < (s32)ARRAY_COUNT(heads); i++) {
             heads[i] = 0;
             tails[i] = 0;
         }

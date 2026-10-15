@@ -252,7 +252,7 @@ void Airship::ConvertTiles()
     u32 mask = 0xf;
 
     stride = (u32)(mapCols * mapRows + 1) >> 1 << 2;
-    for (k = 0; k < 4; k++) {
+    for (k = 0; k < (s32)ARRAY_COUNT(heights); k++) {
         s32 x = *(const s32 *)((const u8 *)palette + off);
         heights[k] = x;
         sum += x;
@@ -263,7 +263,7 @@ void Airship::ConvertTiles()
     }
     mapTileBase = 0xFF - sum;
     dst = (u32 *)(((0xFF - sum) << 6) + BG_CHAR_ADDR(2));
-    for (row_i = 0; row_i <= 3; row_i++) {
+    for (row_i = 0; row_i < (s32)ARRAY_COUNT(heights); row_i++) {
         u8 *src;
         /* `row`, `hp`, `n` are needed: inlined, the code is 2 instructions longer */
         u8 *row;

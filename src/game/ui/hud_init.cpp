@@ -55,7 +55,7 @@ Hud::Hud()
     crateSlideTimer = 0;
     wumpaSlideTimer = 0;
 
-    for (i = 0; i <= 0x22; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(gHudPartPositions); i++) {
         HudPart *slot;
 
         parts[i].SetPriority(0);
@@ -199,5 +199,5 @@ void Hud::ConfigureParts(u8 iconFlag)
         } else
             parts[i].palette = frame;
     }
-    DmaFill32(3, -1, &shownLives, 9 * 4);
+    DmaFill32(3, -1, &shownLives, 9 * sizeof(shownLives));
 }

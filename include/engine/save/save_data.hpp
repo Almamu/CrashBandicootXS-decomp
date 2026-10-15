@@ -106,7 +106,7 @@ public:
         s32 i;
         u32 result;
 
-        for (i = SAVE_DATA_SIZE / 4 - 2; i >= 0; i--) {
+        for (i = SAVE_DATA_SIZE / sizeof(u32) - 2; i >= 0; i--) {
             sum += *p++;
         }
 
@@ -236,7 +236,7 @@ public:
         u32 sum = SAVE_LINK_CHECKSUM_SEED;
         s32 i;
 
-        for (i = SAVE_LINK_SIZE / 4 - 2; i >= 0; i--) {
+        for (i = SAVE_LINK_SIZE / sizeof(u32) - 2; i >= 0; i--) {
             sum += *p++;
         }
         return sum;
@@ -251,10 +251,10 @@ public:
         s32 i;
         s32 j;
 
-        for (i = SAVE_LINK_SIZE / 4 - 1; i >= 0; i--) {
+        for (i = SAVE_LINK_SIZE / sizeof(u32) - 1; i >= 0; i--) {
             *p++ = 0;
         }
-        for (i = 0; i <= 3; i++) {
+        for (i = 0; i < (s32)ARRAY_COUNT(slots); i++) {
             struct save_slot *src = &save->slots[i];
             struct save_link_slot *dst = &slots[i];
 
@@ -312,7 +312,7 @@ public:
         save->versionNibble = versionNibble;
         save->flags = flags;
         if (SameLevels()) {
-            for (i = 0; i <= 3; i++) {
+            for (i = 0; i < (s32)ARRAY_COUNT(slots); i++) {
                 struct save_link_slot *src = &slots[i];
                 struct save_slot *dst = &save->slots[i];
 

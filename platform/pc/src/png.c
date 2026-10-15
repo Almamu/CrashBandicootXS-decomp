@@ -57,7 +57,7 @@ static void ChunkStart(struct Chunk *c, FILE *f, const char *type, u32 length)
 
     Be32(head, length);
     memcpy(head + 4, type, 4);
-    fwrite(head, 1, 8, f);
+    fwrite(head, 1, sizeof(head), f);
     c->f = f;
     c->crc = Crc(0, head + 4, 4);
 }
@@ -73,7 +73,7 @@ static void ChunkEnd(struct Chunk *c)
     u8 crc[4];
 
     Be32(crc, c->crc);
-    fwrite(crc, 1, 4, c->f);
+    fwrite(crc, 1, sizeof(crc), c->f);
 }
 
 int HostWritePng(const char *path, const u32 *xrgb, u32 width, u32 height)
@@ -101,7 +101,7 @@ int HostWritePng(const char *path, const u32 *xrgb, u32 width, u32 height)
         return 0;
     }
     CrcInit();
-    fwrite(signature, 1, 8, f);
+    fwrite(signature, 1, sizeof(signature), f);
 
     Be32(ihdr, width);
     Be32(ihdr + 4, height);
@@ -110,8 +110,8 @@ int HostWritePng(const char *path, const u32 *xrgb, u32 width, u32 height)
     ihdr[10] = 0; /* deflate */
     ihdr[11] = 0; /* adaptive filtering (each row's filter byte: none) */
     ihdr[12] = 0; /* not interlaced */
-    ChunkStart(&c, f, "IHDR", 13);
-    ChunkData(&c, ihdr, 13);
+    ChunkStart(&c, f, "IHDR", sizeof(ihdr));
+    ChunkData(&c, ihdr, sizeof(ihdr));
     ChunkEnd(&c);
 
     ChunkStart(&c, f, "IDAT", idat);
@@ -132,7 +132,7 @@ int HostWritePng(const char *path, const u32 *xrgb, u32 width, u32 height)
         block[2] = rowBytes >> 8;
         block[3] = ~rowBytes & 0xFF;
         block[4] = (~rowBytes >> 8) & 0xFF;
-        ChunkData(&c, block, 5);
+        ChunkData(&c, block, sizeof(block));
         ChunkData(&c, row, rowBytes);
         for (i = 0; i < rowBytes; i++) {
             a = (a + row[i]) % 65521;
@@ -143,7 +143,7 @@ int HostWritePng(const char *path, const u32 *xrgb, u32 width, u32 height)
         u8 adler[4];
 
         Be32(adler, b << 16 | a);
-        ChunkData(&c, adler, 4);
+        ChunkData(&c, adler, sizeof(adler));
     }
     ChunkEnd(&c);
 

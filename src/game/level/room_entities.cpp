@@ -100,8 +100,8 @@ void LevelEntityFlags::SpawnRoomEntities(const struct level_entity_list *list,
         this->list = list;
         /* 64 bytes: only the first 16 of each array's 64 words (the
          * ROM's length, not sizeof(bits0)). */
-        DmaFill32(3, zero, bits0, 64);
-        DmaFill32(3, zero, bits1, 64);
+        DmaFill32(3, zero, bits0, 16 * sizeof(*bits0));
+        DmaFill32(3, zero, bits1, 16 * sizeof(*bits1));
     }
     CpuSet(bits0, bits0Copy, CPU_SET_32BIT | sizeof(bits0Copy) / sizeof(u32));
     CpuSet(bits1, bits1Copy, CPU_SET_32BIT | sizeof(bits1Copy) / sizeof(u32));

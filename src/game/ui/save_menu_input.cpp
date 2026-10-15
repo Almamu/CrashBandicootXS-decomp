@@ -131,7 +131,7 @@ SaveMenu::~SaveMenu()
     delete linkSave;
     delete cartSave;
 
-    for (i = 0; i <= 4; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(rowObjA); i++) {
         delete rowObjA[i];
         delete rowObjB[i];
         delete rowObjC[i];
@@ -146,7 +146,7 @@ void SaveMenu::Input(u32 keys)
 {
     s32 i;
 
-    for (i = 0; i <= 4; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(rowObjA); i++) {
         rowObjA[i]->Update();
         rowObjB[i]->Update();
         rowObjC[i]->Update();
@@ -639,7 +639,7 @@ void SaveMenu::DrawMain()
 
     flag.v = 0;
 
-    for (i = 0; i <= 4; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(gSaveMenuOptions); i++) {
         s32 label;
         screen_w_t w;
 

@@ -58,7 +58,7 @@ void HostAudioMixed(const s8 *buf, u32 samples, u32 rate)
     tag[1] = rate >> 8;
     tag[2] = rate >> 16;
     tag[3] = rate >> 24;
-    HostSha1Update(&sHash, tag, 4);
+    HostSha1Update(&sHash, tag, sizeof(tag));
     HostSha1Update(&sHash, buf, samples);
 }
 

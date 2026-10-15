@@ -113,7 +113,7 @@ s32 LinkSession::ResetState()
     }
     connectCounter = 0;
     totalSent = 0;
-    for (i = 0; i <= 3; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(players); i++) {
         players[i].ring.Reset();
         /* scoped, as the `t` block below */
         {

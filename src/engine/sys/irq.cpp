@@ -61,7 +61,7 @@ u32 Irq::Setup()
     irq_handler_t *dst2 = table;
     s32 count;
 
-    for (count = 0xD; count >= 0; count--) {
+    for (count = ARRAY_COUNT(table) - 1; count >= 0; count--) {
         *dst1++ = fn;
         *dst2++ = fn;
     }
@@ -85,7 +85,7 @@ void Irq::EnableVBlankHandler()
     struct vblank_callbacks *base = &vblankCallbacks;
     /* `zero` is needed: inlined, the instructions are reordered */
     irq_handler_t zero = 0;
-    irq_handler_t *current = &base->funcs[7];
+    irq_handler_t *current = &base->funcs[ARRAY_COUNT(base->funcs) - 1];
 
     do {
         *current-- = zero;
@@ -120,7 +120,7 @@ s32 Irq::AddVBlankCallback(void (*fn)(void))
 {
     s32 index = 0;
 
-    while (index <= 7) {
+    while (index < (s32)ARRAY_COUNT(vblankCallbacks.funcs)) {
         if (vblankCallbacks.funcs[index] == 0) {
             vblankCallbacks.funcs[index] = fn;
             return index;

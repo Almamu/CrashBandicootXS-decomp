@@ -36,7 +36,8 @@ void ScaledSprite::Fit(s32 width, s32 height)
     this->width = width;
     this->height = height;
     best = 0x1000;
-    for (i = 0, widths = gObjSizeWidths, heights = gObjSizeHeights; i < 12; i++) {
+    for (i = 0, widths = gObjSizeWidths, heights = gObjSizeHeights;
+         i < (s32)ARRAY_COUNT(gObjSizeWidths); i++) {
         if (width <= widths[i] * 2 && height <= heights[i] * 2 && widths[i] * heights[i] < best) {
             best = widths[i] * heights[i];
             sizeIndex = i;

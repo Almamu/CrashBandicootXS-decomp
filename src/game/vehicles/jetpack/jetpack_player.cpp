@@ -123,7 +123,8 @@ void JetpackPlayer::AnimatePalette()
         frame = __divsi3(gJetpackFlashTimer, 3);
         if (frame > 2)
             frame = 5 - frame;
-        VramDmaQueue::Add(gJetpackFlashPalettes[frame], OBJ_PALETTE(0), 0x20, 0x10);
+        VramDmaQueue::Add(gJetpackFlashPalettes[frame], OBJ_PALETTE(0),
+                          sizeof(gJetpackFlashPalettes[frame]), 0x10);
     }
 }
 

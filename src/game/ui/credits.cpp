@@ -355,10 +355,10 @@ struct popup_glyph_src {
  * hoisted (50). */
 static inline void CopyPaletteToSlot(u16 (*slots)[16], const u32 &slot, const u16 *s)
 {
-    u16 *d = (u16 *)(slot * TILE_SIZE_4BPP + (uintptr_t)slots);
+    u16 *d = (u16 *)(slot * sizeof(*slots) + (uintptr_t)slots);
     s32 k;
 
-    for (k = 15; k >= 0; k--) {
+    for (k = ARRAY_COUNT(*slots) - 1; k >= 0; k--) {
         *d++ = *s++;
     }
 }
@@ -371,7 +371,7 @@ void Credits::LoadLogos()
     s32 slot = 1;
     s32 i;
 
-    for (i = 0; i <= 4; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(logos); i++) {
         struct popup_glyph_src *src = (struct popup_glyph_src *)&gCreditsLogos[i];
         CreditsLogo *logo = &logos[i];
         u8 *tiles;
@@ -428,7 +428,7 @@ Credits::~Credits()
     s32 i;
 
     delete starfield;
-    for (i = 0; i < 5; i++) {
+    for (i = 0; i < (s32)ARRAY_COUNT(logos); i++) {
         delete[] logos[i].tiles;
     }
 }

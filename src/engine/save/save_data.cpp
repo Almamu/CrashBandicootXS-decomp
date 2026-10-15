@@ -247,7 +247,7 @@ void SaveData::UpdateChecksum()
     u32 sum = SAVE_CHECKSUM_SEED;
     s32 i;
 
-    for (i = SAVE_DATA_SIZE / 4 - 2; i >= 0; i--) {
+    for (i = SAVE_DATA_SIZE / sizeof(u32) - 2; i >= 0; i--) {
         sum += *p++;
     }
     checksum = sum;

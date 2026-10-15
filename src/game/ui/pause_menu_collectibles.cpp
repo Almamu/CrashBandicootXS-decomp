@@ -82,7 +82,7 @@ void PauseMenu::DrawRelicsPage()
 {
     s32 i;
 
-    for (i = 0; i <= 2; i++)
+    for (i = 0; i < (s32)ARRAY_COUNT(relicIcons); i++)
         relicIcons[i]->DrawWithOffset(0, 0);
 
     gSmallFont->SetPos(gPauseRelicIconPos[2].x - 4, gPauseRelicIconPos[2].y + 0xe);

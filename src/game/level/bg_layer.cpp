@@ -42,8 +42,8 @@ BgLayer::BgLayer(s32 bgIndex) : BgLayerBase(bgIndex)
     s32 block = bgIndex + 0x1c;
 
     screen = (u16 *)BG_SCREEN_ADDR(block);
-    cntReg = (vu16 *)(bgIndex * 2 + REG_ADDR_BG0CNT);
-    ofsReg = (vu32 *)(bgIndex * 4 + REG_ADDR_BG0HOFS);
+    cntReg = (vu16 *)(bgIndex * sizeof(*cntReg) + REG_ADDR_BG0CNT);
+    ofsReg = (vu32 *)(bgIndex * sizeof(*ofsReg) + REG_ADDR_BG0HOFS);
     cnt.raw = 0;
     SetColors256(0);
     SetScreenBase(block);
