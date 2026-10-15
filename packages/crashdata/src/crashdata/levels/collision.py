@@ -54,9 +54,11 @@ def legend():
     return out
 
 
-def write_image(path, width, cells):
+def write_image(path, width, cells, fmt=None):
     """The cells (row-major, `width` cells wide) as an 8bpp indexed image,
-    CELL_PX x CELL_PX pixels per cell; the format follows the suffix."""
+    CELL_PX x CELL_PX pixels per cell; the format follows the suffix, or
+    `fmt` (PIL's name: "PNG"), where `path` is a file object (the level
+    editor's, crashdata.levels.room_edit)."""
     from PIL import Image
 
     entries = legend()
@@ -72,7 +74,7 @@ def write_image(path, width, cells):
     img.putdata([index[v] for v in cells])
     img = img.resize((width * CELL_PX, height * CELL_PX), Image.NEAREST)
     img.putpalette([ch for _, c, _ in entries for ch in c])
-    img.save(path)
+    img.save(path, format=fmt)
 
 
 def _where(x, y):

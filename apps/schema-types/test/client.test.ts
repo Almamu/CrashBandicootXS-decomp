@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ApiError, EditorClient } from "../src/client.ts";
+import { ApiError, EditorClient, parseRoomLayer } from "../src/client.ts";
 
 interface Call {
   url: string;
@@ -51,6 +51,32 @@ describe("EditorClient", () => {
     expect((e as ApiError).status).toBe(422);
     expect((e as ApiError).message).toBe("the schema rejects it");
     expect((e as ApiError).diagnostics).toEqual([d]);
+  });
+
+  it("reads a room's layers as bytes", async () => {
+    const calls: string[] = [];
+    const body = new Uint8Array([2, 0, 0, 0, 1, 0, 0, 0, 0x34, 0x12, 0xff, 0x00]);
+    const fetch = (async (url: string) => {
+      calls.push(url);
+      return new Response(body, { status: 200 });
+    }) as unknown as typeof globalThis.fetch;
+    const c = new EditorClient({ fetch });
+    const l = await c.roomLayer("xs", "games/xs/data/levels/jungle_jam/main", "collision");
+    expect(calls[0]).toBe("/api/projects/xs/room/layer?path=games%2Fxs%2Fdata%2Flevels%2Fjungle_jam%2Fmain&layer=collision");
+    expect([l.width, l.height, ...l.data]).toEqual([2, 1, 0x1234, 0xff]);
+    const px = parseRoomLayer(new Uint8Array([2, 0, 0, 0, 1, 0, 0, 0, 7, 9]).buffer, false);
+    expect([...px.data]).toEqual([7, 9]);
+    expect(() => parseRoomLayer(new Uint8Array([2, 0, 0, 0, 2, 0, 0, 0, 7]).buffer, false)).toThrow();
+    expect(c.spriteUrl("n2", 23, 43)).toBe("/api/projects/n2/sprite?bank=23&frame=43");
+    expect(c.spriteUrl("xs", 32, 0, 53)).toBe("/api/projects/xs/sprite?bank=32&frame=0&palette=53");
+  });
+
+  it("gives a refused binary request's error", async () => {
+    const f = fake(404, { ok: false, error: "the room has no layer 'bg9'" });
+    const c = new EditorClient({ fetch: f.fetch });
+    const e = await c.roomLayer("xs", "x", "bg9").catch((x: unknown) => x);
+    expect((e as ApiError).status).toBe(404);
+    expect((e as ApiError).message).toBe("the room has no layer 'bg9'");
   });
 
   it("asks for the check without the text when told", async () => {

@@ -267,7 +267,8 @@ What the editor (stage 4's shell) does:
   a level from levels.json and one of its rooms, headless (a picture
   after N frames) or in the PC port's window.
 
-The real level, cutscene and music editors are stage 6.
+The real level, cutscene and music editors are stage 6; the backend
+already serves the level editor's rooms ("The editor's backend").
 
 ## The editor's backend
 
@@ -291,6 +292,11 @@ dependency), listens on **127.0.0.1 only**, and serves:
 | `GET /api/projects/ID/raw?path=P` | any file of `games/<game>/` as it is (a picture) |
 | `GET /api/projects/ID/check[?text=0]` | `tools/data_check.py --json`'s report ("Errors") |
 | `POST /api/projects/ID/preview` `{level, room, headless, frames, noBuild}` | `tools/preview.py --json`'s report and `image`, or `{started, pid}` for the window |
+| `GET /api/projects/ID/room?path=ROOM` | a room's folder (`games/<game>/data/levels/<level>/<slot>`) for the level editor: `{path, room, palette, layers, legend, entityTypes, sprites}` (room.json's value, its 256 BGR555 colours, each layer's size, priority, scroll scale and tile set, the collision legend, entity_types.json's types, a sprite frame per type) |
+| `GET /api/projects/ID/room/layer?path=ROOM&layer=L` | a layer's data: its width and height (u32 LE), then a BG picture's palette indices (a byte a pixel) or the collision layer's cells (u16 LE); gzipped when asked |
+| `GET /api/projects/ID/room/tiles?path=ROOM&layer=L` | a BG layer's tile set as the build makes it: `{tileset, bpp, count, tiles, banks, cells}` (tiles: 64 bytes each, base64; cells: the layer's, u16 LE, base64) |
+| `GET /api/projects/ID/sprite?bank=N&frame=K[&palette=P]` | a sprite bank's frame as a PNG, index 0 transparent, in OBJ palette P or its own |
+| `POST /api/projects/ID/room/save` `{path, room?, layers?, collision?, palette?}` | saves a room's edits, all or none (below) |
 
 A path is from the project's tree's root (`games/xs/data/levels/levels.json`),
 and must be in the project's `games/<game>/`, with no `..`; a file the
@@ -319,6 +325,20 @@ schemas don't describe can't be read as data or written. A refusal is
    every file of the save back as it was, and is the answer. Errors the
    data already had don't stop a save; they come back with it, and so do
    the warnings.
+
+**Saving a room** (`room/save`, `crashdata.levels.room_edit`) is the same
+transaction over the room's files: `room` is room.json's new value (the
+steps above), `layers` the painted cells of each BG layer (`{"bg1": [[cx,
+cy, base64 of the cell's 64 palette indices], ...]}`; a BG1-3 cell's
+pixels must be of one bank), `collision` the collision cells (`[[cx, cy,
+value], ...]`, a value of the legend) and `palette` the room's 256
+colours, which every layer picture gets. A picture whose pixels and
+palette come out as they were isn't written; one with a new palette only
+gets its PLTE chunk replaced (the pixels' bytes stay); painted cells
+write the picture as crashdata's writers do (`write_layer_png`'s
+settings, `collision.write_image`). The new files are checked by the
+model's checks (data-check reads the pictures: their palettes, the
+collision image's size and colours) and all go back on an error.
 
 **Who can call it.** Besides listening on 127.0.0.1, the server answers
 only requests whose `Host` is its own (`127.0.0.1:PORT` or
@@ -363,8 +383,11 @@ CI (`.github/workflows/apps.yml`) runs `pnpm gen:check`, `pnpm typecheck`
 generation, the client, the globs and pointers, the editor's schema
 helpers), `pnpm build`, the backend's Python tests (every data file of
 both games written back unchanged, a change in the tool's layout, the
-refusals, the token), and a smoke test of `tools/editor_server.py` as
-`make editor` runs it, through the typed client.
+refusals, the token; every room of both games opened and saved back unchanged through
+the room API, a room edit saved and put back, the tile set drawing the
+layer's picture, the room save's refusals), and a smoke test of
+`tools/editor_server.py` as `make editor` runs it, through the typed
+client.
 
 ## The desktop app
 
