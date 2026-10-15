@@ -1,5 +1,5 @@
 # `make` builds the ROM from whatever is in the tree; `make compare` also
-# checks it against checksum.sha1 (the original ROM's).
+# checks it against games/xs/checksum.sha1 (the original ROM's).
 .DEFAULT_GOAL := all
 
 #### Tools ####
@@ -168,7 +168,7 @@ SOUND_BUILT := $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_audio_
 all: $(ROM)
 
 compare: $(ROM)
-	sha1sum -c checksum.sha1
+	sha1sum -c games/xs/checksum.sha1
 
 # The ROM shiftability check (#967, docs/shifting.md): links the ROM again
 # with padding in front of several objects, and fails if anything that

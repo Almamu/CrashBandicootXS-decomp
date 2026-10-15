@@ -97,7 +97,7 @@ jobs:
       if: env.HAS_ROM == 'true'
       run: curl -fsS -o baserom.gba -u '${{ secrets.BASEROM_USERNAME }}:${{ secrets.BASEROM_PASSWORD }}' ${{ secrets.BASEROM_URL }}
 
-    # `make compare` links the ROM and runs `sha1sum -c checksum.sha1`, which
+    # `make compare` links the ROM and runs `sha1sum -c games/xs/checksum.sha1`, which
     # fails the step on any byte mismatch.
     - name: Build and compare
       if: env.HAS_ROM == 'true'

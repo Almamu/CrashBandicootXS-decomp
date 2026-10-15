@@ -32,10 +32,14 @@ jobs:
         ref: ${{ github.event.pull_request.head.sha }}
         persist-credentials: false
 
-    # checksum.sha1 comes from the PR too, so keep main's copy aside and
-    # compare against that - a PR editing the checksum can't pass itself.
+    # games/xs/checksum.sha1 comes from the PR too, so keep main's copy
+    # aside and compare against that - a PR editing the checksum can't pass
+    # itself. A PR based on a main from before the checksums moved to
+    # games/<game>/ has it at the root.
     - name: Take the checksum from main
-      run: curl -fsS -o "$RUNNER_TEMP/checksum.sha1" "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.event.pull_request.base.sha }}/checksum.sha1"
+      run: |
+        base="https://raw.githubusercontent.com/${{ github.repository }}/${{ github.event.pull_request.base.sha }}"
+        curl -fsS -o "$RUNNER_TEMP/checksum.sha1" "$base/games/xs/checksum.sha1" || curl -fsS -o "$RUNNER_TEMP/checksum.sha1" "$base/checksum.sha1"
 
     - name: Take the N-Tranced checksum from main
       if: env.HAS_N2_ROM == 'true'

@@ -13,6 +13,7 @@ games keep the XS names, and differences go behind `GAME_XS` /
 | SHA-1 | `bdd061e1b5187c0528928ec0ddb6886b1de16970` | `ee9234ca15ba2caa71fad7d6af71e27b2030ae0b` |
 | Build | `make compare` | `make GAME=n2 compare` |
 | Build dir | `build/crashbandicootxs/` | `build/ntranced/` |
+| Checksum | `games/xs/checksum.sha1` | `games/n2/checksum.sha1` |
 | Defines | `GAME_XS=1` | `GAME_N2=1` |
 | Original ROM | not needed | `baserom_n2.gba`, in the project root |
 
@@ -26,10 +27,10 @@ two builds share only the toolchain variables at the top (`AS`, `LD`,
 `CC1FLAGS`, `CPPFLAGS`, ...). Each game defines `GAME_XS` or `GAME_N2`,
 for the preprocessor and as an assembler symbol.
 
-Where XS's own files (`ldscript.txt`, `checksum.sha1`, `sym_*.txt`,
-`expected/`) end up, and how source files are shared, is #1108 and
-#1109; for now XS's stay where they were and N-Tranced's are under
-`games/n2/`.
+Each game's checksum is in `games/<game>/checksum.sha1`. Where XS's
+other files (`ldscript.txt`, `sym_*.txt`, `expected/`) end up, and how
+source files are shared, is #1108 and #1109; for now XS's stay where
+they were and N-Tranced's are under `games/n2/`.
 
 The compile rules and the per-object compiler choices (which objects
 old_agbcp builds, `-fno-implement-inlines`, `-O1`, ...) are in
@@ -40,7 +41,7 @@ with agbcp where XS used old_agbcp, e.g. `vram_dma_queue.o`).
 
 ## Checking both ROMs
 
-`make compare` checks XS against `checksum.sha1` and
+`make compare` checks XS against `games/xs/checksum.sha1` and
 `make GAME=n2 compare` checks N-Tranced against
 `games/n2/checksum.sha1`. Before a PR, check both from clean:
 
