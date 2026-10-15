@@ -42,7 +42,7 @@ sub_0800763C: @ 0x0800763C
 	adds r1, #0x10
 	ldr r2, _0800766C @ =0x05000100
 	mov r0, sp
-	bl sub_0805AFAC
+	bl CpuSet
 	ldr r0, [r4, #0xc]
 	str r0, [r4, #4]
 	str r0, [r4, #8]
@@ -64,8 +64,8 @@ sub_08007670: @ 0x08007670
 sub_08007676: @ 0x08007676
 	bx lr
 
-	thumb_func_start sub_08007678
-sub_08007678: @ 0x08007678
+	thumb_func_start UploadObjVram
+UploadObjVram: @ 0x08007678
 	push {r4, r5, r6, lr}
 	sub sp, #4
 	adds r4, r0, #0
@@ -1675,7 +1675,7 @@ _0800840C:
 	ldr r0, _08008458 @ =0x02000E98
 	ldr r4, [r0]
 	ldr r0, [sp, #8]
-	bl sub_080091B0
+	bl GetSpriteTileBase
 	adds r1, r0, #0
 	mov r2, sb
 	ldr r0, [r2, #8]
@@ -1684,7 +1684,7 @@ _0800840C:
 	adds r1, r1, r0
 	adds r0, r4, #0
 	ldr r2, [sp, #0x10]
-	bl sub_08007678
+	bl UploadObjVram
 	add sp, #0x1c
 	pop {r3, r4, r5}
 	mov r8, r3
@@ -2202,7 +2202,7 @@ _08008838:
 	ldr r0, _08008884 @ =0x02000E98
 	ldr r4, [r0]
 	ldr r0, [sp, #8]
-	bl sub_080091B0
+	bl GetSpriteTileBase
 	adds r1, r0, #0
 	ldr r2, [sp, #0x14]
 	ldr r0, [r2, #8]
@@ -2211,7 +2211,7 @@ _08008838:
 	adds r1, r1, r0
 	adds r0, r4, #0
 	ldr r2, [sp, #0x10]
-	bl sub_08007678
+	bl UploadObjVram
 	add sp, #0x48
 	pop {r3, r4, r5}
 	mov r8, r3
@@ -3143,8 +3143,8 @@ _08008F52:
 	bx r1
 	.align 2, 0
 
-	thumb_func_start sub_08008F70
-sub_08008F70: @ 0x08008F70
+	thumb_func_start OffsetFromHitboxEdge
+OffsetFromHitboxEdge: @ 0x08008F70
 	movs r0, #0
 	bx lr
 _08008F74:
@@ -3157,8 +3157,8 @@ _08008F74:
 	.byte 0x18, 0x60, 0x0A, 0xE0, 0x02, 0x20, 0x11, 0x5E, 0x03, 0xE0, 0x02, 0x20, 0x11, 0x5E, 0xD2, 0x88
 	.byte 0x89, 0x18, 0x09, 0x02, 0x58, 0x68, 0x40, 0x1A, 0x58, 0x60, 0x01, 0xBC, 0x00, 0x47, 0x00, 0x00
 
-	thumb_func_start sub_08008FF0
-sub_08008FF0: @ 0x08008FF0
+	thumb_func_start OffsetToHitboxEdge
+OffsetToHitboxEdge: @ 0x08008FF0
 	push {lr}
 	adds r3, r0, #0
 	subs r0, r1, #1
@@ -3217,8 +3217,8 @@ _08009066:
 	bx r0
 	.align 2, 0
 
-	thumb_func_start sub_0800906C
-sub_0800906C: @ 0x0800906C
+	thumb_func_start OffsetToHitboxEdgeStart
+OffsetToHitboxEdgeStart: @ 0x0800906C
 	push {lr}
 	adds r3, r0, #0
 	subs r0, r1, #1
@@ -3384,8 +3384,8 @@ _0800919C:
 	.byte 0xC2, 0x6A, 0x40, 0x30
 	.byte 0x00, 0x78, 0xC1, 0x00, 0x09, 0x1A, 0x89, 0x00, 0x10, 0x68, 0x40, 0x18, 0x04, 0x30, 0x70, 0x47
 
-	thumb_func_start sub_080091B0
-sub_080091B0: @ 0x080091B0
+	thumb_func_start GetSpriteTileBase
+GetSpriteTileBase: @ 0x080091B0
 	push {lr}
 	ldr r0, _080091C0 @ =0x02000E80
 	ldr r0, [r0]
@@ -3438,8 +3438,8 @@ _080091F6:
 	pop {r1}
 	bx r1
 
-	thumb_func_start sub_08009210
-sub_08009210: @ 0x08009210
+	thumb_func_start GetSpriteObjPriority
+GetSpriteObjPriority: @ 0x08009210
 	push {lr}
 	ldr r0, _08009230 @ =0x02000EA4
 	ldr r1, [r0]
@@ -3822,8 +3822,8 @@ _080095B4:
 	.byte 0xC8, 0x00, 0x40, 0x1A, 0x80, 0x00, 0x80, 0x18, 0x80, 0x7D, 0x70, 0x47, 0xC2, 0x6A, 0x40, 0x30
 	.byte 0x01, 0x78, 0x12, 0x68, 0xC8, 0x00, 0x40, 0x1A, 0x80, 0x00, 0x80, 0x18, 0x40, 0x7D, 0x70, 0x47
 
-	thumb_func_start sub_08009620
-sub_08009620: @ 0x08009620
+	thumb_func_start ResetSpriteFrameIndex
+ResetSpriteFrameIndex: @ 0x08009620
 	movs r1, #0
 	str r1, [r0, #0x44]
 	bx lr
@@ -3831,8 +3831,8 @@ sub_08009620: @ 0x08009620
 _08009628:
 	.byte 0x81, 0x64, 0x70, 0x47
 
-	thumb_func_start sub_0800962C
-sub_0800962C: @ 0x0800962C
+	thumb_func_start ResetSpriteFrameTimer
+ResetSpriteFrameTimer: @ 0x0800962C
 	movs r1, #0
 	str r1, [r0, #0x48]
 	bx lr
@@ -3847,9 +3847,9 @@ SetSpriteAnim: @ 0x0800963C
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -4435,8 +4435,8 @@ _08009B2E:
 	bx r3
 	.align 2, 0
 
-	thumb_func_start sub_08009B38
-sub_08009B38: @ 0x08009B38
+	thumb_func_start CollidePartList
+CollidePartList: @ 0x08009B38
 	sub sp, #0xc
 	push {r4, r5, r6, r7, lr}
 	sub sp, #0x1c
@@ -5187,7 +5187,7 @@ _0800A15C:
 	movs r3, #0x80
 	lsls r3, r3, #0x13
 	orrs r2, r3
-	bl sub_0805AFAC
+	bl CpuSet
 	ldr r2, [r7]
 	ldr r1, [r7, #8]
 	lsls r0, r2, #2
@@ -5301,7 +5301,7 @@ _0800A23C:
 	movs r3, #0x80
 	lsls r3, r3, #0x13
 	orrs r2, r3
-	bl sub_0805AFAC
+	bl CpuSet
 	ldr r2, [r7]
 	ldr r1, [r7, #8]
 	lsls r0, r2, #2
@@ -5926,7 +5926,7 @@ _0800A6CC:
 	movs r3, #0x80
 	lsls r3, r3, #0x13
 	orrs r2, r3
-	bl sub_0805AFAC
+	bl CpuSet
 	ldr r2, [r5]
 	ldr r1, [r5, #8]
 	lsls r0, r2, #2
@@ -5968,7 +5968,7 @@ RemoveCrateListAt: @ 0x0800A714
 	movs r3, #0x80
 	lsls r3, r3, #0x13
 	orrs r2, r3
-	bl sub_0805AFAC
+	bl CpuSet
 	ldr r2, [r5]
 	ldr r1, [r5, #8]
 	lsls r0, r2, #2
@@ -6385,7 +6385,7 @@ ProbeHitboxEdgeTerrain: @ 0x0800AA78
 	str r1, [sp, #8]
 	add r0, sp, #4
 	mov r1, sb
-	bl sub_0800906C
+	bl OffsetToHitboxEdgeStart
 	ldr r0, [sp, #4]
 	asrs r0, r0, #8
 	str r0, [sp, #4]
@@ -6509,7 +6509,7 @@ _0800AB6C:
 	cmp r0, #0
 	beq _0800AB9C
 	adds r0, r5, #0
-	bl sub_0800AEE8
+	bl ResolvePlayerContact
 	b _0800ABC2
 	.align 2, 0
 _0800AB90: .4byte 0x02000E88
@@ -6531,7 +6531,7 @@ _0800AB9C:
 	cmp r0, #0
 	beq _0800ABC2
 	adds r0, r5, #0
-	bl sub_0800AEE8
+	bl ResolvePlayerContact
 _0800ABC2:
 	add sp, #0x20
 	pop {r4, r5}
@@ -6689,7 +6689,7 @@ sub_0800ACB4: @ 0x0800ACB4
 	ldr r3, [r1, #4]
 	adds r1, r5, #0
 	adds r2, r6, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 _0800ACDA:
 	pop {r4, r5, r6}
 	pop {r0}
@@ -6714,8 +6714,8 @@ sub_0800ACF8: @ 0x0800ACF8
 	asrs r0, r0, #8
 	bx lr
 
-	thumb_func_start sub_0800AD00
-sub_0800AD00: @ 0x0800AD00
+	thumb_func_start GetSpritePrevX
+GetSpritePrevX: @ 0x0800AD00
 	adds r0, #0x8c
 	ldr r0, [r0]
 	asrs r0, r0, #8
@@ -6975,8 +6975,8 @@ _0800AEDC:
 	bx r1
 	.align 2, 0
 
-	thumb_func_start sub_0800AEE8
-sub_0800AEE8: @ 0x0800AEE8
+	thumb_func_start ResolvePlayerContact
+ResolvePlayerContact: @ 0x0800AEE8
 	push {r4, lr}
 	sub sp, #4
 	adds r4, r0, #0
@@ -7252,7 +7252,7 @@ _0800B184:
 	adds r0, r4, #0
 	movs r1, #8
 	mov r2, r8
-	bl sub_08008FF0
+	bl OffsetToHitboxEdge
 	ldr r0, [sp, #8]
 	asrs r0, r0, #8
 	str r0, [sp, #8]
@@ -7358,7 +7358,7 @@ _0800B248:
 	adds r0, r4, #0
 	adds r1, r7, #0
 	mov r2, r8
-	bl sub_0800906C
+	bl OffsetToHitboxEdgeStart
 	ldr r0, [sp, #8]
 	asrs r0, r0, #8
 	str r0, [sp, #8]
@@ -7410,7 +7410,7 @@ _0800B2B0:
 	adds r0, r4, #0
 	adds r1, r7, #0
 	mov r2, r8
-	bl sub_0800906C
+	bl OffsetToHitboxEdgeStart
 	ldr r0, [sp, #8]
 	asrs r0, r0, #8
 	str r0, [sp, #8]
@@ -7459,7 +7459,7 @@ _0800B318:
 	adds r0, r4, #0
 	adds r1, r7, #0
 	mov r2, r8
-	bl sub_0800906C
+	bl OffsetToHitboxEdgeStart
 	ldr r0, [sp, #8]
 	asrs r0, r0, #8
 	str r0, [sp, #8]
@@ -7518,7 +7518,7 @@ ProbeGroundSpriteFloor: @ 0x0800B394
 	mov r0, sp
 	movs r1, #8
 	adds r2, r5, #0
-	bl sub_08008FF0
+	bl OffsetToHitboxEdge
 	ldr r0, [sp]
 	asrs r0, r0, #8
 	str r0, [sp]
@@ -7558,7 +7558,7 @@ _0800B3F4:
 	add r6, sp, #8
 	mov r1, sp
 	adds r2, r6, #0
-	bl sub_08026D48
+	bl ProbeFloorHeight
 	lsls r0, r0, #0x18
 	lsrs r5, r0, #0x18
 	cmp r5, #0
@@ -7598,7 +7598,7 @@ _0800B438:
 	ldr r0, [r1]
 	mov r1, sp
 	adds r2, r6, #0
-	bl sub_08026D48
+	bl ProbeFloorHeight
 	lsls r0, r0, #0x18
 	lsrs r5, r0, #0x18
 	cmp r5, #0
@@ -7915,9 +7915,9 @@ sub_0800B69C: @ 0x0800B69C
 	adds r0, #0x40
 	strb r7, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -9020,7 +9020,7 @@ sub_0800BF54: @ 0x0800BF54
 	ldr r2, [sp, #0x20]
 	ldr r3, [sp, #0x24]
 	adds r0, r4, #0
-	bl sub_08009B38
+	bl CollidePartList
 _0800BF9E:
 	ldrb r0, [r5, #0x18]
 	lsrs r0, r0, #7
@@ -9309,7 +9309,7 @@ _0800C226:
 	beq _0800C23C
 	adds r0, r1, #0
 	movs r1, #0x64
-	bl sub_08022E6C
+	bl FreezeLevelClock
 _0800C23C:
 	ldr r0, [r6, #0x64]
 	ldr r2, [r0, #0xc]
@@ -9608,7 +9608,7 @@ _0800C41C:
 	strb r2, [r1]
 	movs r1, #0x1a
 	movs r2, #3
-	bl sub_08025850
+	bl SpawnEffectPart
 	b _0800C508
 	.align 2, 0
 _0800C4A4: .4byte 0x020001CC
@@ -9617,7 +9617,7 @@ _0800C4AC: .4byte 0x02000E6C
 _0800C4B0: .4byte 0x02000E8C
 _0800C4B4:
 	adds r0, r2, #0
-	bl sub_08022BAC
+	bl AddDeath
 	b _0800C4CA
 _0800C4BC:
 	movs r0, #0
@@ -10004,9 +10004,9 @@ _0800C764:
 	mov r3, sb
 	strb r3, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -10056,7 +10056,7 @@ _0800C7C6:
 	strb r6, [r1]
 	movs r1, #0x26
 	movs r2, #0
-	bl sub_08025850
+	bl SpawnEffectPart
 	adds r3, r0, #0
 	cmp r3, #0
 	beq _0800C8B6
@@ -10102,9 +10102,9 @@ _0800C840:
 	mov r1, sb
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -10401,7 +10401,7 @@ sub_0800CC28: @ 0x0800CC28
 	ldrsh r3, [r4, r5]
 	adds r0, r0, r3
 	ldr r3, [r4, #0x3c]
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	pop {r4, r5}
 	pop {r0}
 	bx r0
@@ -10425,18 +10425,18 @@ SetCtrlTargetMotionX: @ 0x0800CC58
 	ldr r0, [r7]
 	ldr r1, [r5, #4]
 	ldr r1, [r1, #4]
-	bl sub_08000A30
+	bl FixedMul
 	adds r4, r0, #0
 	rsbs r4, r4, #0
 	ldr r0, [r7, #4]
 	ldr r1, [r5, #4]
 	ldr r1, [r1, #4]
-	bl sub_08000A30
+	bl FixedMul
 	mov r8, r0
 	ldr r0, [r7, #8]
 	ldr r1, [r5, #4]
 	ldr r1, [r1, #4]
-	bl sub_08000A30
+	bl FixedMul
 	rsbs r0, r0, #0
 	str r4, [r6, #0x68]
 	mov r1, r8
@@ -10446,17 +10446,17 @@ _0800CC9E:
 	ldr r0, [r7]
 	ldr r1, [r5, #4]
 	ldr r1, [r1, #4]
-	bl sub_08000A30
+	bl FixedMul
 	mov r8, r0
 	ldr r0, [r7, #4]
 	ldr r1, [r5, #4]
 	ldr r1, [r1, #4]
-	bl sub_08000A30
+	bl FixedMul
 	adds r4, r0, #0
 	ldr r0, [r7, #8]
 	ldr r1, [r5, #4]
 	ldr r1, [r1, #4]
-	bl sub_08000A30
+	bl FixedMul
 	mov r1, r8
 	str r1, [r6, #0x68]
 	str r4, [r6, #0x6c]
@@ -10487,20 +10487,20 @@ StartCtrlTargetMotionX: @ 0x0800CCD4
 	mov r2, r8
 	ldr r1, [r2, #4]
 	ldr r1, [r1, #4]
-	bl sub_08000A30
+	bl FixedMul
 	adds r4, r0, #0
 	rsbs r4, r4, #0
 	ldr r0, [r7, #4]
 	mov r2, r8
 	ldr r1, [r2, #4]
 	ldr r1, [r1, #4]
-	bl sub_08000A30
+	bl FixedMul
 	adds r5, r0, #0
 	ldr r0, [r7, #8]
 	mov r2, r8
 	ldr r1, [r2, #4]
 	ldr r1, [r1, #4]
-	bl sub_08000A30
+	bl FixedMul
 	rsbs r0, r0, #0
 	adds r1, r6, #0
 	adds r1, #0x80
@@ -10513,19 +10513,19 @@ _0800CD24:
 	mov r2, r8
 	ldr r1, [r2, #4]
 	ldr r1, [r1, #4]
-	bl sub_08000A30
+	bl FixedMul
 	adds r5, r0, #0
 	ldr r0, [r7, #4]
 	mov r2, r8
 	ldr r1, [r2, #4]
 	ldr r1, [r1, #4]
-	bl sub_08000A30
+	bl FixedMul
 	adds r4, r0, #0
 	ldr r0, [r7, #8]
 	mov r2, r8
 	ldr r1, [r2, #4]
 	ldr r1, [r1, #4]
-	bl sub_08000A30
+	bl FixedMul
 	adds r1, r6, #0
 	adds r1, #0x80
 	str r5, [r1]
@@ -10558,7 +10558,7 @@ sub_0800CD64: @ 0x0800CD64
 	ldrsh r3, [r4, r5]
 	adds r0, r0, r3
 	ldr r3, [r4, #0x34]
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	pop {r4, r5}
 	pop {r0}
 	bx r0
@@ -10584,9 +10584,9 @@ SetCtrlTargetAnim: @ 0x0800CD9C
 	beq _0800CDCC
 	strb r2, [r1]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -11173,7 +11173,7 @@ _0800D228:
 	strb r4, [r1]
 	movs r1, #0x20
 	movs r2, #2
-	bl sub_08025850
+	bl SpawnEffectPart
 	ldrb r2, [r0, #0x18]
 	movs r1, #5
 	rsbs r1, r1, #0
@@ -11824,9 +11824,9 @@ _0800D720:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -12004,9 +12004,9 @@ _0800D866:
 	beq _0800D8A0
 	strb r0, [r2]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -12065,9 +12065,9 @@ _0800D8D2:
 	ldr r0, [r0]
 	strb r0, [r2]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -12759,9 +12759,9 @@ sub_0800DDBC: @ 0x0800DDBC
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -12828,9 +12828,9 @@ sub_0800DE40: @ 0x0800DE40
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -14104,7 +14104,7 @@ _0800E904:
 	ldr r1, [sp, #0xc]
 	ldr r2, [sp, #0x10]
 	ldr r3, [sp, #0x14]
-	bl sub_08009B38
+	bl CollidePartList
 _0800E924:
 	ldr r2, [r6]
 	ldrb r0, [r2, #0x18]
@@ -14628,7 +14628,7 @@ ResolveStackCrateHit: @ 0x0800ED50
 	mov sl, r1
 	adds r5, r2, #0
 	adds r7, r0, #0
-	bl sub_080125AC
+	bl GetCrateBelow
 	adds r4, r0, #0
 	adds r0, r7, #0
 	bl sub_080125A4
@@ -14983,7 +14983,7 @@ _0800F004:
 	cmp r0, #3
 	beq _0800F034
 	adds r0, r1, #0
-	bl sub_08022A58
+	bl HasTurboRun
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _0800F044
@@ -15253,7 +15253,7 @@ _0800F232:
 	b _0800F23E
 _0800F236:
 	adds r0, r4, #0
-	bl sub_080125AC
+	bl GetCrateBelow
 	adds r4, r0, #0
 _0800F23E:
 	cmp r4, #0
@@ -15297,7 +15297,7 @@ _0800F28C:
 	cmp r3, #6
 	bne _0800F29C
 	mov r0, r8
-	bl sub_080110F4
+	bl ActivateNitroSwitchCrate
 	b _0800F4DA
 _0800F29C:
 	cmp r3, #3
@@ -15355,7 +15355,7 @@ _0800F2C0:
 	cmp r0, #0
 	beq _0800F372
 	mov r0, r8
-	bl sub_080125AC
+	bl GetCrateBelow
 	adds r3, r0, #0
 	cmp r3, #0
 	beq _0800F380
@@ -15432,7 +15432,7 @@ _0800F38C:
 	cmp r3, #3
 	bne _0800F3AE
 	mov r0, r8
-	bl sub_080125AC
+	bl GetCrateBelow
 	cmp r0, #0
 	beq _0800F40C
 _0800F3AE:
@@ -15459,7 +15459,7 @@ _0800F3D4:
 	cmp r0, #3
 	bne _0800F3E4
 	mov r0, r8
-	bl sub_080125AC
+	bl GetCrateBelow
 	cmp r0, #0
 	beq _0800F40C
 _0800F3E4:
@@ -15755,7 +15755,7 @@ _0800F606:
 	b _0800F7F0
 _0800F61A:
 	ldr r0, [r6]
-	bl sub_0800AD00
+	bl GetSpritePrevX
 	ldr r4, [sp, #0x68]
 	ldr r0, [r6]
 	ldr r1, [r0]
@@ -16037,7 +16037,7 @@ _0800F814:
 _0800F838: .4byte 0x081CFC04
 _0800F83C:
 	ldr r0, [r6]
-	bl sub_0800AD00
+	bl GetSpritePrevX
 	adds r5, r0, #0
 	ldr r0, [r6]
 	bl sub_0800ACF8
@@ -16710,7 +16710,7 @@ _0800FD3A:
 	beq _0800FDAA
 	movs r5, #1
 	mov r0, sb
-	bl sub_080125AC
+	bl GetCrateBelow
 	adds r4, r0, #0
 	mov r0, sb
 	bl sub_080125A4
@@ -16798,8 +16798,8 @@ _0800FDDE:
 _0800FDF0: .4byte 0x081CFC04
 _0800FDF4: .4byte 0x02000E88
 
-	thumb_func_start sub_0800FDF8
-sub_0800FDF8: @ 0x0800FDF8
+	thumb_func_start ApplyCrateCollision
+ApplyCrateCollision: @ 0x0800FDF8
 	push {r4, r5, r6, r7, lr}
 	mov r7, sl
 	mov r6, sb
@@ -17126,7 +17126,7 @@ _0801006C:
 	cmp r0, #6
 	bne _08010084
 	adds r0, r6, #0
-	bl sub_080110F4
+	bl ActivateNitroSwitchCrate
 	b _08010198
 	.align 2, 0
 _08010080: .4byte 0x02000E88
@@ -17145,13 +17145,13 @@ _08010092:
 	cmp r0, #0xe
 	bne _080100A4
 	adds r0, r6, #0
-	bl sub_08010380
+	bl LightTntCrate
 	b _08010198
 _080100A4:
 	cmp r0, #0xc
 	bne _080100B0
 	adds r0, r6, #0
-	bl sub_080102BC
+	bl BounceWumpaCrate
 	b _08010198
 _080100B0:
 	adds r2, r6, #0
@@ -17338,7 +17338,7 @@ _080101F6:
 _0801020A:
 	adds r0, r1, #0
 _0801020C:
-	bl sub_080125AC
+	bl GetCrateBelow
 	adds r1, r0, #0
 	cmp r1, #0
 	bne _080101F6
@@ -17372,7 +17372,7 @@ MarkCrateStackTouched: @ 0x08010240
 	adds r6, r0, #0
 	adds r4, r1, #0
 	ldr r5, [r4, #0xc]
-	bl sub_080125AC
+	bl GetCrateBelow
 	adds r2, r0, #0
 	cmp r2, #0
 	beq _08010280
@@ -17396,7 +17396,7 @@ _08010254:
 	str r0, [r4, #0xc]
 _08010274:
 	adds r0, r2, #0
-	bl sub_080125AC
+	bl GetCrateBelow
 	adds r2, r0, #0
 	cmp r2, #0
 	bne _08010254
@@ -17433,8 +17433,8 @@ _080102B4:
 	bx r0
 	.align 2, 0
 
-	thumb_func_start sub_080102BC
-sub_080102BC: @ 0x080102BC
+	thumb_func_start BounceWumpaCrate
+BounceWumpaCrate: @ 0x080102BC
 	push {r4, r5, r6, r7, lr}
 	sub sp, #8
 	adds r7, r0, #0
@@ -17533,8 +17533,8 @@ _08010378:
 	pop {r0}
 	bx r0
 
-	thumb_func_start sub_08010380
-sub_08010380: @ 0x08010380
+	thumb_func_start LightTntCrate
+LightTntCrate: @ 0x08010380
 	push {r4, lr}
 	adds r4, r0, #0
 	adds r1, r4, #0
@@ -17546,9 +17546,9 @@ sub_08010380: @ 0x08010380
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -17611,7 +17611,7 @@ _08010404:
 	beq _08010422
 	ldr r0, _080104B0 @ =0x02000E64
 	ldr r0, [r0]
-	bl sub_08025724
+	bl SetEntityIdActivated
 _08010422:
 	ldr r0, _080104B4 @ =0x081CFAC4
 	ldrb r1, [r6]
@@ -17667,9 +17667,9 @@ _08010436:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r7, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r7, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r7, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -17697,7 +17697,7 @@ _080104C0:
 	strb r1, [r2]
 	movs r1, #0x21
 	movs r2, #0
-	bl sub_08025850
+	bl SpawnEffectPart
 	adds r4, r0, #0
 	ldrb r1, [r4, #0x18]
 	movs r0, #5
@@ -17726,9 +17726,9 @@ _080104C0:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r7, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r7, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r7, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -17744,7 +17744,7 @@ _080104C0:
 	beq _0801054A
 	ldr r0, _080105B4 @ =0x02000E64
 	ldr r0, [r0]
-	bl sub_08025724
+	bl SetEntityIdActivated
 _0801054A:
 	ldr r0, _080105B8 @ =0x081CFAC4
 	ldrb r1, [r6]
@@ -17858,7 +17858,7 @@ _0801062C:
 	cmp r3, #8
 	bne _0801068C
 	adds r0, r5, #0
-	bl sub_080125AC
+	bl GetCrateBelow
 	adds r4, r0, #0
 	cmp r4, #0
 	beq _0801064A
@@ -17877,7 +17877,7 @@ _0801064E:
 	b _0801066E
 _08010652:
 	adds r0, r4, #0
-	bl sub_080125AC
+	bl GetCrateBelow
 	adds r2, r0, #0
 	cmp r2, #0
 	beq _0801064E
@@ -17900,22 +17900,22 @@ _0801066E:
 	bne _08010694
 	adds r0, r2, #0
 	adds r1, r6, #0
-	bl sub_0801069C
+	bl BreakCrate
 	b _08010694
 	.align 2, 0
 _08010688: .4byte 0x081CFB12
 _0801068C:
 	adds r0, r5, #0
 	adds r1, r6, #0
-	bl sub_0801069C
+	bl BreakCrate
 _08010694:
 	pop {r4, r5, r6}
 	pop {r0}
 	bx r0
 	.align 2, 0
 
-	thumb_func_start sub_0801069C
-sub_0801069C: @ 0x0801069C
+	thumb_func_start BreakCrate
+BreakCrate: @ 0x0801069C
 	push {r4, r5, r6, r7, lr}
 	mov r7, r8
 	push {r7}
@@ -17934,7 +17934,7 @@ _080106B8:
 	movs r0, #0
 	mov r8, r0
 	adds r0, r5, #0
-	bl sub_080125AC
+	bl GetCrateBelow
 	cmp r0, #0
 	beq _080106CA
 	cmp r6, #0
@@ -17985,9 +17985,9 @@ _080106D8:
 	adds r4, #0x40
 	strb r0, [r4]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -18090,7 +18090,7 @@ _08010826:
 	b _08010924
 _0801082E:
 	adds r0, r5, #0
-	bl sub_080110F4
+	bl ActivateNitroSwitchCrate
 	b _08010924
 _08010836:
 	cmp r6, #0
@@ -18115,7 +18115,7 @@ _0801085C:
 	ldr r0, _08010868 @ =0x02000E70
 	ldr r0, [r0]
 	movs r1, #1
-	bl sub_08022E6C
+	bl FreezeLevelClock
 	b _08010924
 	.align 2, 0
 _08010868: .4byte 0x02000E70
@@ -18123,7 +18123,7 @@ _0801086C:
 	ldr r0, _08010878 @ =0x02000E70
 	ldr r0, [r0]
 	movs r1, #2
-	bl sub_08022E6C
+	bl FreezeLevelClock
 	b _08010924
 	.align 2, 0
 _08010878: .4byte 0x02000E70
@@ -18131,7 +18131,7 @@ _0801087C:
 	ldr r0, _08010888 @ =0x02000E70
 	ldr r0, [r0]
 	movs r1, #3
-	bl sub_08022E6C
+	bl FreezeLevelClock
 	b _08010924
 	.align 2, 0
 _08010888: .4byte 0x02000E70
@@ -18159,9 +18159,9 @@ _080108B4:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -18233,7 +18233,7 @@ OpenMysteryCrate: @ 0x08010938
 	ldrb r0, [r5]
 	cmp r0, #9
 	bne _08010984
-	bl sub_08000174
+	bl rand
 	lsls r0, r0, #0x10
 	lsrs r0, r0, #0x18
 	adds r1, r0, #0
@@ -18320,7 +18320,7 @@ _080109EC:
 	bne _08010A18
 	ldr r0, [r5]
 	ldrh r1, [r4, #8]
-	bl sub_08025724
+	bl SetEntityIdActivated
 _08010A18:
 	ldr r1, [r4]
 	asrs r1, r1, #8
@@ -18512,7 +18512,7 @@ _08010B7C:
 	bne _08010BA4
 	ldr r0, [r5]
 	ldrh r1, [r4, #8]
-	bl sub_08025724
+	bl SetEntityIdActivated
 _08010BA4:
 	ldr r1, [r4]
 	asrs r1, r1, #8
@@ -18574,7 +18574,7 @@ DropCratesAbove: @ 0x08010BEC
 	lsls r0, r0, #8
 	mov sl, r0
 	mov r0, r8
-	bl sub_080125AC
+	bl GetCrateBelow
 	adds r5, r0, #0
 	mov r3, r8
 	ldr r0, [r3, #0x64]
@@ -18663,7 +18663,7 @@ _08010C82:
 	cmp r1, r0
 	ble _08010CF6
 	adds r0, r5, #0
-	bl sub_080125AC
+	bl GetCrateBelow
 	adds r4, r0, #0
 	adds r0, r5, #0
 	bl sub_080125A4
@@ -18690,7 +18690,7 @@ _08010CEA:
 	str r0, [r5, #0x68]
 _08010CF6:
 	adds r0, r5, #0
-	bl sub_080125AC
+	bl GetCrateBelow
 	adds r5, r0, #0
 	mov r0, sb
 	cmp r0, #0
@@ -18797,9 +18797,9 @@ sub_08010DA0: @ 0x08010DA0
 	adds r0, #0x40
 	strb r3, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -18810,9 +18810,9 @@ _08010DE8:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -18992,7 +18992,7 @@ _08010F58:
 	cmp r1, #6
 	bne _08010F62
 	adds r0, r4, #0
-	bl sub_080110F4
+	bl ActivateNitroSwitchCrate
 _08010F62:
 	adds r5, #1
 	ldr r0, _08010FE8 @ =0x02000EB4
@@ -19203,8 +19203,8 @@ _080110E8:
 	.align 2, 0
 _080110F0: .4byte 0x02000EB4
 
-	thumb_func_start sub_080110F4
-sub_080110F4: @ 0x080110F4
+	thumb_func_start ActivateNitroSwitchCrate
+ActivateNitroSwitchCrate: @ 0x080110F4
 	push {r4, r5, lr}
 	adds r5, r0, #0
 	ldr r0, [r5, #0x68]
@@ -19226,16 +19226,16 @@ sub_080110F4: @ 0x080110F4
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
 	bl DetonateNitroCrates
 	ldr r0, _08011160 @ =0x020001F4
 	ldr r0, [r0]
-	bl sub_08028CC0
+	bl ShowHudCrates
 	ldr r0, _08011164 @ =0x02000E6C
 	ldr r0, [r0]
 	movs r2, #0x80
@@ -19301,9 +19301,9 @@ _0801118E:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -19651,9 +19651,9 @@ _08011470:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -19670,15 +19670,15 @@ _08011490:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
 _080114B4:
 	adds r0, r4, #0
-	bl sub_08008F70
+	bl OffsetFromHitboxEdge
 	adds r3, r4, #0
 	adds r3, #0x35
 	movs r1, #0xf
@@ -19849,7 +19849,7 @@ _080115F4:
 	bl sub_080125A4
 	adds r5, r0, #0
 	adds r0, r6, #0
-	bl sub_080125AC
+	bl GetCrateBelow
 	adds r4, r0, #0
 	cmp r5, #0
 	beq _08011626
@@ -19982,9 +19982,9 @@ _080116F8:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -20004,9 +20004,9 @@ _08011730:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -20141,9 +20141,9 @@ _0801182C:
 _08011836:
 	strb r7, [r6]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -20153,7 +20153,7 @@ _08011836:
 	cmp r0, #0
 	beq _08011940
 	adds r0, r4, #0
-	bl sub_08012910
+	bl GetSlotCrateSpins
 	lsls r0, r0, #0x18
 	lsrs r0, r0, #0x18
 	cmp r0, #0
@@ -20208,9 +20208,9 @@ _080118B8:
 	movs r0, #0x20
 	strb r0, [r6]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -20240,9 +20240,9 @@ _080118EA:
 _080118FA:
 	strb r0, [r6]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -20258,9 +20258,9 @@ _08011912:
 	movs r0, #0xd
 	strb r0, [r6]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -20325,9 +20325,9 @@ _0801199E:
 _080119A0:
 	strb r0, [r2]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -20336,9 +20336,9 @@ _080119B8:
 	movs r0, #8
 	strb r0, [r6]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -20455,7 +20455,7 @@ _08011AA0:
 	cmp r1, #0xe
 	bne _08011AC0
 	adds r0, r5, #0
-	bl sub_080125AC
+	bl GetCrateBelow
 	adds r4, r0, #0
 	adds r0, r5, #0
 	bl sub_080125A4
@@ -20465,7 +20465,7 @@ _08011AA0:
 	bne _08011AC0
 _08011ABA:
 	adds r0, r5, #0
-	bl sub_08010380
+	bl LightTntCrate
 _08011AC0:
 	adds r0, r5, #0
 	bl sub_080125A4
@@ -20481,7 +20481,7 @@ _08011AD0:
 	cmp r0, #0xe
 	bne _08011AE0
 	adds r0, r4, #0
-	bl sub_08010380
+	bl LightTntCrate
 _08011AE0:
 	adds r0, r4, #0
 _08011AE2:
@@ -21075,9 +21075,9 @@ _08011F7C:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -21113,9 +21113,9 @@ _08011FCC:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -21148,9 +21148,9 @@ _08012020:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -21189,9 +21189,9 @@ _08012060:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -21236,9 +21236,9 @@ _080120AE:
 	movs r4, #0
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -21325,9 +21325,9 @@ _08012178:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -21340,9 +21340,9 @@ _08012198:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -21406,9 +21406,9 @@ _08012206:
 	adds r4, #0x40
 	strb r0, [r4]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -21652,7 +21652,7 @@ _080123EC:
 	strb r1, [r2]
 	movs r1, #0x21
 	movs r2, #0
-	bl sub_08025850
+	bl SpawnEffectPart
 	mov ip, r0
 	ldrb r1, [r0, #0x18]
 	movs r0, #5
@@ -21686,9 +21686,9 @@ _0801244C:
 	movs r0, #0x20
 	strb r0, [r6]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -21824,7 +21824,7 @@ _08012540:
 	strb r1, [r0]
 	adds r0, r3, #0
 	movs r1, #0
-	bl sub_0801069C
+	bl BreakCrate
 	b _08012578
 	.align 2, 0
 _08012568: .4byte 0x081CFADE
@@ -21832,7 +21832,7 @@ _0801256C: .4byte 0x02000E88
 _08012570:
 	adds r0, r3, #0
 	movs r1, #1
-	bl sub_0801069C
+	bl BreakCrate
 _08012578:
 	pop {r0}
 	bx r0
@@ -21866,8 +21866,8 @@ sub_080125A4: @ 0x080125A4
 	bx lr
 	.align 2, 0
 
-	thumb_func_start sub_080125AC
-sub_080125AC: @ 0x080125AC
+	thumb_func_start GetCrateBelow
+GetCrateBelow: @ 0x080125AC
 	ldr r0, [r0, #0x7c]
 	bx lr
 
@@ -22135,7 +22135,7 @@ OpenLifeCrate: @ 0x08012748
 	bne _0801277E
 	ldr r0, [r5]
 	ldrh r1, [r4, #8]
-	bl sub_08025724
+	bl SetEntityIdActivated
 _0801277E:
 	ldr r1, [r4]
 	asrs r1, r1, #8
@@ -22173,7 +22173,7 @@ _080127BC: .4byte 0x081CFADE
 sub_080127C0: @ 0x080127C0
 	push {r4, r5, lr}
 	adds r5, r0, #0
-	bl sub_080125AC
+	bl GetCrateBelow
 	adds r4, r0, #0
 	cmp r4, #0
 	beq _080127DC
@@ -22192,7 +22192,7 @@ _080127E0:
 	b _08012800
 _080127E4:
 	adds r0, r4, #0
-	bl sub_080125AC
+	bl GetCrateBelow
 	adds r2, r0, #0
 	cmp r2, #0
 	beq _080127E0
@@ -22311,8 +22311,8 @@ _080128AA:
 	.align 2, 0
 _080128BC: .4byte 0x00003FFF
 
-	thumb_func_start sub_080128C0
-sub_080128C0: @ 0x080128C0
+	thumb_func_start GetSlotCrateStage
+GetSlotCrateStage: @ 0x080128C0
 	ldr r0, [r0, #0x68]
 	movs r1, #0xc0
 	ands r0, r1
@@ -22324,7 +22324,7 @@ sub_080128C0: @ 0x080128C0
 DecrementSlotCrateStage: @ 0x080128CC
 	push {r4, lr}
 	adds r4, r0, #0
-	bl sub_080128C0
+	bl GetSlotCrateStage
 	lsls r0, r0, #0x18
 	lsrs r0, r0, #0x18
 	cmp r0, #0
@@ -22346,8 +22346,8 @@ _080128F4:
 	.byte 0x09, 0x06, 0x82, 0x6E, 0x3F, 0x23, 0x1A, 0x40, 0x89, 0x0C, 0x0A, 0x43
 	.byte 0x82, 0x66, 0x70, 0x47, 0x81, 0x6E, 0x3F, 0x22, 0x11, 0x40, 0x81, 0x66, 0x70, 0x47, 0x00, 0x00
 
-	thumb_func_start sub_08012910
-sub_08012910: @ 0x08012910
+	thumb_func_start GetSlotCrateSpins
+GetSlotCrateSpins: @ 0x08012910
 	ldr r0, [r0, #0x68]
 	movs r1, #0x38
 	ands r0, r1
@@ -22359,7 +22359,7 @@ sub_08012910: @ 0x08012910
 DecrementSlotCrateSpins: @ 0x0801291C
 	push {r4, lr}
 	adds r4, r0, #0
-	bl sub_08012910
+	bl GetSlotCrateSpins
 	lsls r0, r0, #0x18
 	lsrs r0, r0, #0x18
 	cmp r0, #0
@@ -22546,7 +22546,7 @@ _08012B14:
 	ldr r4, [sp, #0x3c]
 	strb r0, [r4]
 	adds r0, r6, #0
-	bl sub_0800FDF8
+	bl ApplyCrateCollision
 	movs r5, #1
 	mov ip, r5
 	b _08012B72
@@ -22636,7 +22636,7 @@ _08012BA2:
 	mov r5, ip
 	ldr r4, [sp, #0x3c]
 	strb r5, [r4]
-	bl sub_0800FDF8
+	bl ApplyCrateCollision
 	movs r0, #0
 	str r0, [r7]
 	strb r0, [r7, #4]
@@ -22852,7 +22852,7 @@ PickUpExtraLife: @ 0x08012D70
 	strh r1, [r0]
 	cmp r4, #0
 	beq _08012DE4
-	bl sub_08000174
+	bl rand
 	lsls r0, r0, #0x10
 	lsrs r2, r0, #0x10
 	movs r1, #1
@@ -22905,7 +22905,7 @@ _08012DE4:
 	strb r0, [r1]
 	ldr r0, _08012E50 @ =0x020001F4
 	ldr r0, [r0]
-	bl sub_08028CF0
+	bl ShowHudLives
 _08012DFC:
 	ldrb r0, [r5, #0x18]
 	movs r1, #0x10
@@ -23078,7 +23078,7 @@ _08012F20:
 	movs r1, #0xa0
 	lsls r1, r1, #2
 	adds r0, r2, #0
-	bl sub_08000A30
+	bl FixedMul
 	adds r2, r0, #0
 	ldr r0, [r4, #0x70]
 	adds r0, r0, r2
@@ -23221,7 +23221,7 @@ SendExtraLifeToHud: @ 0x08013004
 	str r0, [r5, #0x64]
 	ldr r0, _08013090 @ =0x020001F4
 	ldr r0, [r0]
-	bl sub_08028CF0
+	bl ShowHudLives
 	add sp, #0xc
 	pop {r4, r5}
 	pop {r0}
@@ -23252,7 +23252,7 @@ UpdateExtraLifeHop: @ 0x08013094
 	movs r1, #0x80
 	lsls r1, r1, #4
 	adds r0, r2, #0
-	bl sub_08000A30
+	bl FixedMul
 	ldr r1, [r5, #0x70]
 	subs r1, r1, r0
 	str r1, [r5, #4]
@@ -23269,7 +23269,7 @@ UpdateExtraLifeHop: @ 0x08013094
 	add r0, sp
 	ldr r1, [r0]
 	adds r0, r2, #0
-	bl sub_08000A30
+	bl FixedMul
 	adds r2, r0, #0
 	ldrb r0, [r4]
 	cmp r0, #1
@@ -23484,7 +23484,7 @@ PickUpWumpa: @ 0x08013294
 	bl PlaySfx
 	cmp r4, #0
 	beq _08013300
-	bl sub_08000174
+	bl rand
 	lsls r0, r0, #0x10
 	lsrs r2, r0, #0x10
 	movs r1, #1
@@ -23536,7 +23536,7 @@ _08013300:
 	strb r0, [r1]
 	ldr r0, _08013390 @ =0x020001F4
 	ldr r0, [r0]
-	bl sub_08028D20
+	bl ShowHudWumpa
 _08013316:
 	movs r1, #0xa0
 	adds r0, r5, #0
@@ -23783,7 +23783,7 @@ _080134CC:
 	movs r1, #0xa0
 	lsls r1, r1, #2
 	adds r0, r2, #0
-	bl sub_08000A30
+	bl FixedMul
 	adds r2, r0, #0
 	ldr r0, [r5, #0x70]
 	adds r0, r0, r2
@@ -23820,8 +23820,8 @@ _0801353C: .4byte 0x02000E88
 _08013540: .4byte 0xFFFFFC00
 _08013544: .4byte 0xFFFFF200
 
-	thumb_func_start sub_08013548
-sub_08013548: @ 0x08013548
+	thumb_func_start CreateWumpa
+CreateWumpa: @ 0x08013548
 	push {r4, r5, r6, r7, lr}
 	mov r7, sl
 	mov r6, sb
@@ -23851,7 +23851,7 @@ sub_08013548: @ 0x08013548
 	ldr r0, _080135B4 @ =0x087F8BC4
 	str r0, [r4, #0x24]
 	adds r0, r4, #0
-	bl sub_080137DC
+	bl ResetExtraLifePickup
 	adds r7, r4, #0
 	mov r1, r8
 	strh r1, [r7, #8]
@@ -23892,9 +23892,9 @@ _080135CA:
 	movs r5, #0
 	strb r0, [r4]
 	adds r0, r7, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r7, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r7, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -23936,7 +23936,7 @@ _0801360C:
 	cmp r0, #0xff
 	bne _08013642
 	adds r0, r7, #0
-	bl sub_0801370C
+	bl StartWumpaPayout
 _08013642:
 	adds r0, r7, #0
 	pop {r3, r4, r5}
@@ -24024,7 +24024,7 @@ _080136A6:
 	str r0, [r5, #0x64]
 	ldr r0, _08013708 @ =0x020001F4
 	ldr r0, [r0]
-	bl sub_08028D20
+	bl ShowHudWumpa
 	add sp, #0xc
 	pop {r4, r5}
 	pop {r0}
@@ -24034,8 +24034,8 @@ _08013700: .4byte 0x02000E6C
 _08013704: .4byte 0xFFFFF000
 _08013708: .4byte 0x020001F4
 
-	thumb_func_start sub_0801370C
-sub_0801370C: @ 0x0801370C
+	thumb_func_start StartWumpaPayout
+StartWumpaPayout: @ 0x0801370C
 	adds r2, r0, #0
 	adds r2, #0x68
 	movs r1, #3
@@ -24065,7 +24065,7 @@ UpdateWumpaHop: @ 0x0801371C
 	movs r1, #0xc0
 	lsls r1, r1, #6
 	adds r0, r2, #0
-	bl sub_08000A30
+	bl FixedMul
 	ldr r1, [r5, #0x70]
 	subs r1, r1, r0
 	str r1, [r5, #4]
@@ -24082,7 +24082,7 @@ UpdateWumpaHop: @ 0x0801371C
 	add r0, sp
 	ldr r1, [r0]
 	adds r0, r2, #0
-	bl sub_08000A30
+	bl FixedMul
 	adds r2, r0, #0
 	ldrb r0, [r4]
 	cmp r0, #1
@@ -24147,8 +24147,8 @@ sub_080137C8: @ 0x080137C8
 	.align 2, 0
 _080137D8: .4byte 0x087F8BC4
 
-	thumb_func_start sub_080137DC
-sub_080137DC: @ 0x080137DC
+	thumb_func_start ResetExtraLifePickup
+ResetExtraLifePickup: @ 0x080137DC
 	ldrb r1, [r0, #0x18]
 	movs r2, #0x40
 	orrs r1, r2
@@ -24217,7 +24217,7 @@ SetWumpaHop: @ 0x0801386C
 	cmp r1, #0xff
 	bne _08013886
 	adds r0, r3, #0
-	bl sub_0801370C
+	bl StartWumpaPayout
 _08013886:
 	pop {r0}
 	bx r0
@@ -25496,7 +25496,7 @@ sub_08014214: @ 0x08014214
 	strb r2, [r1]
 	movs r1, #0x20
 	movs r2, #2
-	bl sub_08025850
+	bl SpawnEffectPart
 	adds r3, r0, #0
 	adds r3, #0x34
 	ldrb r2, [r3]
@@ -26663,7 +26663,7 @@ sub_08014BA8: @ 0x08014BA8
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	adds r2, r4, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r1, [r6, #0xc]
 	movs r2, #0x28
 	ldrsh r0, [r1, r2]
@@ -26797,9 +26797,9 @@ _08014CC6:
 	strb r1, [r0]
 _08014CD0:
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -26832,7 +26832,7 @@ UpdatePlayerFacing: @ 0x08014D0C
 	adds r4, r0, #0
 	ldr r0, _08014D30 @ =0x02000EA0
 	ldr r0, [r0]
-	bl sub_0800088C
+	bl GetDpadDirection
 	lsls r0, r0, #0x18
 	lsrs r3, r0, #0x18
 	movs r5, #0
@@ -27170,7 +27170,7 @@ _08014FFE:
 	adds r0, r1, #0
 _08015000:
 	adds r0, r5, r0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r2, [r5, #0x10]
 	adds r2, #0x88
 	ldrb r0, [r2]
@@ -27357,7 +27357,7 @@ _08015178:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x12
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r1, [r4, #0xc]
 	movs r2, #0x28
 	ldrsh r0, [r1, r2]
@@ -27373,7 +27373,7 @@ _08015178:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #6
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	movs r1, #0xd
 	adds r0, r4, #0
 	adds r0, #0x31
@@ -27420,7 +27420,7 @@ _080151FC:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xa
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	movs r2, #0xe
 	adds r1, r4, #0
 	adds r1, #0x31
@@ -27469,7 +27469,7 @@ _08015268:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xa
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r1, r4, #0
 	adds r1, #0x31
 	movs r0, #0
@@ -27623,7 +27623,7 @@ _080153B8:
 	cmp r3, #0
 	ble _080153C2
 	adds r0, r4, #0
-	bl sub_080181B0
+	bl StartActionCtrlTornadoFall
 _080153C2:
 	ldr r0, [r4, #8]
 	cmp r0, #0xe
@@ -27706,7 +27706,7 @@ _08015440:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x19
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r0, r4, #0
 	adds r0, #0x31
 	strb r5, [r0]
@@ -27739,7 +27739,7 @@ _08015486:
 _080154A0:
 	ldr r0, _080154C8 @ =0x02000EA0
 	ldr r0, [r0]
-	bl sub_0800088C
+	bl GetDpadDirection
 	lsls r0, r0, #0x18
 	lsrs r0, r0, #0x18
 	cmp r0, #2
@@ -27866,7 +27866,7 @@ CheckActionCtrlLeftGround: @ 0x08015550
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x1a
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	b _080155A4
 _08015594:
 	ldr r1, [r4, #0xc]
@@ -27980,7 +27980,7 @@ _0801562E:
 	ldr r3, [r1, #4]
 	adds r1, r2, #0
 	movs r2, #0x12
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 _08015668:
 	ldr r0, [r4, #8]
 	cmp r0, #0
@@ -28068,7 +28068,7 @@ _080156F4:
 	ldr r0, [sp, #8]
 	movs r1, #0xc0
 	lsls r1, r1, #1
-	bl sub_08000A30
+	bl FixedMul
 	str r0, [sp, #8]
 	ldr r0, [sp, #4]
 	lsrs r1, r0, #0x1f
@@ -28094,12 +28094,12 @@ _0801571C:
 	ldr r0, [sp, #4]
 	movs r1, #0x80
 	lsls r1, r1, #2
-	bl sub_08000A30
+	bl FixedMul
 	str r0, [sp, #4]
 	ldr r0, [sp]
 	movs r1, #0xc0
 	lsls r1, r1, #1
-	bl sub_08000A30
+	bl FixedMul
 	str r0, [sp]
 _08015752:
 	ldrb r0, [r5]
@@ -28113,7 +28113,7 @@ _08015752:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	mov r2, sp
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	b _0801578A
 	.align 2, 0
 _08015770: .4byte 0x02000E88
@@ -28126,7 +28126,7 @@ _08015778:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #0x34]
 	mov r2, sp
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 _0801578A:
 	movs r0, #0
 	strb r0, [r6]
@@ -28165,7 +28165,7 @@ _0801578E:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	mov r2, sp
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	b _080157EE
 	.align 2, 0
 _080157D8: .4byte 0x081CE010
@@ -28177,7 +28177,7 @@ _080157DC:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #0x3c]
 	mov r2, sp
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 _080157EE:
 	movs r0, #0
 	strb r0, [r5]
@@ -28203,7 +28203,7 @@ sub_08015800: @ 0x08015800
 	ldr r1, _0801589C @ =0x02000018
 	ldr r1, [r1]
 	str r1, [sp, #0xc]
-	bl sub_0800088C
+	bl GetDpadDirection
 	lsls r0, r0, #0x18
 	lsrs r0, r0, #0x18
 	mov r8, r0
@@ -28233,7 +28233,7 @@ _08015836:
 	ldr r3, [r1, #4]
 	adds r1, r2, #0
 	movs r2, #0x12
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r1, r6, #0
 	adds r1, #0x33
 	movs r0, #0
@@ -28263,7 +28263,7 @@ _0801585E:
 	ldr r3, [r1, #4]
 	adds r1, r2, #0
 	movs r2, #5
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r0, _080158A4 @ =0x000004C4
 	b _080158C8
 	.align 2, 0
@@ -28284,7 +28284,7 @@ _080158A8:
 	ldr r3, [r1, #4]
 	adds r1, r2, #0
 	movs r2, #0xe
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	movs r0, #0x82
 	lsls r0, r0, #2
 _080158C8:
@@ -28325,7 +28325,7 @@ _080158E2:
 	beq _08015964
 	ldr r0, _08015960 @ =0x02000E70
 	ldr r0, [r0]
-	bl sub_08022A50
+	bl HasSuperBodySlam
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _08015964
@@ -28344,7 +28344,7 @@ _080158E2:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x13
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r4, [r6, #0x18]
 	movs r1, #0x15
 	adds r0, r6, #0
@@ -28377,7 +28377,7 @@ _08015964:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x13
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r4, [r6, #0x18]
 	movs r2, #7
 	adds r0, r6, #0
@@ -28412,7 +28412,7 @@ _080159B8:
 	bne _08015A70
 	ldr r0, _08015A60 @ =0x02000E70
 	ldr r0, [r0]
-	bl sub_08022A58
+	bl HasTurboRun
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _08015A70
@@ -28438,7 +28438,7 @@ _080159B8:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xf
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r7, [r6, #0x18]
 	str r4, [r6, #0x1c]
 	adds r0, r6, #0
@@ -28510,7 +28510,7 @@ _08015A70:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #3
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r4, [r6, #0x1c]
 _08015AA6:
 	adds r0, r6, #0
@@ -28571,7 +28571,7 @@ _08015AEE:
 	beq _08015B60
 	ldr r0, _08015B5C @ =0x02000E70
 	ldr r0, [r0]
-	bl sub_08022A6C
+	bl HasTornadoSpin
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _08015B60
@@ -28592,7 +28592,7 @@ _08015AEE:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x18
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	movs r0, #0x1c
 	adds r1, r6, #0
 	adds r1, #0x31
@@ -28624,7 +28624,7 @@ _08015B68:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #3
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r5, [r6, #0x1c]
 _08015B8E:
 	adds r0, r6, #0
@@ -28683,7 +28683,7 @@ _08015BC0:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x13
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r4, [r6, #0x18]
 	movs r1, #7
 	adds r0, r6, #0
@@ -28730,7 +28730,7 @@ _08015C4C:
 	bl PlaySfx
 	ldr r0, _08015CB4 @ =0x02000E70
 	ldr r0, [r0]
-	bl sub_08022A58
+	bl HasTurboRun
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _08015CB8
@@ -28757,7 +28757,7 @@ _08015C4C:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xf
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r5, [r6, #0x18]
 	str r4, [r6, #0x1c]
 	adds r0, r6, #0
@@ -28789,7 +28789,7 @@ _08015CB8:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xf
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r4, [r6, #0x18]
 	str r5, [r6, #0x1c]
 	movs r1, #0x1f
@@ -28839,7 +28839,7 @@ _08015CFA:
 _08015D3C:
 	ldr r0, _08015D60 @ =0x02000EA0
 	ldr r0, [r0]
-	bl sub_0800088C
+	bl GetDpadDirection
 	lsls r0, r0, #0x18
 	lsrs r4, r0, #0x18
 	cmp r4, #2
@@ -28880,7 +28880,7 @@ _08015D76:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #3
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r4, [r6, #0x1c]
 _08015D9E:
 	movs r1, #0x1e
@@ -28909,7 +28909,7 @@ _08015DB4:
 	bne _08015E3C
 	ldr r0, _08015E1C @ =0x02000E70
 	ldr r0, [r0]
-	bl sub_08022A6C
+	bl HasTornadoSpin
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _08015E3C
@@ -28933,7 +28933,7 @@ _08015DB4:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x18
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	movs r0, #0x1c
 	adds r1, r6, #0
 	adds r1, #0x31
@@ -29009,7 +29009,7 @@ ActionCtrlStateJump: @ 0x08015E4C
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x15
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r3, [r5, #0x10]
 	movs r4, #2
 	ldr r2, [r3, #0x2c]
@@ -29072,7 +29072,7 @@ _08015ECC:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x10
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r6, [r5, #0x18]
 	str r4, [r5, #0x1c]
 	adds r0, r5, #0
@@ -29140,7 +29140,7 @@ _08015F8A:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #6
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 _08015FAE:
 	adds r3, r5, #0
 	adds r3, #0x28
@@ -29173,7 +29173,7 @@ _08015FCC:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xc
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r3, r5, #0
 	adds r3, #0x28
 	ldrb r0, [r3]
@@ -29205,7 +29205,7 @@ _08016018:
 _08016026:
 	ldr r0, _08016058 @ =0x02000EA0
 	ldr r0, [r0]
-	bl sub_0800088C
+	bl GetDpadDirection
 	lsls r0, r0, #0x18
 	lsrs r0, r0, #0x18
 	cmp r0, #2
@@ -29310,7 +29310,7 @@ ActionCtrlStateAirborne: @ 0x080160D4
 	ldr r1, [r5, #0x10]
 	adds r1, #0x88
 	ldrb r7, [r1]
-	bl sub_0800088C
+	bl GetDpadDirection
 	lsls r0, r0, #0x18
 	lsrs r0, r0, #0x18
 	mov r8, r0
@@ -29354,7 +29354,7 @@ ActionCtrlStateAirborne: @ 0x080160D4
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x10
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r6, [r5, #0x18]
 	str r4, [r5, #0x1c]
 	adds r0, r5, #0
@@ -29458,7 +29458,7 @@ _080161DA:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x15
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r3, [r5, #0x10]
 	movs r4, #2
 	ldr r2, [r3, #0x2c]
@@ -29553,7 +29553,7 @@ _080162B8:
 	strb r2, [r7]
 	movs r1, #0x20
 	movs r2, #1
-	bl sub_08025850
+	bl SpawnEffectPart
 	adds r3, r0, #0
 	adds r2, r3, #0
 	adds r2, #0x34
@@ -29609,7 +29609,7 @@ _0801632C:
 	strb r1, [r7]
 	movs r1, #0x20
 	movs r2, #1
-	bl sub_08025850
+	bl SpawnEffectPart
 	adds r3, r0, #0
 	adds r2, r3, #0
 	adds r2, #0x34
@@ -29649,7 +29649,7 @@ _08016394:
 	cmp r0, #0x19
 	bne _080163A2
 	adds r0, r5, #0
-	bl sub_08017F64
+	bl DoSuperBodySlamShockwave
 _080163A2:
 	ldr r0, [r5, #8]
 	cmp r0, #0x1d
@@ -29677,7 +29677,7 @@ _080163AA:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x11
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r0, r5, #0
 	adds r0, #0x32
 	strb r6, [r0]
@@ -29775,7 +29775,7 @@ _08016474:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x16
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	b _080164D0
 	.align 2, 0
 _080164A8: .4byte 0x02000E88
@@ -29795,7 +29795,7 @@ _080164AC:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x16
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 _080164D0:
 	movs r1, #0
 	adds r0, r5, #0
@@ -29857,7 +29857,7 @@ ActionCtrlStateFlipBodySlamStart: @ 0x08016518
 	ldr r3, [r1, #4]
 	adds r1, r2, #0
 	movs r2, #9
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	b _080165BC
 _08016544:
 	cmp r0, #3
@@ -29876,7 +29876,7 @@ _08016552:
 	ldr r3, [r1, #4]
 	adds r1, r2, #0
 	movs r2, #8
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	b _080165BC
 _08016568:
 	adds r0, r2, #0
@@ -29905,7 +29905,7 @@ _08016568:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #7
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	b _080165BC
 	.align 2, 0
 _080165A8: .4byte 0x02000E70
@@ -30067,7 +30067,7 @@ _080166B6:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x1a
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	movs r2, #4
 	adds r0, r5, #0
 	adds r0, #0x32
@@ -30106,7 +30106,7 @@ _080166FC:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r4, [r5, #0x1c]
 	movs r1, #3
 	adds r0, r5, #0
@@ -30125,7 +30125,7 @@ _080166FC:
 _08016754:
 	ldr r0, _080167D4 @ =0x02000EA0
 	ldr r0, [r0]
-	bl sub_0800088C
+	bl GetDpadDirection
 	lsls r0, r0, #0x18
 	lsrs r4, r0, #0x18
 	cmp r4, #0
@@ -30149,7 +30149,7 @@ _08016754:
 	beq _080167DC
 	ldr r0, _080167D8 @ =0x02000E70
 	ldr r0, [r0]
-	bl sub_08022A6C
+	bl HasTornadoSpin
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _080167DC
@@ -30172,7 +30172,7 @@ _08016754:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x18
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	movs r1, #0x1c
 	adds r0, r5, #0
 	adds r0, #0x31
@@ -30228,7 +30228,7 @@ _08016806:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #2
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	movs r1, #0
 	adds r0, r5, #0
 	adds r0, #0x31
@@ -30254,7 +30254,7 @@ _0801684A:
 	ldr r3, [r2, #4]
 	movs r2, #4
 _0801686A:
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	movs r1, #0
 	adds r0, r5, #0
 	adds r0, #0x31
@@ -30283,7 +30283,7 @@ ActionCtrlStateSpin: @ 0x0801688C
 	ldr r1, _08016934 @ =0x02000018
 	ldr r1, [r1]
 	str r1, [sp]
-	bl sub_0800088C
+	bl GetDpadDirection
 	lsls r0, r0, #0x18
 	lsrs r5, r0, #0x18
 	ldr r0, [r4, #0x10]
@@ -30427,8 +30427,8 @@ _080169B6:
 	bx r0
 	.align 2, 0
 
-	thumb_func_start sub_080169C0
-sub_080169C0: @ 0x080169C0
+	thumb_func_start ActionCtrlStateAirSpin
+ActionCtrlStateAirSpin: @ 0x080169C0
 	push {r4, r5, lr}
 	sub sp, #4
 	adds r5, r0, #0
@@ -30557,7 +30557,7 @@ _08016A9C:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x15
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r4, [r5, #0x18]
 	str r4, [r5, #0x1c]
 _08016ACC:
@@ -30580,7 +30580,7 @@ ActionCtrlStateTornadoSpin: @ 0x08016ADC
 	ldr r1, _08016B14 @ =0x02000018
 	ldr r1, [r1]
 	str r1, [sp]
-	bl sub_0800088C
+	bl GetDpadDirection
 	lsls r0, r0, #0x18
 	lsrs r5, r0, #0x18
 	ldr r0, [r4, #0x10]
@@ -30594,7 +30594,7 @@ ActionCtrlStateTornadoSpin: @ 0x08016ADC
 	cmp r0, #0
 	beq _08016B18
 	adds r0, r4, #0
-	bl sub_080181B0
+	bl StartActionCtrlTornadoFall
 	b _08016B62
 	.align 2, 0
 _08016B10: .4byte 0x02000EA0
@@ -30828,7 +30828,7 @@ _08016CB2:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #4
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 _08016CE0:
 	add sp, #4
 	pop {r4}
@@ -30845,7 +30845,7 @@ ActionCtrlStateCrouch: @ 0x08016CE8
 	ldr r1, _08016D54 @ =0x02000018
 	ldr r1, [r1]
 	str r1, [sp]
-	bl sub_0800088C
+	bl GetDpadDirection
 	lsls r0, r0, #0x18
 	lsrs r5, r0, #0x18
 	mov r0, sp
@@ -30958,7 +30958,7 @@ _08016DD2:
 	bne _08016E30
 	ldr r0, _08016E84 @ =0x02000EA0
 	ldr r0, [r0]
-	bl sub_0800088C
+	bl GetDpadDirection
 	lsls r0, r0, #0x18
 	lsrs r0, r0, #0x18
 	cmp r0, #3
@@ -30985,7 +30985,7 @@ _08016DF4:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x14
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	movs r1, #3
 	adds r0, r4, #0
 	adds r0, #0x31
@@ -31028,7 +31028,7 @@ _08016E30:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #2
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r0, r4, #0
 	adds r0, #0x31
 	strb r5, [r0]
@@ -31057,7 +31057,7 @@ _08016E88:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #4
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r0, r4, #0
 	adds r0, #0x31
 	strb r6, [r0]
@@ -31144,7 +31144,7 @@ _08016F34:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r0, r4, #0
 	bl ActionCtrlStateCrawl
 _08016F68:
@@ -31209,7 +31209,7 @@ _08016FD0:
 _08016FE0:
 	ldr r0, _08016FFC @ =0x02000EA0
 	ldr r0, [r0]
-	bl sub_0800088C
+	bl GetDpadDirection
 	lsls r0, r0, #0x18
 	lsrs r5, r0, #0x18
 	cmp r5, #1
@@ -31240,7 +31240,7 @@ _08017004:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #1
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	movs r1, #0
 	adds r0, r4, #0
 	adds r0, #0x31
@@ -31294,7 +31294,7 @@ _08017072:
 	ldr r3, [r2, #4]
 	movs r2, #4
 _08017092:
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r0, r4, #0
 	adds r0, #0x31
 	strb r6, [r0]
@@ -31332,7 +31332,7 @@ _080170A4:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #2
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r0, r4, #0
 	adds r0, #0x31
 	strb r5, [r0]
@@ -31370,7 +31370,7 @@ sub_08017104: @ 0x08017104
 	lsrs r1, r1, #0x10
 	rsbs r1, r1, #0
 	lsrs r5, r1, #0x1f
-	bl sub_0800088C
+	bl GetDpadDirection
 	lsls r0, r0, #0x18
 	lsrs r0, r0, #0x18
 	cmp r0, #2
@@ -31408,7 +31408,7 @@ _08017158:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #3
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	movs r1, #0
 	adds r0, r4, #0
 	adds r0, #0x31
@@ -31453,7 +31453,7 @@ _080171BC:
 	bl PlaySfx
 	ldr r0, _08017228 @ =0x02000E70
 	ldr r0, [r0]
-	bl sub_08022A58
+	bl HasTurboRun
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _0801722C
@@ -31478,7 +31478,7 @@ _080171BC:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xf
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r5, [r6, #0x18]
 	str r4, [r6, #0x1c]
 	adds r0, r6, #0
@@ -31514,7 +31514,7 @@ _0801722C:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xf
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r4, [r6, #0x18]
 	str r5, [r6, #0x1c]
 	movs r1, #0x1f
@@ -31633,7 +31633,7 @@ _0801731C:
 	ldr r3, [r1, #4]
 	adds r1, r2, #0
 	movs r2, #0x18
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r1, [r4, #0xc]
 	movs r2, #0x28
 	ldrsh r0, [r1, r2]
@@ -31818,7 +31818,7 @@ _08017472:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x13
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r5, [r4, #0x18]
 	movs r1, #7
 	adds r0, r4, #0
@@ -31913,7 +31913,7 @@ _08017528:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #3
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r5, [r4, #0x1c]
 	adds r0, r4, #0
 	adds r0, #0x31
@@ -31925,7 +31925,7 @@ _08017528:
 _08017578:
 	ldr r0, _080175A4 @ =0x02000EA0
 	ldr r0, [r0]
-	bl sub_0800088C
+	bl GetDpadDirection
 	lsls r0, r0, #0x18
 	lsrs r1, r0, #0x18
 	cmp r1, #0
@@ -31986,9 +31986,9 @@ _080175E0:
 	movs r0, #0x33
 	strb r0, [r1]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -32022,16 +32022,16 @@ sub_0801761C: @ 0x0801761C
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
 _08017648:
 	ldr r0, _08017668 @ =0x02000EA0
 	ldr r0, [r0]
-	bl sub_0800088C
+	bl GetDpadDirection
 	lsls r0, r0, #0x18
 	lsrs r0, r0, #0x18
 	cmp r0, #3
@@ -32076,9 +32076,9 @@ _0801768E:
 	strb r0, [r1]
 _0801769E:
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -32185,7 +32185,7 @@ sub_08017768: @ 0x08017768
 	adds r4, r0, #0
 	ldr r0, _08017798 @ =0x02000EA0
 	ldr r0, [r0]
-	bl sub_0800088C
+	bl GetDpadDirection
 	lsls r0, r0, #0x18
 	lsrs r2, r0, #0x18
 	ldr r0, _0801779C @ =0x02000018
@@ -32253,7 +32253,7 @@ _080177C6:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x1f
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 _0801780C:
 	mov r0, sp
 	ldrh r1, [r0, #2]
@@ -32273,7 +32273,7 @@ _0801780C:
 	movs r1, #0x23
 	bl PlaySfx
 	adds r0, r4, #0
-	bl sub_0801794C
+	bl ActionCtrlReleaseHang
 	b _080178DC
 	.align 2, 0
 _08017838: .4byte 0x020001CC
@@ -32379,7 +32379,7 @@ ActionCtrlStateUnusedHang: @ 0x080178E4
 	movs r1, #0x23
 	bl PlaySfx
 	adds r0, r4, #0
-	bl sub_0801794C
+	bl ActionCtrlReleaseHang
 	b _08017944
 	.align 2, 0
 _08017914: .4byte 0x02000018
@@ -32409,8 +32409,8 @@ _08017944:
 	pop {r0}
 	bx r0
 
-	thumb_func_start sub_0801794C
-sub_0801794C: @ 0x0801794C
+	thumb_func_start ActionCtrlReleaseHang
+ActionCtrlReleaseHang: @ 0x0801794C
 	push {r4, r5, lr}
 	adds r4, r0, #0
 	ldr r0, [r4, #0x10]
@@ -32438,7 +32438,7 @@ sub_0801794C: @ 0x0801794C
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x1a
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r2, [r4, #0x10]
 	ldr r3, [r2, #0x2c]
 	adds r0, r2, #0
@@ -32498,7 +32498,7 @@ sub_080179BC: @ 0x080179BC
 	subs r1, #8
 	strb r0, [r1]
 	adds r0, r4, #0
-	bl sub_0801794C
+	bl ActionCtrlReleaseHang
 	b _08017C48
 	.align 2, 0
 _08017A00: .4byte 0x02000EA0
@@ -32523,7 +32523,7 @@ _08017A0C:
 	b _08017C48
 _08017A30:
 	adds r0, r2, #0
-	bl sub_0800088C
+	bl GetDpadDirection
 	lsls r0, r0, #0x18
 	lsrs r6, r0, #0x18
 	cmp r6, #0
@@ -32543,7 +32543,7 @@ _08017A30:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x21
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r0, r4, #0
 	adds r0, #0x31
 	strb r6, [r0]
@@ -32621,7 +32621,7 @@ _08017ADA:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x21
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r0, r4, #0
 	adds r0, #0x31
 	strb r6, [r0]
@@ -32667,7 +32667,7 @@ _08017B1E:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x21
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	b _08017C48
 _08017B62:
 	ldr r0, [r4, #0x10]
@@ -32691,7 +32691,7 @@ _08017B62:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x20
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r6, [r4, #0x18]
 	ldr r3, [r4, #0x10]
 	movs r5, #5
@@ -32794,7 +32794,7 @@ sub_08017C50: @ 0x08017C50
 	adds r4, r0, #0
 	ldr r0, _08017CC4 @ =0x02000EA0
 	ldr r0, [r0]
-	bl sub_0800088C
+	bl GetDpadDirection
 	lsls r0, r0, #0x18
 	lsrs r6, r0, #0x18
 	ldr r0, _08017CC8 @ =0x02000018
@@ -32811,9 +32811,9 @@ sub_08017C50: @ 0x08017C50
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -32840,7 +32840,7 @@ _08017C90:
 	subs r1, #8
 	strb r0, [r1]
 	adds r0, r4, #0
-	bl sub_0801794C
+	bl ActionCtrlReleaseHang
 	b _08017EB0
 	.align 2, 0
 _08017CC4: .4byte 0x02000EA0
@@ -32956,7 +32956,7 @@ _08017D7A:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x21
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	b _08017EB0
 _08017DB4:
 	cmp r6, #0
@@ -33009,7 +33009,7 @@ _08017DF6:
 	ldr r3, [r2, #4]
 	movs r2, #0x21
 _08017E16:
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 _08017E1A:
 	adds r0, r4, #0
 	adds r0, #0x31
@@ -33119,7 +33119,7 @@ ActionCtrlStateHangStop: @ 0x08017EB8
 	subs r1, #8
 	strb r0, [r1]
 	adds r0, r4, #0
-	bl sub_0801794C
+	bl ActionCtrlReleaseHang
 	b _08017F5A
 	.align 2, 0
 _08017EF8: .4byte 0x02000018
@@ -33164,7 +33164,7 @@ _08017F28:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x1e
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r6, [r4, #0x18]
 	str r6, [r4, #0x1c]
 _08017F5A:
@@ -33174,8 +33174,8 @@ _08017F5A:
 	bx r0
 	.align 2, 0
 
-	thumb_func_start sub_08017F64
-sub_08017F64: @ 0x08017F64
+	thumb_func_start DoSuperBodySlamShockwave
+DoSuperBodySlamShockwave: @ 0x08017F64
 	push {r4, r5, r6, r7, lr}
 	mov r7, sb
 	mov r6, r8
@@ -33324,7 +33324,7 @@ _0801805E:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	mov r2, r8
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	mov r2, sb
 	str r2, [r6, #0x18]
 	str r4, [r6, #0x1c]
@@ -33405,7 +33405,7 @@ _080180FC:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	mov r2, r8
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r4, [r6, #0x18]
 	mov r2, sb
 	str r2, [r6, #0x1c]
@@ -33442,7 +33442,7 @@ _08018144:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x10
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r4, [r6, #0x18]
 	str r7, [r6, #0x1c]
 	ldr r0, _080181AC @ =0x02000E6C
@@ -33474,8 +33474,8 @@ _08018196:
 	.align 2, 0
 _080181AC: .4byte 0x02000E6C
 
-	thumb_func_start sub_080181B0
-sub_080181B0: @ 0x080181B0
+	thumb_func_start StartActionCtrlTornadoFall
+StartActionCtrlTornadoFall: @ 0x080181B0
 	push {lr}
 	adds r3, r0, #0
 	adds r1, r3, #0
@@ -33558,7 +33558,7 @@ sub_08018224: @ 0x08018224
 	beq _0801829C
 	ldr r0, _08018298 @ =0x02000E70
 	ldr r0, [r0]
-	bl sub_08022A6C
+	bl HasTornadoSpin
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _0801829C
@@ -33581,7 +33581,7 @@ sub_08018224: @ 0x08018224
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x18
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	movs r1, #0x1c
 	adds r2, r5, #0
 	adds r2, #0x31
@@ -33727,7 +33727,7 @@ StartActionCtrlSpin: @ 0x08018360
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x10
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r1, [r4, #0xc]
 	movs r2, #0x28
 	ldrsh r0, [r1, r2]
@@ -33789,7 +33789,7 @@ StartActionCtrlHangSpin: @ 0x080183C4
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x1d
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r1, [r5, #0xc]
 	movs r2, #0x28
 	ldrsh r0, [r1, r2]
@@ -33822,7 +33822,7 @@ StartActionCtrlRun: @ 0x08018428
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x18
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r1, [r5, #0xc]
 	movs r2, #0x28
 	ldrsh r0, [r1, r2]
@@ -33856,7 +33856,7 @@ _0801847E:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xd
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r4, [r5, #0x18]
 	ldr r1, [r5, #0xc]
 	movs r2, #0x28
@@ -33905,7 +33905,7 @@ StartActionCtrlHighJump: @ 0x080184C8
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xb
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r5, [r4, #0x18]
 	movs r2, #0xb
 	adds r0, r4, #0
@@ -33946,7 +33946,7 @@ StartActionCtrlMaskHitJump: @ 0x08018518
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xb
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r5, [r4, #0x18]
 	movs r2, #7
 	adds r0, r4, #0
@@ -33993,9 +33993,9 @@ sub_08018568: @ 0x08018568
 	movs r0, #0x2b
 	strb r0, [r1]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -34025,7 +34025,7 @@ _080185AA:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xa
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r4, [r6, #0x18]
 	str r4, [r6, #0x1c]
 	movs r1, #7
@@ -34072,7 +34072,7 @@ _0801860C:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x10
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r5, [r6, #0x18]
 	str r4, [r6, #0x1c]
 	adds r0, r6, #0
@@ -34083,7 +34083,7 @@ _0801860C:
 	str r0, [r6, #0x38]
 	ldr r0, _0801867C @ =0x02000EA0
 	ldr r0, [r0]
-	bl sub_0800088C
+	bl GetDpadDirection
 	lsls r0, r0, #0x18
 	lsrs r0, r0, #0x18
 	cmp r0, #2
@@ -34152,7 +34152,7 @@ _080186CA:
 	ldr r1, [r6, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x15
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	mov r0, r8
 	str r0, [r6, #0x18]
 	str r0, [r6, #0x1c]
@@ -34380,7 +34380,7 @@ _08018878:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x15
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r5, [r4, #0x18]
 	str r5, [r4, #0x1c]
 	movs r2, #4
@@ -34397,7 +34397,7 @@ _08018878:
 _080188C4:
 	ldr r0, _08018900 @ =0x02000EA0
 	ldr r0, [r0]
-	bl sub_0800088C
+	bl GetDpadDirection
 	lsls r0, r0, #0x18
 	lsrs r0, r0, #0x18
 	adds r1, r0, #0
@@ -34522,7 +34522,7 @@ sub_0801896C: @ 0x0801896C
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x15
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r3, [r4, #0x10]
 	movs r5, #2
 	ldr r2, [r3, #0x2c]
@@ -34568,11 +34568,11 @@ _080189EC:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x2f
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 _08018A1A:
 	ldr r0, _08018A4C @ =0x02000EA0
 	ldr r0, [r0]
-	bl sub_0800088C
+	bl GetDpadDirection
 	lsls r0, r0, #0x18
 	lsrs r0, r0, #0x18
 	cmp r0, #2
@@ -34627,7 +34627,7 @@ sub_08018A78: @ 0x08018A78
 	ldr r1, [r4, #0x10]
 	adds r1, #0x88
 	ldrb r6, [r1]
-	bl sub_0800088C
+	bl GetDpadDirection
 	lsls r0, r0, #0x18
 	lsrs r5, r0, #0x18
 	cmp r6, #0
@@ -34669,9 +34669,9 @@ _08018AB4:
 	movs r0, #0xc
 	strb r0, [r1]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -34702,9 +34702,9 @@ _08018B10:
 	movs r0, #0x2e
 	strb r0, [r1]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -34724,9 +34724,9 @@ _08018B38:
 	movs r0, #0x2d
 	strb r0, [r1]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -34764,7 +34764,7 @@ _08018B6A:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xc
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r3, [r4, #0x10]
 	movs r5, #2
 	ldr r2, [r3, #0x2c]
@@ -34842,7 +34842,7 @@ _08018C08:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x16
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	b _08018C7C
 	.align 2, 0
 _08018C54: .4byte 0x02000E88
@@ -34862,7 +34862,7 @@ _08018C58:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x16
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 _08018C7C:
 	movs r1, #0
 	adds r0, r4, #0
@@ -34927,7 +34927,7 @@ sub_08018CA0: @ 0x08018CA0
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x16
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	b _08018D20
 	.align 2, 0
 _08018CF8: .4byte 0x02000E88
@@ -34947,7 +34947,7 @@ _08018CFC:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x16
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 _08018D20:
 	movs r1, #0
 	adds r0, r4, #0
@@ -35145,7 +35145,7 @@ _08018E72:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x1a
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	movs r2, #4
 	adds r0, r5, #0
 	adds r0, #0x32
@@ -35184,7 +35184,7 @@ _08018EB8:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r4, [r5, #0x1c]
 	movs r1, #3
 	adds r0, r5, #0
@@ -35203,7 +35203,7 @@ _08018EB8:
 _08018F10:
 	ldr r0, _08018F90 @ =0x02000EA0
 	ldr r0, [r0]
-	bl sub_0800088C
+	bl GetDpadDirection
 	lsls r0, r0, #0x18
 	lsrs r4, r0, #0x18
 	cmp r4, #0
@@ -35227,7 +35227,7 @@ _08018F10:
 	beq _08018F98
 	ldr r0, _08018F94 @ =0x02000E70
 	ldr r0, [r0]
-	bl sub_08022A6C
+	bl HasTornadoSpin
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _08018F98
@@ -35250,7 +35250,7 @@ _08018F10:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x18
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	movs r1, #0x1c
 	adds r0, r5, #0
 	adds r0, #0x31
@@ -35306,7 +35306,7 @@ _08018FC2:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #2
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	movs r1, #0
 	adds r0, r5, #0
 	adds r0, #0x31
@@ -35332,7 +35332,7 @@ _08019006:
 	ldr r3, [r2, #4]
 	movs r2, #4
 _08019026:
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	movs r1, #0
 	adds r0, r5, #0
 	adds r0, #0x31
@@ -35421,7 +35421,7 @@ _080190A8:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x30
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r4, [r5, #0x18]
 	str r4, [r5, #0x1c]
 	ldr r0, [r5, #0x10]
@@ -35518,9 +35518,9 @@ sub_08019184: @ 0x08019184
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -35590,7 +35590,7 @@ _080191E6:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x13
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r0, [r5, #0x10]
 	adds r0, #0x84
 	str r4, [r0]
@@ -35622,7 +35622,7 @@ _08019248:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x10
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	movs r1, #4
 	adds r0, r5, #0
 	adds r0, #0x32
@@ -35664,7 +35664,7 @@ sub_08019298: @ 0x08019298
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0xc
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r4, [r5, #0x18]
 	str r4, [r5, #0x1c]
 	movs r2, #4
@@ -35703,7 +35703,7 @@ sub_080192EC: @ 0x080192EC
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x35
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r5, [r4, #0x18]
 	str r5, [r4, #0x1c]
 	pop {r4, r5}
@@ -35744,7 +35744,7 @@ ActionCtrlStateNop6: @ 0x0801934E
 	thumb_func_start ActionCtrlStateUnusedHangRelease
 ActionCtrlStateUnusedHangRelease: @ 0x08019350
 	push {lr}
-	bl sub_0801794C
+	bl ActionCtrlReleaseHang
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -35774,7 +35774,7 @@ sub_0801935C: @ 0x0801935C
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x1e
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r4, [r5, #0x18]
 	str r4, [r5, #0x1c]
 _08019394:
@@ -35819,7 +35819,7 @@ _080193B6:
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x1e
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r4, [r5, #0x18]
 	str r4, [r5, #0x1c]
 _080193E8:
@@ -35855,7 +35855,7 @@ sub_080193F4: @ 0x080193F4
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #0x1e
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r0, _08019440 @ =0x7FFFFFFF
 	cmp r5, r0
 	beq _08019432
@@ -35939,7 +35939,7 @@ ActionCtrlStateCrawlStop: @ 0x08019490
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #4
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 _080194C2:
 	pop {r4}
 	pop {r0}
@@ -36005,7 +36005,7 @@ ActionCtrlStateBodySlamStart: @ 0x080194F8
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	movs r2, #7
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	b _08019550
 	.align 2, 0
 _0801953C: .4byte 0x02000E70
@@ -36077,7 +36077,7 @@ SetActionCtrlModeAnim: @ 0x0801958C
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	adds r2, r4, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r0, _080195CC @ =0x7FFFFFFF
 	cmp r6, r0
 	beq _080195C0
@@ -36345,7 +36345,7 @@ _08019730:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	adds r2, r5, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r2, [r4, #0x10]
 	ldrb r1, [r2, #0x18]
 	movs r0, #0x7f
@@ -36589,9 +36589,9 @@ _08019924:
 	movs r5, #0
 	strb r7, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -36610,7 +36610,7 @@ _08019924:
 	strb r7, [r1]
 	movs r1, #0x26
 	movs r2, #1
-	bl sub_08025850
+	bl SpawnEffectPart
 	adds r3, r0, #0
 	cmp r3, #0
 	beq _080199A2
@@ -36670,9 +36670,9 @@ _080199E0:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -36832,7 +36832,7 @@ ApplyInputCtrlMotion: @ 0x08019B04
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	adds r2, r5, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	b _08019B56
 	.align 2, 0
 _08019B40: .4byte 0x081CE3E0
@@ -36844,7 +36844,7 @@ _08019B44:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #0x34]
 	adds r2, r5, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 _08019B56:
 	movs r0, #0
 	strb r0, [r4, #0x17]
@@ -36875,7 +36875,7 @@ _08019B5C:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	adds r2, r5, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	b _08019BAA
 	.align 2, 0
 _08019B94: .4byte 0x081CE3E0
@@ -36887,7 +36887,7 @@ _08019B98:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #0x3c]
 	adds r2, r5, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 _08019BAA:
 	movs r0, #0
 	strb r0, [r4, #0x18]
@@ -36919,7 +36919,7 @@ sub_08019BB8: @ 0x08019BB8
 	ldr r1, [r5, #0x10]
 	ldr r3, [r2, #4]
 	adds r2, r4, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r0, _08019BF8 @ =0x7FFFFFFF
 	cmp r6, r0
 	beq _08019BEC
@@ -36987,8 +36987,8 @@ RestartInputCtrl: @ 0x08019C34
 	bx r0
 	.align 2, 0
 
-	thumb_func_start sub_08019C5C
-sub_08019C5C: @ 0x08019C5C
+	thumb_func_start ResetInputCtrl
+ResetInputCtrl: @ 0x08019C5C
 	movs r1, #1
 	str r1, [r0, #8]
 	movs r2, #0
@@ -37067,7 +37067,7 @@ sub_08019CD4: @ 0x08019CD4
 	ldr r0, _08019CF0 @ =0x087F8F9C
 	str r0, [r4, #0xc]
 	adds r0, r4, #0
-	bl sub_08019C5C
+	bl ResetInputCtrl
 	adds r0, r4, #0
 	pop {r4}
 	pop {r1}
@@ -37331,7 +37331,7 @@ _08019EC4:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	adds r2, r5, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r2, [r4, #0x10]
 	ldrb r1, [r2, #0x18]
 	movs r0, #0x7f
@@ -37851,7 +37851,7 @@ sub_0801A2D0: @ 0x0801A2D0
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	adds r2, r5, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	b _0801A322
 	.align 2, 0
 _0801A30C: .4byte 0x081CE3E0
@@ -37863,7 +37863,7 @@ _0801A310:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #0x34]
 	adds r2, r5, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 _0801A322:
 	movs r0, #0
 	strb r0, [r4, #0x16]
@@ -37894,7 +37894,7 @@ _0801A328:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #4]
 	adds r2, r5, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	b _0801A376
 	.align 2, 0
 _0801A360: .4byte 0x081CE3E0
@@ -37906,7 +37906,7 @@ _0801A364:
 	ldr r1, [r4, #0x10]
 	ldr r3, [r2, #0x3c]
 	adds r2, r5, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 _0801A376:
 	movs r0, #0
 	strb r0, [r4, #0x17]
@@ -37968,9 +37968,9 @@ _0801A3D2:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -38040,9 +38040,9 @@ _0801A44A:
 	movs r5, #0
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -38386,7 +38386,7 @@ _0801A6E8:
 	adds r0, r1, #0
 _0801A6EA:
 	adds r0, r4, r0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r0, r4, #0
 	bl sub_0801A2D0
 	pop {r4, r5, r6, r7}
@@ -38813,9 +38813,9 @@ _0801AA5A:
 	adds r4, #0x40
 	strb r0, [r4]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -39640,9 +39640,9 @@ _0801B0CE:
 	movs r5, #0
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -39670,7 +39670,7 @@ _0801B0CE:
 	strb r6, [r1]
 	movs r1, #0x26
 	movs r2, #2
-	bl sub_08025850
+	bl SpawnEffectPart
 	ldrb r2, [r0, #0x18]
 	movs r4, #5
 	rsbs r4, r4, #0
@@ -39690,7 +39690,7 @@ _0801B0CE:
 	strb r6, [r1]
 	movs r1, #0x20
 	movs r2, #2
-	bl sub_08025850
+	bl SpawnEffectPart
 	ldrb r1, [r0, #0x18]
 	ands r4, r1
 	strb r4, [r0, #0x18]
@@ -39721,9 +39721,9 @@ _0801B0CE:
 	subs r0, #0x44
 	strb r3, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -39833,9 +39833,9 @@ _0801B25C:
 	adds r0, #0x40
 	strb r6, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -40085,8 +40085,8 @@ sub_0801B460: @ 0x0801B460
 	.align 2, 0
 _0801B474: .4byte 0x087F928C
 
-	thumb_func_start sub_0801B478
-sub_0801B478: @ 0x0801B478
+	thumb_func_start SetScaledSpritePos
+SetScaledSpritePos: @ 0x0801B478
 	str r1, [r0, #0x10]
 	bx lr
 _0801B47C:
@@ -40290,9 +40290,9 @@ _0801B598:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -40442,7 +40442,7 @@ _0801B714:
 	bl FadeBrightness
 	str r4, [r6]
 	str r5, [r6, #4]
-	bl sub_08001668
+	bl CommitBlendRegs
 	ldr r0, [r7]
 	bl sub_08007F24
 	b _0801B780
@@ -40511,7 +40511,7 @@ _0801B786:
 	bl FadeBrightness
 	str r4, [r6]
 	str r5, [r6, #4]
-	bl sub_08001668
+	bl CommitBlendRegs
 	ldr r0, [r7]
 	bl sub_08007F24
 _0801B7EA:
@@ -40598,7 +40598,7 @@ _0801B860:
 	movs r6, #1
 	strb r6, [r1]
 	adds r1, r4, #0
-	bl sub_08025850
+	bl SpawnEffectPart
 	adds r3, r0, #0
 	cmp r3, #0
 	beq _0801B8D2
@@ -41233,9 +41233,9 @@ _0801BDF8:
 	adds r0, #0x40
 	strb r4, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -42394,8 +42394,8 @@ GetBgSetupControl: @ 0x0801C944
 	ldrh r0, [r0, #0xc]
 	bx lr
 
-	thumb_func_start sub_0801C948
-sub_0801C948: @ 0x0801C948
+	thumb_func_start InitBgSetup
+InitBgSetup: @ 0x0801C948
 	push {r4, r5, r6, lr}
 	mov r6, r8
 	push {r6}
@@ -42609,7 +42609,7 @@ _0801CADE:
 	cmp r4, r0
 	bge _0801CB1C
 	ldr r0, [r5]
-	bl sub_0805B538
+	bl GetLives
 	cmp r0, #0
 	bne _0801CB46
 	ldr r0, [r5]
@@ -42664,9 +42664,9 @@ _0801CB46:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -42748,9 +42748,9 @@ sub_0801CBCC: @ 0x0801CBCC
 	adds r0, #0x40
 	strb r5, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -42797,8 +42797,8 @@ _0801CC90: .4byte 0x02000E70
 _0801CC94: .4byte 0x02000E80
 _0801CC98: .4byte 0x02000EC4
 
-	thumb_func_start sub_0801CC9C
-sub_0801CC9C: @ 0x0801CC9C
+	thumb_func_start SpawnCrateGem
+SpawnCrateGem: @ 0x0801CC9C
 	push {r4, r5, r6, r7, lr}
 	mov r7, sl
 	mov r6, sb
@@ -42846,9 +42846,9 @@ sub_0801CC9C: @ 0x0801CC9C
 	adds r0, #0x40
 	strb r6, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -42891,7 +42891,7 @@ _0801CD4A:
 	movs r1, #0x22
 	movs r2, #2
 	ldr r3, [sp, #0xc]
-	bl sub_08025850
+	bl SpawnEffectPart
 	adds r3, r0, #0
 	adds r3, #0x34
 	ldrb r2, [r3]
@@ -43049,9 +43049,9 @@ _0801CE96:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r7, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r7, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r7, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -43116,9 +43116,9 @@ sub_0801CEE8: @ 0x0801CEE8
 	adds r0, #0x40
 	strb r5, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -43156,9 +43156,9 @@ _0801CF6C:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -43193,7 +43193,7 @@ _0801CFDA:
 	ldr r1, _0801CFFC @ =0x02000E70
 	ldr r0, [r1]
 	mov r1, sp
-	bl sub_08022E24
+	bl SetCrateGemPos
 	b _0801D034
 	.align 2, 0
 _0801CFF8: .4byte 0x02000E88
@@ -43272,9 +43272,9 @@ _0801D092:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -43291,9 +43291,9 @@ _0801D0B8:
 	subs r0, #0x68
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -43315,7 +43315,7 @@ _0801D0FC:
 	ldr r0, _0801D118 @ =0x02000E70
 	ldr r0, [r0]
 	adds r1, r4, #0
-	bl sub_08022E18
+	bl SetGemPlatform
 	ldr r0, _0801D11C @ =0x02000ECC
 	ldr r0, [r0]
 	adds r1, r4, #0
@@ -43399,9 +43399,9 @@ _0801D192:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r7, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r7, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r7, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -43512,9 +43512,9 @@ _0801D248:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r6, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r6, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r6, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -43664,9 +43664,9 @@ _0801D47C:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r7, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r7, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r7, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -43820,9 +43820,9 @@ _0801D5CE:
 	mov r2, sb
 	strb r2, [r0]
 	adds r0, r7, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r7, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r7, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -43963,9 +43963,9 @@ _0801D702:
 	mov r2, sb
 	strb r2, [r0]
 	adds r0, r7, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r7, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r7, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -44091,9 +44091,9 @@ _0801D830:
 	mov r2, r8
 	strb r2, [r0]
 	adds r0, r7, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r7, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r7, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -44203,9 +44203,9 @@ _0801D928:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r6, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r6, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r6, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -44333,9 +44333,9 @@ _0801DA3A:
 	mov r1, r8
 	strb r1, [r0]
 	adds r0, r7, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r7, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r7, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -44495,9 +44495,9 @@ _0801DB94:
 	mov r2, r8
 	strb r2, [r0]
 	adds r0, r7, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r7, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r7, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -44667,9 +44667,9 @@ _0801DCFE:
 	adds r0, #0x40
 	strb r6, [r0]
 	adds r0, r7, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r7, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r7, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -44780,9 +44780,9 @@ _0801DDF8:
 	mov r1, sl
 	strb r1, [r0]
 	adds r0, r6, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r6, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r6, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -46074,9 +46074,9 @@ sub_0801E8E4: @ 0x0801E8E4
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r6, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r6, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r6, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -46148,7 +46148,7 @@ _0801E9B0:
 	ldr r3, [r1, #4]
 	movs r1, #4
 	movs r2, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 _0801E9C4:
 	pop {r4, r5, r6}
 	pop {r0}
@@ -46180,9 +46180,9 @@ sub_0801E9CC: @ 0x0801E9CC
 	adds r0, #0x40
 	strb r7, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -46366,9 +46366,9 @@ _0801EB76:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r7, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r7, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r7, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -46517,9 +46517,9 @@ _0801ECB6:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r7, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r7, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r7, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -46567,9 +46567,9 @@ sub_0801ED08: @ 0x0801ED08
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -46629,7 +46629,7 @@ _0801EDAC:
 	ldr r3, [r1, #4]
 	movs r1, #4
 	adds r2, r5, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldrb r0, [r7]
 	ands r4, r0
 	cmp r4, #0
@@ -46775,9 +46775,9 @@ _0801EE96:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r6, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r6, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r6, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -46874,9 +46874,9 @@ _0801EF74:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r6, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r6, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r6, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -46991,9 +46991,9 @@ _0801F068:
 	mov r2, r8
 	strb r2, [r0]
 	adds r0, r7, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r7, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r7, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -47122,9 +47122,9 @@ _0801F16E:
 	mov r2, sl
 	strb r2, [r0]
 	adds r0, r7, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r7, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r7, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -47272,9 +47272,9 @@ _0801F2C4:
 	mov r2, r8
 	strb r2, [r0]
 	adds r0, r7, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r7, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r7, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -47475,9 +47475,9 @@ _0801F4CE:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -47526,9 +47526,9 @@ sub_0801F520: @ 0x0801F520
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -47709,9 +47709,9 @@ _0801F6C6:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r7, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r7, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r7, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -47869,9 +47869,9 @@ sub_0801F808: @ 0x0801F808
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -47966,9 +47966,9 @@ sub_0801F8E0: @ 0x0801F8E0
 	adds r0, #0x40
 	strb r5, [r0]
 	adds r0, r6, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r6, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r6, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -48053,9 +48053,9 @@ sub_0801F99C: @ 0x0801F99C
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -48088,9 +48088,9 @@ _0801FA20:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -48183,9 +48183,9 @@ sub_0801FA98: @ 0x0801FA98
 	adds r4, #0x40
 	strb r0, [r4]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -48196,9 +48196,9 @@ sub_0801FA98: @ 0x0801FA98
 	mov r2, sb
 	strb r2, [r4]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -48288,9 +48288,9 @@ sub_0801FB84: @ 0x0801FB84
 	adds r4, #0x40
 	strb r0, [r4]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -48301,9 +48301,9 @@ sub_0801FB84: @ 0x0801FB84
 	movs r0, #5
 	strb r0, [r4]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -48392,9 +48392,9 @@ sub_0801FC6C: @ 0x0801FC6C
 	adds r5, #0x40
 	strb r7, [r5]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -48405,9 +48405,9 @@ sub_0801FC6C: @ 0x0801FC6C
 	movs r0, #6
 	strb r0, [r5]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -48485,9 +48485,9 @@ sub_0801FD50: @ 0x0801FD50
 	mov r8, r2
 	strb r1, [r0]
 	adds r0, r7, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r7, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r7, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -48507,9 +48507,9 @@ sub_0801FD50: @ 0x0801FD50
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r6, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r6, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r6, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -48649,9 +48649,9 @@ _0801FEE4:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -48691,7 +48691,7 @@ sub_0801FF2C: @ 0x0801FF2C
 	cmp r0, #0
 	bne _08020014
 	ldr r0, [r5]
-	bl sub_0802312C
+	bl PackSaveData
 	adds r4, r0, #0
 	ldr r0, [r5]
 	bl sub_08022C00
@@ -48719,9 +48719,9 @@ sub_0801FF2C: @ 0x0801FF2C
 	adds r0, #0x40
 	strb r6, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -49020,9 +49020,9 @@ _08020194:
 	mov r2, sb
 	strb r2, [r0]
 	adds r0, r7, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r7, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r7, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -49077,9 +49077,9 @@ sub_08020268: @ 0x08020268
 	movs r4, #0
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -49157,9 +49157,9 @@ sub_08020304: @ 0x08020304
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -49296,9 +49296,9 @@ sub_08020450: @ 0x08020450
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -49408,9 +49408,9 @@ _0802055C:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -49473,9 +49473,9 @@ _080205EE:
 	movs r4, #0
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -49563,7 +49563,7 @@ sub_080206A0: @ 0x080206A0
 	strb r1, [r2]
 	movs r1, #0x13
 	movs r2, #0
-	bl sub_08025850
+	bl SpawnEffectPart
 	ldrb r2, [r0, #0x18]
 	movs r1, #5
 	rsbs r1, r1, #0
@@ -49600,9 +49600,9 @@ sub_080206DC: @ 0x080206DC
 	adds r0, #0x40
 	strb r5, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -49730,9 +49730,9 @@ sub_080207D4: @ 0x080207D4
 	movs r4, #0
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -49805,9 +49805,9 @@ _080208AE:
 	movs r4, #0
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -49864,9 +49864,9 @@ _08020932:
 	movs r4, #0
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -49923,9 +49923,9 @@ _080209B6:
 	movs r4, #0
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -49968,9 +49968,9 @@ sub_08020A08: @ 0x08020A08
 	adds r0, #0x40
 	strb r5, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -50524,7 +50524,7 @@ sub_08020E38: @ 0x08020E38
 	lsrs r6, r3, #0x10
 	ldr r4, _08020EC8 @ =0x02000E70
 	ldr r0, [r4]
-	bl sub_08022CE0
+	bl IsCrystalSaved
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _08020EBA
@@ -50551,9 +50551,9 @@ sub_08020E38: @ 0x08020E38
 	adds r0, #0x40
 	strb r5, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -50595,7 +50595,7 @@ SpawnCrateGemMarker: @ 0x08020EE4
 	ldr r0, _08020F08 @ =0x02000E70
 	ldr r0, [r0]
 	mov r1, sp
-	bl sub_08022E24
+	bl SetCrateGemPos
 	add sp, #8
 	pop {r4}
 	pop {r0}
@@ -50639,9 +50639,9 @@ CreateTouchableSprite: @ 0x08020F10
 	adds r0, #0x40
 	strb r6, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -50688,7 +50688,7 @@ SpawnWumpa: @ 0x08020F84
 	adds r1, r6, #0
 	adds r2, r5, #0
 	adds r3, r4, #0
-	bl sub_08013548
+	bl CreateWumpa
 _08020FBC:
 	pop {r4, r5, r6, r7}
 	pop {r0}
@@ -50778,7 +50778,7 @@ InitLevelState: @ 0x08021070
 	ldr r4, _08021188 @ =0x02000E6C
 	ldr r0, _0802118C @ =0x00002094
 	bl IwramAlloc
-	bl sub_08001CF4
+	bl InitAudioContext
 	str r0, [r4]
 	bl EnableMusicVCountIrq
 	ldr r0, [r4]
@@ -50848,7 +50848,7 @@ InitLevelState: @ 0x08021070
 	ldr r4, _080211C8 @ =0x02000E78
 	movs r0, #0x48
 	bl sub_080273EC
-	bl sub_080275D8
+	bl InitPaletteCycles
 	str r0, [r4]
 	ldr r4, _080211CC @ =0x02000EB0
 	movs r0, #0x1c
@@ -50954,7 +50954,7 @@ _08021342:
 	movs r0, #0
 	str r0, [r7, #0x64]
 	adds r0, r7, #0
-	bl sub_08022A88
+	bl ResetLives
 	adds r0, r7, #0
 	bl sub_08022A80
 	adds r0, r7, #0
@@ -51188,7 +51188,7 @@ _08021558:
 	bl sub_0802DF7C
 	adds r1, r0, #0
 	adds r0, r7, #0
-	bl sub_080229D4
+	bl AddPendingSwitchCrates
 	adds r0, r7, #0
 	movs r1, #0
 	bl sub_08021B7C
@@ -51279,7 +51279,7 @@ _080215E8:
 	cmp r1, #1
 	bne _0802162E
 	adds r0, r7, #0
-	bl sub_0805B538
+	bl GetLives
 	cmp r0, #0
 	blt _08021708
 _0802162E:
@@ -51302,7 +51302,7 @@ _0802164C:
 	cmp r0, #0
 	bne _080216AC
 	mov r0, sl
-	bl sub_08023EA8
+	bl IsInBonusRoom
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	bne _080216C8
@@ -51312,7 +51312,7 @@ _0802164C:
 	cmp r0, #0
 	bne _080216C8
 	mov r0, sl
-	bl sub_08023E80
+	bl IsInGemPathRoom
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	bne _080216C8
@@ -51339,7 +51339,7 @@ _080216A4: .4byte 0x02000E6C
 _080216A8: .4byte 0x02000E64
 _080216AC:
 	adds r0, r7, #0
-	bl sub_08022C70
+	bl GetBossIndex
 	movs r1, #1
 	rsbs r1, r1, #0
 	cmp r0, r1
@@ -51377,7 +51377,7 @@ _080216F2:
 	b _080214F8
 _080216FA:
 	mov r0, sl
-	bl sub_08024018
+	bl SelectRoom
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _08021708
@@ -51480,7 +51480,7 @@ _080217A0:
 	str r0, [r7, #0x74]
 _080217BE:
 	adds r0, r7, #0
-	bl sub_0805B538
+	bl GetLives
 	cmp r0, #0
 	bge _080217E0
 	bl sub_0802C164
@@ -51490,7 +51490,7 @@ _080217BE:
 	b _08021342
 _080217D4:
 	adds r0, r7, #0
-	bl sub_08022A88
+	bl ResetLives
 	b _080217F4
 	.align 2, 0
 _080217DC: .4byte 0x0000014D
@@ -51647,7 +51647,7 @@ sub_080218D4: @ 0x080218D4
 	adds r1, #0xac
 	str r0, [r1]
 	adds r0, r5, #0
-	bl sub_0805B538
+	bl GetLives
 	adds r1, r5, #0
 	adds r1, #0xb4
 	str r0, [r1]
@@ -51732,7 +51732,7 @@ _080219BC: @ jump table
 	.4byte _08021A58 @ case 4
 _080219D0:
 	adds r0, r4, #0
-	bl sub_08022A58
+	bl HasTurboRun
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	bne _08021A64
@@ -51743,7 +51743,7 @@ _080219D0:
 	b _08021A64
 _080219EA:
 	adds r0, r4, #0
-	bl sub_08022A50
+	bl HasSuperBodySlam
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	bne _08021A64
@@ -51765,7 +51765,7 @@ _08021A04:
 	b _08021A64
 _08021A1E:
 	adds r0, r4, #0
-	bl sub_08022A6C
+	bl HasTornadoSpin
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	bne _08021A36
@@ -51775,7 +51775,7 @@ _08021A1E:
 	bl sub_0803A138
 _08021A36:
 	adds r0, r4, #0
-	bl sub_080071D4
+	bl GetCompletionPercent
 	cmp r0, #0x63
 	ble _08021A64
 	adds r1, r4, #0
@@ -52006,7 +52006,7 @@ _08021BFE:
 	adds r1, r4, #0
 	adds r1, #8
 	ldr r2, _08021C3C @ =0x04000040
-	bl sub_0805AFAC
+	bl CpuSet
 	movs r2, #0xc2
 	lsls r2, r2, #2
 	adds r0, r4, r2
@@ -52014,7 +52014,7 @@ _08021BFE:
 	lsls r2, r2, #2
 	adds r1, r4, r2
 	ldr r2, _08021C3C @ =0x04000040
-	bl sub_0805AFAC
+	bl CpuSet
 	adds r0, r5, #0
 	adds r0, #0xe8
 	adds r1, r5, #0
@@ -52068,9 +52068,9 @@ sub_08021C40: @ 0x08021C40
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -52273,7 +52273,7 @@ _08021DFE:
 	ldrh r2, [r0]
 	ldr r0, _08021E38 @ =0x0000FFFF
 	movs r3, #0
-	bl sub_0801CC9C
+	bl SpawnCrateGem
 _08021E1A:
 	adds r0, r4, #0
 	adds r0, #0x88
@@ -52284,7 +52284,7 @@ _08021E1A:
 	ldr r0, [r0]
 	cmp r0, #0
 	beq _08021E30
-	bl sub_08028CC0
+	bl ShowHudCrates
 _08021E30:
 	pop {r4}
 	pop {r0}
@@ -52369,7 +52369,7 @@ _08021EC2:
 	ldrh r2, [r0]
 	ldr r0, _08021EE4 @ =0x0000FFFF
 	movs r3, #0
-	bl sub_0801CC9C
+	bl SpawnCrateGem
 _08021EDE:
 	pop {r4}
 	pop {r0}
@@ -52885,7 +52885,7 @@ _080222F8: .4byte 0x02000E74
 _080222FC: .4byte 0x0000014D
 _08022300:
 	movs r0, #0
-	bl sub_0802C6C4
+	bl RunCredits
 	movs r5, #1
 	b _08022170
 _0802230A:
@@ -53487,7 +53487,7 @@ _08022798:
 	movs r1, #0
 	bl sub_08043A20
 	movs r0, #0
-	bl sub_0802C6C4
+	bl RunCredits
 	b _08022818
 	.align 2, 0
 _080227F8: .4byte 0x0000014D
@@ -53503,7 +53503,7 @@ _0802280A:
 	movs r1, #0
 	bl sub_08043A20
 	movs r0, #0
-	bl sub_0802C6C4
+	bl RunCredits
 _08022818:
 	adds r0, r4, #0
 	adds r0, #0xc8
@@ -53736,8 +53736,8 @@ GetDeaths: @ 0x080229D0
 	ldr r0, [r0, #0x7c]
 	bx lr
 
-	thumb_func_start sub_080229D4
-sub_080229D4: @ 0x080229D4
+	thumb_func_start AddPendingSwitchCrates
+AddPendingSwitchCrates: @ 0x080229D4
 	adds r0, #0xa8
 	ldr r2, [r0]
 	adds r2, r2, r1
@@ -53790,15 +53790,15 @@ sub_08022A40: @ 0x08022A40
 _08022A4C:
 	.byte 0x70, 0x47, 0x00, 0x00
 
-	thumb_func_start sub_08022A50
-sub_08022A50: @ 0x08022A50
+	thumb_func_start HasSuperBodySlam
+HasSuperBodySlam: @ 0x08022A50
 	ldrb r0, [r0, #3]
 	lsls r0, r0, #0x1a
 	lsrs r0, r0, #0x1f
 	bx lr
 
-	thumb_func_start sub_08022A58
-sub_08022A58: @ 0x08022A58
+	thumb_func_start HasTurboRun
+HasTurboRun: @ 0x08022A58
 	ldrb r0, [r0, #3]
 	lsls r0, r0, #0x1b
 	lsrs r0, r0, #0x1f
@@ -53816,8 +53816,8 @@ sub_08022A68: @ 0x08022A68
 	movs r0, #1
 	bx lr
 
-	thumb_func_start sub_08022A6C
-sub_08022A6C: @ 0x08022A6C
+	thumb_func_start HasTornadoSpin
+HasTornadoSpin: @ 0x08022A6C
 	ldrb r0, [r0, #3]
 	lsls r0, r0, #0x1e
 	lsrs r0, r0, #0x1f
@@ -53842,8 +53842,8 @@ sub_08022A80: @ 0x08022A80
 	bx lr
 	.align 2, 0
 
-	thumb_func_start sub_08022A88
-sub_08022A88: @ 0x08022A88
+	thumb_func_start ResetLives
+ResetLives: @ 0x08022A88
 	movs r1, #5
 	str r1, [r0, #0x70]
 	bx lr
@@ -53913,7 +53913,7 @@ LoseLife: @ 0x08022AE0
 	ldr r0, [r0]
 	cmp r0, #0
 	beq _08022B02
-	bl sub_08028CF0
+	bl ShowHudLives
 _08022B02:
 	pop {r0}
 	bx r0
@@ -54058,8 +54058,8 @@ sub_08022BA8: @ 0x08022BA8
 	ldr r0, [r0, #0x78]
 	bx lr
 
-	thumb_func_start sub_08022BAC
-sub_08022BAC: @ 0x08022BAC
+	thumb_func_start AddDeath
+AddDeath: @ 0x08022BAC
 	ldr r1, [r0, #0x78]
 	adds r1, #1
 	str r1, [r0, #0x78]
@@ -54098,8 +54098,8 @@ ArmStartSpawn: @ 0x08022BCC
 	pop {r0}
 	bx r0
 
-	thumb_func_start sub_08022BE0
-sub_08022BE0: @ 0x08022BE0
+	thumb_func_start GetBonusPlatform
+GetBonusPlatform: @ 0x08022BE0
 	movs r1, #0xe2
 	lsls r1, r1, #1
 	adds r0, r0, r1
@@ -54193,8 +54193,8 @@ _08022C68:
 	bx r1
 	.align 2, 0
 
-	thumb_func_start sub_08022C70
-sub_08022C70: @ 0x08022C70
+	thumb_func_start GetBossIndex
+GetBossIndex: @ 0x08022C70
 	push {lr}
 	movs r1, #1
 	rsbs r1, r1, #0
@@ -54263,8 +54263,8 @@ sub_08022CDC: @ 0x08022CDC
 	ldr r0, [r0, #0x6c]
 	bx lr
 
-	thumb_func_start sub_08022CE0
-sub_08022CE0: @ 0x08022CE0
+	thumb_func_start IsCrystalSaved
+IsCrystalSaved: @ 0x08022CE0
 	adds r1, r0, #0
 	adds r1, #0xc8
 	ldr r1, [r1]
@@ -54294,7 +54294,7 @@ _08022D0A:
 	ldr r0, [r0]
 	cmp r0, #0
 	beq _08022D16
-	bl sub_08028D20
+	bl ShowHudWumpa
 _08022D16:
 	pop {r0}
 	bx r0
@@ -54328,13 +54328,13 @@ _08022D4A:
 	ldr r0, [r0]
 	cmp r0, #0
 	beq _08022D62
-	bl sub_08028CF0
+	bl ShowHudLives
 _08022D56:
 	ldr r0, _08022D6C @ =0x020001F4
 	ldr r0, [r0]
 	cmp r0, #0
 	beq _08022D62
-	bl sub_08028D20
+	bl ShowHudWumpa
 _08022D62:
 	pop {r4}
 	pop {r0}
@@ -54357,7 +54357,7 @@ _08022D7E:
 	ldr r0, [r0]
 	cmp r0, #0
 	beq _08022D8A
-	bl sub_08028CF0
+	bl ShowHudLives
 _08022D8A:
 	pop {r0}
 	bx r0
@@ -54415,7 +54415,7 @@ _08022DE4:
 	adds r2, r4, r3
 	ldrh r2, [r2]
 	movs r3, #0
-	bl sub_0801CC9C
+	bl SpawnCrateGem
 _08022E00:
 	pop {r4}
 	pop {r0}
@@ -54432,8 +54432,8 @@ SetBonusPlatform: @ 0x08022E0C
 	bx lr
 	.align 2, 0
 
-	thumb_func_start sub_08022E18
-sub_08022E18: @ 0x08022E18
+	thumb_func_start SetGemPlatform
+SetGemPlatform: @ 0x08022E18
 	movs r2, #0xda
 	lsls r2, r2, #1
 	adds r0, r0, r2
@@ -54441,8 +54441,8 @@ sub_08022E18: @ 0x08022E18
 	bx lr
 	.align 2, 0
 
-	thumb_func_start sub_08022E24
-sub_08022E24: @ 0x08022E24
+	thumb_func_start SetCrateGemPos
+SetCrateGemPos: @ 0x08022E24
 	movs r2, #0xde
 	lsls r2, r2, #1
 	adds r0, r0, r2
@@ -54486,8 +54486,8 @@ _08022E66:
 	pop {r0}
 	bx r0
 
-	thumb_func_start sub_08022E6C
-sub_08022E6C: @ 0x08022E6C
+	thumb_func_start FreezeLevelClock
+FreezeLevelClock: @ 0x08022E6C
 	push {r4, r5, lr}
 	adds r4, r0, #0
 	adds r5, r1, #0
@@ -54585,7 +54585,7 @@ _08022F0C:
 	adds r1, r4, #0
 	adds r1, #8
 	ldr r2, _08022F48 @ =0x04000040
-	bl sub_0805AFAC
+	bl CpuSet
 	movs r2, #0xc2
 	lsls r2, r2, #2
 	adds r0, r4, r2
@@ -54593,7 +54593,7 @@ _08022F0C:
 	lsls r2, r2, #2
 	adds r1, r4, r2
 	ldr r2, _08022F48 @ =0x04000040
-	bl sub_0805AFAC
+	bl CpuSet
 	adds r0, r5, #0
 	adds r0, #0xe8
 	adds r1, r5, #0
@@ -54754,7 +54754,7 @@ sub_08023064: @ 0x08023064
 	adds r5, r0, #0
 	adds r6, r1, #0
 	adds r0, #0xc8
-	bl sub_08023EA8
+	bl IsInBonusRoom
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _080230A2
@@ -54781,7 +54781,7 @@ _0802309C:
 _080230A2:
 	adds r0, r5, #0
 	adds r0, #0xc8
-	bl sub_08023E80
+	bl IsInGemPathRoom
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _080230DC
@@ -54847,8 +54847,8 @@ UnpackSaveData: @ 0x080230EC
 	.align 2, 0
 _08023128: .4byte 0x0000014D
 
-	thumb_func_start sub_0802312C
-sub_0802312C: @ 0x0802312C
+	thumb_func_start PackSaveData
+PackSaveData: @ 0x0802312C
 	push {r4, lr}
 	mov ip, r0
 	ldr r2, [r0, #0x70]
@@ -55278,7 +55278,7 @@ _080234E4:
 _080234EE:
 	ldr r4, _0802350C @ =0x02000E78
 	ldr r0, [r4]
-	bl sub_0802759C
+	bl ClearPaletteCycles
 	ldr r0, [r4]
 	movs r1, #0xa0
 	lsls r1, r1, #0x13
@@ -55295,7 +55295,7 @@ _08023510: .4byte 0x081D03FC
 _08023514:
 	ldr r4, _0802354C @ =0x02000E78
 	ldr r0, [r4]
-	bl sub_0802759C
+	bl ClearPaletteCycles
 	ldr r0, [r4]
 	movs r1, #0xa0
 	lsls r1, r1, #0x13
@@ -55383,7 +55383,7 @@ _080235C8:
 	cmp r0, #0
 	beq _080235E2
 	adds r0, r7, #0
-	bl sub_08023EA8
+	bl IsInBonusRoom
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	bne _080235FA
@@ -55394,7 +55394,7 @@ _080235E2:
 	cmp r0, #0
 	beq _080236E2
 	adds r0, r7, #0
-	bl sub_08023E80
+	bl IsInGemPathRoom
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _080236E2
@@ -55406,7 +55406,7 @@ _080235FA:
 	cmp r0, #0
 	beq _0802368E
 	adds r0, r7, #0
-	bl sub_08023EA8
+	bl IsInBonusRoom
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _0802368E
@@ -55474,9 +55474,9 @@ _0802368E:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -55515,11 +55515,11 @@ _080236E2:
 	adds r0, r7, #0
 	bl sub_08023A24
 	movs r0, #0
-	bl sub_08001568
+	bl SetDispcntMode
 	bl sub_08001648
 	bl sub_08001624
 	bl CommitDispcnt
-	bl sub_08001668
+	bl CommitBlendRegs
 	b _08023826
 	.align 2, 0
 _08023720: .4byte 0x02000E88
@@ -55660,7 +55660,7 @@ _08023850:
 	movs r0, #0
 	mov sb, r0
 	adds r0, r7, #0
-	bl sub_08023EA8
+	bl IsInBonusRoom
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	bne _080238DC
@@ -55709,7 +55709,7 @@ _080238D4: .4byte 0x020001CC
 _080238D8: .4byte 0xFFFFE200
 _080238DC:
 	adds r0, r7, #0
-	bl sub_08023E80
+	bl IsInGemPathRoom
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	bne _08023918
@@ -55773,7 +55773,7 @@ _0802395C:
 	ldr r0, _0802396C @ =0x02000E70
 	ldr r0, [r0]
 	adds r1, r7, #0
-	bl sub_080229D4
+	bl AddPendingSwitchCrates
 	b _08023996
 	.align 2, 0
 _08023968: .4byte 0x02000EB4
@@ -56132,10 +56132,10 @@ ResumeRoomAfterPause: @ 0x08023C3C
 	adds r0, r4, #0
 	bl sub_08023A24
 	movs r0, #0
-	bl sub_08001568
+	bl SetDispcntMode
 	bl sub_08001624
 	bl CommitDispcnt
-	bl sub_08001668
+	bl CommitBlendRegs
 	pop {r4}
 	pop {r0}
 	bx r0
@@ -56389,8 +56389,8 @@ _08023E74:
 	.align 2, 0
 _08023E7C: .4byte 0x081D0430
 
-	thumb_func_start sub_08023E80
-sub_08023E80: @ 0x08023E80
+	thumb_func_start IsInGemPathRoom
+IsInGemPathRoom: @ 0x08023E80
 	push {lr}
 	ldr r3, _08023EA4 @ =0x081D0430
 	ldr r2, [r0]
@@ -56413,8 +56413,8 @@ _08023E9E:
 	.align 2, 0
 _08023EA4: .4byte 0x081D0430
 
-	thumb_func_start sub_08023EA8
-sub_08023EA8: @ 0x08023EA8
+	thumb_func_start IsInBonusRoom
+IsInBonusRoom: @ 0x08023EA8
 	push {lr}
 	ldr r3, _08023ECC @ =0x081D0430
 	ldr r2, [r0]
@@ -56532,7 +56532,7 @@ PlayRoomMusic: @ 0x08023F54
 _08023F68: .4byte 0x02000E70
 _08023F6C:
 	adds r0, r4, #0
-	bl sub_08023EA8
+	bl IsInBonusRoom
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _08023F7C
@@ -56623,8 +56623,8 @@ EnterBonusRoom: @ 0x08023FFC
 	.align 2, 0
 _08024014: .4byte 0x081D0430
 
-	thumb_func_start sub_08024018
-sub_08024018: @ 0x08024018
+	thumb_func_start SelectRoom
+SelectRoom: @ 0x08024018
 	push {lr}
 	adds r3, r0, #0
 	ldr r2, _0802404C @ =0x081D0430
@@ -56899,7 +56899,7 @@ _08024226:
 	beq _080242A6
 	ldr r5, _080242AC @ =0x02000E70
 	ldr r0, [r5]
-	bl sub_0802312C
+	bl PackSaveData
 	ldrb r0, [r0, #2]
 	lsls r0, r0, #0x1d
 	lsrs r0, r0, #0x1d
@@ -56909,7 +56909,7 @@ _08024226:
 	strb r0, [r4, #0x15]
 _0802424A:
 	ldr r0, [r5]
-	bl sub_0802312C
+	bl PackSaveData
 	ldrb r0, [r0, #2]
 	lsls r0, r0, #0x1a
 	lsrs r0, r0, #0x1d
@@ -56919,7 +56919,7 @@ _0802424A:
 	strb r0, [r4, #0x16]
 _0802425E:
 	ldr r0, [r5]
-	bl sub_0802312C
+	bl PackSaveData
 	ldrh r0, [r0, #2]
 	lsls r0, r0, #0x17
 	lsrs r0, r0, #0x1d
@@ -56929,21 +56929,21 @@ _0802425E:
 	strb r0, [r4, #0x17]
 _08024272:
 	ldr r0, [r5]
-	bl sub_0802312C
+	bl PackSaveData
 	ldrb r0, [r0, #2]
 	lsls r0, r0, #0x1d
 	lsrs r0, r0, #0x1d
 	cmp r0, #5
 	bne _080242A6
 	ldr r0, [r5]
-	bl sub_0802312C
+	bl PackSaveData
 	ldrb r0, [r0, #2]
 	lsls r0, r0, #0x1a
 	lsrs r0, r0, #0x1d
 	cmp r0, #5
 	bne _080242A6
 	ldr r0, [r5]
-	bl sub_0802312C
+	bl PackSaveData
 	ldrh r0, [r0, #2]
 	lsls r0, r0, #0x17
 	lsrs r0, r0, #0x1d
@@ -56967,7 +56967,7 @@ sub_080242B0: @ 0x080242B0
 	bgt _080242D0
 	ldr r0, _080242CC @ =0x02000E70
 	ldr r0, [r0]
-	bl sub_0802312C
+	bl PackSaveData
 	lsls r1, r4, #2
 	adds r0, r0, r1
 	ldrb r0, [r0, #4]
@@ -56996,7 +56996,7 @@ _080242E8: @ jump table
 _080242FC:
 	ldr r0, _0802430C @ =0x02000E70
 	ldr r0, [r0]
-	bl sub_0802312C
+	bl PackSaveData
 	ldrb r0, [r0, #3]
 	lsls r0, r0, #0x1b
 	b _08024358
@@ -57005,7 +57005,7 @@ _0802430C: .4byte 0x02000E70
 _08024310:
 	ldr r0, _08024320 @ =0x02000E70
 	ldr r0, [r0]
-	bl sub_0802312C
+	bl PackSaveData
 	ldrb r0, [r0, #3]
 	lsls r0, r0, #0x1a
 	b _08024358
@@ -57014,7 +57014,7 @@ _08024320: .4byte 0x02000E70
 _08024324:
 	ldr r0, _08024334 @ =0x02000E70
 	ldr r0, [r0]
-	bl sub_0802312C
+	bl PackSaveData
 	ldrb r0, [r0, #3]
 	lsls r0, r0, #0x1d
 	b _08024358
@@ -57023,7 +57023,7 @@ _08024334: .4byte 0x02000E70
 _08024338:
 	ldr r0, _08024348 @ =0x02000E70
 	ldr r0, [r0]
-	bl sub_0802312C
+	bl PackSaveData
 	ldrb r0, [r0, #3]
 	lsls r0, r0, #0x1e
 	b _08024358
@@ -57032,7 +57032,7 @@ _08024348: .4byte 0x02000E70
 _0802434C:
 	ldr r0, _08024364 @ =0x02000E70
 	ldr r0, [r0]
-	bl sub_0802312C
+	bl PackSaveData
 	ldrb r0, [r0, #3]
 	lsls r0, r0, #0x1c
 _08024358:
@@ -57703,8 +57703,8 @@ InitBgLayerBase: @ 0x080248E4
 	.align 2, 0
 _08024900: .4byte 0x087F988C
 
-	thumb_func_start sub_08024904
-sub_08024904: @ 0x08024904
+	thumb_func_start ClampBgLayerScrollStep
+ClampBgLayerScrollStep: @ 0x08024904
 	push {lr}
 	adds r0, r1, #0
 	movs r1, #0x10
@@ -57720,8 +57720,8 @@ _08024918:
 	pop {r1}
 	bx r1
 
-	thumb_func_start sub_0802491C
-sub_0802491C: @ 0x0802491C
+	thumb_func_start ClampBgLayerScrollMax
+ClampBgLayerScrollMax: @ 0x0802491C
 	push {lr}
 	ldr r2, [r0, #8]
 	ldr r3, [r1]
@@ -57741,8 +57741,8 @@ _08024934:
 	bx r0
 	.align 2, 0
 
-	thumb_func_start sub_0802493C
-sub_0802493C: @ 0x0802493C
+	thumb_func_start ScaleBgLayerScroll
+ScaleBgLayerScroll: @ 0x0802493C
 	push {lr}
 	adds r3, r0, #0
 	adds r2, r1, #0
@@ -57814,10 +57814,10 @@ ScrollBgLayerBase: @ 0x080249AC
 	str r1, [sp, #4]
 	adds r0, r4, #0
 	mov r1, sp
-	bl sub_0802493C
+	bl ScaleBgLayerScroll
 	adds r0, r4, #0
 	mov r1, sp
-	bl sub_0802491C
+	bl ClampBgLayerScrollMax
 	adds r0, r4, #0
 	mov r1, sp
 	bl StepBgLayerScroll
@@ -57837,10 +57837,10 @@ ResetBgLayerBase: @ 0x080249DC
 	str r1, [r4, #4]
 	adds r0, r4, #0
 	adds r1, r4, #0
-	bl sub_0802493C
+	bl ScaleBgLayerScroll
 	adds r0, r4, #0
 	adds r1, r4, #0
-	bl sub_0802491C
+	bl ClampBgLayerScrollMax
 	ldr r0, [r4, #0x2c]
 	adds r1, r4, #0
 	bl FillBgStreamer
@@ -58244,8 +58244,8 @@ _08024CAA:
 	.align 2, 0
 _08024CB8: .4byte 0x081D0E14
 
-	thumb_func_start sub_08024CBC
-sub_08024CBC: @ 0x08024CBC
+	thumb_func_start GetSolidTerrainHeights
+GetSolidTerrainHeights: @ 0x08024CBC
 	push {r4, r5, r6, r7, lr}
 	mov r7, sb
 	mov r6, r8
@@ -58957,7 +58957,7 @@ ClearBitmap: @ 0x080251C8
 	str r0, [sp]
 	ldr r2, _080251E0 @ =0x05000020
 	mov r0, sp
-	bl sub_0805AFAC
+	bl CpuSet
 	add sp, #4
 	pop {r0}
 	bx r0
@@ -59017,7 +59017,7 @@ _08025236:
 	adds r1, r6, r2
 	ldr r4, _08025304 @ =0x04000040
 	adds r2, r4, #0
-	bl sub_0805AFAC
+	bl CpuSet
 	movs r3, #0x82
 	lsls r3, r3, #2
 	adds r0, r6, r3
@@ -59025,7 +59025,7 @@ _08025236:
 	lsls r2, r2, #2
 	adds r1, r6, r2
 	adds r2, r4, #0
-	bl sub_0805AFAC
+	bl CpuSet
 	asrs r0, r5, #8
 	str r0, [r6, #4]
 	movs r7, #0
@@ -59330,7 +59330,7 @@ _0802547E:
 	adds r0, r6, #0
 	bl SetEntityPos
 	adds r0, r6, #0
-	bl sub_080125AC
+	bl GetCrateBelow
 	adds r6, r0, #0
 	cmp r6, #0
 	bne _0802547E
@@ -59598,8 +59598,8 @@ _0802571A:
 	bx r1
 	.align 2, 0
 
-	thumb_func_start sub_08025724
-sub_08025724: @ 0x08025724
+	thumb_func_start SetEntityIdActivated
+SetEntityIdActivated: @ 0x08025724
 	push {lr}
 	mov ip, r0
 	adds r2, r1, #0
@@ -59697,7 +59697,7 @@ LaunchEffectPart: @ 0x080257A0
 	add r5, sp, #8
 	movs r4, #1
 	strb r4, [r5]
-	bl sub_08025850
+	bl SpawnEffectPart
 	adds r5, r0, #0
 	add r0, sp, #0xc
 	adds r1, r5, #0
@@ -59765,8 +59765,8 @@ _08025840:
 	bx r1
 	.align 2, 0
 
-	thumb_func_start sub_08025850
-sub_08025850: @ 0x08025850
+	thumb_func_start SpawnEffectPart
+SpawnEffectPart: @ 0x08025850
 	push {r4, r5, r6, r7, lr}
 	mov r7, r8
 	push {r7}
@@ -59833,9 +59833,9 @@ _08025892:
 	adds r0, #0x40
 	strb r7, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -59912,7 +59912,7 @@ _08025962:
 	strb r5, [r0]
 	adds r0, r7, #0
 	mov r3, ip
-	bl sub_08025850
+	bl SpawnEffectPart
 	adds r5, r0, #0
 	cmp r4, #0
 	beq _080259BC
@@ -60114,9 +60114,9 @@ DropExtraLife: @ 0x08025AAC
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -60171,7 +60171,7 @@ _08025B70:
 	lsrs r2, r2, #0x10
 	movs r3, #0
 _08025B7C:
-	bl sub_08013548
+	bl CreateWumpa
 	adds r4, r0, #0
 	ldrb r0, [r4, #0x18]
 	movs r1, #0x10
@@ -60188,7 +60188,7 @@ _08025B7C:
 	cmp r5, #0xff
 	bne _08025BA4
 	adds r0, r4, #0
-	bl sub_0801370C
+	bl StartWumpaPayout
 _08025BA4:
 	cmp r6, #0
 	beq _08025BAE
@@ -60440,7 +60440,7 @@ _08025D44:
 	ldr r3, [r1, #4]
 	adds r1, r7, #0
 	adds r2, r5, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 _08025D58:
 	ldr r4, [r4, #4]
 	cmp r4, #0
@@ -60751,8 +60751,8 @@ _08025F82:
 	bx r0
 	.align 2, 0
 
-	thumb_func_start sub_08025F90
-sub_08025F90: @ 0x08025F90
+	thumb_func_start ClipBgLayerColumns
+ClipBgLayerColumns: @ 0x08025F90
 	push {lr}
 	adds r3, r0, #0
 	ldr r0, [r3, #0x44]
@@ -60768,8 +60768,8 @@ _08025FA4:
 	pop {r0}
 	bx r0
 
-	thumb_func_start sub_08025FA8
-sub_08025FA8: @ 0x08025FA8
+	thumb_func_start ClipBgLayerRows
+ClipBgLayerRows: @ 0x08025FA8
 	push {lr}
 	adds r3, r0, #0
 	ldr r0, [r3, #0x3c]
@@ -60829,7 +60829,7 @@ _08025FFC:
 	ldr r3, [r1, #4]
 	adds r1, r6, #0
 	adds r2, r4, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r1, [r5, #0x30]
 	adds r1, #0x40
 	movs r2, #0
@@ -60838,7 +60838,7 @@ _08025FFC:
 	ldr r3, [r1, #4]
 	mov r1, r8
 	adds r2, r7, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r0, [r5, #0x2c]
 	adds r1, r5, #0
 	bl ScrollBgStreamer
@@ -61244,8 +61244,8 @@ _08026370:
 	.align 2, 0
 _08026380: .4byte 0x0000041F
 
-	thumb_func_start sub_08026384
-sub_08026384: @ 0x08026384
+	thumb_func_start ClampPooledBgLayerScrollStep
+ClampPooledBgLayerScrollStep: @ 0x08026384
 	push {lr}
 	adds r0, r1, #0
 	movs r1, #8
@@ -61979,8 +61979,8 @@ _080268D0: .4byte 0x02000E64
 _080268D4: .4byte 0x040000D4
 _080268D8: .4byte 0x80000100
 
-	thumb_func_start sub_080268DC
-sub_080268DC: @ 0x080268DC
+	thumb_func_start InitLevelLayers
+InitLevelLayers: @ 0x080268DC
 	push {r4, lr}
 	adds r4, r0, #0
 	ldr r0, _08026948 @ =0x087F9954
@@ -62121,7 +62121,7 @@ GetLevelLayers: @ 0x080269F4
 	bne _08026A0A
 	movs r0, #0x30
 	bl sub_080273EC
-	bl sub_080268DC
+	bl InitLevelLayers
 	str r0, [r4]
 _08026A0A:
 	ldr r0, [r4]
@@ -62131,8 +62131,8 @@ _08026A0A:
 	.align 2, 0
 _08026A14: .4byte 0x020001D4
 
-	thumb_func_start sub_08026A18
-sub_08026A18: @ 0x08026A18
+	thumb_func_start SetLevelScroll
+SetLevelScroll: @ 0x08026A18
 	push {lr}
 	cmp r1, #0
 	bge _08026A20
@@ -62354,7 +62354,7 @@ _08026BB2:
 	adds r1, r4, #0
 	adds r2, r6, #0
 	ldr r3, [sp, #0x2c]
-	bl sub_08024CBC
+	bl GetSolidTerrainHeights
 	cmp r0, #0
 	beq _08026BCC
 	movs r0, #1
@@ -62468,7 +62468,7 @@ _08026C82:
 	adds r1, r6, #0
 	adds r2, r4, #0
 	ldr r3, [sp, #0x2c]
-	bl sub_08024CBC
+	bl GetSolidTerrainHeights
 	cmp r0, #0
 	beq _08026C9C
 	movs r0, #1
@@ -62569,8 +62569,8 @@ _08026D2E:
 	pop {r1}
 	bx r1
 
-	thumb_func_start sub_08026D48
-sub_08026D48: @ 0x08026D48
+	thumb_func_start ProbeFloorHeight
+ProbeFloorHeight: @ 0x08026D48
 	push {r4, r5, r6, r7, lr}
 	mov r7, r8
 	push {r7}
@@ -62818,7 +62818,7 @@ _08026F92:
 	adds r1, r4, r3
 	ldr r3, _08026FB0 @ =0xFFFFB000
 	adds r2, r2, r3
-	bl sub_08026A18
+	bl SetLevelScroll
 	pop {r4}
 	pop {r0}
 	bx r0
@@ -63163,7 +63163,7 @@ _08027212:
 	adds r1, r1, r3
 	ldr r3, _08027230 @ =0xFFFFB000
 	adds r2, r2, r3
-	bl sub_08026A18
+	bl SetLevelScroll
 	pop {r4}
 	pop {r0}
 	bx r0
@@ -63191,10 +63191,10 @@ sub_08027280: @ 0x08027280
 	str r1, [sp, #4]
 	adds r0, r5, #0
 	mov r1, sp
-	bl sub_0802493C
+	bl ScaleBgLayerScroll
 	adds r0, r5, #0
 	mov r1, sp
-	bl sub_0802491C
+	bl ClampBgLayerScrollMax
 	ldr r0, _0802733C @ =0x02000E70
 	ldr r0, [r0]
 	bl sub_0802297C
@@ -63242,7 +63242,7 @@ _080272EA:
 	ldr r3, [r1, #4]
 	adds r1, r6, #0
 	adds r2, r4, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r1, [r5, #0x30]
 	adds r1, #0x40
 	movs r2, #0
@@ -63251,7 +63251,7 @@ _080272EA:
 	ldr r3, [r1, #4]
 	mov r1, r8
 	adds r2, r7, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r0, [r5, #0x2c]
 	adds r1, r5, #0
 	bl ScrollBgStreamer
@@ -63282,10 +63282,10 @@ sub_08027340: @ 0x08027340
 	str r1, [r4, #4]
 	adds r0, r4, #0
 	adds r1, r4, #0
-	bl sub_0802493C
+	bl ScaleBgLayerScroll
 	adds r0, r4, #0
 	adds r1, r4, #0
-	bl sub_0802491C
+	bl ClampBgLayerScrollMax
 	ldr r0, _08027394 @ =0x02000E70
 	ldr r0, [r0]
 	bl sub_0802297C
@@ -63590,8 +63590,8 @@ _08027596:
 	pop {r0}
 	bx r0
 
-	thumb_func_start sub_0802759C
-sub_0802759C: @ 0x0802759C
+	thumb_func_start ClearPaletteCycles
+ClearPaletteCycles: @ 0x0802759C
 	push {lr}
 	adds r2, r0, #0
 	movs r0, #0
@@ -63627,8 +63627,8 @@ _080275D2:
 	bx r0
 	.align 2, 0
 
-	thumb_func_start sub_080275D8
-sub_080275D8: @ 0x080275D8
+	thumb_func_start InitPaletteCycles
+InitPaletteCycles: @ 0x080275D8
 	push {lr}
 	adds r2, r0, #0
 	movs r0, #0
@@ -63903,7 +63903,7 @@ _080277B2:
 	bne _08027818
 	ldr r0, _08027814 @ =0x02000E70
 	ldr r0, [r0]
-	bl sub_08022C70
+	bl GetBossIndex
 	ldr r4, [r7, #0x68]
 	adds r4, r5, r4
 	adds r0, #8
@@ -63911,9 +63911,9 @@ _080277B2:
 	adds r1, #0x40
 	strb r0, [r1]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -63931,9 +63931,9 @@ _08027818:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -63965,9 +63965,9 @@ _0802783A:
 	adds r1, r1, r3
 	strb r0, [r1]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -64093,15 +64093,15 @@ _0802794E:
 	adds r1, r1, r2
 	strb r0, [r1]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
 	ldr r0, [r6, #0x68]
 	adds r0, r0, r5
-	bl sub_08008F70
+	bl OffsetFromHitboxEdge
 	adds r7, r0, #0
 	ldr r2, [r6, #0x68]
 	ldr r0, _08027A30 @ =0x00000549
@@ -64121,7 +64121,7 @@ _080279B6:
 	bne _080279E4
 	ldr r0, _08027A34 @ =0x02000E70
 	ldr r0, [r0]
-	bl sub_08022C70
+	bl GetBossIndex
 	ldr r1, [r6, #0x68]
 	ldr r2, _08027A38 @ =0x00000898
 	adds r4, r1, r2
@@ -64130,9 +64130,9 @@ _080279B6:
 	adds r1, r1, r2
 	strb r0, [r1]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -64156,9 +64156,9 @@ _080279E4:
 	adds r0, r0, r2
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -64182,9 +64182,9 @@ _08027A3C:
 	adds r0, r0, r2
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -64221,7 +64221,7 @@ _08027A7C: @ jump table
 _08027ABC:
 	ldr r0, _08027AD0 @ =0x02000E70
 	ldr r0, [r0]
-	bl sub_08022C70
+	bl GetBossIndex
 	movs r1, #1
 	rsbs r1, r1, #0
 	cmp r0, r1
@@ -64242,12 +64242,12 @@ _08027AE2:
 	muls r1, r0, r1
 	ldr r0, [r6, #0x68]
 	adds r0, r0, r1
-	bl sub_08008F70
+	bl OffsetFromHitboxEdge
 	adds r4, r0, #0
 _08027AF2:
 	ldr r0, _08027B1C @ =0x02000E70
 	ldr r0, [r0]
-	bl sub_08022C70
+	bl GetBossIndex
 	movs r1, #1
 	rsbs r1, r1, #0
 	cmp r0, r1
@@ -64438,7 +64438,7 @@ _08027C88:
 	bl sub_080282A0
 	ldr r6, _08027CAC @ =0x02000E70
 	ldr r0, [r6]
-	bl sub_08022C70
+	bl GetBossIndex
 	movs r1, #1
 	rsbs r1, r1, #0
 	cmp r0, r1
@@ -65150,11 +65150,11 @@ sub_080282A0: @ 0x080282A0
 	beq _0802839A
 	ldr r4, _080282C0 @ =0x02000E70
 	ldr r0, [r4]
-	bl sub_0805B538
+	bl GetLives
 	cmp r0, #0
 	ble _080282C4
 	ldr r0, [r4]
-	bl sub_0805B538
+	bl GetLives
 	b _080282C6
 	.align 2, 0
 _080282C0: .4byte 0x02000E70
@@ -66348,19 +66348,19 @@ _08028BF0:
 	adds r2, #0x14
 	adds r0, r4, #0
 	movs r3, #0x78
-	bl sub_08028D6C
+	bl StepHudSlide
 	adds r2, r4, #4
 	adds r0, r4, #0
 	adds r1, r4, #0
 	movs r3, #0x78
-	bl sub_08028D6C
+	bl StepHudSlide
 	adds r1, r4, #0
 	adds r1, #8
 	adds r2, r4, #0
 	adds r2, #0xc
 	adds r0, r4, #0
 	movs r3, #0x78
-	bl sub_08028D6C
+	bl StepHudSlide
 	pop {r4}
 	pop {r0}
 	bx r0
@@ -66440,8 +66440,8 @@ _08028CB4: .4byte 0x00000DAC
 _08028CB8: .4byte 0x02000EA4
 _08028CBC: .4byte 0x00000E74
 
-	thumb_func_start sub_08028CC0
-sub_08028CC0: @ 0x08028CC0
+	thumb_func_start ShowHudCrates
+ShowHudCrates: @ 0x08028CC0
 	push {lr}
 	adds r1, r0, #0
 	ldr r0, _08028CE0 @ =0x02000E70
@@ -66470,8 +66470,8 @@ _08028CEC:
 	pop {r0}
 	bx r0
 
-	thumb_func_start sub_08028CF0
-sub_08028CF0: @ 0x08028CF0
+	thumb_func_start ShowHudLives
+ShowHudLives: @ 0x08028CF0
 	push {lr}
 	adds r1, r0, #0
 	ldr r0, _08028D10 @ =0x02000E70
@@ -66500,8 +66500,8 @@ _08028D1C:
 	pop {r0}
 	bx r0
 
-	thumb_func_start sub_08028D20
-sub_08028D20: @ 0x08028D20
+	thumb_func_start ShowHudWumpa
+ShowHudWumpa: @ 0x08028D20
 	push {lr}
 	adds r1, r0, #0
 	ldr r0, _08028D40 @ =0x02000E70
@@ -66534,18 +66534,18 @@ _08028D4C:
 ShowHudCounters: @ 0x08028D50
 	push {r4, lr}
 	adds r4, r0, #0
-	bl sub_08028CC0
+	bl ShowHudCrates
 	adds r0, r4, #0
-	bl sub_08028CF0
+	bl ShowHudLives
 	adds r0, r4, #0
-	bl sub_08028D20
+	bl ShowHudWumpa
 	pop {r4}
 	pop {r0}
 	bx r0
 	.align 2, 0
 
-	thumb_func_start sub_08028D6C
-sub_08028D6C: @ 0x08028D6C
+	thumb_func_start StepHudSlide
+StepHudSlide: @ 0x08028D6C
 	push {lr}
 	ldr r0, [r1]
 	cmp r0, #1
@@ -66672,7 +66672,7 @@ sub_08028E14: @ 0x08028E14
 	ldr r2, _08028ED4 @ =0x05000002
 	mov r0, sp
 	adds r1, r6, #0
-	bl sub_0805AFAC
+	bl CpuSet
 	movs r0, #0x90
 	lsls r0, r0, #1
 	adds r1, r6, r0
@@ -66710,7 +66710,7 @@ sub_08028E14: @ 0x08028E14
 	str r0, [r1]
 	adds r0, r6, #0
 	movs r1, #0
-	bl sub_08029390
+	bl FontResetPalette
 	movs r3, #0
 	movs r1, #0xc
 	adds r1, r1, r6
@@ -67125,7 +67125,7 @@ _08029198:
 	muls r3, r2, r3
 	ldr r1, [r5]
 	adds r1, r1, r3
-	bl sub_08007678
+	bl UploadObjVram
 	ldr r0, _08029270 @ =0x02000E9C
 	ldr r0, [r0]
 	adds r1, r7, #0
@@ -67325,8 +67325,8 @@ _0802938A:
 	pop {r1}
 	bx r1
 
-	thumb_func_start sub_08029390
-sub_08029390: @ 0x08029390
+	thumb_func_start FontResetPalette
+FontResetPalette: @ 0x08029390
 	push {r4, r5, lr}
 	adds r5, r0, #0
 	lsls r1, r1, #0x18
@@ -67578,10 +67578,10 @@ RunLanguageSelect: @ 0x080295AC
 	str r0, [r1]
 	strb r0, [r1, #4]
 	ldr r0, [r4]
-	bl sub_080296F0
+	bl DrawLanguageSelect
 	bl WaitForVBlank
 	ldr r0, [r4]
-	bl sub_080298BC
+	bl CommitLanguageSelectFrame
 	ldr r0, [r4]
 	ldrb r0, [r0, #4]
 	cmp r0, #0
@@ -67596,10 +67596,10 @@ _080295D4:
 	ldr r0, [r4]
 	bl LanguageSelectInput
 	ldr r0, [r4]
-	bl sub_080296F0
+	bl DrawLanguageSelect
 	bl WaitForVBlank
 	ldr r0, [r4]
-	bl sub_080298BC
+	bl CommitLanguageSelectFrame
 	ldr r0, [r5]
 	cmp r0, #0
 	beq _0802960E
@@ -67729,8 +67729,8 @@ _080296DC:
 	.align 2, 0
 _080296EC: .4byte 0x02000E6C
 
-	thumb_func_start sub_080296F0
-sub_080296F0: @ 0x080296F0
+	thumb_func_start DrawLanguageSelect
+DrawLanguageSelect: @ 0x080296F0
 	push {r4, r5, r6, r7, lr}
 	mov r7, sl
 	mov r6, sb
@@ -67774,12 +67774,12 @@ _0802973E:
 	bne _08029768
 	ldr r4, [r7]
 	adds r0, r6, #0
-	bl sub_080298A4
+	bl LanguageSelectBlink
 	adds r1, r0, #0
 	lsls r1, r1, #0x18
 	lsrs r1, r1, #0x18
 	adds r0, r4, #0
-	bl sub_08029390
+	bl FontResetPalette
 	b _08029770
 	.align 2, 0
 _0802975C: .4byte 0x02000E9C
@@ -67788,7 +67788,7 @@ _08029764: .4byte 0x02000E90
 _08029768:
 	ldr r0, [r7]
 	movs r1, #0
-	bl sub_08029390
+	bl FontResetPalette
 _08029770:
 	ldr r0, [r7]
 	mov r2, sb
@@ -67921,11 +67921,11 @@ sub_08029858: @ 0x08029858
 	ldr r0, _0802989C @ =0x02000E90
 	ldr r0, [r0]
 	movs r1, #0
-	bl sub_08029390
+	bl FontResetPalette
 	ldr r0, _080298A0 @ =0x02000E94
 	ldr r0, [r0]
 	movs r1, #0
-	bl sub_08029390
+	bl FontResetPalette
 	pop {r4}
 	pop {r0}
 	bx r0
@@ -67935,8 +67935,8 @@ _08029898: .4byte 0x02000E68
 _0802989C: .4byte 0x02000E90
 _080298A0: .4byte 0x02000E94
 
-	thumb_func_start sub_080298A4
-sub_080298A4: @ 0x080298A4
+	thumb_func_start LanguageSelectBlink
+LanguageSelectBlink: @ 0x080298A4
 	push {lr}
 	ldr r0, [r0]
 	asrs r0, r0, #2
@@ -67952,8 +67952,8 @@ _080298B8:
 	pop {r1}
 	bx r1
 
-	thumb_func_start sub_080298BC
-sub_080298BC: @ 0x080298BC
+	thumb_func_start CommitLanguageSelectFrame
+CommitLanguageSelectFrame: @ 0x080298BC
 	push {r4, r5, lr}
 	adds r5, r0, #0
 	movs r1, #0x80
@@ -68062,7 +68062,7 @@ sub_08029968: @ 0x08029968
 	bl sub_08001648
 	bl sub_08001624
 	movs r0, #1
-	bl sub_08001568
+	bl SetDispcntMode
 	bl CommitDispcnt
 	str r6, [r4, #0x18]
 	adds r0, r4, #0
@@ -69847,9 +69847,9 @@ _0802A726:
 	ldrb r0, [r1]
 	strb r0, [r1]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -69971,9 +69971,9 @@ _0802A818:
 	strb r1, [r0]
 _0802A838:
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -69989,9 +69989,9 @@ _0802A84E:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -70024,9 +70024,9 @@ _0802A890:
 	ldr r0, [r3, #0x1c]
 	strb r0, [r2]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -70083,7 +70083,7 @@ sub_0802A8E0: @ 0x0802A8E0
 	strb r2, [r1]
 	movs r1, #0x20
 	movs r2, #2
-	bl sub_08025850
+	bl SpawnEffectPart
 	ldrb r2, [r0, #0x18]
 	movs r1, #5
 	rsbs r1, r1, #0
@@ -70206,7 +70206,7 @@ _0802AA20:
 _0802AA26:
 	adds r0, r6, #0
 	adds r0, #0x24
-	bl sub_08001294
+	bl StepBresenhamLine
 	ldr r1, [r6, #0x24]
 	ldr r0, [r6, #0x2c]
 	cmp r1, r0
@@ -71142,8 +71142,8 @@ sub_0802B240: @ 0x0802B240
 	.align 2, 0
 _0802B250: .4byte 0x02000F30
 
-	thumb_func_start sub_0802B254
-sub_0802B254: @ 0x0802B254
+	thumb_func_start AgeSpriteFrameCache
+AgeSpriteFrameCache: @ 0x0802B254
 	push {lr}
 	ldr r3, _0802B27C @ =0x02000F0C
 	ldr r0, [r3]
@@ -71217,8 +71217,8 @@ sub_0802B2C4: @ 0x0802B2C4
 	.align 2, 0
 _0802B2E0: .4byte 0x02000F30
 
-	thumb_func_start sub_0802B2E4
-sub_0802B2E4: @ 0x0802B2E4
+	thumb_func_start GetSpriteShapeSizeBits
+GetSpriteShapeSizeBits: @ 0x0802B2E4
 	push {lr}
 	ldrb r1, [r0]
 	ldrb r0, [r0, #1]
@@ -71624,7 +71624,7 @@ InitContinuePrompt: @ 0x0802BC74
 	movs r1, #0
 	movs r2, #0x1f
 	movs r3, #0
-	bl sub_0801C948
+	bl InitBgSetup
 	str r0, [r4, #4]
 	movs r0, #0x10
 	bl sub_080273EC
@@ -71633,7 +71633,7 @@ InitContinuePrompt: @ 0x0802BC74
 	movs r1, #3
 	movs r2, #0x1e
 	movs r3, #0
-	bl sub_0801C948
+	bl InitBgSetup
 	str r0, [r4]
 	movs r0, #0x10
 	bl sub_080273EC
@@ -71641,7 +71641,7 @@ InitContinuePrompt: @ 0x0802BC74
 	str r1, [sp]
 	movs r2, #0x1d
 	movs r3, #1
-	bl sub_0801C948
+	bl InitBgSetup
 	str r0, [r4, #8]
 	ldr r0, [r4]
 	ldr r1, _0802BD98 @ =0x081DF5D4
@@ -71928,7 +71928,7 @@ DrawContinuePrompt: @ 0x0802BED0
 	adds r4, r0, #0
 	ldr r0, [r6, #0x18]
 	movs r1, #0
-	bl sub_08029390
+	bl FontResetPalette
 	movs r1, #0x88
 	subs r1, r1, r4
 	ldr r4, [r6, #0x18]
@@ -71958,12 +71958,12 @@ DrawContinuePrompt: @ 0x0802BED0
 	ldr r4, [r6, #0x18]
 	adds r0, r6, #0
 	movs r1, #0
-	bl sub_0802C06C
+	bl GetContinuePromptBlink
 	adds r1, r0, #0
 	lsls r1, r1, #0x18
 	lsrs r1, r1, #0x18
 	adds r0, r4, #0
-	bl sub_08029390
+	bl FontResetPalette
 	ldr r0, [r6, #0x20]
 	cmp r0, #0
 	bne _0802BF9A
@@ -72016,12 +72016,12 @@ _0802BF9A:
 	ldr r4, [r6, #0x18]
 	adds r0, r6, #0
 	movs r1, #1
-	bl sub_0802C06C
+	bl GetContinuePromptBlink
 	adds r1, r0, #0
 	lsls r1, r1, #0x18
 	lsrs r1, r1, #0x18
 	adds r0, r4, #0
-	bl sub_08029390
+	bl FontResetPalette
 	ldr r0, [r6, #0x20]
 	cmp r0, #1
 	bne _0802C016
@@ -72084,8 +72084,8 @@ _0802C060: .4byte 0x02000E9C
 _0802C064: .4byte 0x02000E98
 _0802C068: .4byte 0x081DF5A8
 
-	thumb_func_start sub_0802C06C
-sub_0802C06C: @ 0x0802C06C
+	thumb_func_start GetContinuePromptBlink
+GetContinuePromptBlink: @ 0x0802C06C
 	push {r4, lr}
 	adds r4, r0, #0
 	movs r2, #0
@@ -72324,11 +72324,11 @@ _0802C24C:
 	ldr r0, _0802C324 @ =0x02000E90
 	ldr r0, [r0]
 	movs r1, #0
-	bl sub_08029390
+	bl FontResetPalette
 	ldr r0, _0802C328 @ =0x02000E94
 	ldr r0, [r0]
 	movs r1, #0
-	bl sub_08029390
+	bl FontResetPalette
 	adds r3, r6, #0
 	adds r3, #0x84
 	adds r4, r6, #0
@@ -72373,7 +72373,7 @@ _0802C28A:
 _0802C2D0:
 	ldr r1, _0802C334 @ =sub_0802C4A8
 	movs r0, #1
-	bl sub_08000694
+	bl IrqSetHandler
 	ldr r2, _0802C338 @ =0x04000004
 	ldrh r0, [r2]
 	movs r1, #0x10
@@ -72726,7 +72726,7 @@ _0802C596:
 	ldr r0, _0802C5BC @ =0x02000E90
 	ldr r0, [r0]
 	movs r1, #0
-	bl sub_08029390
+	bl FontResetPalette
 	pop {r4, r5, r6}
 	pop {r0}
 	bx r0
@@ -72856,8 +72856,8 @@ _0802C6B8: .4byte 0x0000FFEF
 _0802C6BC: .4byte 0x02000E98
 _0802C6C0: .4byte 0x02000E68
 
-	thumb_func_start sub_0802C6C4
-sub_0802C6C4: @ 0x0802C6C4
+	thumb_func_start RunCredits
+RunCredits: @ 0x0802C6C4
 	push {r4, lr}
 	adds r4, r0, #0
 	movs r0, #0x98
@@ -73313,8 +73313,8 @@ sub_0802CA38: @ 0x0802CA38
 	.align 2, 0
 _0802CA40: .4byte 0x02000F48
 
-	thumb_func_start sub_0802CA44
-sub_0802CA44: @ 0x0802CA44
+	thumb_func_start AdvanceCellAnim
+AdvanceCellAnim: @ 0x0802CA44
 	push {r4, r5, lr}
 	lsls r0, r0, #0x18
 	lsrs r5, r0, #0x18
@@ -73616,7 +73616,7 @@ _0802CC5A:
 	ldr r2, [r2]
 	lsls r2, r2, #8
 	ldr r3, [r3, #4]
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r0, [r4]
 	adds r2, r0, #1
 	str r2, [r4]
@@ -73758,7 +73758,7 @@ sub_0802CD8C: @ 0x0802CD8C
 	ldr r0, [r0, #0xc]
 	cmp r0, #0
 	beq _0802CDA0
-	bl sub_08047968
+	bl _call_via_r0
 _0802CDA0:
 	ldr r1, _0802CDDC @ =0x02000F80
 	movs r0, #0
@@ -73775,7 +73775,7 @@ _0802CDA0:
 	ble _0802CDC4
 	ldr r0, [r7]
 	ldr r0, [r0, #0x48]
-	bl sub_08047968
+	bl _call_via_r0
 _0802CDC4:
 	ldr r0, _0802CDE8 @ =0x02000F84
 	ldrb r0, [r0]
@@ -73832,7 +73832,7 @@ _0802CE1C:
 	ldr r2, [r5]
 	lsls r2, r2, #8
 	ldr r3, [r3, #4]
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r0, [r4]
 	adds r2, r0, #1
 	str r2, [r4]
@@ -73995,7 +73995,7 @@ _0802CF6E:
 	ldr r0, [r0, #0x14]
 	cmp r0, #0
 	beq _0802CF7C
-	bl sub_08047968
+	bl _call_via_r0
 _0802CF7C:
 	ldr r0, _0802CFD4 @ =0x02000248
 	ldr r1, [r0]
@@ -74582,8 +74582,8 @@ GetActorSpawnX: @ 0x0802D3A0
 	.align 2, 0
 _0802D3B4: .4byte 0x02000F68
 
-	thumb_func_start sub_0802D3B8
-sub_0802D3B8: @ 0x0802D3B8
+	thumb_func_start GetActorSpawnKindIndex
+GetActorSpawnKindIndex: @ 0x0802D3B8
 	push {lr}
 	ldr r1, _0802D3D8 @ =0x02000F68
 	ldr r2, [r1]
@@ -74652,7 +74652,7 @@ CanPauseActorCategory: @ 0x0802D430
 	ldr r0, _0802D444 @ =0x02000F78
 	ldr r0, [r0]
 	ldr r0, [r0, #0x54]
-	bl sub_08047968
+	bl _call_via_r0
 	movs r1, #1
 	eors r0, r1
 	pop {r1}
@@ -74666,10 +74666,10 @@ ReloadActorCategoryGraphics: @ 0x0802D448
 	ldr r4, _0802D464 @ =0x02000F78
 	ldr r0, [r4]
 	ldr r0, [r0, #0x18]
-	bl sub_08047968
+	bl _call_via_r0
 	ldr r0, [r4]
 	ldr r0, [r0, #0x50]
-	bl sub_08047968
+	bl _call_via_r0
 	pop {r4}
 	pop {r0}
 	bx r0
@@ -74684,7 +74684,7 @@ UpdateActorCategoryBg2: @ 0x0802D468
 	ldr r0, [r0, #0x10]
 	cmp r0, #0
 	beq _0802D478
-	bl sub_08047968
+	bl _call_via_r0
 _0802D478:
 	ldr r4, _0802D4B4 @ =0x02000FA8
 	ldr r0, [r4]
@@ -74772,7 +74772,7 @@ sub_0802D514: @ 0x0802D514
 	ldr r0, _0802D524 @ =0x02000F78
 	ldr r0, [r0]
 	ldr r0, [r0, #0x4c]
-	bl sub_08047968
+	bl _call_via_r0
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -74938,7 +74938,7 @@ sub_0802D674: @ 0x0802D674
 	ldr r0, _0802D684 @ =0x02000F78
 	ldr r0, [r0]
 	ldr r0, [r0, #0x30]
-	bl sub_08047968
+	bl _call_via_r0
 	pop {r1}
 	bx r1
 	.align 2, 0
@@ -74950,7 +74950,7 @@ sub_0802D688: @ 0x0802D688
 	ldr r0, _0802D698 @ =0x02000F78
 	ldr r0, [r0]
 	ldr r0, [r0, #0x44]
-	bl sub_08047968
+	bl _call_via_r0
 	pop {r1}
 	bx r1
 	.align 2, 0
@@ -74962,7 +74962,7 @@ sub_0802D69C: @ 0x0802D69C
 	ldr r0, _0802D6AC @ =0x02000F78
 	ldr r0, [r0]
 	ldr r0, [r0, #0x40]
-	bl sub_08047968
+	bl _call_via_r0
 	pop {r1}
 	bx r1
 	.align 2, 0
@@ -74974,7 +74974,7 @@ sub_0802D6B0: @ 0x0802D6B0
 	ldr r0, _0802D6C0 @ =0x02000F78
 	ldr r0, [r0]
 	ldr r0, [r0, #0x3c]
-	bl sub_08047968
+	bl _call_via_r0
 	pop {r1}
 	bx r1
 	.align 2, 0
@@ -75170,7 +75170,7 @@ _0802D880: .4byte 0x80000100
 _0802D884:
 	ldr r4, _0802D8D0 @ =0x02000E70
 	ldr r0, [r4]
-	bl sub_0805B538
+	bl GetLives
 	cmp r0, #0
 	bge _0802D892
 	b _0802DE1A
@@ -75311,7 +75311,7 @@ _0802D998:
 	adds r1, #0x1c
 	adds r0, r0, r1
 	ldr r0, [r0]
-	bl sub_0802FAC4
+	bl DecompressCategorySpriteSheet
 	movs r0, #0x80
 	movs r1, #2
 	movs r2, #1
@@ -75388,7 +75388,7 @@ _0802DA28:
 	movs r1, #1
 _0802DA4C:
 	adds r0, r1, #0
-	bl sub_0802CA44
+	bl AdvanceCellAnim
 	bl sub_0802CD8C
 	str r0, [sp, #0x14]
 	ldr r0, _0802DAA4 @ =0x02000E70
@@ -75466,7 +75466,7 @@ _0802DAB8:
 	bl FlipCellAnimPage
 _0802DB14:
 	bl UpdateActorCategoryBg2
-	bl sub_0802B254
+	bl AgeSpriteFrameCache
 	ldr r2, _0802DB7C @ =0x02001074
 	ldr r0, [r2]
 	mov r1, sl
@@ -76582,7 +76582,7 @@ sub_0802E420: @ 0x0802E420
 	mov r1, r8
 	ldr r0, [r1]
 	movs r1, #2
-	bl sub_0802FB18
+	bl SetActorAnim
 	ldr r0, _0802E4F0 @ =0x02001092
 	strb r4, [r0]
 	ldr r0, _0802E4F4 @ =0x02001093
@@ -76676,7 +76676,7 @@ sub_0802E51C: @ 0x0802E51C
 	str r0, [r4]
 	movs r1, #0xb0
 	lsls r1, r1, #4
-	bl sub_08000A30
+	bl FixedMul
 	str r0, [r4]
 _0802E55E:
 	ldr r1, _0802E5D4 @ =0x081DFF00
@@ -76685,7 +76685,7 @@ _0802E55E:
 	lsls r0, r0, #2
 	adds r0, r0, r1
 	ldr r0, [r0]
-	bl sub_08047968
+	bl _call_via_r0
 	ldr r2, _0802E5DC @ =0x02001094
 	ldr r1, _0802E5E0 @ =0x020010C4
 	ldr r0, [r2]
@@ -76782,7 +76782,7 @@ _0802E634:
 	lsls r1, r1, #7
 	bl __divsi3
 	adds r4, r0, #0
-	bl sub_0802F5D4
+	bl GetActorBgCenterX
 	adds r6, r0, #0
 	ldr r0, _0802E6B4 @ =0x02001094
 	ldr r2, _0802E6B8 @ =0x020010BC
@@ -76934,14 +76934,14 @@ sub_0802E758: @ 0x0802E758
 _0802E772:
 	adds r0, r2, #0
 	movs r1, #1
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _0802E788
 	.align 2, 0
 _0802E77C: .4byte 0x0200108C
 _0802E780:
 	ldr r0, [r0]
 	movs r1, #0
-	bl sub_0802FB18
+	bl SetActorAnim
 _0802E788:
 	movs r6, #0xb4
 	lsls r6, r6, #7
@@ -77020,7 +77020,7 @@ _0802E81C:
 	ldr r0, _0802E850 @ =0x0200108C
 	ldr r0, [r0]
 	movs r1, #2
-	bl sub_0802FB18
+	bl SetActorAnim
 _0802E826:
 	movs r6, #0xb4
 	lsls r6, r6, #7
@@ -77080,7 +77080,7 @@ sub_0802E86C: @ 0x0802E86C
 	beq _0802E89E
 	ldr r0, [r5]
 	movs r1, #2
-	bl sub_0802FB18
+	bl SetActorAnim
 _0802E89E:
 	ldr r1, _0802E8F4 @ =0x020010AC
 	ldr r0, [r1]
@@ -77093,7 +77093,7 @@ _0802E89E:
 	str r0, [r1]
 	ldr r0, [r5]
 	movs r1, #3
-	bl sub_0802FB18
+	bl SetActorAnim
 	ldr r0, _0802E8FC @ =0x02000E6C
 	ldr r0, [r0]
 	ldr r1, _0802E900 @ =0x020010C0
@@ -77157,14 +77157,14 @@ sub_0802E920: @ 0x0802E920
 	bne _0802E956
 	adds r0, r2, #0
 	movs r1, #2
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _0802E974
 	.align 2, 0
 _0802E948: .4byte 0x0200108C
 _0802E94C:
 	adds r0, r2, #0
 	movs r1, #0
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _0802E974
 _0802E956:
 	ldr r0, _0802E968 @ =0x020010B0
@@ -77173,14 +77173,14 @@ _0802E956:
 	beq _0802E96C
 	ldr r0, [r3]
 	movs r1, #1
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _0802E974
 	.align 2, 0
 _0802E968: .4byte 0x020010B0
 _0802E96C:
 	ldr r0, [r3]
 	movs r1, #2
-	bl sub_0802FB18
+	bl SetActorAnim
 _0802E974:
 	movs r1, #0xa0
 	lsls r1, r1, #2
@@ -77248,7 +77248,7 @@ _0802E9DE:
 	ldr r0, _0802EA10 @ =0x0200108C
 	ldr r0, [r0]
 	movs r1, #5
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _0802EA24
 	.align 2, 0
 _0802EA00: .4byte 0x02001093
@@ -77263,7 +77263,7 @@ _0802EA14:
 	ldr r0, _0802EA30 @ =0x0200108C
 	ldr r0, [r0]
 	movs r1, #4
-	bl sub_0802FB18
+	bl SetActorAnim
 _0802EA24:
 	pop {r4, r5, r6}
 	pop {r0}
@@ -77387,7 +77387,7 @@ _0802EB10:
 	beq _0802EB2E
 	adds r0, r1, #0
 	movs r1, #2
-	bl sub_0802FB18
+	bl SetActorAnim
 	ldr r1, _0802EB6C @ =0x020010A0
 	movs r0, #6
 	str r0, [r1]
@@ -77550,7 +77550,7 @@ _0802EC68:
 	beq _0802EC86
 	adds r0, r1, #0
 	movs r1, #6
-	bl sub_0802FB18
+	bl SetActorAnim
 	ldr r1, _0802ECC4 @ =0x020010A0
 	movs r0, #6
 	str r0, [r1]
@@ -77615,19 +77615,19 @@ sub_0802ECE4: @ 0x0802ECE4
 	bne _0802ED16
 	adds r0, r2, #0
 	movs r1, #2
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _0802ED1E
 	.align 2, 0
 _0802ED08: .4byte 0x0200108C
 _0802ED0C:
 	adds r0, r2, #0
 	movs r1, #0
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _0802ED1E
 _0802ED16:
 	ldr r0, [r0]
 	movs r1, #2
-	bl sub_0802FB18
+	bl SetActorAnim
 _0802ED1E:
 	movs r1, #0xa0
 	lsls r1, r1, #2
@@ -78015,7 +78015,7 @@ sub_0802EFF8: @ 0x0802EFF8
 	bne _0802F01C
 	adds r0, r1, #0
 	movs r1, #6
-	bl sub_0802FB18
+	bl SetActorAnim
 _0802F01C:
 	movs r0, #6
 	str r0, [r4]
@@ -78068,7 +78068,7 @@ _0802F068:
 	bne _0802F084
 	adds r0, r1, #0
 	movs r1, #1
-	bl sub_0802FB18
+	bl SetActorAnim
 _0802F084:
 	pop {r0}
 	bx r0
@@ -78103,7 +78103,7 @@ sub_0802F0A4: @ 0x0802F0A4
 	ldr r0, _0802F0D0 @ =0x0200108C
 	ldr r0, [r0]
 	movs r1, #3
-	bl sub_0802FB18
+	bl SetActorAnim
 _0802F0C2:
 	pop {r0}
 	bx r0
@@ -78343,7 +78343,7 @@ sub_0802F2A0: @ 0x0802F2A0
 	ldr r0, [r0]
 	cmp r0, #0
 	bne _0802F2D2
-	bl sub_08000174
+	bl rand
 	adds r1, r0, #0
 	movs r0, #3
 	ands r0, r1
@@ -78371,7 +78371,7 @@ _0802F2F0:
 	str r0, [r1]
 	adds r0, r5, #0
 	movs r1, #0x60
-	bl sub_08000A30
+	bl FixedMul
 	asrs r0, r0, #8
 	ldr r4, [sp]
 	asrs r4, r4, #8
@@ -78591,7 +78591,7 @@ sub_0802F498: @ 0x0802F498
 	adds r2, r2, r0
 	ldr r1, [r2]
 	adds r0, r3, #0
-	bl sub_08000A30
+	bl FixedMul
 	adds r3, r0, #0
 	ldr r0, [r6]
 	subs r0, r0, r3
@@ -78601,7 +78601,7 @@ sub_0802F498: @ 0x0802F498
 	str r0, [r4]
 	cmp r0, #0
 	bgt _0802F520
-	bl sub_08000174
+	bl rand
 	movs r1, #3
 	ands r1, r0
 	cmp r1, #0
@@ -78734,8 +78734,8 @@ sub_0802F5C0: @ 0x0802F5C0
 _0802F5CC: .4byte 0x02001100
 _0802F5D0: .4byte 0x020010D8
 
-	thumb_func_start sub_0802F5D4
-sub_0802F5D4: @ 0x0802F5D4
+	thumb_func_start GetActorBgCenterX
+GetActorBgCenterX: @ 0x0802F5D4
 	ldr r0, _0802F5E0 @ =0x020010FC
 	ldr r1, _0802F5E4 @ =0x020010DC
 	ldr r0, [r0]
@@ -78944,7 +78944,7 @@ sub_0802F738: @ 0x0802F738
 	ldr r0, [r6, #0x1c]
 	muls r4, r0, r4
 	asrs r4, r4, #0xc
-	bl sub_0802F5D4
+	bl GetActorBgCenterX
 	adds r4, r4, r0
 	asrs r4, r4, #8
 	bl sub_0802F54C
@@ -79029,7 +79029,7 @@ sub_0802F7F8: @ 0x0802F7F8
 	beq _0802F810
 	adds r0, r3, #0
 	adds r1, r2, #0
-	bl sub_0802FB18
+	bl SetActorAnim
 _0802F810:
 	pop {r0}
 	bx r0
@@ -79060,7 +79060,7 @@ sub_0802F814: @ 0x0802F814
 	adds r4, r4, r0
 	asrs r4, r4, #8
 	subs r4, #8
-	bl sub_0802F5D4
+	bl GetActorBgCenterX
 	ldr r1, [r5, #0x1c]
 	muls r1, r6, r1
 	asrs r1, r1, #0xc
@@ -79394,8 +79394,8 @@ GivePolarPlayerLife: @ 0x0802FAB0
 	.align 2, 0
 _0802FAC0: .4byte 0x02001128
 
-	thumb_func_start sub_0802FAC4
-sub_0802FAC4: @ 0x0802FAC4
+	thumb_func_start DecompressCategorySpriteSheet
+DecompressCategorySpriteSheet: @ 0x0802FAC4
 	push {r4, r5, lr}
 	adds r4, r0, #0
 	ldr r5, _0802FAE8 @ =0x02001128
@@ -79440,8 +79440,8 @@ _0802FB14:
 	pop {r0}
 	bx r0
 
-	thumb_func_start sub_0802FB18
-sub_0802FB18: @ 0x0802FB18
+	thumb_func_start SetActorAnim
+SetActorAnim: @ 0x0802FB18
 	str r1, [r0, #0x10]
 	ldr r3, [r0]
 	lsls r2, r1, #1
@@ -79470,7 +79470,7 @@ sub_0802FB38: @ 0x0802FB38
 	str r0, [r4, #0x18]
 	adds r0, r4, #0
 	movs r1, #0
-	bl sub_0802FB18
+	bl SetActorAnim
 	adds r0, r4, #0
 	pop {r4}
 	pop {r1}
@@ -79547,7 +79547,7 @@ _0802FBDA:
 _0802FBE0:
 	adds r0, r4, #0
 	movs r1, #2
-	bl sub_0802FB18
+	bl SetActorAnim
 	movs r0, #1
 	str r0, [r4, #0x54]
 	movs r0, #0
@@ -79587,7 +79587,7 @@ _0802FC28:
 	beq _0802FCF2
 	adds r0, r4, #0
 	movs r1, #1
-	bl sub_0802FB18
+	bl SetActorAnim
 	movs r0, #2
 	str r0, [r4, #0x54]
 	movs r0, #0
@@ -79618,7 +79618,7 @@ _0802FC64:
 	ble _0802FCF2
 	adds r0, r4, #0
 	movs r1, #3
-	bl sub_0802FB18
+	bl SetActorAnim
 	movs r0, #3
 	str r0, [r4, #0x54]
 	b _0802FCF2
@@ -79647,7 +79647,7 @@ _0802FCA2:
 	beq _0802FCF2
 	adds r0, r4, #0
 	movs r1, #0
-	bl sub_0802FB18
+	bl SetActorAnim
 	movs r0, #4
 	str r0, [r4, #0x54]
 	movs r0, #0
@@ -79705,7 +79705,7 @@ _0802FCF2:
 	str r0, [r4, #0x54]
 	adds r0, r4, #0
 	movs r1, #4
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _0802FD94
 	.align 2, 0
 _0802FD28: .4byte 0x02000248
@@ -79716,7 +79716,7 @@ _0802FD2C:
 	str r0, [r4, #0x54]
 	adds r0, r4, #0
 	movs r1, #0
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _0802FD94
 _0802FD3E:
 	ldr r0, [r4, #0x54]
@@ -79787,7 +79787,7 @@ sub_0802FDA4: @ 0x0802FDA4
 	str r4, [r5, #0x54]
 	adds r0, r5, #0
 	movs r1, #0
-	bl sub_0802FB18
+	bl SetActorAnim
 	str r4, [r5, #0x58]
 	str r4, [r5, #0x60]
 	str r4, [r5, #0x64]
@@ -79830,7 +79830,7 @@ _0802FE04:
 	beq _0802FE1E
 	adds r0, r4, #0
 	movs r1, #1
-	bl sub_0802FB18
+	bl SetActorAnim
 _0802FE1E:
 	ldr r0, [r4, #0x10]
 	cmp r0, #1
@@ -79982,7 +79982,7 @@ sub_0802FF28: @ 0x0802FF28
 	asrs r4, r4, #0xc
 	adds r4, r4, r0
 	asrs r4, r4, #8
-	bl sub_0802F5D4
+	bl GetActorBgCenterX
 	ldr r1, [r6, #0x1c]
 	muls r1, r5, r1
 	asrs r1, r1, #0xc
@@ -80806,7 +80806,7 @@ _080305B8:
 	str r0, [r1]
 	bl sub_0802CAD4
 	adds r4, r0, #0
-	bl sub_08000174
+	bl rand
 	ldr r1, _08030638 @ =0x081E0234
 	lsls r4, r4, #2
 	adds r4, r4, r1
@@ -82115,7 +82115,7 @@ sub_08031004: @ 0x08031004
 	beq _0803104C
 	adds r0, r4, #0
 	movs r1, #1
-	bl sub_0802FB18
+	bl SetActorAnim
 	ldr r0, _080310A4 @ =0x02000E6C
 	ldr r0, [r0]
 	movs r2, #0x80
@@ -82144,7 +82144,7 @@ _0803104C:
 	beq _08031080
 	adds r0, r4, #0
 	movs r1, #3
-	bl sub_0802FB18
+	bl SetActorAnim
 	movs r0, #1
 	str r0, [r4, #0x14]
 	ldr r0, _080310A4 @ =0x02000E6C
@@ -82200,7 +82200,7 @@ CreatePolarCheckpointCrate: @ 0x080310BC
 	bne _080310EC
 	adds r0, r5, #0
 	movs r1, #2
-	bl sub_0802FB18
+	bl SetActorAnim
 	ldr r0, _080310FC @ =0x02000E6C
 	ldr r0, [r0]
 	movs r2, #0x80
@@ -82240,7 +82240,7 @@ sub_08031100: @ 0x08031100
 	bl AddBrokenCrate
 	adds r0, r4, #0
 	movs r1, #0x12
-	bl sub_0802FB18
+	bl SetActorAnim
 _08031134:
 	ldr r0, [r4, #0x10]
 	cmp r0, #0x12
@@ -82306,7 +82306,7 @@ _08031192:
 	ldrsh r1, [r0, r3]
 	adds r0, r1, #0
 	adds r1, r5, #0
-	bl sub_08000A30
+	bl FixedMul
 	adds r1, r0, #0
 	ldr r0, [r4, #0x54]
 	adds r0, r0, r1
@@ -82338,7 +82338,7 @@ _080311D8:
 	movs r1, #0xb0
 	lsls r1, r1, #3
 	adds r0, r2, #0
-	bl sub_08000A30
+	bl FixedMul
 	adds r2, r0, #0
 	ldr r0, [r4, #0x54]
 	adds r0, r0, r2
@@ -82446,7 +82446,7 @@ _080312C8:
 _080312E0:
 	adds r0, r4, #0
 	movs r1, #0x12
-	bl sub_0802FB18
+	bl SetActorAnim
 _080312E8:
 	adds r0, r4, #0
 	bl sub_08031100
@@ -82485,7 +82485,7 @@ UpdatePolarLifeCrate: @ 0x080312FC
 	bl MarkSpawnCollected
 	adds r0, r4, #0
 	movs r1, #0x12
-	bl sub_0802FB18
+	bl SetActorAnim
 	movs r0, #1
 	str r0, [r4, #0x14]
 _08031342:
@@ -82508,7 +82508,7 @@ _08031342:
 	bl AddBrokenCrate
 	adds r0, r4, #0
 	movs r1, #0x12
-	bl sub_0802FB18
+	bl SetActorAnim
 	movs r0, #1
 	str r0, [r4, #0x14]
 _08031376:
@@ -82590,7 +82590,7 @@ _080313FC:
 _08031420:
 	adds r0, r4, #0
 	movs r1, #0x12
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _0803144A
 	.align 2, 0
 _0803142C: .4byte 0x02000E6C
@@ -82715,7 +82715,7 @@ _080314F6:
 	str r0, [r5, #0x44]
 	adds r0, r5, #0
 	movs r1, #0x12
-	bl sub_0802FB18
+	bl SetActorAnim
 _08031522:
 	ldr r5, [r5, #0x4c]
 	ldr r0, _0803153C @ =0x02000248
@@ -82751,7 +82751,7 @@ sub_08031540: @ 0x08031540
 	bl GivePolarPlayerMask
 	adds r0, r4, #0
 	movs r1, #0x12
-	bl sub_0802FB18
+	bl SetActorAnim
 	movs r0, #1
 	str r0, [r4, #0x14]
 _08031572:
@@ -82774,7 +82774,7 @@ _08031572:
 	bl AddBrokenCrate
 	adds r0, r4, #0
 	movs r1, #0x12
-	bl sub_0802FB18
+	bl SetActorAnim
 	movs r0, #1
 	str r0, [r4, #0x14]
 _080315A6:
@@ -82842,21 +82842,21 @@ _08031620:
 _08031626:
 	ldr r0, [r4]
 	movs r1, #1
-	bl sub_08022E6C
+	bl FreezeLevelClock
 	b _08031642
 _08031630:
 	ldr r0, [r4]
 	movs r1, #2
-	bl sub_08022E6C
+	bl FreezeLevelClock
 	b _08031642
 _0803163A:
 	ldr r0, [r4]
 	movs r1, #3
-	bl sub_08022E6C
+	bl FreezeLevelClock
 _08031642:
 	adds r0, r5, #0
 	movs r1, #0x12
-	bl sub_0802FB18
+	bl SetActorAnim
 _0803164A:
 	adds r0, r5, #0
 	bl sub_08031100
@@ -82885,7 +82885,7 @@ DetonatePolarNitroCrate: @ 0x08031658
 	str r0, [r4, #0x44]
 	adds r0, r4, #0
 	movs r1, #0x12
-	bl sub_0802FB18
+	bl SetActorAnim
 _08031684:
 	pop {r4}
 	pop {r0}
@@ -82958,7 +82958,7 @@ UpdatePolarFourWumpaCrate: @ 0x080316DC
 	bl sub_08036A74
 	adds r0, r4, #0
 	movs r1, #0x12
-	bl sub_0802FB18
+	bl SetActorAnim
 _0803171A:
 	adds r0, r4, #0
 	bl sub_08031100
@@ -82997,7 +82997,7 @@ UpdatePolarBasicCrate: @ 0x08031734
 	bl sub_08036A74
 	adds r0, r4, #0
 	movs r1, #0x12
-	bl sub_0802FB18
+	bl SetActorAnim
 _08031772:
 	adds r0, r4, #0
 	bl sub_08031100
@@ -83148,7 +83148,7 @@ _08031888:
 	ldr r0, [r5, #0x20]
 	str r0, [r5, #0x54]
 	adds r0, r5, #0
-	bl sub_0802FB18
+	bl SetActorAnim
 	adds r0, r5, #0
 	add sp, #4
 	pop {r4, r5, r6}
@@ -83354,7 +83354,7 @@ sub_08031AD4: @ 0x08031AD4
 	ldr r1, [r6, #0x20]
 	adds r1, r1, r0
 	str r1, [r6, #0x20]
-	bl sub_0802F5D4
+	bl GetActorBgCenterX
 	ldr r1, [r6, #0x1c]
 	adds r3, r1, r0
 	str r3, [r6, #0x1c]
@@ -84338,7 +84338,7 @@ sub_080322F8: @ 0x080322F8
 	bl sub_08047970
 	adds r0, r4, #0
 	movs r1, #1
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _080323A2
 _08032344:
 	adds r0, r4, #0
@@ -84408,7 +84408,7 @@ sub_080323A8: @ 0x080323A8
 	adds r1, r4, #0
 	bl __divsi3
 	adds r5, r0, #0
-	bl sub_0802F5D4
+	bl GetActorBgCenterX
 	ldr r1, [r7, #0x1c]
 	adds r4, r1, #0
 	muls r4, r5, r4
@@ -84470,7 +84470,7 @@ sub_08032438: @ 0x08032438
 	cmp r1, #0
 	blt _08032454
 	adds r0, r4, #0
-	bl sub_0802FB18
+	bl SetActorAnim
 	movs r0, #1
 	rsbs r0, r0, #0
 	str r0, [r4, #0x70]
@@ -84633,7 +84633,7 @@ sub_08032548: @ 0x08032548
 	ldr r0, [r6, #0x1c]
 	muls r4, r0, r4
 	asrs r4, r4, #0xc
-	bl sub_0802F5D4
+	bl GetActorBgCenterX
 	adds r4, r4, r0
 	asrs r4, r4, #8
 	bl sub_0802F54C
@@ -85402,8 +85402,8 @@ _08032BF8: .4byte 0x020018C8
 _08032BFC: .4byte 0x081E11B4
 _08032C00: .4byte 0x02001AC8
 
-	thumb_func_start sub_08032C04
-sub_08032C04: @ 0x08032C04
+	thumb_func_start StopYeti
+StopYeti: @ 0x08032C04
 	ldr r1, _08032C0C @ =0x020018BC
 	movs r0, #0x64
 	str r0, [r1]
@@ -85617,21 +85617,21 @@ _08032DEA:
 _08032DF0:
 	str r0, [r5, #0x68]
 _08032DF2:
-	bl sub_08000174
+	bl rand
 	movs r1, #1
 	ands r1, r0
 	cmp r1, #0
 	beq _08032E0C
 	adds r0, r5, #0
 	movs r1, #1
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _08032E14
 	.align 2, 0
 _08032E08: .4byte 0xFFFE8000
 _08032E0C:
 	adds r0, r5, #0
 	movs r1, #0
-	bl sub_0802FB18
+	bl SetActorAnim
 _08032E14:
 	adds r0, r5, #0
 	add sp, #8
@@ -86086,7 +86086,7 @@ _0803315C:
 	adds r0, r1, #0
 _0803315E:
 	adds r0, r4, r0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	pop {r4, r5, r6, r7}
 	pop {r0}
 	bx r0
@@ -86668,8 +86668,8 @@ sub_08033654: @ 0x08033654
 	bx r0
 	.align 2, 0
 
-	thumb_func_start sub_08033660
-sub_08033660: @ 0x08033660
+	thumb_func_start HomeJetpackBomber
+HomeJetpackBomber: @ 0x08033660
 	push {r4, lr}
 	adds r4, r0, #0
 	ldrb r0, [r4, #0xe]
@@ -86680,14 +86680,14 @@ sub_08033660: @ 0x08033660
 	bne _08033678
 	adds r0, r4, #0
 	movs r1, #1
-	bl sub_0802FB18
+	bl SetActorAnim
 _08033678:
 	ldr r0, [r4, #0x10]
 	cmp r0, #1
 	bne _08033686
 	adds r0, r4, #0
 	movs r1, #2
-	bl sub_0802FB18
+	bl SetActorAnim
 _08033686:
 	bl sub_0802D6B0
 	ldr r1, [r4, #0x1c]
@@ -86757,7 +86757,7 @@ _080336FC: .4byte 0x000035FF
 _08033700: .4byte 0x081CD704
 _08033704:
 	adds r0, r4, #0
-	bl sub_08033660
+	bl HomeJetpackBomber
 _0803370A:
 	pop {r4}
 	pop {r0}
@@ -86797,7 +86797,7 @@ _08033748: .4byte 0x000035FF
 _0803374C: .4byte 0x081CD704
 _08033750:
 	adds r0, r3, #0
-	bl sub_08033660
+	bl HomeJetpackBomber
 _08033756:
 	pop {r0}
 	bx r0
@@ -86833,7 +86833,7 @@ _0803378C: .4byte 0x000035FF
 _08033790: .4byte 0x081CD704
 _08033794:
 	adds r0, r3, #0
-	bl sub_08033660
+	bl HomeJetpackBomber
 _0803379A:
 	pop {r0}
 	bx r0
@@ -86848,7 +86848,7 @@ JetpackBomberStateHome: @ 0x080337A0
 	cmp r1, r0
 	bgt _080337B2
 	adds r0, r2, #0
-	bl sub_08033660
+	bl HomeJetpackBomber
 _080337B2:
 	pop {r0}
 	bx r0
@@ -87011,7 +87011,7 @@ _080338D8:
 	adds r0, r1, #0
 _080338DA:
 	adds r0, r4, r0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	pop {r4, r5, r6, r7}
 	pop {r0}
 	bx r0
@@ -87071,7 +87071,7 @@ sub_0803393C: @ 0x0803393C
 	bne _08033954
 	adds r0, r4, #0
 	movs r1, #4
-	bl sub_0802FB18
+	bl SetActorAnim
 _08033954:
 	ldr r0, _08033998 @ =0x02000248
 	ldr r0, [r0]
@@ -87096,7 +87096,7 @@ _08033954:
 	strb r0, [r5]
 	adds r0, r4, #0
 	movs r1, #2
-	bl sub_0802FB18
+	bl SetActorAnim
 _0803398C:
 	adds r0, r4, #0
 	bl sub_0802F6A0
@@ -87107,8 +87107,8 @@ _0803398C:
 _08033998: .4byte 0x02000248
 _0803399C: .4byte 0x02000E6C
 
-	thumb_func_start sub_080339A0
-sub_080339A0: @ 0x080339A0
+	thumb_func_start CreatePolarGoal
+CreatePolarGoal: @ 0x080339A0
 	push {r4, lr}
 	sub sp, #8
 	adds r4, r0, #0
@@ -87196,7 +87196,7 @@ sub_08033A24: @ 0x08033A24
 	bge _08033A50
 	adds r0, r6, #0
 	movs r1, #1
-	bl sub_0802FB18
+	bl SetActorAnim
 _08033A50:
 	adds r0, r6, #0
 	add sp, #8
@@ -87575,7 +87575,7 @@ _08033D78:
 	adds r0, r1, #0
 _08033D7A:
 	adds r0, r4, r0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r0, [r4, #0x28]
 	cmp r0, #2
 	bne _08033DA2
@@ -87715,7 +87715,7 @@ _08033E70:
 	adds r0, r1, #0
 _08033E72:
 	adds r0, r4, r0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	pop {r4, r5, r6, r7}
 	pop {r0}
 	bx r0
@@ -87808,7 +87808,7 @@ _08033F14:
 	adds r0, r1, #0
 _08033F16:
 	adds r0, r6, r0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r0, [r6, #0x10]
 	cmp r0, #0
 	bne _08033FC2
@@ -87940,8 +87940,8 @@ _0803401C:
 	bx r0
 	.align 2, 0
 
-	thumb_func_start sub_0803402C
-sub_0803402C: @ 0x0803402C
+	thumb_func_start AimJetpackPlane
+AimJetpackPlane: @ 0x0803402C
 	push {r4, r5, r6, r7, lr}
 	adds r6, r0, #0
 	adds r7, r1, #0
@@ -87968,7 +87968,7 @@ _08034050:
 	b _080340DE
 _0803405E:
 	adds r0, r7, #0
-	bl sub_0802D3B8
+	bl GetActorSpawnKindIndex
 	ldr r1, _080340E4 @ =0x02000260
 	lsls r0, r0, #2
 	adds r0, r0, r1
@@ -88139,7 +88139,7 @@ CreateJetpackPlane: @ 0x0803416C
 	cmp r0, #0
 	blt _080341C8
 	ldr r4, _080341E4 @ =0x02000260
-	bl sub_0802D3B8
+	bl GetActorSpawnKindIndex
 	lsls r0, r0, #2
 	adds r0, r0, r4
 	ldr r0, [r0]
@@ -88154,7 +88154,7 @@ CreateJetpackPlane: @ 0x0803416C
 _080341C8:
 	ldr r1, [r7, #0x10]
 	adds r0, r5, #0
-	bl sub_0803402C
+	bl AimJetpackPlane
 	adds r0, r5, #0
 	add sp, #8
 	pop {r4, r5, r6, r7}
@@ -88167,8 +88167,8 @@ _080341E4: .4byte 0x02000260
 _080341E8: .4byte 0xFFFF7200
 _080341EC: .4byte 0x00000D55
 
-	thumb_func_start sub_080341F0
-sub_080341F0: @ 0x080341F0
+	thumb_func_start JetpackPlaneStateFall
+JetpackPlaneStateFall: @ 0x080341F0
 	push {lr}
 	adds r2, r0, #0
 	ldr r0, [r2, #0x64]
@@ -88223,7 +88223,7 @@ JetpackPlaneStateFly: @ 0x08034230
 	bgt _08034256
 	ldr r1, [r2, #0x78]
 	adds r0, r2, #0
-	bl sub_0803402C
+	bl AimJetpackPlane
 _08034256:
 	pop {r0}
 	bx r0
@@ -88340,7 +88340,7 @@ sub_0803437C: @ 0x0803437C
 	beq _08034398
 	adds r0, r4, #0
 	movs r1, #1
-	bl sub_0802FB18
+	bl SetActorAnim
 	ldr r0, _080343AC @ =0x02000E70
 	ldr r0, [r0]
 	bl AddBrokenCrate
@@ -88439,7 +88439,7 @@ _0803448C:
 	ldr r0, _08034498 @ =0x02000E70
 	ldr r0, [r0]
 	movs r1, #1
-	bl sub_08022E6C
+	bl FreezeLevelClock
 	b _0803451C
 	.align 2, 0
 _08034498: .4byte 0x02000E70
@@ -88447,7 +88447,7 @@ _0803449C:
 	ldr r0, _080344A8 @ =0x02000E70
 	ldr r0, [r0]
 	movs r1, #2
-	bl sub_08022E6C
+	bl FreezeLevelClock
 	b _0803451C
 	.align 2, 0
 _080344A8: .4byte 0x02000E70
@@ -88455,7 +88455,7 @@ _080344AC:
 	ldr r0, _080344B8 @ =0x02000E70
 	ldr r0, [r0]
 	movs r1, #3
-	bl sub_08022E6C
+	bl FreezeLevelClock
 	b _0803451C
 	.align 2, 0
 _080344B8: .4byte 0x02000E70
@@ -88502,7 +88502,7 @@ _08034508:
 	.align 2, 0
 _08034514: .4byte 0x02000248
 _08034518:
-	bl sub_08032C04
+	bl StopYeti
 _0803451C:
 	ldr r0, _08034530 @ =0x02000E6C
 	ldr r0, [r0]
@@ -88659,7 +88659,7 @@ sub_0803462C: @ 0x0803462C
 	ldr r1, [r6, #0x20]
 	adds r1, r1, r0
 	str r1, [r6, #0x20]
-	bl sub_0802F5D4
+	bl GetActorBgCenterX
 	ldr r1, [r6, #0x1c]
 	adds r3, r1, r0
 	str r3, [r6, #0x1c]
@@ -89525,7 +89525,7 @@ _08034DF4:
 	str r4, [sp]
 	adds r2, r6, #0
 	adds r3, r7, #0
-	bl sub_080339A0
+	bl CreatePolarGoal
 	b _08034F56
 	.align 2, 0
 _08034E10: .4byte 0x02001AEC
@@ -90230,7 +90230,7 @@ _080353B2:
 	cmp r4, #0x1d
 	bne _080353C2
 	ldr r0, [r0]
-	bl sub_08022CE0
+	bl IsCrystalSaved
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _080353D2
@@ -90309,7 +90309,7 @@ _08035442:
 	cmp r4, #0x12
 	bne _08035452
 	ldr r0, [r0]
-	bl sub_08022CE0
+	bl IsCrystalSaved
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _08035470
@@ -90881,7 +90881,7 @@ _08035880:
 	asrs r1, r1, #8
 	adds r5, r1, #0
 	subs r5, #8
-	bl sub_0802F5D4
+	bl GetActorBgCenterX
 	ldr r1, [r7, #0x1c]
 	muls r1, r4, r1
 	asrs r1, r1, #0xc
@@ -90933,7 +90933,7 @@ _08035940:
 	ldr r1, [sp]
 	adds r1, r1, r0
 	asrs r5, r1, #8
-	bl sub_0802F5D4
+	bl GetActorBgCenterX
 	ldr r1, [r7, #0x1c]
 	adds r1, r1, r0
 	asrs r6, r1, #8
@@ -90953,7 +90953,7 @@ _0803596E:
 	asrs r1, r1, #0xc
 	adds r1, r1, r0
 	asrs r5, r1, #8
-	bl sub_0802F5D4
+	bl GetActorBgCenterX
 	ldr r1, [r7, #0x1c]
 	muls r1, r4, r1
 	asrs r1, r1, #0xc
@@ -91019,7 +91019,7 @@ _080359E0:
 	adds r0, r0, r2
 	ldr r4, [r0, #8]
 	ldr r0, [sp, #8]
-	bl sub_0802B2E4
+	bl GetSpriteShapeSizeBits
 	movs r1, #0xff
 	ands r5, r1
 	ldr r1, _08035A94 @ =0x000001FF
@@ -91212,39 +91212,39 @@ _08035B6C: @ jump table
 	.4byte _08035BF2 @ case 21
 	.4byte _08035BFC @ case 22
 _08035BC8:
-	bl sub_08000174
+	bl rand
 	movs r1, #0xf
 	ands r1, r0
 	cmp r1, #0
 	bne _08035C0E
 	adds r0, r4, #0
 	movs r1, #1
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _08035C0E
 _08035BDE:
 	adds r0, r4, #0
 	movs r1, #8
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _08035C0E
 _08035BE8:
 	adds r0, r4, #0
 	movs r1, #0xb
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _08035C0E
 _08035BF2:
 	adds r0, r4, #0
 	movs r1, #0x13
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _08035C0E
 _08035BFC:
 	adds r0, r4, #0
 	movs r1, #0x14
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _08035C0E
 _08035C06:
 	adds r0, r4, #0
 	movs r1, #0
-	bl sub_0802FB18
+	bl SetActorAnim
 _08035C0E:
 	adds r0, r4, #0
 	bl sub_08036B3C
@@ -91293,13 +91293,13 @@ _08035C3C: @ jump table
 	.4byte _08035CB8 @ case 21
 	.4byte _08035CB8 @ case 22
 _08035C98:
-	bl sub_08000174
+	bl rand
 	movs r5, #3
 	adds r1, r5, #0
 	ands r1, r0
 	cmp r1, #0
 	bne _08035CCA
-	bl sub_08000174
+	bl rand
 	adds r1, r5, #0
 	ands r1, r0
 	adds r1, #1
@@ -91405,7 +91405,7 @@ _08035D66:
 	beq _08035D82
 	adds r0, r4, #0
 	movs r1, #0xa
-	bl sub_0802FB18
+	bl SetActorAnim
 	ldr r1, _08035D94 @ =0x02001B20
 	movs r0, #0
 	str r0, [r1]
@@ -91423,7 +91423,7 @@ _08035D98:
 	bne _08035DA6
 	adds r0, r4, #0
 	movs r1, #0xc
-	bl sub_0802FB18
+	bl SetActorAnim
 _08035DA6:
 	movs r2, #0
 	ldr r0, _08035E04 @ =0x02000018
@@ -91467,7 +91467,7 @@ _08035DE2:
 	beq _08035DFE
 	adds r0, r4, #0
 	movs r1, #7
-	bl sub_0802FB18
+	bl SetActorAnim
 	ldr r1, _08035E10 @ =0x02001B20
 	movs r0, #0
 	str r0, [r1]
@@ -91485,7 +91485,7 @@ _08035E14:
 	bne _08035E22
 	adds r0, r4, #0
 	movs r1, #9
-	bl sub_0802FB18
+	bl SetActorAnim
 _08035E22:
 	movs r2, #0
 	ldr r0, _08035E58 @ =0x02000018
@@ -91507,7 +91507,7 @@ _08035E36:
 	beq _08035E52
 	adds r0, r4, #0
 	movs r1, #0x15
-	bl sub_0802FB18
+	bl SetActorAnim
 	ldr r1, _08035E5C @ =0x02001B20
 	movs r0, #0
 	str r0, [r1]
@@ -91523,7 +91523,7 @@ _08035E60:
 	bne _08035E6E
 	adds r0, r4, #0
 	movs r1, #0x11
-	bl sub_0802FB18
+	bl SetActorAnim
 _08035E6E:
 	movs r2, #0
 	ldr r0, _08035EA0 @ =0x02000018
@@ -91545,7 +91545,7 @@ _08035E82:
 	beq _08035EB6
 	adds r0, r4, #0
 	movs r1, #0x16
-	bl sub_0802FB18
+	bl SetActorAnim
 	ldr r1, _08035EA4 @ =0x02001B20
 	movs r0, #0
 	str r0, [r1]
@@ -91559,7 +91559,7 @@ _08035EA8:
 	bne _08035EB6
 	adds r0, r4, #0
 	movs r1, #0x12
-	bl sub_0802FB18
+	bl SetActorAnim
 _08035EB6:
 	add sp, #8
 	pop {r4, r5, r6}
@@ -91580,9 +91580,9 @@ sub_08035EC0: @ 0x08035EC0
 	bne _08035EDA
 	adds r0, r5, #0
 	movs r1, #3
-	bl sub_0802FB18
+	bl SetActorAnim
 _08035EDA:
-	bl sub_08000174
+	bl rand
 	movs r1, #3
 	ands r1, r0
 	adds r1, #3
@@ -91683,7 +91683,7 @@ sub_08035F8C: @ 0x08035F8C
 	bne _08035FBC
 	adds r0, r5, #0
 	movs r1, #6
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _08036050
 	.align 2, 0
 _08035FB0: .4byte 0x02001B48
@@ -91699,7 +91699,7 @@ _08035FBC:
 	ble _08035FFC
 	adds r0, r5, #0
 	movs r1, #0xf
-	bl sub_0802FB18
+	bl SetActorAnim
 	ldr r1, _08035FF0 @ =0x02001B40
 	movs r0, #3
 	str r0, [r1]
@@ -91741,7 +91741,7 @@ _08035FFC:
 	ble _08036050
 	adds r0, r5, #0
 	movs r1, #5
-	bl sub_0802FB18
+	bl SetActorAnim
 	movs r0, #0x80
 	lsls r0, r0, #2
 	str r0, [r5, #8]
@@ -91755,7 +91755,7 @@ _08036044:
 	bne _08036050
 	adds r0, r5, #0
 	movs r1, #0xe
-	bl sub_0802FB18
+	bl SetActorAnim
 _08036050:
 	ldr r0, _080360D8 @ =0x02001B48
 	ldr r1, [r0]
@@ -91774,7 +91774,7 @@ _08036050:
 _0803606C:
 	adds r0, r5, #0
 	movs r1, #5
-	bl sub_0802FB18
+	bl SetActorAnim
 	movs r0, #0xc0
 	lsls r0, r0, #2
 	str r0, [r5, #8]
@@ -92274,7 +92274,7 @@ _08036448:
 	adds r0, r1, #0
 _0803644A:
 	adds r0, r5, r0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r1, _08036478 @ =0x02001B14
 	ldr r0, [r5, #0x28]
 	str r0, [r1]
@@ -92323,7 +92323,7 @@ _08036494:
 	bne _080364AC
 	adds r0, r5, #0
 	movs r1, #0
-	bl sub_0802FB18
+	bl SetActorAnim
 _080364AC:
 	ldr r1, _080364BC @ =0x02001B10
 	ldr r0, [r1]
@@ -92416,7 +92416,7 @@ _0803650C:
 	beq _0803656A
 	ldr r1, _080365A8 @ =0x00002710
 	adds r0, r2, #0
-	bl sub_08022E6C
+	bl FreezeLevelClock
 _0803656A:
 	ldr r0, _080365AC @ =0x020001F4
 	ldr r0, [r0]
@@ -92979,7 +92979,7 @@ sub_08036988: @ 0x08036988
 	adds r2, r2, r0
 	ldr r1, [r2]
 	adds r0, r3, #0
-	bl sub_08000A30
+	bl FixedMul
 	adds r3, r0, #0
 	ldr r0, [r5]
 	adds r0, r0, r3
@@ -93317,7 +93317,7 @@ sub_08036C58: @ 0x08036C58
 	bne _08036C80
 	adds r0, r4, #0
 	movs r1, #0xe
-	bl sub_0802FB18
+	bl SetActorAnim
 _08036C70:
 	ldr r0, [r4, #0x10]
 	cmp r0, #4
@@ -93823,7 +93823,7 @@ _08037124:
 	adds r0, r1, #0
 _08037126:
 	adds r0, r5, r0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r0, [r5, #0x1c]
 	ldr r1, [r5, #0x20]
 	bl sub_0802F388
@@ -93889,7 +93889,7 @@ sub_08037154: @ 0x08037154
 	bl sub_0802F5C0
 	adds r0, r6, r0
 	asrs r7, r0, #8
-	bl sub_0802F5D4
+	bl GetActorBgCenterX
 	ldr r1, [r5, #0x1c]
 	adds r1, r1, r0
 	asrs r6, r1, #8
@@ -93909,7 +93909,7 @@ _080371BC:
 	asrs r1, r1, #0xc
 	adds r1, r1, r0
 	asrs r7, r1, #8
-	bl sub_0802F5D4
+	bl GetActorBgCenterX
 	ldr r1, [r5, #0x1c]
 	muls r1, r4, r1
 	asrs r1, r1, #0xc
@@ -94015,7 +94015,7 @@ _080372AC:
 	adds r0, r0, r2
 	ldr r4, [r0, #8]
 	mov r0, r8
-	bl sub_0802B2E4
+	bl GetSpriteShapeSizeBits
 	movs r2, #0xff
 	ands r2, r7
 	ldr r1, _08037354 @ =0x000001FF
@@ -94284,7 +94284,7 @@ _0803749A:
 	ldr r0, [r6]
 	ldr r4, [r0, #0x60]
 	lsls r4, r4, #8
-	bl sub_0802F5D4
+	bl GetActorBgCenterX
 	subs r4, r4, r0
 	lsls r4, r4, #0xc
 	adds r0, r4, #0
@@ -94600,7 +94600,7 @@ _08037724:
 	beq _08037786
 	ldr r1, _080377C0 @ =0x00002710
 	adds r0, r2, #0
-	bl sub_08022E6C
+	bl FreezeLevelClock
 _08037786:
 	ldr r0, _080377C4 @ =0x020001F4
 	ldr r0, [r0]
@@ -94659,27 +94659,27 @@ _080377E8: @ jump table
 _0803781C:
 	adds r0, r5, #0
 	movs r1, #2
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _0803784C
 _08037826:
 	adds r0, r5, #0
 	movs r1, #5
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _0803784C
 _08037830:
 	adds r0, r5, #0
 	movs r1, #0
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _0803784C
 _0803783A:
 	adds r0, r5, #0
 	movs r1, #0xb
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _0803784C
 _08037844:
 	adds r0, r5, #0
 	movs r1, #0xc
-	bl sub_0802FB18
+	bl SetActorAnim
 _0803784C:
 	ldr r3, _080378B8 @ =0x02001BB0
 	ldr r0, _080378BC @ =0x02001B6C
@@ -94855,7 +94855,7 @@ _0803799C:
 	ble _080379BE
 	adds r0, r4, #0
 	movs r1, #0xd
-	bl sub_0802FB18
+	bl SetActorAnim
 _080379BE:
 	pop {r4, r5, r6}
 	pop {r0}
@@ -94931,17 +94931,17 @@ _08037A44: @ jump table
 _08037A60:
 	adds r0, r5, #0
 	movs r1, #9
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _08037A7C
 _08037A6A:
 	adds r0, r5, #0
 	movs r1, #0xa
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _08037A7C
 _08037A74:
 	adds r0, r5, #0
 	movs r1, #8
-	bl sub_0802FB18
+	bl SetActorAnim
 _08037A7C:
 	pop {r4, r5, r6}
 	pop {r0}
@@ -95074,7 +95074,7 @@ sub_08037B64: @ 0x08037B64
 	ldr r4, [r0, #0x60]
 	bl sub_0802F54C
 	adds r5, r0, #0
-	bl sub_0802F5D4
+	bl GetActorBgCenterX
 	subs r4, r4, r5
 	lsls r4, r4, #8
 	subs r4, r4, r0
@@ -95161,7 +95161,7 @@ _08037C0C:
 	bne _08037C44
 	adds r0, r6, #0
 	movs r1, #6
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _08037C7E
 	.align 2, 0
 _08037C38: .4byte 0x02001BB0
@@ -95175,7 +95175,7 @@ _08037C44:
 	beq _08037C84
 	adds r0, r6, #0
 	movs r1, #1
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _08037C7E
 _08037C58:
 	cmp r1, #0
@@ -95185,7 +95185,7 @@ _08037C58:
 	bne _08037C6C
 	adds r0, r6, #0
 	movs r1, #3
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _08037C7E
 _08037C6C:
 	cmp r0, #0
@@ -95195,7 +95195,7 @@ _08037C6C:
 	beq _08037C84
 	adds r0, r6, #0
 	movs r1, #4
-	bl sub_0802FB18
+	bl SetActorAnim
 _08037C7E:
 	mov r1, r8
 	cmp r1, #0
@@ -95206,14 +95206,14 @@ _08037C84:
 	bne _08037C94
 	adds r0, r6, #0
 	movs r1, #3
-	bl sub_0802FB18
+	bl SetActorAnim
 	b _08037CA0
 _08037C94:
 	cmp r0, #5
 	bne _08037CA0
 	adds r0, r6, #0
 	movs r1, #6
-	bl sub_0802FB18
+	bl SetActorAnim
 _08037CA0:
 	ldr r3, _08037CC4 @ =0x02001BC0
 	ldr r2, [r3]
@@ -95611,7 +95611,7 @@ sub_08037FA4: @ 0x08037FA4
 	str r0, [r1]
 	adds r0, r2, #0
 	movs r1, #0xc
-	bl sub_0802FB18
+	bl SetActorAnim
 	ldr r0, _08037FF8 @ =0x02001B6C
 	ldr r0, [r0]
 	movs r1, #0
@@ -95946,7 +95946,7 @@ _08038260:
 	adds r0, r1, #0
 _08038262:
 	adds r0, r4, r0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	pop {r4, r5, r6, r7}
 	pop {r0}
 	bx r0
@@ -95981,7 +95981,7 @@ sub_080382B0: @ 0x080382B0
 	.align 2, 0
 _080382D8: .4byte 0x02000248
 _080382DC:
-	bl sub_08000174
+	bl rand
 	movs r1, #0x7f
 	ands r1, r0
 	str r1, [r4, #0x58]
@@ -96008,14 +96008,14 @@ _08038308:
 	bl sub_0802F0A4
 	b _08038332
 _0803830E:
-	bl sub_08000174
+	bl rand
 	adds r1, r0, #0
 	movs r0, #1
 	ands r0, r1
 	bl sub_0802F030
 	b _08038332
 _0803831E:
-	bl sub_08000174
+	bl rand
 	adds r1, r0, #0
 	movs r0, #1
 	ands r0, r1
@@ -96137,7 +96137,7 @@ _0803840C:
 	adds r2, #8
 	ldr r3, [r3, #0x14]
 	movs r1, #0x80
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r2, r6, #0
 	adds r2, #0x98
 	ldrh r1, [r6, #0x10]
@@ -96167,7 +96167,7 @@ _0803840C:
 	adds r1, r6, #0
 	adds r1, #0xbc
 	ldr r2, _080384CC @ =0x01000100
-	bl sub_0805AFAC
+	bl CpuSet
 	adds r0, r6, #0
 	bl sub_08038538
 	ldr r0, [r6]
@@ -96275,7 +96275,7 @@ sub_08038538: @ 0x08038538
 	adds r2, #0x88
 	ldr r3, [r3, #0x14]
 	movs r1, #0x10
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	movs r7, #0
 	b _0803860C
 _08038558:
@@ -96288,7 +96288,7 @@ _08038558:
 	ldr r3, [r2, #0x14]
 	movs r1, #6
 	mov r2, sp
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r0, [r6]
 	ldr r3, [r0]
 	movs r2, #0x10
@@ -96300,7 +96300,7 @@ _08038558:
 	adds r4, #0xac
 	ldr r2, [r4]
 	ldr r3, [r3, #0x14]
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldrh r0, [r5, #4]
 	subs r0, #4
 	cmp r0, #0xe
@@ -96776,7 +96776,7 @@ sub_080388E0: @ 0x080388E0
 	cmp r0, #1
 	bne _08038914
 	ldr r0, _08038920 @ =0x08038929
-	bl sub_080007A4
+	bl AddVBlankCallback
 	ldr r1, _08038924 @ =0x02000280
 	str r0, [r1]
 _08038914:
@@ -97090,9 +97090,9 @@ sub_08038B4C: @ 0x08038B4C
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -97117,9 +97117,9 @@ _08038BA4:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -97140,9 +97140,9 @@ _08038BD8:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -97659,11 +97659,11 @@ sub_08038FB4: @ 0x08038FB4
 	ldr r0, _0803901C @ =0x02000E90
 	ldr r0, [r0]
 	movs r1, #0
-	bl sub_08029390
+	bl FontResetPalette
 	ldr r0, _08039020 @ =0x02000E94
 	ldr r0, [r0]
 	movs r1, #0
-	bl sub_08029390
+	bl FontResetPalette
 	ldr r0, _08039024 @ =0x02000E98
 	ldr r0, [r0]
 	movs r1, #0
@@ -97755,9 +97755,9 @@ _0803907E:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -98121,7 +98121,7 @@ _080393C0:
 	ldr r0, _080393E4 @ =0x02000E90
 	ldr r0, [r0]
 	movs r1, #0
-	bl sub_08029390
+	bl FontResetPalette
 	pop {r4, r5, r6}
 	pop {r0}
 	bx r0
@@ -98332,7 +98332,7 @@ _0803954E:
 _0803955E:
 	adds r0, r5, #0
 	movs r1, #0
-	bl sub_08029390
+	bl FontResetPalette
 	b _08039582
 _08039568:
 	mov r2, r8
@@ -98341,12 +98341,12 @@ _08039568:
 	beq _0803957A
 	adds r0, r5, #0
 	movs r1, #1
-	bl sub_08029390
+	bl FontResetPalette
 	b _08039582
 _0803957A:
 	adds r0, r5, #0
 	movs r1, #0
-	bl sub_08029390
+	bl FontResetPalette
 _08039582:
 	mov r3, sl
 	ldr r0, [r3]
@@ -99080,9 +99080,9 @@ _08039B40:
 _08039B5E:
 	strb r0, [r1]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -99103,9 +99103,9 @@ _08039B76:
 	movs r0, #1
 	strb r0, [r1]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -99584,9 +99584,9 @@ _08039EE4:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -100216,7 +100216,7 @@ _0803A476:
 	bl sub_0803A848
 	bl WaitForVBlank
 	bl sub_08001624
-	bl sub_08001668
+	bl CommitBlendRegs
 	bl CommitDispcnt
 	movs r0, #0x80
 	movs r1, #1
@@ -100258,7 +100258,7 @@ _0803A4D4:
 	movs r5, #2
 _0803A4DC:
 	ldr r0, [r4, #0x18]
-	bl sub_08001294
+	bl StepBresenhamLine
 	ldr r2, [r4, #0x18]
 	ldr r0, [r2]
 	lsls r0, r0, #8
@@ -100970,7 +100970,7 @@ _0803AA74:
 	lsls r0, r0, #0x11
 	orrs r2, r0
 	mov r0, sp
-	bl sub_0805AFAC
+	bl CpuSet
 	add sp, #4
 	pop {r4, r5}
 	pop {r0}
@@ -101797,7 +101797,7 @@ sub_0803B0B0: @ 0x0803B0B0
 	cmp r0, #0
 	bne _0803B18C
 	movs r0, #0
-	bl sub_08001568
+	bl SetDispcntMode
 	ldr r4, _0803B1D4 @ =0x00002020
 	adds r0, r4, #0
 	bl sub_080273EC
@@ -104983,7 +104983,7 @@ sub_0803CCEC: @ 0x0803CCEC
 	adds r1, r4, #0
 	adds r1, #0x18
 	ldr r2, _0803CD3C @ =0x01000004
-	bl sub_0805AFAC
+	bl CpuSet
 	ldrb r1, [r4, #0x1d]
 	movs r0, #0xd
 	rsbs r0, r0, #0
@@ -105643,7 +105643,7 @@ _0803D1AE:
 	adds r1, r1, r0
 	adds r0, r5, #0
 	adds r2, r4, #0
-	bl sub_08007678
+	bl UploadObjVram
 	add sp, #4
 	pop {r3, r4}
 	mov r8, r3
@@ -106084,12 +106084,12 @@ sub_0803D3F4: @ 0x0803D3F4
 	str r1, [r6, #0x54]
 	ldr r0, _0803D628 @ =0x02000E70
 	ldr r0, [r0]
-	bl sub_0802312C
+	bl PackSaveData
 	str r0, [r6, #0x60]
 	ldr r0, _0803D62C @ =0x02000E94
 	ldr r0, [r0]
 	movs r1, #0
-	bl sub_08029390
+	bl FontResetPalette
 	adds r0, r6, #0
 	pop {r3, r4, r5}
 	mov r8, r3
@@ -106632,7 +106632,7 @@ _0803DA18:
 	ldr r5, _0803DAA4 @ =0x02000E94
 	ldr r0, [r5]
 	movs r1, #0
-	bl sub_08029390
+	bl FontResetPalette
 	ldr r6, _0803DAA8 @ =0x081E3B2C
 	ldr r0, [r5]
 	ldr r2, [r7, #0x50]
@@ -106661,7 +106661,7 @@ _0803DA18:
 	bl sub_08047970
 	ldr r0, [r5]
 	movs r1, #0
-	bl sub_08029390
+	bl FontResetPalette
 	ldr r0, [r5]
 	ldr r2, [r7, #0x50]
 	ldr r1, [r6]
@@ -107155,9 +107155,9 @@ _0803DE36:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -107186,9 +107186,9 @@ _0803DE8A:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -107203,7 +107203,7 @@ _0803DEA8:
 	ldr r1, [r5, #0x10]
 	subs r1, #1
 	adds r0, r5, #0
-	bl sub_0801B478
+	bl SetScaledSpritePos
 	ldr r0, [r5, #0x10]
 	cmp r0, #0
 	bgt _0803DECC
@@ -107252,9 +107252,9 @@ _0803DF06:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -107286,7 +107286,7 @@ _0803DF4E:
 	ldr r1, [r5, #0x10]
 	subs r1, #1
 	adds r0, r5, #0
-	bl sub_0801B478
+	bl SetScaledSpritePos
 	ldr r0, [r5, #0x10]
 	cmp r0, #0
 	bgt _0803DF7C
@@ -107457,9 +107457,9 @@ _0803E0B0:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -107473,9 +107473,9 @@ _0803E0DC:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -107503,9 +107503,9 @@ _0803E118:
 	movs r5, #0
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -107535,9 +107535,9 @@ _0803E15C:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -107561,9 +107561,9 @@ _0803E190:
 _0803E194:
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -107584,9 +107584,9 @@ _0803E1AC:
 	subs r0, #0x44
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -107814,7 +107814,7 @@ sub_0803E344: @ 0x0803E344
 	strb r2, [r1]
 	movs r1, #0x2a
 	movs r2, #9
-	bl sub_08025850
+	bl SpawnEffectPart
 	adds r2, r0, #0
 	rsbs r4, r4, #0
 	adds r0, #0x80
@@ -107904,7 +107904,7 @@ _0803E418:
 	movs r1, #1
 	movs r2, #2
 	mov r3, r8
-	bl sub_08025850
+	bl SpawnEffectPart
 	adds r3, r0, #0
 	movs r1, #0x40
 	adds r0, #0x80
@@ -108041,7 +108041,7 @@ sub_0803E560: @ 0x0803E560
 	movs r1, #3
 	subs r1, r1, r0
 	adds r0, r4, #0
-	bl sub_0801B478
+	bl SetScaledSpritePos
 	adds r0, r4, #0
 	pop {r4}
 	pop {r1}
@@ -108148,9 +108148,9 @@ sub_0803E5CC: @ 0x0803E5CC
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -108172,9 +108172,9 @@ sub_0803E5CC: @ 0x0803E5CC
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -108197,9 +108197,9 @@ sub_0803E5CC: @ 0x0803E5CC
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -108222,9 +108222,9 @@ sub_0803E5CC: @ 0x0803E5CC
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -108246,9 +108246,9 @@ sub_0803E5CC: @ 0x0803E5CC
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -108280,9 +108280,9 @@ sub_0803E5CC: @ 0x0803E5CC
 	movs r1, #1
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -108493,9 +108493,9 @@ sub_0803E9DC: @ 0x0803E9DC
 	movs r4, #0
 	strb r6, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -108528,9 +108528,9 @@ _0803EA20:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -108542,9 +108542,9 @@ _0803EA20:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -108562,9 +108562,9 @@ _0803EA6E:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -108576,9 +108576,9 @@ _0803EA6E:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -108591,9 +108591,9 @@ _0803EABA:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -108605,9 +108605,9 @@ _0803EABA:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -108621,9 +108621,9 @@ _0803EAF8:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -108635,9 +108635,9 @@ _0803EAF8:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -109024,7 +109024,7 @@ sub_0803EDCC: @ 0x0803EDCC
 	str r0, [r5, #0x38]
 	adds r0, r5, #0
 	movs r1, #3
-	bl sub_0801B478
+	bl SetScaledSpritePos
 	ldr r0, _0803F06C @ =0x02000EA4
 	ldr r0, [r0]
 	ldr r0, [r0, #0x10]
@@ -109065,9 +109065,9 @@ _0803EE58:
 	movs r2, #0xc
 	strb r2, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -109127,9 +109127,9 @@ _0803EEE6:
 	movs r2, #0xc
 	strb r2, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -109185,9 +109185,9 @@ _0803EF6C:
 	movs r2, #0xc
 	strb r2, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -109243,9 +109243,9 @@ _0803EFF2:
 	movs r2, #0xc
 	strb r2, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -109663,9 +109663,9 @@ _0803F328:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -109855,9 +109855,9 @@ sub_0803F4AC: @ 0x0803F4AC
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -109989,9 +109989,9 @@ _0803F5DA:
 _0803F5DC:
 	strb r0, [r2]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -110191,7 +110191,7 @@ sub_0803F758: @ 0x0803F758
 	ldr r1, [r4, #0x10]
 	subs r1, #1
 	adds r0, r4, #0
-	bl sub_0801B478
+	bl SetScaledSpritePos
 	ldr r0, [r4, #0x60]
 	cmp r0, #3
 	bne _0803F7AC
@@ -110707,9 +110707,9 @@ sub_0803FD6C: @ 0x0803FD6C
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -110736,7 +110736,7 @@ sub_0803FD6C: @ 0x0803FD6C
 	bl sub_08009D00
 	adds r0, r5, #0
 	movs r1, #4
-	bl sub_0801B478
+	bl SetScaledSpritePos
 	adds r0, r5, #0
 	pop {r4, r5}
 	pop {r1}
@@ -110776,16 +110776,16 @@ _0803FE14:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
 	ldr r1, [r5, #0x10]
 	subs r1, #1
 	adds r0, r5, #0
-	bl sub_0801B478
+	bl SetScaledSpritePos
 	b _0803FE96
 _0803FE58:
 	ldr r0, [r5, #0x30]
@@ -110804,16 +110804,16 @@ _0803FE58:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
 	ldr r1, [r5, #0x10]
 	subs r1, #1
 	adds r0, r5, #0
-	bl sub_0801B478
+	bl SetScaledSpritePos
 _0803FE96:
 	ldr r0, [r5, #0x10]
 	cmp r0, #0
@@ -110837,9 +110837,9 @@ _0803FE96:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -110973,9 +110973,9 @@ sub_0803FFB0: @ 0x0803FFB0
 	movs r0, #0xc
 	strb r0, [r1]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -110997,9 +110997,9 @@ _0803FFE2:
 	movs r5, #0
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -111086,9 +111086,9 @@ _08040072:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -111252,9 +111252,9 @@ _080401DC:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -111294,9 +111294,9 @@ sub_0804021C: @ 0x0804021C
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -111315,9 +111315,9 @@ _08040266:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -111535,9 +111535,9 @@ _080403FA:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -111648,9 +111648,9 @@ _08040510:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -111686,9 +111686,9 @@ _08040532:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -111904,9 +111904,9 @@ _0804070A:
 	mov r8, r2
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -111934,9 +111934,9 @@ _0804070A:
 	mov r1, r8
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -112165,9 +112165,9 @@ _08040932:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -112398,7 +112398,7 @@ _08040B02:
 	lsls r0, r0, #1
 	adds r4, r6, r0
 	adds r0, r4, #0
-	bl sub_08001294
+	bl StepBresenhamLine
 	lsls r1, r7, #2
 	adds r0, r6, #0
 	adds r0, #0xa0
@@ -112795,7 +112795,7 @@ sub_08040E08: @ 0x08040E08
 	str r5, [r6, #0x4c]
 	adds r0, r6, #0
 	movs r1, #5
-	bl sub_0801B478
+	bl SetScaledSpritePos
 	ldr r0, _08040F30 @ =0x0000FFFF
 	movs r1, #0
 	movs r2, #0
@@ -112812,9 +112812,9 @@ sub_08040E08: @ 0x08040E08
 	adds r0, #0x40
 	strb r5, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -113217,9 +113217,9 @@ _08041154:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -113417,7 +113417,7 @@ _08041330:
 	ldr r1, [r6, #0x10]
 	subs r1, #1
 	adds r0, r6, #0
-	bl sub_0801B478
+	bl SetScaledSpritePos
 	ldr r0, [r6, #0x10]
 	cmp r0, #0
 	bgt _08041394
@@ -113434,9 +113434,9 @@ _08041330:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -113473,9 +113473,9 @@ _08041394:
 	movs r4, #0
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -113858,9 +113858,9 @@ sub_08041684: @ 0x08041684
 	movs r0, #5
 	strb r0, [r1]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -114205,9 +114205,9 @@ _0804191A:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -114231,9 +114231,9 @@ _08041964:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -114263,9 +114263,9 @@ _080419AA:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -114500,9 +114500,9 @@ sub_08041B70: @ 0x08041B70
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -114725,9 +114725,9 @@ _08041D50:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -114787,7 +114787,7 @@ sub_08041DCC: @ 0x08041DCC
 	strb r5, [r1]
 	movs r1, #0x2c
 	adds r2, r6, #0
-	bl sub_08025850
+	bl SpawnEffectPart
 	adds r7, r0, #0
 	ldrb r0, [r7, #0x18]
 	movs r1, #0x80
@@ -114842,9 +114842,9 @@ sub_08041E58: @ 0x08041E58
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -114872,9 +114872,9 @@ sub_08041E88: @ 0x08041E88
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -115107,7 +115107,7 @@ _0804208C:
 	movs r1, #2
 	movs r2, #0
 	adds r3, r6, #0
-	bl sub_08025850
+	bl SpawnEffectPart
 	adds r7, r0, #0
 	ldrb r1, [r7, #0x18]
 	movs r0, #0x7f
@@ -115251,14 +115251,14 @@ sub_080421E4: @ 0x080421E4
 _080421F2:
 	ldr r4, _080422A0 @ =0x02000E70
 	ldr r0, [r4]
-	bl sub_08022BE0
+	bl GetBonusPlatform
 	ldr r0, [r0]
 	adds r0, #0x80
 	ldr r0, [r0]
 	cmp r0, #0
 	ble _080422A4
 	ldr r0, [r4]
-	bl sub_08022BE0
+	bl GetBonusPlatform
 	ldr r1, [r0]
 	add r0, sp, #4
 	bl sub_08008958
@@ -115282,13 +115282,13 @@ _08042230:
 	beq _080422A4
 	ldr r5, _080422A0 @ =0x02000E70
 	ldr r0, [r5]
-	bl sub_08022BE0
+	bl GetBonusPlatform
 	ldr r6, [r0]
 	ldr r0, [r7]
 	ldr r4, [r0]
 	asrs r4, r4, #8
 	ldr r0, [r5]
-	bl sub_08022BE0
+	bl GetBonusPlatform
 	ldr r0, [r0]
 	ldr r0, [r0, #4]
 	asrs r0, r0, #8
@@ -115297,7 +115297,7 @@ _08042230:
 	lsls r0, r0, #8
 	str r0, [r6, #4]
 	ldr r0, [r5]
-	bl sub_08022BE0
+	bl GetBonusPlatform
 	ldr r0, [r0]
 	ldr r2, [r0, #0x24]
 	adds r2, #0x88
@@ -115317,9 +115317,9 @@ _08042230:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -115358,9 +115358,9 @@ _080422CC:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -115600,9 +115600,9 @@ _080424EC:
 	movs r4, #0
 	strb r0, [r1]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -115725,7 +115725,7 @@ _080425BE:
 	ldr r1, [sp, #0xc]
 	ldr r2, [sp, #0x10]
 	ldr r3, [sp, #0x14]
-	bl sub_08009B38
+	bl CollidePartList
 	ldr r0, [r6]
 	ldrb r0, [r0, #0x18]
 	lsrs r0, r0, #3
@@ -115738,7 +115738,7 @@ _080425FC:
 	ldr r1, [r6, #0x10]
 	subs r1, #1
 	adds r0, r6, #0
-	bl sub_0801B478
+	bl SetScaledSpritePos
 	ldr r4, _08042668 @ =0x02000E6C
 	ldr r0, [r4]
 	movs r5, #0x80
@@ -115779,7 +115779,7 @@ _080425FC:
 	strb r7, [r1]
 	movs r1, #0x1a
 	movs r2, #5
-	bl sub_08025850
+	bl SpawnEffectPart
 	b _08042696
 	.align 2, 0
 _08042660: .4byte 0x020001CC
@@ -115804,7 +115804,7 @@ _08042670:
 	strb r7, [r1]
 	movs r1, #0x1a
 	movs r2, #5
-	bl sub_08025850
+	bl SpawnEffectPart
 _08042696:
 	ldr r0, [r6, #0x10]
 	cmp r0, #0
@@ -115828,9 +115828,9 @@ _08042696:
 	movs r4, #0
 	strb r1, [r0]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -115909,9 +115909,9 @@ _0804273C:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -115979,7 +115979,7 @@ sub_080427D4: @ 0x080427D4
 	str r5, [r4, #0x28]
 	adds r0, r4, #0
 	movs r1, #4
-	bl sub_0801B478
+	bl SetScaledSpritePos
 	str r5, [r4, #0x34]
 	movs r0, #1
 	str r0, [r4, #0x38]
@@ -116039,7 +116039,7 @@ sub_08042800: @ 0x08042800
 	str r0, [r4, #0x40]
 	adds r0, r4, #0
 	movs r1, #3
-	bl sub_0801B478
+	bl SetScaledSpritePos
 	adds r0, r4, #0
 	pop {r4}
 	pop {r1}
@@ -116090,9 +116090,9 @@ _080428C4:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -116129,9 +116129,9 @@ _0804291C:
 	movs r5, #0
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -116201,9 +116201,9 @@ _080429B8:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -116248,9 +116248,9 @@ _080429E8:
 	mov r8, r2
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -116263,7 +116263,7 @@ _080429E8:
 	strb r0, [r1, #0x19]
 	ldr r4, _08042AC8 @ =0x02000E40
 	str r5, [r4]
-	bl sub_08001668
+	bl CommitBlendRegs
 	str r5, [r4]
 	ldrb r0, [r4]
 	movs r2, #0x3f
@@ -116296,7 +116296,7 @@ _080429E8:
 	rsbs r0, r0, #0
 	ands r0, r1
 	strb r0, [r4, #3]
-	bl sub_08001668
+	bl CommitBlendRegs
 	adds r0, r7, #0
 	adds r0, #0x8c
 	str r5, [r0]
@@ -116416,13 +116416,13 @@ _08042B68:
 	ands r2, r1
 	orrs r2, r0
 	strb r2, [r3, #3]
-	bl sub_08001668
+	bl CommitBlendRegs
 	ldr r0, [r6]
 	cmp r0, #4
 	bne _08042BB0
 	adds r0, r7, #0
 	movs r1, #1
-	bl sub_0801B478
+	bl SetScaledSpritePos
 	b _08042BCA
 	.align 2, 0
 _08042BAC: .4byte 0x02000E40
@@ -116431,14 +116431,14 @@ _08042BB0:
 	bne _08042BBE
 	adds r0, r7, #0
 	movs r1, #2
-	bl sub_0801B478
+	bl SetScaledSpritePos
 	b _08042BCA
 _08042BBE:
 	cmp r0, #0xd
 	bne _08042BCA
 	adds r0, r7, #0
 	movs r1, #3
-	bl sub_0801B478
+	bl SetScaledSpritePos
 _08042BCA:
 	ldr r0, _08042C40 @ =0x02000010
 	ldr r0, [r0]
@@ -116483,7 +116483,7 @@ _08042BCA:
 	movs r1, #0x26
 	movs r2, #3
 	adds r3, r5, #0
-	bl sub_08025850
+	bl SpawnEffectPart
 _08042C32:
 	add sp, #0x2c
 	pop {r3}
@@ -116685,9 +116685,9 @@ _08042DB6:
 _08042DB8:
 	strb r0, [r1]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -116696,9 +116696,9 @@ _08042DD0:
 	movs r0, #7
 	strb r0, [r1]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -116734,9 +116734,9 @@ _08042E14:
 	movs r0, #0xc
 	strb r0, [r1]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -116747,9 +116747,9 @@ _08042E36:
 	movs r0, #2
 	strb r0, [r1]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -116772,9 +116772,9 @@ _08042E6C:
 	movs r0, #7
 	strb r0, [r1]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -116823,9 +116823,9 @@ _08042EC8:
 _08042ECE:
 	strb r0, [r1]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -116834,9 +116834,9 @@ _08042EE6:
 	movs r5, #8
 	strb r5, [r1]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -116849,9 +116849,9 @@ _08042EE6:
 	adds r0, #0x40
 	strb r5, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -116998,9 +116998,9 @@ _0804304C:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -117045,9 +117045,9 @@ _080430B2:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -117064,9 +117064,9 @@ _080430CE:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -117102,9 +117102,9 @@ _08043124:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -117191,9 +117191,9 @@ _080431EA:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -117281,9 +117281,9 @@ _08043298:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -117317,9 +117317,9 @@ _08043300:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -117345,9 +117345,9 @@ _0804333C:
 _0804334E:
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -117366,9 +117366,9 @@ _0804336C:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -117410,9 +117410,9 @@ sub_080433C4: @ 0x080433C4
 	movs r0, #3
 	strb r0, [r1]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -117502,9 +117502,9 @@ _0804348E:
 	movs r0, #3
 	strb r0, [r1]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -117697,7 +117697,7 @@ _080435F2:
 	strb r1, [r2]
 	movs r1, #0x2d
 	mov r2, ip
-	bl sub_08025850
+	bl SpawnEffectPart
 	mov ip, r0
 	cmp r6, #0
 	bne _0804363C
@@ -117882,9 +117882,9 @@ sub_08043758: @ 0x08043758
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -117896,9 +117896,9 @@ _0804378E:
 	adds r0, #0x40
 	strb r1, [r0]
 	adds r0, r4, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r4, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r4, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -117912,7 +117912,7 @@ _080437AC:
 	ldr r1, [r5, #0x10]
 	subs r1, #1
 	adds r0, r5, #0
-	bl sub_0801B478
+	bl SetScaledSpritePos
 	adds r0, r5, #0
 	movs r1, #7
 	bl sub_0804287C
@@ -117950,9 +117950,9 @@ sub_080437E0: @ 0x080437E0
 	movs r4, #0
 	strb r0, [r1]
 	adds r0, r5, #0
-	bl sub_0800962C
+	bl ResetSpriteFrameTimer
 	adds r0, r5, #0
-	bl sub_08009620
+	bl ResetSpriteFrameIndex
 	adds r0, r5, #0
 	movs r1, #0
 	bl sub_0800956C
@@ -118114,7 +118114,7 @@ _08043922:
 	adds r0, r4, #0
 	movs r1, #2
 	bl sub_0804287C
-	bl sub_08001668
+	bl CommitBlendRegs
 _08043938:
 	pop {r4}
 	pop {r0}
@@ -118348,7 +118348,7 @@ sub_08043B08: @ 0x08043B08
 	ldr r4, _08043B84 @ =0x02000E90
 	ldr r0, [r4]
 	movs r1, #0
-	bl sub_08029390
+	bl FontResetPalette
 	movs r0, #0xa0
 	lsls r0, r0, #0x13
 	strh r5, [r0]
@@ -118611,7 +118611,7 @@ _08043D78:
 	str r0, [r5, #0x10]
 	ldr r0, [r5, #0x2c]
 	movs r1, #0
-	bl sub_08029390
+	bl FontResetPalette
 	pop {r4, r5, r6}
 	pop {r0}
 	bx r0
@@ -120094,7 +120094,7 @@ _080448E0:
 	mov pc, lr
 _080448E6:
 	push {lr}
-	bl sub_08047A38
+	bl __div0
 	movs r0, #0
 	pop {pc}
 
@@ -120222,7 +120222,7 @@ _080449CA:
 	orrs r2, r0
 	adds r0, r7, #0
 	adds r1, r4, #0
-	bl sub_0805AFAC
+	bl CpuSet
 	adds r0, r4, #0
 	pop {r4, r5, r6, r7}
 	pop {r1}
@@ -122245,8 +122245,8 @@ _08045C58: .4byte 0x040000D2
 _08045C5C: .4byte 0x040000BC
 _08045C60: .4byte 0x0000B660
 
-	thumb_func_start sub_08045C64
-sub_08045C64: @ 0x08045C64
+	thumb_func_start GAX_play
+GAX_play: @ 0x08045C64
 	push {r4, r5, r6, lr}
 	sub sp, #4
 	ldr r0, _08045D88 @ =0x0200266C
@@ -122488,8 +122488,8 @@ _08045E18:
 	.byte 0x04, 0x49, 0x00, 0xF0, 0xA5, 0xF9, 0x28, 0x1C, 0xF0, 0xBC, 0x02, 0xBC, 0x08, 0x47, 0x00, 0x00
 	.byte 0x3C, 0xD0, 0x52, 0x08, 0x44, 0xD0, 0x52, 0x08
 
-	thumb_func_start sub_08045EF8
-sub_08045EF8: @ 0x08045EF8
+	thumb_func_start GAX_fx_ex
+GAX_fx_ex: @ 0x08045EF8
 	push {r4, r5, r6, r7, lr}
 	mov r7, r8
 	push {r7}
@@ -122648,8 +122648,8 @@ _08045FFC:
 	.byte 0x81, 0x42, 0x04, 0xD1, 0x18, 0x1C, 0x88, 0x30, 0x80, 0x18, 0x00, 0x21, 0x01, 0x70, 0x20, 0x68
 	.byte 0x88, 0x30, 0x80, 0x18, 0x00, 0x78, 0x10, 0xBC, 0x02, 0xBC, 0x08, 0x47
 
-	thumb_func_start sub_080460EC
-sub_080460EC: @ 0x080460EC
+	thumb_func_start GAX_set_music_volume
+GAX_set_music_volume: @ 0x080460EC
 	push {r4, r5, lr}
 	adds r2, r0, #0
 	adds r5, r1, #0
@@ -123185,8 +123185,8 @@ _08046528:
 	.byte 0x07, 0xD0, 0x10, 0x1C, 0x44, 0x30, 0x04, 0x80, 0xD8, 0x68, 0x08, 0x18, 0x4A, 0x30, 0x01, 0x21
 	.byte 0x01, 0x70, 0x10, 0xBC, 0x01, 0xBC, 0x00, 0x47, 0xEC, 0x0E, 0x00, 0x00, 0x6C, 0x26, 0x00, 0x02
 
-	thumb_func_start sub_08046590
-sub_08046590: @ 0x08046590
+	thumb_func_start GAX_stop_fx
+GAX_stop_fx: @ 0x08046590
 	push {r4, lr}
 	adds r2, r0, #0
 	movs r0, #1
@@ -123240,8 +123240,8 @@ _080465EA:
 	.align 2, 0
 _080465F0: .4byte 0x0200266C
 
-	thumb_func_start sub_080465F4
-sub_080465F4: @ 0x080465F4
+	thumb_func_start GAX_set_fx_volume
+GAX_set_fx_volume: @ 0x080465F4
 	push {r4, lr}
 	adds r2, r0, #0
 	adds r4, r1, #0
@@ -123298,8 +123298,8 @@ _08046652:
 	.align 2, 0
 _08046658: .4byte 0x0200266C
 
-	thumb_func_start sub_0804665C
-sub_0804665C: @ 0x0804665C
+	thumb_func_start GAX_stop
+GAX_stop: @ 0x0804665C
 	push {r4, r5, r6, lr}
 	ldr r5, _080466BC @ =0x0200266C
 	ldr r0, [r5]
@@ -124883,7 +124883,7 @@ _080471EE:
 	ldr r1, [r0]
 	adds r0, r6, #0
 	ldr r3, _08047328 @ =0x08047828
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	str r0, [sp]
 	movs r0, #0
 	mov r8, r0
@@ -125370,8 +125370,8 @@ _0804753C:
 	.byte 0x5B, 0xA0, 0xA0, 0x53, 0x91, 0xA0, 0x4F, 0xE5, 0x89, 0xA0, 0x4F, 0xE5, 0x75, 0xA0, 0x4F, 0xE5
 	.byte 0x6D, 0xA0, 0x4F, 0xE5, 0x1E, 0xFF, 0x2F, 0xE1
 
-	thumb_func_start sub_08047968
-sub_08047968: @ 0x08047968
+	thumb_func_start _call_via_r0
+_call_via_r0: @ 0x08047968
 	bx r0
 	nop
 
@@ -125385,8 +125385,8 @@ sub_08047970: @ 0x08047970
 	bx r2
 	nop
 
-	thumb_func_start sub_08047974
-sub_08047974: @ 0x08047974
+	thumb_func_start StartCtrlTargetMotionY
+StartCtrlTargetMotionY: @ 0x08047974
 	bx r3
 	nop
 
@@ -125502,13 +125502,13 @@ _08047A28:
 	mov pc, lr
 _08047A2C:
 	push {lr}
-	bl sub_08047A38
+	bl __div0
 	movs r0, #0
 	pop {pc}
 	.align 2, 0
 
-	thumb_func_start sub_08047A38
-sub_08047A38: @ 0x08047A38
+	thumb_func_start __div0
+__div0: @ 0x08047A38
 	mov pc, lr
 	.align 2, 0
 
@@ -125629,7 +125629,7 @@ _08047AFC:
 	mov pc, lr
 _08047B00:
 	push {lr}
-	bl sub_08047A38
+	bl __div0
 	movs r0, #0
 	pop {pc}
 	.align 2, 0
@@ -125743,7 +125743,7 @@ _08047BBE:
 	mov pc, lr
 _08047BC2:
 	push {lr}
-	bl sub_08047A38
+	bl __div0
 	movs r0, #0
 	pop {pc}
 
@@ -127402,7 +127402,7 @@ _080488BA:
 	ldr r4, _08048ACC @ =0x020021E4
 	ldr r2, _08048AD0 @ =0x01000190
 	adds r1, r4, #0
-	bl sub_0805AFAC
+	bl CpuSet
 	adds r5, r4, #0
 	movs r4, #0xbf
 	movs r0, #0xbe
@@ -128770,12 +128770,12 @@ sub_0804939C: @ 0x0804939C
 	strh r2, [r4]
 	movs r0, #7
 	movs r1, #0
-	bl sub_08000694
+	bl IrqSetHandler
 	mov r2, r8
 	ldr r0, [r2]
 	adds r0, #3
 	movs r1, #0
-	bl sub_08000694
+	bl IrqSetHandler
 	strh r5, [r4]
 	ldr r0, _08049440 @ =0x04000134
 	strh r6, [r0]
@@ -128943,10 +128943,10 @@ sub_08049508: @ 0x08049508
 	strh r1, [r6]
 	strh r3, [r7]
 	movs r1, #0
-	bl sub_08000694
+	bl IrqSetHandler
 	ldr r1, _080495B8 @ =0x0804BC7F
 	movs r0, #7
-	bl sub_08000694
+	bl IrqSetHandler
 	ldrh r0, [r6]
 	movs r1, #0x80
 	orrs r0, r1
@@ -128957,7 +128957,7 @@ sub_08049508: @ 0x08049508
 	ldr r0, [r1]
 	adds r0, #3
 	ldr r1, _080495BC @ =sub_0804A328
-	bl sub_08000694
+	bl IrqSetHandler
 	mov r0, r8
 	ldr r4, [r0]
 	adds r1, r4, #3
@@ -130082,7 +130082,7 @@ _08049DCC:
 	add r0, sp, #0x20
 	ldr r2, _08049FC8 @ =0x05000008
 	mov r1, sp
-	bl sub_0805AFAC
+	bl CpuSet
 	movs r1, #0
 	mov r8, r1
 	cmp r5, #3
@@ -130531,7 +130531,7 @@ sub_0804A0A0: @ 0x0804A0A0
 	ldr r2, _0804A148 @ =0x05000020
 	mov r0, sp
 	adds r1, r4, #0
-	bl sub_0805AFAC
+	bl CpuSet
 	add sp, #4
 	pop {r4, r5}
 	pop {r0}
@@ -130937,7 +130937,7 @@ _0804A42C:
 	cmp r6, #0
 	beq _0804A474
 	ldr r0, _0804A45C @ =sub_0804A5CC
-	bl sub_080007A4
+	bl AddVBlankCallback
 	str r0, [r4]
 	b _0804A488
 	.align 2, 0
@@ -132765,7 +132765,7 @@ sub_0804B328: @ 0x0804B328
 	ldr r3, [r7]
 	movs r2, #0xe0
 	lsls r2, r2, #1
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 _0804B35A:
 	ldrb r0, [r5, #1]
 	cmp r0, #0
@@ -132785,7 +132785,7 @@ _0804B35A:
 	ldr r3, [r7]
 	movs r2, #0xe0
 	lsls r2, r2, #1
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 _0804B384:
 	pop {r4, r5, r6, r7}
 	pop {r0}
@@ -132987,7 +132987,7 @@ _0804B63A:
 	adds r0, r0, r1
 	ldr r3, [r3, #0x14]
 	adds r1, r4, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r6, [r5, #0x20]
 	b _0804B676
 _0804B658:
@@ -133286,7 +133286,7 @@ _0804B836:
 	ldr r3, [r2, #0x14]
 	mov r1, r8
 	adds r2, r4, #0
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r0, r7, #0
 	mov r1, sl
 	mov r2, sb
@@ -133443,7 +133443,7 @@ _0804B95E:
 	strh r0, [r2]
 	ldr r2, _0804B980 @ =0x01000400
 	add r0, sp, #0xc
-	bl sub_0805AFAC
+	bl CpuSet
 	adds r0, r6, #0
 	add sp, #0x10
 	pop {r4, r5, r6, r7}
@@ -133482,7 +133482,7 @@ sub_0804B9EC: @ 0x0804B9EC
 	lsls r0, r0, #0x11
 	orrs r2, r0
 	mov r0, sp
-	bl sub_0805AFAC
+	bl CpuSet
 	movs r5, #0
 	ldr r0, [r4, #0x18]
 	cmp r5, r0
@@ -136123,7 +136123,7 @@ _0804DD38:
 	ldr r1, [sp, #4]
 	ldr r3, [r2]
 _0804DD4C:
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r1, r0, #0
 	ldr r0, [r4]
 	adds r0, r0, r1
@@ -136674,7 +136674,7 @@ sub_0804EBB4: @ 0x0804EBB4
 	ldr r0, [sp]
 	ldr r1, [sp, #4]
 	ldr r3, [r2]
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r1, r0, #0
 	ldr r0, [r4]
 	adds r0, r0, r1
@@ -138327,7 +138327,7 @@ _0804F9B8:
 _0804F9D0:
 	ldr r0, _0804F9F0 @ =0x02000E70
 	ldr r0, [r0]
-	bl sub_0805B538
+	bl GetLives
 	cmp r0, #0
 	blt _0804F9E2
 	ldr r0, [r5]
@@ -139472,7 +139472,7 @@ _0805031C:
 	cmp r1, r0
 	bne _08050372
 	ldr r4, [r4]
-	bl sub_08000174
+	bl rand
 	movs r3, #0x8a
 	lsls r3, r3, #2
 	adds r1, r5, r3
@@ -139541,7 +139541,7 @@ _080503C8:
 	cmp r0, #0
 	beq _080503FA
 	ldr r4, [r7]
-	bl sub_08000174
+	bl rand
 	lsls r0, r0, #0x10
 	lsrs r0, r0, #0x10
 	ldr r3, [r6]
@@ -139682,7 +139682,7 @@ _080504E0:
 	movs r2, #0xa
 	bl sub_080487A4
 	ldr r4, [r4]
-	bl sub_08000174
+	bl rand
 	movs r3, #0x8a
 	lsls r3, r3, #2
 	adds r1, r5, r3
@@ -141521,7 +141521,7 @@ _08051330:
 	ldr r1, [r5, #4]
 	ldr r3, [r2, #0x2c]
 	movs r2, #1
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r5, #0x10
 	movs r6, #1
 _08051366:
@@ -141537,7 +141537,7 @@ _08051366:
 	ldr r1, [r1]
 	ldr r3, [r2, #0x2c]
 	movs r2, #1
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r5, #0x10
 	adds r6, #1
 _08051386:
@@ -141553,7 +141553,7 @@ _08051386:
 	ldr r1, [r1]
 	ldr r3, [r2, #0x2c]
 	movs r2, #1
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r5, #0x10
 	adds r6, #1
 	ldr r0, [r7, #0x24]
@@ -141572,7 +141572,7 @@ _080513AC:
 	ldr r1, [r2]
 	ldr r3, [r3, #0x2c]
 	movs r2, #1
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r2, r6, #1
 	lsls r2, r2, #4
 	mov r8, r2
@@ -141586,7 +141586,7 @@ _080513AC:
 	ldr r1, [r2]
 	ldr r3, [r3, #0x2c]
 	movs r2, #1
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r2, r6, #2
 	lsls r2, r2, #4
 	mov r8, r2
@@ -141600,7 +141600,7 @@ _080513AC:
 	ldr r1, [r2]
 	ldr r3, [r3, #0x2c]
 	movs r2, #1
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r2, r6, #3
 	lsls r2, r2, #4
 	mov r8, r2
@@ -141613,7 +141613,7 @@ _080513AC:
 	ldr r1, [r4]
 	ldr r3, [r3, #0x2c]
 	movs r2, #1
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	adds r5, #0x40
 	adds r6, #4
 	ldr r3, [r7, #0x24]
@@ -141682,7 +141682,7 @@ _08051470:
 	lsls r0, r0, #0x13
 	orrs r2, r0
 	mov r0, sp
-	bl sub_0805AFAC
+	bl CpuSet
 	adds r5, r6, #0
 	ldr r0, [r5]
 	cmp r0, r4
@@ -145653,7 +145653,7 @@ sub_0805354C: @ 0x0805354C
 	adds r4, r0, #0
 	ldr r0, _080535B0 @ =0x02000E70
 	ldr r0, [r0]
-	bl sub_0805B538
+	bl GetLives
 	adds r1, r0, #0
 	adds r0, r4, #0
 	bl sub_0805281C
@@ -146064,7 +146064,7 @@ _080538FA:
 	lsls r0, r0, #0x13
 	orrs r2, r0
 	adds r0, r6, #0
-	bl sub_0805AFAC
+	bl CpuSet
 	movs r5, #0x40
 	rsbs r5, r5, #0
 	ldr r4, _08053930 @ =0x03002AD0
@@ -147321,7 +147321,7 @@ _080542FE:
 	ldr r3, [r2, #0x34]
 	adds r1, r6, #0
 	mov r2, sl
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	mov r1, sb
 	ldr r0, [r1]
 	ldr r2, [r0, #4]
@@ -147331,7 +147331,7 @@ _080542FE:
 	ldr r3, [r2, #0x34]
 	mov r1, r8
 	ldr r2, [sp, #0xe4]
-	bl sub_08047974
+	bl StartCtrlTargetMotionY
 	ldr r0, _08054444 @ =0x02000524
 	ldr r0, [r0]
 	ldr r1, [sp, #0xc8]
@@ -150724,7 +150724,7 @@ sub_08055EAC: @ 0x08055EAC
 	str r0, [r4, #0x1c]
 	cmp r0, #0
 	bne _08055EF6
-	bl sub_08000174
+	bl rand
 	lsls r0, r0, #0x10
 	movs r1, #0xf0
 	lsls r1, r1, #0xc
@@ -150793,7 +150793,7 @@ sub_08055F28: @ 0x08055F28
 	str r0, [r4, #0xc]
 	strb r5, [r4, #0x14]
 	str r7, [r4, #0x18]
-	bl sub_08000174
+	bl rand
 	lsls r0, r0, #0x10
 	movs r1, #0xf0
 	lsls r1, r1, #0xc
@@ -159542,7 +159542,7 @@ _0805ACA0:
 	adds r1, #8
 	ldr r2, [r4, #0x40]
 	bl sub_0805011C
-	bl sub_08000174
+	bl rand
 	lsls r0, r0, #0x10
 	lsrs r0, r0, #0x10
 	movs r1, #0x3c
@@ -159609,7 +159609,7 @@ _0805AD28:
 	ldr r1, [r1]
 	movs r2, #1
 	bl sub_0804FE1C
-	bl sub_08000174
+	bl rand
 	lsls r0, r0, #0x10
 	lsrs r0, r0, #0x10
 	movs r1, #0x3c
@@ -159645,7 +159645,7 @@ sub_0805AD74: @ 0x0805AD74
 	orrs r4, r0
 	ldr r0, _0805ADCC @ =0xFFFFFEFF
 	ands r4, r0
-	bl sub_08000174
+	bl rand
 	lsls r0, r0, #0x10
 	lsrs r0, r0, #0x10
 	movs r1, #5
@@ -159730,7 +159730,7 @@ sub_0805AE28: @ 0x0805AE28
 	orrs r4, r0
 	ldr r0, _0805AE80 @ =0xFFFFFEFF
 	ands r4, r0
-	bl sub_08000174
+	bl rand
 	lsls r0, r0, #0x10
 	lsrs r0, r0, #0x10
 	movs r1, #5
@@ -159847,8 +159847,8 @@ sub_0805AFA8: @ 0x0805AFA8
 	svc #0xc
 	bx lr
 
-	thumb_func_start sub_0805AFAC
-sub_0805AFAC: @ 0x0805AFAC
+	thumb_func_start CpuSet
+CpuSet: @ 0x0805AFAC
 	svc #0xb
 	bx lr
 
@@ -159902,8 +159902,8 @@ sub_0805AFD4: @ 0x0805AFD4
 	svc #8
 	bx lr
 
-	thumb_func_start sub_0805AFD8
-sub_0805AFD8: @ 0x0805AFD8
+	thumb_func_start VBlankIntrWait
+VBlankIntrWait: @ 0x0805AFD8
 	movs r2, #0
 	svc #5
 	bx lr
@@ -160657,8 +160657,8 @@ sub_0805B52C: @ 0x0805B52C
 	bx r0
 	.align 2, 0
 
-	thumb_func_start sub_0805B538
-sub_0805B538: @ 0x0805B538
+	thumb_func_start GetLives
+GetLives: @ 0x0805B538
 	ldr r0, [r0, #0x70]
 	bx lr
 

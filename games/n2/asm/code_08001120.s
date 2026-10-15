@@ -152,8 +152,8 @@ LoadBackgroundTileAndPalette: @ 0x080011FC
 _08001228: .4byte 0x040000D4
 _0800122C: .4byte 0x80000100
 
-	thumb_func_start sub_08001230
-sub_08001230: @ 0x08001230
+	thumb_func_start GetWordLength
+GetWordLength: @ 0x08001230
 	push {lr}
 	movs r2, #0
 	ldrb r1, [r0]
@@ -208,8 +208,8 @@ DrawWrappedTextInBox: @ 0x08001254
 	pop {r1}
 	bx r1
 
-	thumb_func_start sub_08001294
-sub_08001294: @ 0x08001294
+	thumb_func_start StepBresenhamLine
+StepBresenhamLine: @ 0x08001294
 	push {lr}
 	adds r2, r0, #0
 	adds r0, #0x24
@@ -389,7 +389,7 @@ _080013D8:
 	strb r3, [r5, #8]
 	str r6, [r5]
 	ldr r0, _080013F8 @ =StepBrightnessFade
-	bl sub_080007A4
+	bl AddVBlankCallback
 	str r0, [r5, #4]
 	movs r0, #1
 	strh r0, [r4]
@@ -587,8 +587,8 @@ IsBrightnessFadeActive: @ 0x08001554
 	.align 2, 0
 _08001564: .4byte 0x02000020
 
-	thumb_func_start sub_08001568
-sub_08001568: @ 0x08001568
+	thumb_func_start SetDispcntMode
+SetDispcntMode: @ 0x08001568
 	ldr r3, _0800157C @ =0x02000E48
 	movs r1, #7
 	ands r0, r1
@@ -742,8 +742,8 @@ CommitDispcnt: @ 0x08001658
 	.align 2, 0
 _08001664: .4byte 0x02000E48
 
-	thumb_func_start sub_08001668
-sub_08001668: @ 0x08001668
+	thumb_func_start CommitBlendRegs
+CommitBlendRegs: @ 0x08001668
 	ldr r2, _0800167C @ =0x04000050
 	ldr r1, _08001680 @ =0x02000E40
 	ldr r0, [r1]

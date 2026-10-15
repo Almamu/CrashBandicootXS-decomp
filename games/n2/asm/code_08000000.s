@@ -73,8 +73,8 @@ _08000168: .4byte 0x03000000
 _0800016C: .4byte 0x040000D4
 _08000170: .4byte AgbMain
 
-	thumb_func_start sub_08000174
-sub_08000174: @ 0x08000174
+	thumb_func_start rand
+rand: @ 0x08000174
 	ldr r3, _080001D8 @ =0x0200001C
 	ldr r0, [r3]
 	ldr r1, _080001B8 @ =0x00003039
@@ -202,7 +202,7 @@ MemCopy32: @ 0x08000224
 	lsls r1, r1, #0x13
 	orrs r2, r1
 	adds r1, r4, #0
-	bl sub_0805AFAC
+	bl CpuSet
 	adds r0, r4, #0
 	pop {r4}
 	pop {r1}
@@ -772,8 +772,8 @@ _08000688: .4byte 0x04000208
 _0800068C: .4byte 0x04000200
 _08000690: .4byte IrqEmptyHandler
 
-	thumb_func_start sub_08000694
-sub_08000694: @ 0x08000694
+	thumb_func_start IrqSetHandler
+IrqSetHandler: @ 0x08000694
 	push {r4, r5, lr}
 	adds r5, r0, #0
 	adds r4, r1, #0
@@ -868,7 +868,7 @@ IrqEmptyHandler: @ 0x08000740
 	thumb_func_start EnableVBlankHandler
 EnableVBlankHandler: @ 0x08000744
 	push {lr}
-	ldr r1, _0800076C @ =sub_08000844
+	ldr r1, _0800076C @ =VBlankHandler
 	ldr r2, _08000770 @ =0x02000620
 	movs r3, #0
 	adds r0, r2, #0
@@ -879,7 +879,7 @@ _08000750:
 	cmp r0, r2
 	bge _08000750
 	movs r0, #0
-	bl sub_08000694
+	bl IrqSetHandler
 	ldr r0, _08000774 @ =0x04000004
 	ldrb r1, [r0]
 	movs r2, #8
@@ -888,7 +888,7 @@ _08000750:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_0800076C: .4byte sub_08000844
+_0800076C: .4byte VBlankHandler
 _08000770: .4byte 0x02000620
 _08000774: .4byte 0x04000004
 
@@ -919,8 +919,8 @@ RemoveVBlankCallback: @ 0x08000794
 	.align 2, 0
 _080007A0: .4byte 0x02000620
 
-	thumb_func_start sub_080007A4
-sub_080007A4: @ 0x080007A4
+	thumb_func_start AddVBlankCallback
+AddVBlankCallback: @ 0x080007A4
 	push {lr}
 	adds r3, r0, #0
 	movs r2, #0
@@ -962,7 +962,7 @@ _080007E4: .4byte 0x02000010
 _080007E8: .4byte 0x02000618
 _080007EC: .4byte 0x0200061C
 _080007F0:
-	bl sub_0805AFD8
+	bl VBlankIntrWait
 _080007F4:
 	ldr r0, [r5]
 	ldr r1, [r4]
@@ -973,7 +973,7 @@ _080007F4:
 	str r0, [r4]
 	b _08000808
 _08000804:
-	bl sub_0805AFD8
+	bl VBlankIntrWait
 _08000808:
 	pop {r4, r5, r6}
 	pop {r0}
@@ -1008,8 +1008,8 @@ _08000838: .4byte 0x02000618
 _0800083C: .4byte 0x02000010
 _08000840: .4byte 0x02000014
 
-	thumb_func_start sub_08000844
-sub_08000844: @ 0x08000844
+	thumb_func_start VBlankHandler
+VBlankHandler: @ 0x08000844
 	push {r4, r5, lr}
 	ldr r1, _0800087C @ =0x03007FF8
 	movs r0, #1
@@ -1026,7 +1026,7 @@ _0800085C:
 	ldr r0, [r5]
 	cmp r0, #0
 	beq _08000866
-	bl sub_08047968
+	bl _call_via_r0
 _08000866:
 	adds r5, #4
 	subs r4, #1
@@ -1045,8 +1045,8 @@ _08000880: .4byte 0x02000015
 _08000884: .4byte 0x02000620
 _08000888: .4byte 0x02000010
 
-	thumb_func_start sub_0800088C
-sub_0800088C: @ 0x0800088C
+	thumb_func_start GetDpadDirection
+GetDpadDirection: @ 0x0800088C
 	push {lr}
 	ldr r0, _080008D4 @ =0x02000018
 	ldrh r2, [r0]
@@ -1265,8 +1265,8 @@ FixedDiv: @ 0x08000A24
 	pop {r1}
 	bx r1
 
-	thumb_func_start sub_08000A30
-sub_08000A30: @ 0x08000A30
+	thumb_func_start FixedMul
+FixedMul: @ 0x08000A30
 	push {lr}
 	cmp r0, r1
 	ble _08000A3A
@@ -1319,8 +1319,8 @@ FixedMul16: @ 0x08000A74
 	asrs r0, r0, #0x10
 	bx lr
 
-	thumb_func_start sub_08000A84
-sub_08000A84: @ 0x08000A84
+	thumb_func_start FormatPaddedNumber
+FormatPaddedNumber: @ 0x08000A84
 	push {r4, r5, r6, r7, lr}
 	mov r7, r8
 	push {r7}
@@ -1512,7 +1512,7 @@ _08000D6C:
 	adds r1, r5, #0
 	adds r2, r6, #0
 	movs r3, #0x30
-	bl sub_08000A84
+	bl FormatPaddedNumber
 	adds r4, r0, #0
 	ldr r0, [sp, #4]
 	b _08000D98
@@ -1523,7 +1523,7 @@ _08000D82:
 	adds r0, r4, #0
 	adds r2, r6, #0
 	movs r3, #0x20
-	bl sub_08000A84
+	bl FormatPaddedNumber
 	adds r4, r0, #0
 	ldr r0, [sp, #8]
 	subs r0, #1
