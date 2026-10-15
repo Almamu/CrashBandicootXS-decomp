@@ -49,28 +49,47 @@ public:
     u16 id;  // 0x08 - the "gone" bit index; ENTITY_ID_NONE: none
     u8 kind; // 0x0A - the object kind sent to the player's hit method on contact
     u8 unused_0B;
+#ifdef GAME_N2
+    /* N-Tranced's entity has three more words here, which Reset sets to 1,
+     * 0 and 0 (its ResetEntity, 0x0800805C); what they are isn't known
+     * yet. So the rest is 12 bytes later: the flags at 0x18, the box at
+     * 0x1C (its sizes u16, hitbox_quad.h) and the vtable pointer at 0x24. */
+    s32 unk_0C;
+    s32 unk_10;
+    s32 unk_14;
+#endif
     union EntityFlags f; // 0x0C
     /* 0x10-0x17: a struct hitbox_quad, the box GetBounds returns. */
     s16 halfW; // 0x10 - -rawW / 2 (SetSize, Reset)
     s16 halfH; // 0x12 - -rawH / 2
-    u8 rawW;   // 0x14
-    u8 rawH;   // 0x15
+#ifdef GAME_N2
+    u16 rawW;
+    u16 rawH;
+#else
+    u8 rawW; // 0x14
+    u8 rawH; // 0x15
     u8 unused_16[2];
+#endif
     // 0x18: the vtable pointer
 
     // OverlapsRect (6) and IsInsideRect (8) are yes/no tests that stay s32:
     // their callers' `(u8)` is the ROM's truncation, but as bools, Entity's,
     // Sprite's and Crate's versions change (#855).
-    Entity();                                      // InitEntity: inline in entity.cpp (see there)
-    virtual s32 CheckPlayerContact();              // 1
-    virtual const struct hitbox_quad *GetBounds(); // 2 - the hitbox record
-    virtual void Update();                         // 3
-    virtual void Draw();                           // 4
-    virtual u8 IsOnScreen();                       // 5
-    virtual s32 OverlapsRect(struct aabb *region); // 6
-    virtual u8 IsNearCamera();                     // 7
-    virtual s32 IsInsideRect(struct aabb *box);    // 8
-    virtual s32 GetClassId();                      // 9
+    Entity();                         // InitEntity: inline in entity.cpp (see there)
+    virtual s32 CheckPlayerContact(); // 1
+#ifdef GAME_N2
+    /* N-Tranced's slot 2, empty in Entity (0x08007F94): the slots below
+     * are one later there (GetBounds 3, ..., the destructor 11) */
+    virtual void UnkVirtual2();
+#endif
+    virtual const struct hitbox_quad *GetBounds();           // 2 - the hitbox record
+    virtual void Update();                                   // 3
+    virtual void Draw();                                     // 4
+    virtual u8 IsOnScreen();                                 // 5
+    virtual s32 OverlapsRect(struct aabb *region);           // 6
+    virtual u8 IsNearCamera();                               // 7
+    virtual s32 IsInsideRect(struct aabb *box);              // 8
+    virtual s32 GetClassId();                                // 9
     static Entity *Create(u16 id, u16 x, u16 y, u16 unused); // CreateEntity
     void SetSize(s32 w, s32 h);
     void Reset();
@@ -86,6 +105,10 @@ public:
     virtual ~Entity()
     {
     }
+#ifdef GAME_N2
+    /* N-Tranced's slot 12, empty in Entity (0x08007F4C) */
+    virtual void UnkVirtual12();
+#endif
 
     u16 GetId()
     {
@@ -235,6 +258,7 @@ public:
 };
 
 LAYOUT_ASSERT(entity_hpp, sizeof(Entity) == 0x1C);
+N2_LAYOUT_ASSERT(entity_hpp, sizeof(Entity) == 0x28);
 
 } // namespace Entities
 } // namespace Game

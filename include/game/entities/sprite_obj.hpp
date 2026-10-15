@@ -118,12 +118,26 @@ public:
     u8 palette:4;              // 0x29 - low nibble: the OBJ palette slot
     u32:20;                    // 0x29 bit 4-0x2B: the unused rest of the 0x28 word
     u8 animating;              // 0x2C - nonzero while the animation timer runs
-    u8 tag;                    // 0x2D - the animation (SetTargetAnim)
-    s32 frame;                 // 0x30 - the step within the animation
-    s32 stepTimer;             // 0x34 - ticks spent on the current step
-    u8 animDone;               // 0x38 - set once a non-looping animation ends
+#ifdef GAME_N2
+    /* N-Tranced's sprite (0x60 bytes): Entity's 12 more bytes before
+     * these, and its own: a word here (-1 after Reset) and three after
+     * `affine`, which its Sprite::Reset (0x080088F8) sets. Named by
+     * their N-Tranced offset (unused_n2_39: XS's unk_39 is after animDone). */
+    u8 unused_n2_39[3];
+    s32 unk_3C;
+#endif
+    u8 tag;        // 0x2D - the animation (SetTargetAnim)
+    s32 frame;     // 0x30 - the step within the animation
+    s32 stepTimer; // 0x34 - ticks spent on the current step
+    u8 animDone;   // 0x38 - set once a non-looping animation ends
     u8 unk_39[3];
     u16 affine; // 0x3C - nonzero: DrawWithOffset draws the affine pieces
+#ifdef GAME_N2
+    u16 unk_52;
+    s32 unk_54; // -1 after Reset
+    s32 unk_58; // 0xFF after Reset
+    u8 unk_5C;  // 0 after Reset
+#endif
 
     Sprite();                                      // InitSpriteObj
     virtual s32 CheckPlayerContact();              // 1 CheckSpritePickup
@@ -136,8 +150,17 @@ public:
     virtual s32 IsInsideRect(struct aabb *box);    // 8 IsSpriteObjInsideRect
     virtual s32 GetClassId();                      // 9 GetSpriteObjClassId
     virtual ~Sprite();                             // 10 DestroySpriteObj
-    virtual s32 GetPriority();                     // 11 GetSpriteObjPriority
-    virtual s32 ApplyVelocity();                   // 12 ApplySpriteObjVelocity
+#ifdef GAME_N2
+    /* N-Tranced's vtable (0x087F851C): Entity's 12 slots, then this (13,
+     * 0x080096DC), GetPriority (14), the other (15, 0x080092D4) and
+     * ApplyVelocity (16). */
+    virtual void UnkVirtual13();
+#endif
+    virtual s32 GetPriority(); // 11 GetSpriteObjPriority
+#ifdef GAME_N2
+    virtual void UnkVirtual15();
+#endif
+    virtual s32 ApplyVelocity(); // 12 ApplySpriteObjVelocity
 
     /* CreateSpriteObj's `new Sprite(id, x, y)`: the constructor inlined,
      * then the spawn's id and position. */
@@ -250,6 +273,7 @@ public:
 };
 
 LAYOUT_ASSERT(sprite_obj_hpp, sizeof(Sprite) == 0x40);
+N2_LAYOUT_ASSERT(sprite_obj_hpp, sizeof(Sprite) == 0x60);
 
 /* The mirror bits' setters, inline: the spawners and the menus expand
  * them. Inlined with a parameter (not a literal), the store is a general
@@ -367,6 +391,8 @@ public:
 };
 
 LAYOUT_ASSERT(sprite_obj_hpp, sizeof(MovingSprite) == 0x78);
+/* Sprite's 0x20 more (tools/nt_compare's structs.txt: its members' offsets) */
+N2_LAYOUT_ASSERT(sprite_obj_hpp, sizeof(MovingSprite) == 0x98);
 
 inline MovingSprite *Sprite::AsMovingSprite()
 {

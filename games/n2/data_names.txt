@@ -40,3 +40,5 @@
 0x087F8448 gEepromConfig8k
 0x087F8454 gEepromMaxTime
 0x087F845C gEepromLibraryAddresses
+0x087F84B4 gEntityVtable
+0x087F894C gPeriodicSpawnerVtable

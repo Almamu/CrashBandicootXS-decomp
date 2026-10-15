@@ -39,6 +39,12 @@ void Sprite::Reset()
     dir = 0;
     affine = 0;
     animating = 1;
+#ifdef GAME_N2
+    unk_54 = -1;
+    unk_58 = 0xFF;
+    unk_5C = 0;
+    unk_3C = -1;
+#endif
 }
 
 /* The current animation's box[1] at the sprite's position, mirrored

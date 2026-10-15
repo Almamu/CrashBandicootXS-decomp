@@ -25,7 +25,11 @@ bool MovingSprite::ProbeEdgeTerrain(s32 mode, const struct hitbox_quad *quad)
         struct vec2 pos;
         s32 origY;
     } f;
+#ifdef GAME_N2
+    u16 span = quad->w; // N-Tranced's box sizes are u16 (hitbox_quad.h)
+#else
     u8 span = quad->w;
+#endif
     u8 *tries;
     u8 hit;
 

@@ -250,7 +250,7 @@ _080277B2:
 	adds r0, r0, r1
 	ldr r2, [r2, #4]
 	movs r1, #0
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r0, _08027810 @ =gSpriteBankSet
 	ldr r0, [r0]
 	movs r1, #0x29
@@ -2991,7 +2991,7 @@ _08028DDE:
 	adds r0, r4, r0
 	ldr r2, [r1, #4]
 	movs r1, #0
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r0, [r5, #0x68]
 	cmp r0, r4
 	bne _08028DDE
@@ -4186,7 +4186,7 @@ _08029770:
 	adds r1, r4, r1
 	ldr r1, [r1]
 	ldr r2, [r2, #0x1c]
-	bl sub_08047970
+	bl _call_via_r2
 	movs r1, #0xf0
 	subs r1, r1, r0
 	lsrs r0, r1, #0x1f
@@ -4212,7 +4212,7 @@ _08029770:
 	adds r4, r4, r1
 	ldr r1, [r4]
 	ldr r2, [r2, #0x14]
-	bl sub_08047970
+	bl _call_via_r2
 	movs r0, #0xa
 	add r8, r0
 	adds r5, #1
@@ -4614,7 +4614,7 @@ _08029AEC:
 	ldrsh r0, [r1, r2]
 	adds r0, r4, r0
 	ldr r1, [r1, #0x34]
-	bl sub_0804796C
+	bl _call_via_r1
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	bne _08029B0A
@@ -4837,7 +4837,7 @@ sub_08029C80: @ 0x08029C80
 	movs r1, #0
 	movs r2, #0x14
 	movs r3, #0
-	bl sub_08047978
+	bl _call_via_r4
 _08029CE0:
 	add sp, #0x24
 	pop {r4, r5}
@@ -5040,7 +5040,7 @@ _08029E3A:
 	movs r1, #0
 	movs r2, #0x11
 	movs r3, #0
-	bl sub_08047978
+	bl _call_via_r4
 	b _0802A07A
 	.align 2, 0
 _08029E74: .4byte gUnknown_081DF560
@@ -5094,7 +5094,7 @@ _08029EBE:
 	ldrsh r0, [r1, r3]
 	adds r0, r4, r0
 	ldr r1, [r1, #0x34]
-	bl sub_0804796C
+	bl _call_via_r1
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _08029EFE
@@ -5458,7 +5458,7 @@ _0802A17A:
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0xc]
-	bl sub_0804796C
+	bl _call_via_r1
 	add sp, #0x10
 	pop {r3}
 	mov r8, r3
@@ -5525,7 +5525,7 @@ sub_0802A1D4: @ 0x0802A1D4
 	movs r1, #0
 	movs r2, #0x13
 	movs r3, #0
-	bl sub_08047978
+	bl _call_via_r4
 _0802A224:
 	add sp, #4
 	pop {r4, r5}
@@ -6189,7 +6189,7 @@ sub_0802A690: @ 0x0802A690
 	movs r1, #0
 	movs r2, #0x10
 	movs r3, #0
-	bl sub_08047978
+	bl _call_via_r4
 	ldr r2, [r5]
 	ldrb r0, [r2, #0x18]
 	movs r1, #8
@@ -6304,7 +6304,7 @@ _0802A7B8:
 	ldrsh r0, [r1, r2]
 	adds r0, r4, r0
 	ldr r1, [r1, #0x34]
-	bl sub_0804796C
+	bl _call_via_r1
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	beq _0802A878
@@ -6332,7 +6332,7 @@ _0802A7B8:
 	ldr r4, [r1, #0x14]
 	movs r1, #0
 	movs r3, #0
-	bl sub_08047978
+	bl _call_via_r4
 	b _0802A878
 	.align 2, 0
 _0802A814: .4byte gPlayer
@@ -6732,7 +6732,7 @@ _0802AB0C:
 	adds r0, r6, r0
 	ldr r2, [r1, #4]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 	b _0802AB4A
 	.align 2, 0
 _0802AB40: .4byte gUnknown_081DF584
@@ -7328,7 +7328,7 @@ LoadSpriteFrameTiles: @ 0x0802B0D0
 	ldr r0, _0802B0EC @ =0x02000200
 	ldr r1, [r0]
 	adds r0, r4, #0
-	bl sub_0804796C
+	bl _call_via_r1
 	adds r1, r0, #0
 	movs r0, #1
 	rsbs r0, r0, #0
@@ -8308,7 +8308,7 @@ DrawContinuePrompt: @ 0x0802BED0
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	adds r4, r0, #0
 	ldr r0, [r6, #0x18]
 	movs r1, #0
@@ -8338,7 +8338,7 @@ DrawContinuePrompt: @ 0x0802BED0
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r4, [r6, #0x18]
 	adds r0, r6, #0
 	movs r1, #0
@@ -8369,7 +8369,7 @@ DrawContinuePrompt: @ 0x0802BED0
 	adds r0, r3, r0
 	ldr r1, _0802C068 @ =gContinuePromptCursorText
 	ldr r2, [r2, #0x14]
-	bl sub_08047970
+	bl _call_via_r2
 _0802BF9A:
 	ldr r4, [r6, #0x18]
 	movs r0, #0x98
@@ -8396,7 +8396,7 @@ _0802BF9A:
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r4, [r6, #0x18]
 	adds r0, r6, #0
 	movs r1, #1
@@ -8427,7 +8427,7 @@ _0802BF9A:
 	adds r0, r0, r1
 	ldr r1, _0802C068 @ =gContinuePromptCursorText
 	ldr r2, [r2, #0x14]
-	bl sub_08047970
+	bl _call_via_r2
 _0802C016:
 	ldr r4, [r6, #0x18]
 	movs r1, #0x91
@@ -8452,7 +8452,7 @@ _0802C016:
 	adds r1, r0, #0
 	ldr r2, [r5, #4]
 	adds r0, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	mov r2, sl
 	ldr r0, [r2]
 	bl HideUnusedOamEntries
@@ -8963,7 +8963,7 @@ _0802C45A:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x1c]
 	mov r1, sp
-	bl sub_08047970
+	bl _call_via_r2
 	lsrs r0, r0, #1
 	movs r1, #0x78
 	subs r1, r1, r0
@@ -8979,7 +8979,7 @@ _0802C45A:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x14]
 	mov r1, sp
-	bl sub_08047970
+	bl _call_via_r2
 _0802C492:
 	mov r2, sl
 	cmp r2, #0xf
@@ -9908,7 +9908,7 @@ sub_0802CB7C: @ 0x0802CB7C
 	str r2, [r1]
 	ldr r2, [r4]
 	adds r1, r6, #0
-	bl sub_08047970
+	bl _call_via_r2
 	bl sub_0802CA38
 	adds r6, r0, #0
 	ldr r5, [r5]
@@ -9961,7 +9961,7 @@ _0802CC10:
 	cmp r1, #0
 	beq _0802CC2E
 	ldr r0, [sp, #0x1c]
-	bl sub_0804796C
+	bl _call_via_r1
 _0802CC2E:
 	ldr r0, _0802CCD0 @ =gActorSpawnIndex
 	mov r8, r0
@@ -10000,7 +10000,7 @@ _0802CC5A:
 	ldr r2, [r2]
 	lsls r2, r2, #8
 	ldr r3, [r3, #4]
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r0, [r4]
 	adds r2, r0, #1
 	str r2, [r4]
@@ -10065,7 +10065,7 @@ sub_0802CCE8: @ 0x0802CCE8
 	mov r0, sp
 	ldr r2, [r2, #0x14]
 	adds r1, r3, r1
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0x50]
 	movs r4, #0x10
 	ldrsh r1, [r2, r4]
@@ -10073,7 +10073,7 @@ sub_0802CCE8: @ 0x0802CCE8
 	adds r0, r4, #0
 	ldr r2, [r2, #0x14]
 	adds r1, r5, r1
-	bl sub_08047970
+	bl _call_via_r2
 	mov r1, sp
 	movs r5, #4
 	ldrsh r2, [r1, r5]
@@ -10216,7 +10216,7 @@ _0802CE1C:
 	ldr r2, [r5]
 	lsls r2, r2, #8
 	ldr r3, [r3, #4]
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r0, [r4]
 	adds r2, r0, #1
 	str r2, [r4]
@@ -10249,7 +10249,7 @@ _0802CE6E:
 	ldrsh r0, [r1, r2]
 	adds r0, r4, r0
 	ldr r1, [r1, #0x1c]
-	bl sub_0804796C
+	bl _call_via_r1
 	ldr r4, [r4, #0x4c]
 	ldr r0, [r5]
 	cmp r4, r0
@@ -10269,7 +10269,7 @@ _0802CE84:
 	adds r0, r4, r0
 	ldr r2, [r1, #0xc]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _0802CEA4:
 	adds r4, r5, #0
 	ldr r0, _0802CECC @ =0x02000248
@@ -10345,7 +10345,7 @@ _0802CF22:
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x24]
-	bl sub_0804796C
+	bl _call_via_r1
 	adds r4, #1
 	ldr r0, _0802CF4C @ =0x02000F74
 	ldr r0, [r0]
@@ -10397,7 +10397,7 @@ _0802CF88:
 	adds r0, r2, r0
 	ldr r2, [r1, #0xc]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _0802CF9E:
 	adds r2, r4, #0
 	ldr r0, _0802CFD4 @ =0x02000248
@@ -10414,7 +10414,7 @@ _0802CFA8:
 	adds r0, r2, r0
 	ldr r2, [r1, #0xc]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _0802CFBE:
 	ldr r0, _0802CFD8 @ =gActorDrawList
 	ldr r0, [r0]
@@ -10620,7 +10620,7 @@ _0802D11C:
 	ldrsh r0, [r1, r2]
 	adds r0, r5, r0
 	ldr r1, [r1, #0x34]
-	bl sub_0804796C
+	bl _call_via_r1
 	lsls r0, r0, #0x18
 	cmp r0, #0
 	bne _0802D1BE
@@ -10630,7 +10630,7 @@ _0802D11C:
 	mov r0, sp
 	ldr r2, [r2, #0x14]
 	adds r1, r6, r1
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0x50]
 	movs r7, #0x10
 	ldrsh r1, [r2, r7]
@@ -10638,7 +10638,7 @@ _0802D11C:
 	adds r0, r4, #0
 	ldr r2, [r2, #0x14]
 	adds r1, r5, r1
-	bl sub_08047970
+	bl _call_via_r2
 	mov r1, sp
 	movs r0, #4
 	ldrsh r2, [r1, r0]
@@ -11184,7 +11184,7 @@ sub_0802D53C: @ 0x0802D53C
 	adds r0, r0, r1
 	ldr r2, [r2, #0x2c]
 	movs r1, #1
-	bl sub_08047970
+	bl _call_via_r2
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -11202,7 +11202,7 @@ sub_0802D55C: @ 0x0802D55C
 	ldrsh r3, [r2, r4]
 	adds r0, r0, r3
 	ldr r2, [r2, #4]
-	bl sub_08047970
+	bl _call_via_r2
 	movs r0, #0
 	pop {r4}
 	pop {r1}
@@ -11286,7 +11286,7 @@ sub_0802D630: @ 0x0802D630
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x3c]
-	bl sub_0804796C
+	bl _call_via_r1
 	pop {r1}
 	bx r1
 	.align 2, 0
@@ -11298,7 +11298,7 @@ sub_0802D64C: @ 0x0802D64C
 	ldr r1, _0802D65C @ =gActorCategoryVtable
 	ldr r1, [r1]
 	ldr r1, [r1, #0x38]
-	bl sub_0804796C
+	bl _call_via_r1
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -11310,7 +11310,7 @@ sub_0802D660: @ 0x0802D660
 	ldr r1, _0802D670 @ =gActorCategoryVtable
 	ldr r1, [r1]
 	ldr r1, [r1, #0x34]
-	bl sub_0804796C
+	bl _call_via_r1
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -11370,7 +11370,7 @@ sub_0802D6C4: @ 0x0802D6C4
 	ldr r1, _0802D6D4 @ =gActorCategoryVtable
 	ldr r1, [r1]
 	ldr r1, [r1, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 	pop {r1}
 	bx r1
 	.align 2, 0
@@ -11385,7 +11385,7 @@ IsTouchingPlayer: @ 0x0802D6EC
 	ldr r1, _0802D6FC @ =gActorCategoryVtable
 	ldr r1, [r1]
 	ldr r1, [r1, #0x24]
-	bl sub_0804796C
+	bl _call_via_r1
 	pop {r1}
 	bx r1
 	.align 2, 0
@@ -13100,7 +13100,7 @@ _0802E55E:
 	ldr r1, _0802E5E8 @ =0x02001090
 	ldrb r1, [r1]
 	ldr r2, [r3]
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r1, _0802E5EC @ =0x02001091
 	movs r0, #1
 	strb r0, [r1]
@@ -14102,7 +14102,7 @@ sub_0802EDA0: @ 0x0802EDA0
 	adds r0, r4, #0
 	ldr r2, [r2, #0x14]
 	adds r1, r1, r3
-	bl sub_08047970
+	bl _call_via_r2
 	mov r1, sp
 	movs r3, #4
 	ldrsh r2, [r1, r3]
@@ -14312,7 +14312,7 @@ _0802EF2C:
 	mov r3, sl
 	ldr r2, [r3]
 	movs r1, #1
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r0, _0802EF98 @ =0x02001091
 	strb r5, [r0]
 	bl sub_0802E5F4
@@ -15285,7 +15285,7 @@ _0802F70A:
 	adds r0, r4, r0
 	ldr r2, [r1, #0x2c]
 	movs r1, #0
-	bl sub_08047970
+	bl _call_via_r2
 _0802F71A:
 	ldr r0, [r4, #0x44]
 	adds r0, #1
@@ -16072,7 +16072,7 @@ _0802FCD6:
 	adds r0, r4, r0
 	ldr r2, [r1, #0xc]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 	b _0802FD94
 	.global _0802FCF2
 _0802FCF2:
@@ -16239,7 +16239,7 @@ _0802FE24:
 	adds r0, r4, r0
 	ldr r2, [r1, #0xc]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 	b _0802FE46
 _0802FE40:
 	adds r0, r4, #0
@@ -16293,7 +16293,7 @@ sub_0802FE98: @ 0x0802FE98
 	adds r0, r0, r1
 	ldr r2, [r2, #0x2c]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _0802FEBA:
 	adds r0, r4, #0
 	bl sub_0802F6A0
@@ -16417,7 +16417,7 @@ sub_0802FFA4: @ 0x0802FFA4
 	adds r0, r4, r0
 	ldr r2, [r1, #0xc]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 	b _08030006
 	.align 2, 0
 _0802FFD8: .4byte 0x02000248
@@ -16975,7 +16975,7 @@ _0803040A:
 	ldr r2, [r0]
 	adds r0, r7, #0
 	adds r1, r6, #0
-	bl sub_08047970
+	bl _call_via_r2
 	subs r3, r4, #1
 	cmp r4, #0
 	bne _0803043E
@@ -16997,7 +16997,7 @@ _0803044E:
 	adds r0, r7, #0
 	adds r1, r6, #0
 	str r3, [sp]
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r3, [sp]
 	subs r3, #1
 	movs r0, #1
@@ -17022,7 +17022,7 @@ _08030470:
 	ldr r2, [r0]
 	adds r0, r7, #0
 	adds r1, r6, #0
-	bl sub_08047970
+	bl _call_via_r2
 	subs r3, r5, #1
 	cmp r5, #0
 	beq _08030562
@@ -17043,7 +17043,7 @@ _080304A6:
 	adds r0, r7, #0
 	adds r1, r6, #0
 	str r3, [sp]
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r3, [sp]
 	subs r3, #1
 	movs r0, #1
@@ -17071,7 +17071,7 @@ _080304C8:
 	ldr r2, [r0]
 	adds r0, r7, #0
 	adds r1, r6, #0
-	bl sub_08047970
+	bl _call_via_r2
 	subs r3, r4, #1
 	cmp r4, #0
 	beq _08030562
@@ -17092,7 +17092,7 @@ _08030506:
 	adds r0, r7, #0
 	adds r1, r6, #0
 	str r3, [sp]
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r3, [sp]
 	subs r3, #1
 	movs r0, #1
@@ -17129,7 +17129,7 @@ _0803054C:
 	ldr r2, [r0]
 	adds r0, r7, #0
 	adds r1, r6, #0
-	bl sub_08047970
+	bl _call_via_r2
 	subs r5, #1
 	movs r0, #1
 	rsbs r0, r0, #0
@@ -18563,7 +18563,7 @@ _08031080:
 	adds r0, r4, r0
 	ldr r2, [r1, #0xc]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 	b _080310B6
 	.align 2, 0
 _080310A4: .4byte 0x02000E6C
@@ -18649,7 +18649,7 @@ _0803113A:
 	adds r0, r4, r0
 	ldr r2, [r1, #0xc]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 	b _08031210
 	.align 2, 0
 _08031158: .4byte 0x02000E6C
@@ -18935,7 +18935,7 @@ UpdatePolarNitroCrate: @ 0x08031390
 	adds r0, r4, r0
 	ldr r2, [r1, #0xc]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 	b _08031450
 _080313BE:
 	adds r0, r4, #0
@@ -19029,7 +19029,7 @@ _08031468:
 	mov r0, sp
 	ldr r2, [r2, #0x14]
 	adds r1, r6, r1
-	bl sub_08047970
+	bl _call_via_r2
 	ldr r2, [r5, #0x50]
 	movs r4, #0x10
 	ldrsh r1, [r2, r4]
@@ -19037,7 +19037,7 @@ _08031468:
 	adds r0, r4, #0
 	ldr r2, [r2, #0x14]
 	adds r1, r5, r1
-	bl sub_08047970
+	bl _call_via_r2
 	mov r1, sp
 	movs r7, #4
 	ldrsh r2, [r1, r7]
@@ -19574,7 +19574,7 @@ sub_080318A0: @ 0x080318A0
 	adds r0, r4, r0
 	ldr r2, [r1, #0xc]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 _080318D8:
 	adds r0, r4, #0
 	bl sub_0802F6A0
@@ -19674,7 +19674,7 @@ _08031A4C:
 	adds r0, r4, r0
 	ldr r2, [r1, #0xc]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 	b _08031A7A
 	.align 2, 0
 _08031A70: .4byte 0x02000E6C
@@ -19897,7 +19897,7 @@ sub_08031BF4: @ 0x08031BF4
 	adds r0, r4, r0
 	ldr r2, [r1, #0xc]
 	movs r1, #3
-	bl sub_08047970
+	bl _call_via_r2
 	b _08031C52
 	.align 2, 0
 _08031C24: .4byte 0x02000248

@@ -8,8 +8,8 @@
 	.balign 4
 
 
-	.global gUnknown_087F84B4
-gUnknown_087F84B4:
+	.global gEntityVtable
+gEntityVtable:
 	.incbin "baserom_n2.gba", 0x7F84B4, 0x68
 
 	.global gUnknown_087F851C
@@ -38,7 +38,11 @@ gUnknown_087F885C:
 
 	.global gUnknown_087F88D4
 gUnknown_087F88D4:
-	.incbin "baserom_n2.gba", 0x7F88D4, 0xE0
+	.incbin "baserom_n2.gba", 0x7F88D4, 0x78
+
+	.global gPeriodicSpawnerVtable
+gPeriodicSpawnerVtable:
+	.incbin "baserom_n2.gba", 0x7F894C, 0x68
 
 	.global gUnknown_087F89B4
 gUnknown_087F89B4:

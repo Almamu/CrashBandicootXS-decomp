@@ -185,7 +185,10 @@ match it, and the original's bytes:
    source defines, in `gbadisasm.cfg` (`disasm.py` lists them), and add
    the RAM/data symbols it uses to `symbols.txt`. A function the
    disassembly hasn't found (one only a pointer reaches) needs its
-   `thumb_func` line before the split can cut after the object.
+   `thumb_func` line before the split can cut after the object. A name
+   the disassembly uses inside an object that the object doesn't define
+   (a lib1funcs stub with no global name) gets a `PROVIDE` in the linker
+   script, from the object's first function (`disasm.py`).
 4. `python3 games/n2/disasm.py path/to/gbadisasm`, then
    `make GAME=n2 compare`. If it doesn't match, try the other compiler
    (`NEW_COMPILER_OBJS`), or agbcp without `-fprologue-bugfix`
@@ -232,6 +235,32 @@ code can: the data is the original's bytes, and the pointers in it
 the data and 3,445 into the code) stay where they are when what they
 point at moves. It shifts once its data is source, as XS's is: the
 level, text and graphics data (#1113, #1114, #1115) and the tables.
+
+### Struct layouts (#1111)
+
+Where N-Tranced's code shows a struct or class laid out otherwise than
+XS's, the header has both, under `GAME_N2`, and the shared code compiles
+to each game's offsets. The layout asserts (`LAYOUT_ASSERT`) are XS's
+sizes: N-Tranced's build checks only `N2_LAYOUT_ASSERT`, one per layout
+of N-Tranced's its code shows (`platform/gba/include/gba/defines.h`). So
+far:
+
+- `struct hitbox_quad`: `w` and `h` are u16 (XS's u8 and two bytes of
+  padding).
+- `Entity` (0x28 bytes, XS 0x1C): three words at +0x0C its `Reset` sets
+  (1, 0, 0), so the flags are at +0x18, the box (its sizes u16) at +0x1C
+  and the vtable pointer at +0x24; and two more virtual methods, slot 2
+  (before `GetBounds`) and 12 (after the destructor), empty in Entity
+  (`UnkVirtual2`, `UnkVirtual12`).
+- `Sprite` (0x60 bytes, XS 0x40): Entity's 12 bytes, a word before `tag`
+  and three after `affine`, which its `Reset` sets; two more virtual
+  methods, slots 13 and 15 (`GetPriority` 14, `ApplyVelocity` 16).
+  `MovingSprite` is 0x98 (XS 0x78).
+- `gCrateHitResponse`'s rows: `ATTACK_KIND_COUNT`, 8 (XS 7).
+
+`tools/nt_compare`'s `structs.txt` gives the members' offsets the code
+shows in both games, and `n2_objects.py` which objects a layout makes
+match.
 
 ### Tables shared with XS (#1131)
 

@@ -410,7 +410,7 @@ _08025464:
 	ldrsh r0, [r1, r4]
 	adds r0, r6, r0
 	ldr r1, [r1, #0x1c]
-	bl sub_0804796C
+	bl _call_via_r1
 	ldrh r0, [r0, #6]
 	adds r0, #1
 	lsls r5, r0, #8
@@ -950,7 +950,7 @@ _08025892:
 	adds r0, r2, r0
 	ldr r2, [r1, #0x24]
 	adds r1, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 _08025904:
 	ldrb r1, [r4, #0x18]
 	movs r0, #5
@@ -1314,7 +1314,7 @@ SpawnEntity: @ 0x08025BBC
 	ldr r4, [r4]
 	adds r0, r6, #0
 	adds r2, r5, #0
-	bl sub_08047978
+	bl _call_via_r4
 	pop {r4, r5, r6}
 	pop {r0}
 	bx r0
@@ -1481,7 +1481,7 @@ _08025CE6:
 	ldrsh r1, [r2, r3]
 	adds r0, r0, r1
 	ldr r1, [r2, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 _08025CFA:
 	movs r1, #0x80
 	lsls r1, r1, #2
@@ -1538,7 +1538,7 @@ _08025D44:
 	ldr r3, [r1, #4]
 	adds r1, r7, #0
 	adds r2, r5, #0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 _08025D58:
 	ldr r4, [r4, #4]
 	cmp r4, #0
@@ -1786,7 +1786,7 @@ _08025F12:
 	ldrsh r0, [r2, r3]
 	adds r0, r4, r0
 	ldr r2, [r2, #0x34]
-	bl sub_08047970
+	bl _call_via_r2
 _08025F24:
 	ldr r1, [r4, #0x3c]
 	cmp r1, r5
@@ -1800,7 +1800,7 @@ _08025F2C:
 	ldrsh r0, [r2, r3]
 	adds r0, r4, r0
 	ldr r2, [r2, #0x34]
-	bl sub_08047970
+	bl _call_via_r2
 _08025F3E:
 	ldr r1, [r4, #0x40]
 	cmp r1, r6
@@ -1825,7 +1825,7 @@ _08025F56:
 	ldrsh r0, [r2, r3]
 	adds r0, r4, r0
 	ldr r2, [r2, #0x3c]
-	bl sub_08047970
+	bl _call_via_r2
 _08025F68:
 	ldr r1, [r4, #0x44]
 	cmp r1, r5
@@ -1839,7 +1839,7 @@ _08025F70:
 	ldrsh r0, [r2, r3]
 	adds r0, r4, r0
 	ldr r2, [r2, #0x3c]
-	bl sub_08047970
+	bl _call_via_r2
 _08025F82:
 	ldr r1, [r4, #0x48]
 	cmp r1, r6
@@ -1927,7 +1927,7 @@ _08025FFC:
 	ldr r3, [r1, #4]
 	adds r1, r6, #0
 	adds r2, r4, #0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r1, [r5, #0x30]
 	adds r1, #0x40
 	movs r2, #0
@@ -1936,7 +1936,7 @@ _08025FFC:
 	ldr r3, [r1, #4]
 	mov r1, r8
 	adds r2, r7, #0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r0, [r5, #0x2c]
 	adds r1, r5, #0
 	bl ScrollBgStreamer
@@ -2147,7 +2147,7 @@ _08026196:
 	adds r0, r5, r0
 	ldr r2, [r1, #0x34]
 	adds r1, r4, #0
-	bl sub_08047970
+	bl _call_via_r2
 	adds r4, #1
 	ldr r0, [r5, #0x40]
 	cmp r4, r0
@@ -2167,7 +2167,7 @@ ResetBgLayer: @ 0x080261B4
 	ldrsh r0, [r1, r2]
 	adds r0, r4, r0
 	ldr r1, [r1, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 	adds r0, r4, #0
 	bl RedrawBgLayer
 	ldr r1, [r4, #0x38]

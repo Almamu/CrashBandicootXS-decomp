@@ -719,7 +719,7 @@ _080272EA:
 	ldr r3, [r1, #4]
 	adds r1, r6, #0
 	adds r2, r4, #0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r1, [r5, #0x30]
 	adds r1, #0x40
 	movs r2, #0
@@ -728,7 +728,7 @@ _080272EA:
 	ldr r3, [r1, #4]
 	mov r1, r8
 	adds r2, r7, #0
-	bl StartCtrlTargetMotionY
+	bl _call_via_r3
 	ldr r0, [r5, #0x2c]
 	adds r1, r5, #0
 	bl ScrollBgStreamer
@@ -778,7 +778,7 @@ sub_08027340: @ 0x08027340
 	ldrsh r0, [r1, r2]
 	adds r0, r4, r0
 	ldr r1, [r1, #0x2c]
-	bl sub_0804796C
+	bl _call_via_r1
 	adds r0, r4, #0
 	bl RedrawBgLayer
 	ldr r1, [r4, #0x38]
