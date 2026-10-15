@@ -295,6 +295,30 @@ schemas:
 schemas-check:
 	python3 tools/schemas.py --check
 
+# The editors (#1167, docs/editors.md "Running the editor"). `make editor`
+# runs the backend (tools/editor_server.py: crashdata over HTTP on
+# 127.0.0.1:8765, EDITOR_ARGS for its options) and serves the web editor
+# from apps/editor/dist, which `make editor-build` builds (Node.js and
+# pnpm; apps/, pnpm-workspace.yaml). `make editor-test` runs the
+# backend's and the workspace's tests. The ROM's build needs none of it.
+EDITOR_ARGS ?=
+.PHONY: editor editor-build editor-test
+editor:
+	python3 tools/editor_server.py $(EDITOR_ARGS)
+
+editor-build:
+	pnpm install --frozen-lockfile
+	pnpm --filter @crash/editor build
+
+editor-test:
+	python3 -m unittest discover -s packages/crashdata/tests
+	python3 -m unittest discover -s packages/buildtools/tests
+	pnpm install --frozen-lockfile
+	pnpm gen:check
+	pnpm typecheck
+	pnpm lint
+	pnpm test
+
 # Every incbin and include in games/xs/data/*.s (the sound blocks) needs the
 # corresponding built file to exist first. Each GAX2 block is a .bin and
 # the .s that data.s includes: its bytes, with the pointers as

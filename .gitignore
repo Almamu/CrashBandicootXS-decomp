@@ -68,3 +68,11 @@ report.json
 __pycache__/
 .venv/
 ntranced_progress.json
+
+# The editors' TypeScript workspace (apps/, pnpm-workspace.yaml) and the
+# desktop app's Rust build
+node_modules/
+dist/
+*.tsbuildinfo
+apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/gen/
