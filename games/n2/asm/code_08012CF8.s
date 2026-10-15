@@ -352,7 +352,7 @@ sub_08012F74: @ 0x08012F74
 	movs r0, #0x74
 	bl OperatorNew
 	adds r4, r0, #0
-	bl sub_080092B4
+	bl InitSpriteObj
 	ldr r0, _08012FFC @ =gUnknown_087F8B34
 	str r0, [r4, #0x24]
 	adds r0, r4, #0
@@ -567,7 +567,7 @@ sub_08013140: @ 0x08013140
 	push {lr}
 	ldr r2, _08013150 @ =gUnknown_087F8B34
 	str r2, [r0, #0x24]
-	bl sub_08009294
+	bl DestroySpriteObj
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -1083,7 +1083,7 @@ CreateWumpa: @ 0x08013548
 	movs r0, #0x74
 	bl OperatorNew
 	adds r4, r0, #0
-	bl sub_080092B4
+	bl InitSpriteObj
 	ldr r0, _080135B4 @ =gUnknown_087F8BC4
 	str r0, [r4, #0x24]
 	adds r0, r4, #0
@@ -1377,7 +1377,7 @@ sub_080137C8: @ 0x080137C8
 	push {lr}
 	ldr r2, _080137D8 @ =gUnknown_087F8BC4
 	str r2, [r0, #0x24]
-	bl sub_08009294
+	bl DestroySpriteObj
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -1528,7 +1528,7 @@ CreateStopwatch: @ 0x080138E0
 	movs r0, #0x60
 	bl OperatorNew
 	adds r4, r0, #0
-	bl sub_080092B4
+	bl InitSpriteObj
 	ldr r0, _08013928 @ =gUnknown_087F8C54
 	str r0, [r4, #0x24]
 	adds r0, r4, #0
@@ -1558,7 +1558,7 @@ sub_08013930: @ 0x08013930
 	push {lr}
 	ldr r2, _08013940 @ =gUnknown_087F8C54
 	str r2, [r0, #0x24]
-	bl sub_08009294
+	bl DestroySpriteObj
 	pop {r0}
 	bx r0
 	.align 2, 0

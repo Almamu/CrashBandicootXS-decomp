@@ -16,8 +16,8 @@ gEntityVtable:
 gUnknown_087F851C:
 	.incbin "baserom_n2.gba", 0x7F851C, 0x88
 
-	.global gUnknown_087F85A4
-gUnknown_087F85A4:
+	.global gUiSpriteObjVtable
+gUiSpriteObjVtable:
 	.incbin "baserom_n2.gba", 0x7F85A4, 0xF0
 
 	.global gUnknown_087F8694

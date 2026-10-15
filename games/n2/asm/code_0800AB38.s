@@ -283,7 +283,7 @@ CreateMovingSprite: @ 0x0800AD0C
 	movs r0, #0x98
 	bl OperatorNew
 	adds r4, r0, #0
-	bl sub_080092B4
+	bl InitSpriteObj
 	ldr r0, _0800AD54 @ =gUnknown_087F8694
 	str r0, [r4, #0x24]
 	adds r0, r4, #0
@@ -324,7 +324,7 @@ DestroyMovingSprite: @ 0x0800AD58
 _0800AD7A:
 	adds r0, r4, #0
 	adds r1, r5, #0
-	bl sub_08009294
+	bl DestroySpriteObj
 	pop {r4, r5}
 	pop {r0}
 	bx r0
@@ -372,7 +372,7 @@ sub_0800AD8C: @ 0x0800AD8C
 sub_0800ADD0: @ 0x0800ADD0
 	push {r4, lr}
 	adds r4, r0, #0
-	bl sub_080092B4
+	bl InitSpriteObj
 	ldr r0, _0800ADEC @ =gUnknown_087F8694
 	str r0, [r4, #0x24]
 	adds r0, r4, #0
