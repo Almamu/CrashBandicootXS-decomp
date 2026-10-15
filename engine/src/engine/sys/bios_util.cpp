@@ -15,6 +15,9 @@ using Game::Entities::MovingSprite;
  * setup and BIOS RegisterRamReset call every GBA ROM needs before
  * `AgbMain` in engine/src/engine/sys/main.cpp can run) and before main.cpp itself. */
 
+#ifndef GAME_N2
+/* N-Tranced has no DivMod: its ROM starts this object with MemCopy32
+ * (0x08000224). */
 /* BIOS `Div` (SWI 6) wrapper exposing both the quotient (return value)
  * and the remainder (via `remainderOut`). The SWI takes the dividend and
  * divisor in r0/r1 and returns the quotient in r0, the remainder in r1
@@ -43,6 +46,7 @@ s32 DivMod(s32 number, s32 denom, s32 *remainderOut)
     *remainderOut = remainder;
     return quotient;
 }
+#endif
 
 /* `CpuSet` (the BIOS SWI wrapper) with swapped src/dst
  * argument order and `byteCount` converted to CpuSet's 32-bit-word

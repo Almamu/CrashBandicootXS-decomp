@@ -9,6 +9,8 @@ SECTIONS
 	ALIGN(4)
 	{
 		build/ntranced/games/n2/asm/code_08000000.o(.text);
+		build/ntranced/src/engine/sys/bios_util.o(.text);
+		build/ntranced/games/n2/asm/code_08000248.o(.text);
 		build/ntranced/src/engine/gfx/bitmap_screen.o(.text);
 		build/ntranced/src/engine/util/fixed_math.o(.text);
 		build/ntranced/games/n2/asm/code_08000A84.o(.text);
@@ -124,6 +126,7 @@ SECTIONS
 	INCLUDE "games/n2/symbols.txt"
 
 	/* names inside the shared objects */
+	PROVIDE(UpdateCtrl = ((MemCopy32 & ~1) + 0x20) | 1);
 	PROVIDE(FixedDist = ((FixedDistSq & ~1) + 0x18) | 1);
 	PROVIDE(FixedDiv = ((FixedDistSq & ~1) + 0x3C) | 1);
 	PROVIDE(FixedMul = ((FixedDistSq & ~1) + 0x48) | 1);
