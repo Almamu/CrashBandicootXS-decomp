@@ -145,6 +145,14 @@ jobs:
       if: env.HAS_N2_ROM == 'true'
       run: python3 tools/text.py --game n2 extract --check
 
+    # its level table (docs/n_tranced.md, "Levels"): extract-table checks
+    # the layout and rewrites levels.json, which must not change
+    - name: Check N-Tranced's level table against its ROM
+      if: env.HAS_N2_ROM == 'true'
+      run: |
+        python3 tools/levels.py --levels-dir games/n2/data/levels extract-table baserom_n2.gba 081d0430
+        git diff --exit-code games/n2/data/levels/levels.json
+
     # N-Tranced's progress for its decompilati.onl project, on main
     # (games/n2/progress.py, docs/n_tranced.md "Progress"): its own report,
     # POSTed to the webhook with the repository secret

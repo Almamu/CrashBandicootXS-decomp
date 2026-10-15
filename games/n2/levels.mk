@@ -85,6 +85,19 @@ $(C_BUILDDIR)/game/level/data/level_bg_tiles_0.o: $(foreach t,gArabiaBgTiles gAr
 $(C_BUILDDIR)/game/level/data/level_bg_tiles_1.o: $(foreach t,gVolcanoBgTiles \
 	gIslandBgTiles,$(N2_LEVELS_BUILDDIR)/tilesets/$(t).bin.lz.inc)
 
+# The level table and the room records under it
+# (games/n2/src/game/level/data/level_table.cpp, levels.py table, as XS's)
+N2_LEVEL_TABLE_DEPS := $(N2_LEVELS_DIR)/levels.json $(N2_LEVEL_ROOM_JSONS) $(PY_LEVELS)
+$(N2_LEVELS_BUILDDIR)/level_table.inc: $(N2_LEVEL_TABLE_DEPS)
+	@mkdir -p $(dir $@)
+	$(N2_LEVELS) table levels $@
+$(N2_LEVELS_BUILDDIR)/level_table_rooms.inc: $(N2_LEVEL_TABLE_DEPS)
+	@mkdir -p $(dir $@)
+	$(N2_LEVELS) table records $@
+$(C_BUILDDIR)/game/level/data/level_table.o: $(N2_LEVELS_BUILDDIR)/level_table.inc \
+	$(N2_LEVELS_BUILDDIR)/level_table_rooms.inc $(GENERATED_INCLUDE_DIR)/rooms.hpp
+$(C_BUILDDIR)/game/level/data/level_table.o: CPPFLAGS += -iquote $(N2_LEVELS_BUILDDIR)
+
 # The constants XS generates from its levels.json, entity_types.json and
 # crate_kinds.json (constants/levels.h, themes.h, entities.h, categories.h,
 # crates.h): N-Tranced's

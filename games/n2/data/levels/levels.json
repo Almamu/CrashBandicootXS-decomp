@@ -1,45 +1,6 @@
 {
-  "level_names": [
-    "island_intro",
-    "prints_of_persia",
-    "lagoony_tunes",
-    "globe_trottin",
-    "pharaohs_funhouse",
-    "runaway_rug",
-    "tiki_torture",
-    "hoppin_coffins",
-    "barrel_roll",
-    "flockful_of_seagulls",
-    "magma_mania",
-    "run_from_the_sun",
-    "now_its_istanbul",
-    "mister_lava_lava",
-    "water_logged",
-    "slip_n_slidin_sphinx",
-    "rocks_can_roll",
-    "rock_the_casaba",
-    "eruption_disruption",
-    "spaced_out",
-    "king_too_uncommon",
-    "wild_nile_ride",
-    "101_arabian_kites",
-    "fire_walker",
-    "evil_crunch",
-    "evil_coco",
-    "fake_crash",
-    "n_trance",
-    "n_tropy"
-  ],
-  "tileset_names": {
-    "0x081E5394": "gArabiaBg0Tiles",
-    "0x08220840": "gVolcanoBg0Tiles",
-    "0x0826FE48": "gEgyptBg0Tiles",
-    "0x085346AC": "gArabiaBgTiles",
-    "0x08538320": "gArabiaSkyBgTiles",
-    "0x0853B250": "gEgyptBgTiles",
-    "0x0853FD10": "gVolcanoBgTiles",
-    "0x0854309C": "gIslandBgTiles"
-  },
+  "level_names": ["island_intro", "prints_of_persia", "lagoony_tunes", "globe_trottin", "pharaohs_funhouse", "runaway_rug", "tiki_torture", "hoppin_coffins", "barrel_roll", "flockful_of_seagulls", "magma_mania", "run_from_the_sun", "now_its_istanbul", "mister_lava_lava", "water_logged", "slip_n_slidin_sphinx", "rocks_can_roll", "rock_the_casaba", "eruption_disruption", "spaced_out", "king_too_uncommon", "wild_nile_ride", "101_arabian_kites", "fire_walker", "evil_crunch", "evil_coco", "fake_crash", "n_trance", "n_tropy"],
+  "tileset_names": {"0x081E5394": "gArabiaBg0Tiles", "0x08220840": "gVolcanoBg0Tiles", "0x0826FE48": "gEgyptBg0Tiles", "0x085346AC": "gArabiaBgTiles", "0x08538320": "gArabiaSkyBgTiles", "0x0853B250": "gEgyptBgTiles", "0x0853FD10": "gVolcanoBgTiles", "0x0854309C": "gIslandBgTiles"},
   "rooms": [
     "prints_of_persia/bonus",
     "runaway_rug/bonus",
@@ -177,17 +138,380 @@
       "evil_coco/main"
     ]
   },
-  "room_layout": [
-    "params",
-    "type_counts",
-    "entity_list",
-    "links",
-    "grids",
-    "palette",
-    "desc",
-    "groups",
-    "layers",
-    "entities"
+  "room_layout": ["params", "type_counts", "entity_list", "links", "grids", "palette", "desc", "groups", "layers", "entities"],
+  "entity_types": 110,
+  "palette_cycles": [
+    {
+      "name": "arabia",
+      "lists": [
+        {"symbol": "gThemePaletteCycle0", "rate": 10, "direction": 1, "entries": [243, 244, 245, 246, 247]}
+      ]
+    },
+    {
+      "name": "egypt",
+      "lists": [
+        {"symbol": "gThemePaletteCycle1A", "rate": 10, "direction": 0, "entries": [251, 252, 253, 254, 255]},
+        {"symbol": "gThemePaletteCycle1B", "rate": 10, "direction": 0, "entries": [34, 35, 36]}
+      ]
+    }
   ],
-  "entity_types": 110
+  "palette_glows": [{"name": "volcano", "rate": 6, "entries": {"symbol": "gThemePaletteGlow2Entries", "values": [28, 29, 30, 31]}, "colors": [{"symbol": "gThemePaletteGlow2ColorsA", "values": [287, 1662, 32599, 30564]}, {"symbol": "gThemePaletteGlow2ColorsB", "values": [223, 1758, 32767, 32675]}]}],
+  "levels": [
+    {
+      "constant": "LEVEL_ISLAND_INTRO",
+      "name": "island_intro",
+      "name_text": 41,
+      "theme": 5,
+      "times": [264, 240, 128],
+      "mask_assist_deaths": 3,
+      "crate_assist_deaths": 3,
+      "rooms": ["island_intro/main"]
+    },
+    {
+      "constant": "LEVEL_PRINTS_OF_PERSIA",
+      "name": "prints_of_persia",
+      "name_text": 42,
+      "theme": 0,
+      "times": [362, 329, 289],
+      "mask_assist_deaths": 4,
+      "crate_assist_deaths": 4,
+      "rooms": ["prints_of_persia/main"],
+      "bonus": "prints_of_persia/bonus"
+    },
+    {
+      "constant": "LEVEL_LAGOONY_TUNES",
+      "name": "lagoony_tunes",
+      "name_text": 43,
+      "theme": 4,
+      "times": [807, 734, 657],
+      "mask_assist_deaths": 4,
+      "crate_assist_deaths": 4,
+      "rooms": [{"kind": 3, "index": 0}]
+    },
+    {
+      "constant": "LEVEL_GLOBE_TROTTIN",
+      "name": "globe_trottin",
+      "name_text": 44,
+      "theme": 6,
+      "times": [452, 411, 315],
+      "mask_assist_deaths": 4,
+      "crate_assist_deaths": 4,
+      "rooms": [{"kind": 4, "index": 0}]
+    },
+    {
+      "constant": "LEVEL_PHARAOHS_FUNHOUSE",
+      "name": "pharaohs_funhouse",
+      "name_text": 45,
+      "theme": 1,
+      "times": [334, 304, 188],
+      "mask_assist_deaths": 4,
+      "crate_assist_deaths": 4,
+      "rooms": ["pharaohs_funhouse/main"],
+      "bonus": "pharaohs_funhouse/bonus"
+    },
+    {
+      "constant": "LEVEL_RUNAWAY_RUG",
+      "name": "runaway_rug",
+      "name_text": 46,
+      "theme": 0,
+      "times": [618, 562, 476],
+      "mask_assist_deaths": 4,
+      "crate_assist_deaths": 4,
+      "rooms": ["runaway_rug/main"],
+      "bonus": "runaway_rug/bonus"
+    },
+    {
+      "constant": "LEVEL_TIKI_TORTURE",
+      "name": "tiki_torture",
+      "name_text": 47,
+      "theme": 2,
+      "times": [274, 249, 196],
+      "mask_assist_deaths": 5,
+      "crate_assist_deaths": 5,
+      "rooms": ["tiki_torture/main"],
+      "bonus": "tiki_torture/bonus"
+    },
+    {
+      "constant": "LEVEL_HOPPIN_COFFINS",
+      "name": "hoppin_coffins",
+      "name_text": 48,
+      "theme": 1,
+      "times": [645, 586, 497],
+      "mask_assist_deaths": 5,
+      "crate_assist_deaths": 5,
+      "rooms": ["hoppin_coffins/main"],
+      "bonus": "hoppin_coffins/bonus"
+    },
+    {
+      "constant": "LEVEL_BARREL_ROLL",
+      "name": "barrel_roll",
+      "name_text": 49,
+      "theme": 6,
+      "times": [783, 712, 670],
+      "mask_assist_deaths": 5,
+      "crate_assist_deaths": 5,
+      "rooms": [{"kind": 4, "index": 1}]
+    },
+    {
+      "constant": "LEVEL_FLOCKFUL_OF_SEAGULLS",
+      "name": "flockful_of_seagulls",
+      "name_text": 50,
+      "theme": 4,
+      "times": [835, 759, 725],
+      "mask_assist_deaths": 5,
+      "crate_assist_deaths": 5,
+      "rooms": [{"kind": 3, "index": 1}]
+    },
+    {
+      "constant": "LEVEL_MAGMA_MANIA",
+      "name": "magma_mania",
+      "name_text": 51,
+      "theme": 2,
+      "times": [601, 546, 476],
+      "mask_assist_deaths": 5,
+      "crate_assist_deaths": 5,
+      "rooms": ["magma_mania/main"],
+      "bonus": "magma_mania/bonus"
+    },
+    {
+      "constant": "LEVEL_RUN_FROM_THE_SUN",
+      "name": "run_from_the_sun",
+      "name_text": 52,
+      "theme": 3,
+      "times": [1055, 959, 911],
+      "mask_assist_deaths": 6,
+      "crate_assist_deaths": 6,
+      "rooms": [{"kind": 3, "index": 2}]
+    },
+    {
+      "constant": "LEVEL_NOW_ITS_ISTANBUL",
+      "name": "now_its_istanbul",
+      "name_text": 53,
+      "theme": 0,
+      "times": [706, 642, 583],
+      "mask_assist_deaths": 6,
+      "crate_assist_deaths": 6,
+      "rooms": ["now_its_istanbul/main"],
+      "bonus": "now_its_istanbul/bonus"
+    },
+    {
+      "constant": "LEVEL_MISTER_LAVA_LAVA",
+      "name": "mister_lava_lava",
+      "name_text": 54,
+      "theme": 2,
+      "times": [640, 582, 509],
+      "mask_assist_deaths": 6,
+      "crate_assist_deaths": 6,
+      "rooms": ["mister_lava_lava/main"],
+      "bonus": "mister_lava_lava/bonus"
+    },
+    {
+      "constant": "LEVEL_WATER_LOGGED",
+      "name": "water_logged",
+      "name_text": 55,
+      "theme": 4,
+      "times": [581, 528, 461],
+      "mask_assist_deaths": 6,
+      "crate_assist_deaths": 6,
+      "rooms": [{"kind": 3, "index": 4}]
+    },
+    {
+      "constant": "LEVEL_SLIP_N_SLIDIN_SPHINX",
+      "name": "slip_n_slidin_sphinx",
+      "name_text": 56,
+      "theme": 1,
+      "times": [538, 489, 435],
+      "mask_assist_deaths": 6,
+      "crate_assist_deaths": 6,
+      "rooms": ["slip_n_slidin_sphinx/main"],
+      "bonus": "slip_n_slidin_sphinx/bonus"
+    },
+    {
+      "constant": "LEVEL_ROCKS_CAN_ROLL",
+      "name": "rocks_can_roll",
+      "name_text": 57,
+      "theme": 6,
+      "times": [704, 640, 557],
+      "mask_assist_deaths": 7,
+      "crate_assist_deaths": 7,
+      "rooms": [{"kind": 4, "index": 2}]
+    },
+    {
+      "constant": "LEVEL_ROCK_THE_CASABA",
+      "name": "rock_the_casaba",
+      "name_text": 58,
+      "theme": 0,
+      "times": [809, 735, 589],
+      "mask_assist_deaths": 7,
+      "crate_assist_deaths": 7,
+      "rooms": ["rock_the_casaba/main"],
+      "bonus": "rock_the_casaba/bonus"
+    },
+    {
+      "constant": "LEVEL_ERUPTION_DISRUPTION",
+      "name": "eruption_disruption",
+      "name_text": 59,
+      "theme": 2,
+      "times": [659, 599, 503],
+      "mask_assist_deaths": 7,
+      "crate_assist_deaths": 7,
+      "rooms": ["eruption_disruption/main"],
+      "bonus": "eruption_disruption/bonus"
+    },
+    {
+      "constant": "LEVEL_SPACED_OUT",
+      "name": "spaced_out",
+      "name_text": 60,
+      "theme": 3,
+      "times": [1862, 1693, 1509],
+      "mask_assist_deaths": 7,
+      "crate_assist_deaths": 7,
+      "rooms": [{"kind": 3, "index": 3}]
+    },
+    {
+      "constant": "LEVEL_KING_TOO_UNCOMMON",
+      "name": "king_too_uncommon",
+      "name_text": 61,
+      "theme": 1,
+      "times": [584, 531, 507],
+      "mask_assist_deaths": 7,
+      "crate_assist_deaths": 7,
+      "rooms": ["king_too_uncommon/main"],
+      "bonus": "king_too_uncommon/bonus"
+    },
+    {
+      "constant": "LEVEL_WILD_NILE_RIDE",
+      "name": "wild_nile_ride",
+      "name_text": 62,
+      "theme": 1,
+      "times": [846, 769, 459],
+      "mask_assist_deaths": 7,
+      "crate_assist_deaths": 7,
+      "rooms": ["wild_nile_ride/main"]
+    },
+    {
+      "constant": "LEVEL_101_ARABIAN_KITES",
+      "name": "101_arabian_kites",
+      "name_text": 63,
+      "theme": 0,
+      "times": [1121, 1019, 667],
+      "mask_assist_deaths": 7,
+      "crate_assist_deaths": 7,
+      "rooms": ["101_arabian_kites/main"]
+    },
+    {
+      "constant": "LEVEL_FIRE_WALKER",
+      "name": "fire_walker",
+      "name_text": 64,
+      "theme": 2,
+      "times": [986, 896, 805],
+      "mask_assist_deaths": 7,
+      "crate_assist_deaths": 7,
+      "rooms": ["fire_walker/main"]
+    },
+    {
+      "constant": "LEVEL_EVIL_CRUNCH",
+      "name": "evil_crunch",
+      "boss": true,
+      "name_text": 65,
+      "theme": 7,
+      "times": [355, 275, 233],
+      "mask_assist_deaths": 4,
+      "crate_assist_deaths": 5,
+      "rooms": ["evil_crunch/main"]
+    },
+    {
+      "constant": "LEVEL_EVIL_COCO",
+      "name": "evil_coco",
+      "boss": true,
+      "name_text": 66,
+      "theme": 8,
+      "times": [355, 275, 233],
+      "mask_assist_deaths": 5,
+      "crate_assist_deaths": 5,
+      "rooms": ["evil_coco/main"]
+    },
+    {
+      "constant": "LEVEL_FAKE_CRASH",
+      "name": "fake_crash",
+      "boss": true,
+      "name_text": 67,
+      "theme": 9,
+      "times": [355, 275, 233],
+      "mask_assist_deaths": 6,
+      "crate_assist_deaths": 6,
+      "rooms": ["fake_crash/main"]
+    },
+    {
+      "constant": "LEVEL_N_TRANCE",
+      "name": "n_trance",
+      "boss": true,
+      "name_text": 68,
+      "theme": 10,
+      "times": [355, 275, 233],
+      "mask_assist_deaths": 7,
+      "crate_assist_deaths": 7,
+      "rooms": ["n_trance/part1", "n_trance/part2"]
+    },
+    {
+      "constant": "LEVEL_N_TROPY",
+      "name": "n_tropy",
+      "boss": true,
+      "name_text": 69,
+      "theme": 11,
+      "times": [355, 275, 233],
+      "mask_assist_deaths": 7,
+      "crate_assist_deaths": 7,
+      "rooms": ["n_tropy/part1", "n_tropy/part2", "n_tropy/part3"]
+    }
+  ],
+  "themes": [
+    {"constant": "THEME_ARABIA", "name": "Arabia", "song": 1, "palette_cycle": "arabia"},
+    {"constant": "THEME_EGYPT", "name": "Egypt", "song": 2, "palette_cycle": "egypt"},
+    {"constant": "THEME_VOLCANO", "name": "volcano", "song": 3, "palette_glow": "volcano"},
+    {"constant": "THEME_SPACE", "name": "space", "song": 6},
+    {"constant": "THEME_OCEAN", "name": "ocean (the jet ski)", "song": 4},
+    {"constant": "THEME_ISLAND", "name": "the island (the intro)", "song": 0},
+    {"constant": "THEME_ATLASPHERE", "name": "the atlasphere", "song": 7},
+    {"constant": "THEME_EVIL_CRUNCH", "name": "Evil Crunch", "song": 10},
+    {"constant": "THEME_EVIL_COCO", "name": "Evil Coco", "song": 11},
+    {"constant": "THEME_FAKE_CRASH", "name": "Fake Crash", "song": 12, "palette_cycle": "egypt"},
+    {"constant": "THEME_N_TRANCE", "name": "N. Trance", "song": 13},
+    {"constant": "THEME_N_TROPY", "name": "N. Tropy", "song": 14}
+  ],
+  "table": {
+    "lists": [
+      {"level": "LEVEL_ISLAND_INTRO", "rooms": ["island_intro/main"]},
+      {"level": "LEVEL_PRINTS_OF_PERSIA", "rooms": ["prints_of_persia/main"]},
+      {"level": "LEVEL_LAGOONY_TUNES", "rooms": [{"kind": 3, "index": 0}]},
+      {"level": "LEVEL_GLOBE_TROTTIN", "rooms": [{"kind": 4, "index": 0}]},
+      {"level": "LEVEL_PHARAOHS_FUNHOUSE", "rooms": ["pharaohs_funhouse/main"]},
+      {"level": "LEVEL_RUNAWAY_RUG", "rooms": ["runaway_rug/main"]},
+      {"level": "LEVEL_TIKI_TORTURE", "rooms": ["tiki_torture/main"]},
+      {"level": "LEVEL_HOPPIN_COFFINS", "rooms": ["hoppin_coffins/main"]},
+      {"level": "LEVEL_BARREL_ROLL", "rooms": [{"kind": 4, "index": 1}]},
+      {"level": "LEVEL_FLOCKFUL_OF_SEAGULLS", "rooms": [{"kind": 3, "index": 1}]},
+      {"level": "LEVEL_MAGMA_MANIA", "rooms": ["magma_mania/main"]},
+      {"level": "LEVEL_RUN_FROM_THE_SUN", "rooms": [{"kind": 3, "index": 2}]},
+      {"level": "LEVEL_NOW_ITS_ISTANBUL", "rooms": ["now_its_istanbul/main"]},
+      {"level": "LEVEL_MISTER_LAVA_LAVA", "rooms": ["mister_lava_lava/main"]},
+      {"level": "LEVEL_WATER_LOGGED", "rooms": [{"kind": 3, "index": 4}]},
+      {"level": "LEVEL_SLIP_N_SLIDIN_SPHINX", "rooms": ["slip_n_slidin_sphinx/main"]},
+      {"level": "LEVEL_ROCKS_CAN_ROLL", "rooms": [{"kind": 4, "index": 2}]},
+      {"level": "LEVEL_ROCK_THE_CASABA", "rooms": ["rock_the_casaba/main"]},
+      {"level": "LEVEL_ERUPTION_DISRUPTION", "rooms": ["eruption_disruption/main"]},
+      {"level": "LEVEL_SPACED_OUT", "rooms": [{"kind": 3, "index": 3}]},
+      {"level": "LEVEL_KING_TOO_UNCOMMON", "rooms": ["king_too_uncommon/main"]},
+      {"level": "LEVEL_N_TROPY", "rooms": ["n_tropy/part1", "n_tropy/part2", "n_tropy/part3"]},
+      {"level": "LEVEL_EVIL_CRUNCH", "rooms": ["evil_crunch/main"]},
+      {"level": "LEVEL_FAKE_CRASH", "rooms": ["fake_crash/main"]},
+      {"level": "LEVEL_EVIL_COCO", "rooms": ["evil_coco/main"]},
+      {"level": "LEVEL_N_TRANCE", "rooms": ["n_trance/part1", "n_trance/part2"]},
+      {"level": "LEVEL_WILD_NILE_RIDE", "rooms": ["wild_nile_ride/main"]},
+      {"level": "LEVEL_FIRE_WALKER", "rooms": ["fire_walker/main"]},
+      {"level": "LEVEL_101_ARABIAN_KITES", "rooms": ["101_arabian_kites/main"]}
+    ],
+    "records": ["island_intro/main", "prints_of_persia/main", "runaway_rug/main", "now_its_istanbul/main", "rock_the_casaba/main", "pharaohs_funhouse/main", "hoppin_coffins/main", "slip_n_slidin_sphinx/main", "king_too_uncommon/main", "tiki_torture/main", "magma_mania/main", "mister_lava_lava/main", "eruption_disruption/main", "fire_walker/main", "wild_nile_ride/main", "101_arabian_kites/main", {"kind": 3, "index": 0}, {"kind": 3, "index": 1}, {"kind": 3, "index": 4}, {"kind": 4, "index": 0}, {"kind": 4, "index": 1}, {"kind": 4, "index": 2}, {"kind": 3, "index": 2}, {"kind": 3, "index": 3}, "evil_crunch/main", "evil_coco/main", "fake_crash/main", "n_trance/part1", "n_trance/part2", "n_tropy/part1", "n_tropy/part2", "n_tropy/part3"],
+    "room_lists": ["LEVEL_ISLAND_INTRO", "LEVEL_PRINTS_OF_PERSIA", "LEVEL_LAGOONY_TUNES", "LEVEL_GLOBE_TROTTIN", "LEVEL_PHARAOHS_FUNHOUSE", "LEVEL_RUNAWAY_RUG", "LEVEL_TIKI_TORTURE", "LEVEL_HOPPIN_COFFINS", "LEVEL_BARREL_ROLL", "LEVEL_FLOCKFUL_OF_SEAGULLS", "LEVEL_MAGMA_MANIA", "LEVEL_RUN_FROM_THE_SUN", "LEVEL_NOW_ITS_ISTANBUL", "LEVEL_MISTER_LAVA_LAVA", "LEVEL_WATER_LOGGED", "LEVEL_SLIP_N_SLIDIN_SPHINX", "LEVEL_ROCKS_CAN_ROLL", "LEVEL_ROCK_THE_CASABA", "LEVEL_ERUPTION_DISRUPTION", "LEVEL_SPACED_OUT", "LEVEL_KING_TOO_UNCOMMON", "LEVEL_EVIL_CRUNCH", "LEVEL_N_TROPY", "LEVEL_FAKE_CRASH", "LEVEL_EVIL_COCO", "LEVEL_N_TRANCE", "LEVEL_WILD_NILE_RIDE", "LEVEL_101_ARABIAN_KITES", "LEVEL_FIRE_WALKER"]
+  }
 }

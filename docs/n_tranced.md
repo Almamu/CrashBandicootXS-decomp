@@ -368,6 +368,7 @@ is, by [`games/n2/levels.mk`](../games/n2/levels.mk) with
 | The 3 BG0 tile sets (8bpp) | between the regions | `level_bg0_tiles_<N>.cpp` (`levels.py tileset`) |
 | The 5 BG1-3 tile sets (4bpp, LZ77) | `0x085346AC`-`0x08544635`, in two runs | `level_bg_tiles_<N>.cpp` |
 | The 36 level assets | `0x08544638`-`0x0869B8CC` | `engine/src/game/level/data/level_assets.cpp` (shared) |
+| The themes' colour arrays, the level table, room lists, themes' music cues and room records | `0x081D03FC`-`0x081D0E10` | `games/n2/src/game/level/data/level_table.cpp` (`levels.py table`) |
 
 That's 2,313,432 bytes, 28.9% of its data. A room's parts are in another
 order than XS's (`levels.json`'s `"room_layout"`: the type counts, entity
@@ -376,9 +377,42 @@ descriptors) and N-Tranced has 110 entity types (`"entity_types"`; XS
 93): `levels.py` takes both from the game's `levels.json`. The regions'
 names (`level_rooms_<N>`) are placeholders, and the `constants/*.h`
 headers are placeholders with only the counts the shared headers need
-(`levels.mk`, "Linking a shared source into N-Tranced"). Still to do for
-#1113: the level table, its themes and the level select as sources, and
-the entity types' names.
+(`levels.mk`, "Linking a shared source into N-Tranced").
+
+The level table is `levels.json`'s `"levels"`, `"themes"` and `"table"`,
+which `extract-table` writes from the ROM (and checks the layout of; CI
+checks it gives back the same `levels.json`), as `extract` does XS's:
+
+```
+python3 tools/levels.py --levels-dir games/n2/data/levels extract-table baserom_n2.gba 081d0430
+```
+
+Each level is `LEVEL_<NAME>` after `"level_names"`, with its name text,
+theme, time-trial times, assist deaths and rooms, as XS's. Its 12 themes
+(named after the levels that use them, kept by `extract-table`) have
+their music cue as the song's number: N-Tranced's songs have no names yet
+(#1112). The table differs from XS's in four ways, which `"table"` and
+the generator (`levels.py table`) cover:
+
+- the last levels' room lists aren't in level order: `"room_lists"`, the
+  levels in `gLevelRoomLists`' order;
+- the played rooms' records aren't in the order the arrays first play
+  them (the rooms', then the stages', then the rest's): `"records"`;
+- a stage is `{"kind": K, "index": N}`: kind 3 is XS's actor category
+  stage (5 levels: the three ocean ones, the jet ski's, and the two
+  space ones), kind 4 its own (3 levels,
+  the atlasphere's), neither with a name yet;
+- the extra rooms' records set `unk_0C` (1).
+
+Before the table are the themes' colour arrays (`0x081D03FC`), which its
+`RunRoom` (still the disassembly) uses: `"palette_cycles"` as XS's, the
+BG palette entries `f3`-`f7` for theme 0 (`arabia`) and `fb`-`ff` and
+`22`-`24` for themes 1 and 9 (`egypt`), and `"palette_glows"`, an effect
+XS doesn't have: for theme 2 (`volcano`) entries `1c`-`1f` glow between
+two sets of 4 colours. Their symbols, rates and directions are what that
+code passes; `extract-table` reads the values.
+
+Still to do for #1113: the level select, and the entity types' names.
 
 ## Graphics (#1115)
 

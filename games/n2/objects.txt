@@ -59,6 +59,7 @@
 0x08106C58 0x11670 games/n2/src/game/vehicles/space/data/space_sprite_sheet.cpp
 0x081CDFEC 0x00024 engine/src/engine/gfx/data/obj_piece_sizes.cpp
 0x081CE454 0x00050 engine/src/game/crash/data/input_ctrl_motion_set.cpp
+0x081D03FC 0x00A14 games/n2/src/game/level/data/level_table.cpp
 0x081D0E10 0x0072C engine/src/game/level/data/terrain_types.cpp
 0x081D1C8C 0x0CDB4 games/n2/src/game/ui/data/ui_text.cpp
 0x081E44C4 0x00ED0 games/n2/src/game/level/data/level_rooms_0.cpp
