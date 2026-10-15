@@ -16,7 +16,7 @@ moddable, and the worked example for this page. It adds a fifth world
 
 | what | where it comes from | the doc |
 |---|---|---|
-| a new song, `sample_tune`, played by a new level theme and by the new cutscene | an XM the mod writes (two pool instruments, 16-row patterns) | [audio.md, "Adding a song"](./audio.md#adding-a-song) |
+| a new song, `sample_tune`, played by a new level theme and by the new cutscene | an XM the mod writes (16-row patterns; a new instrument with its own synthesized sample, and a pool instrument) | [audio.md, "Adding a song"](./audio.md#adding-a-song) |
 | a new theme, `THEME_SAMPLE` | jungle's picture and colour cycle, the new song | [levels.md, "Adding a theme"](./levels.md#adding-a-theme) |
 | a new room, `sample_grove/main` (room 41) | jungle jam's room under its own symbols, one 8x8 block repainted (a new tile) | [levels.md, "Adding a room"](./levels.md#adding-a-room) |
 | a recoloured actor category, `CATEGORY_SAMPLE_ICE` | snow crash's polar stage with its own OBJ palette and BG palette cycle | [levels.md, "Category graphics"](./levels.md#category-graphics) |
@@ -86,15 +86,13 @@ run `make`; `make compare` then fails, as it should.
 | the save | grows with the levels (64 Kbit past 28), versioned by a hash of the level data | [levels.md, "The save"](./levels.md#the-save) |
 | text | every string, in six languages; the credits | [text.md](./text.md) |
 | cutscenes | slides, pictures, timing, music, text | [data.md, "Cutscenes"](./data.md#cutscenes) |
-| music | new songs from XM files on the ROM's instruments; which song plays where | [audio.md](./audio.md) |
+| music | new songs from XM files, on the ROM's instruments or new ones (an XM's own samples, or WAVs); new sound effects with their own samples; which song plays where | [audio.md](./audio.md) |
 | graphics | the graphics of the manifest, new ones, sprite banks and frames, palettes | [graphics.md](./graphics.md) |
 
 ## What a mod can't do yet
 
 These are code, or not built yet:
 
-- **New instruments and samples.** A new song plays the ROM's pool
-  instruments; new ones are [#1118](https://github.com/Almamu/CrashBandicootXS-decomp/issues/1118).
 - **Editors and ports.** There is no level or cutscene editor and no
   platform library for a PC port yet: [#1093](https://github.com/Almamu/CrashBandicootXS-decomp/issues/1093).
 - **New behaviour.** A new actor kind, boss kind, power, category type or

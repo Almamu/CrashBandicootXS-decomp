@@ -20,6 +20,11 @@ Field names describe what's empirically observable from the data and the
 code that reads it; the deeper mixer semantics of slot_id/pitch_offset
 haven't been fully reversed.
 
+An entry may name a new instrument instead of a slot_id: `"instrument":
+"<name>"`, sound/instruments/<name>.json and its WAV, which
+tools/gax_audio.py --sfx appends to the sound-effect set (docs/audio.md,
+"Adding a sound effect"); its slot_id is the number it gets there.
+
 An entry may also have a `name` and a `comment`: `--constants OUT` writes
 them as the SFX_<name> #defines of constants/sfx.h (build/include), and the
 top-level `none_comment` documents SFX_NONE, the ID one past the table:
@@ -28,16 +33,25 @@ SFX_COUNT, gSfxTable's length. Both follow the table's length, so a new
 entry doesn't collide with the sentinel.
 """
 import json
+import os
 import struct
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from gax_audio import sfx_pool  # noqa: E402
+
 
 def build(json_path, out_path):
     manifest = json.load(open(json_path))
     entries = manifest['entries']
+    # a new sound effect's instrument (sound/instruments/<name>.json): its
+    # number in the sound-effect set, after the ROM's (tools/gax_audio.py)
+    _, slots = sfx_pool(table_path=json_path)
 
     out = bytearray()
     for e in entries:
-        out += struct.pack('<iii', e['slot_id'], e['pitch_offset'], e['volume'])
+        slot = e['slot_id'] if 'slot_id' in e else slots[e['instrument']]
+        out += struct.pack('<iii', slot, e['pitch_offset'], e['volume'])
 
     open(out_path, 'wb').write(out)
 

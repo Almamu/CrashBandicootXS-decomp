@@ -173,7 +173,11 @@ include cutscenes.mk
 # "Adding a song").
 SOUND_SONGS := $(wildcard sound/songs/*.xm) $(wildcard sound/songs/*.json)
 SOUND_SAMPLES := $(wildcard sound/samples/*.wav)
-SOUND_SFX_SOURCES := sound/gax_sfx_manifest.json $(wildcard sound/sfx_samples/*.wav)
+# New instruments (docs/audio.md, "New instruments"): sound/instruments/
+# <name>.json, each with a WAV under sound/, for the songs and for the
+# sound effects sfx_table.json names.
+SOUND_INSTRUMENTS := $(wildcard sound/instruments/*.json) $(SOUND_SAMPLES) $(wildcard sound/sfx_samples/*.wav)
+SOUND_SFX_SOURCES := sound/gax_sfx_manifest.json sound/sfx_table.json $(SOUND_INSTRUMENTS)
 SOUND_BUILT := $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_audio_data.s \
 	$(SOUND_BUILDDIR)/gax_default_layout.bin $(SOUND_BUILDDIR)/gax_default_layout.s \
 	$(SOUND_BUILDDIR)/gax_sfx_data.bin $(SOUND_BUILDDIR)/gax_sfx_data.s $(SOUND_BUILDDIR)/sfx_table.bin
@@ -219,7 +223,7 @@ $(DATA_ASM_OBJS): $(SOUND_BUILT)
 # struct (gGaxDefaultSong) and the song offsets the song table
 # (src/engine/audio/data/song_table.cpp) is written with.
 $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_audio_data.s $(SOUND_BUILDDIR)/gax_default_layout.bin \
-		$(SOUND_BUILDDIR)/gax_default_layout.s $(SOUND_BUILDDIR)/gax_songs.h &: sound/gax_manifest.json $(SOUND_SONGS) $(SOUND_SAMPLES) $(SOUND_SFX_SOURCES) tools/gax_audio.py
+		$(SOUND_BUILDDIR)/gax_default_layout.s $(SOUND_BUILDDIR)/gax_songs.h &: sound/gax_manifest.json $(SOUND_SONGS) $(SOUND_INSTRUMENTS) $(SOUND_SFX_SOURCES) tools/gax_audio.py
 	python3 tools/gax_audio.py $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_default_layout.bin $(SOUND_BUILDDIR)/gax_songs.h
 
 # gSongTable itself, in song id order (the manifest's song_table), which
@@ -233,7 +237,8 @@ $(C_BUILDDIR)/engine/audio/data/song_table.o: $(SOUND_BUILDDIR)/gax_songs.h $(SO
 $(SOUND_BUILDDIR)/gax_sfx_data.bin $(SOUND_BUILDDIR)/gax_sfx_data.s &: $(SOUND_SFX_SOURCES) tools/gax_audio.py
 	python3 tools/gax_audio.py --sfx $(SOUND_BUILDDIR)/gax_sfx_data.bin
 
-$(SOUND_BUILDDIR)/sfx_table.bin: sound/sfx_table.json tools/sfx_table.py
+# An entry naming a new instrument gets its number in the set.
+$(SOUND_BUILDDIR)/sfx_table.bin: $(SOUND_SFX_SOURCES) tools/sfx_table.py tools/gax_audio.py
 	python3 tools/sfx_table.py $@
 
 # The song and sound-effect IDs (#655), generated like levels.mk's

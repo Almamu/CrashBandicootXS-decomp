@@ -5,7 +5,9 @@ alone. tools/apply_mod.py runs apply(tree) in a copy of the tree; a plain
 What it adds (each step names its doc):
 
 - a song, `sample_tune`: a short tune written for the mod (make_xm below),
-  on two of the ROM's pool instruments (docs/audio.md, "Adding a song");
+  its melody on a new instrument with its own synthesized sample, its drum
+  on one of the ROM's pool instruments (docs/audio.md, "Adding a song",
+  "New instruments");
 - a level theme, `THEME_SAMPLE`, playing it (docs/levels.md, "Adding a
   theme");
 - a room, `sample_grove/main`: jungle jam's room copied under its own
@@ -74,9 +76,25 @@ CUTSCENE_TEXT = {
 
 
 # ---------------------------------------------------------------------------
-# The song: an XM of two channels, 16-row patterns, a melody on the pool's
-# instrument 7 and a drum on its instrument 2 (docs/audio.md, "Adding a
-# song": instruments are the pool's, by name; one pattern length; speed 6).
+# The song: an XM of two channels, 16-row patterns, a drum on the pool's
+# instrument 2 (docs/audio.md, "Adding a song": named "Instrument 2") and a
+# melody on "sample lead", a new instrument (docs/audio.md, "New
+# instruments"): its sample, 4 cycles of a buzzy wave synthesized here,
+# looped, and a volume envelope with a sustain point.
+
+def lead_instrument():
+    buzz = bytes(round(56 * (i % 64) / 32 - 56 + (36 if i % 64 < 32 else -36)) & 0xFF for i in range(256))
+    deltas = bytes((v - p) & 0xFF for v, p in zip(buzz, b"\0" + buzz))  # XM stores deltas
+    env = [(0, 64), (6, 44), (12, 40), (24, 0)]
+    head = struct.pack("<I22sBHI", 263, b"sample lead".ljust(22, b"\0"), 0, 1, 40) + bytes(96)
+    head += b"".join(struct.pack("<HH", x, y) for x, y in env).ljust(48, b"\0") + bytes(48)
+    # 4 points, sustain at point 2, no loop; envelope on with sustain
+    head += bytes([len(env), 0, 2, 0, 0, 0, 0, 0, 1 | 2, 0, 0, 0, 0, 0]) + bytes(4)
+    head = head.ljust(263, b"\0")
+    # 256 8-bit samples, a forward loop over all of them, volume 48
+    sample = struct.pack("<IIIBbBBbB22s", 256, 0, 256, 48, 0, 1, 0x80, 0, 0, b"buzz")
+    return head + sample + deltas
+
 
 def make_xm(path):
     rows, names = 16, ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
@@ -100,8 +118,7 @@ def make_xm(path):
     head = b"Extended Module: " + b"sample tune".ljust(20, b"\0") + b"\x1a" + b"apply_mod".ljust(20, b"\0")
     head += struct.pack("<H", 0x104) + struct.pack("<IHHHHHHHH", 276, len(order), 0, 2, len(pats), 2, 1, 6, 150)
     head += bytes(order).ljust(256, b"\0")
-    inst = b"".join(struct.pack("<I22sBH", 29, n.encode().ljust(22, b"\0"), 0, 0)
-                    for n in ("Instrument 7", "Instrument 2"))
+    inst = lead_instrument() + struct.pack("<I22sBH", 29, b"Instrument 2".ljust(22, b"\0"), 0, 0)
     with open(path, "wb") as f:
         f.write(head + b"".join(pats) + inst)
 

@@ -19,6 +19,10 @@ sources:
   sound/samples/*.wav       - one 8-bit mono PCM sample per instrument voice
                               (shared across songs) - this is what a modder
                               edits to change a sound.
+  sound/instruments/*.json  - new instruments, each with a WAV under sound/,
+                              for new songs and sound effects; a new song's
+                              XM can also bring its own (docs/audio.md, "New
+                              instruments"). They are appended to the pool.
 
 It also builds the GAX2 sound-effect set that sits right before the music
 block (`--sfx`, see docs/audio.md) from
@@ -27,6 +31,8 @@ block (`--sfx`, see docs/audio.md) from
                               the music's), the handler type's song fields
                               and how many voice-type pointers to emit.
   sound/sfx_samples/*.wav     - its 87 samples (8-bit mono PCM).
+  sound/sfx_table.json        - the new instruments its new sound effects
+                              name, appended to the set.
 
 The music block starts with the 36-byte GaxSongHeader.sfxTypes array
 (StartSong passes gGaxMusicData there): nine pointers to the
@@ -62,7 +68,9 @@ With unedited sources, the output reproduces the original ROM's audio block
 byte-for-byte (verified during development).
 """
 import base64
+import copy
 import json
+import math
 import os
 import struct
 import sys
@@ -488,22 +496,44 @@ def read_xm(path):
 
     num_instruments = struct.unpack_from('<H', buf, 72)[0]
     gax_instrument_indices = []
+    instruments = []
     for _ in range(num_instruments):
         inst_start = pos
         inst_size = struct.unpack_from('<I', buf, pos)[0]
-        name = buf[pos + 4:pos + 4 + 22].split(b'\x00')[0].decode('ascii', errors='replace')
-        gax_instrument_indices.append(int(name[len('Instrument '):]) if name.startswith('Instrument ') else None)
+        iname = buf[pos + 4:pos + 4 + 22].split(b'\x00')[0].decode('ascii', errors='replace')
+        number = iname[len('Instrument '):] if iname.startswith('Instrument ') else ''
+        gax_instrument_indices.append(int(number) if number.isdigit() else None)
         num_samples = struct.unpack_from('<H', buf, pos + 27)[0]
+        xi = {'name': iname, 'samples': []}
+        if num_samples and inst_size >= 241:
+            sample_header_size = struct.unpack_from('<I', buf, pos + 29)[0]
+            xi['keymap'] = list(buf[pos + 33:pos + 129])
+            for env, at, count_at in (('vol', 129, 225), ('pan', 177, 226)):
+                n = buf[pos + count_at]
+                xi[env + '_points'] = [struct.unpack_from('<HH', buf, pos + at + 4 * k) for k in range(min(n, 12))]
+                xi[env + '_count'] = n
+            (xi['vol_sustain'], xi['vol_loop_start'], xi['vol_loop_end'], _, _, _,
+             xi['vol_type'], xi['pan_type'], xi['vib_type'], xi['vib_sweep'], xi['vib_depth'],
+             xi['vib_rate']) = buf[pos + 227:pos + 239]
+            xi['fadeout'] = struct.unpack_from('<H', buf, pos + 239)[0]
+        else:
+            sample_header_size = 40
         pos = inst_start + inst_size
-        sample_lengths = []
         for _ in range(num_samples):
-            sample_lengths.append(struct.unpack_from('<I', buf, pos)[0])
-            pos += 40
-        pos += sum(sample_lengths)
+            length, loop_start, loop_len, volume, finetune, stype, panning, relnote, packing = \
+                struct.unpack_from('<IIIBbBBbB', buf, pos)
+            xi['samples'].append({'length': length, 'loop_start': loop_start, 'loop_len': loop_len,
+                                  'volume': volume, 'finetune': finetune, 'type': stype, 'panning': panning,
+                                  'relnote': relnote, 'packing': packing})
+            pos += sample_header_size
+        for xs in xi['samples']:
+            xs['data'] = buf[pos:pos + xs['length']]
+            pos += xs['length']
+        instruments.append(xi)
 
     return {'name': name, 'num_channels': num_channels, 'patterns': patterns,
             'order': order, 'restart': restart, 'tempo': tempo, 'bpm': bpm,
-            'gax_instrument_indices': gax_instrument_indices}
+            'gax_instrument_indices': gax_instrument_indices, 'instruments': instruments}
 
 
 # ---------------------------------------------------------------------------
@@ -907,6 +937,374 @@ def link_sfx(instruments_by_index, samples_by_index, song_info):
 
 
 # ---------------------------------------------------------------------------
+# New instruments (docs/audio.md, "New instruments"): an instrument the
+# ROM's pool doesn't have, from an XM's own instrument and sample or from
+# sound/instruments/<name>.json and a WAV, appended to a pool after the
+# ROM's instruments and samples.
+# ---------------------------------------------------------------------------
+
+INSTRUMENTS_DIR = os.path.join(SOUND_DIR, 'instruments')
+
+# gGaxPeriodTable (lib/gax/data/gax_tables.c): entry i is the playback
+# rate, in Hz * 2048, of pitch i in 1/32 semitones: PERIOD_0_HZ * 2 ** (i /
+# 384). GaxChannelMix clamps the index to the last entry (as unsigned, so
+# a negative one too).
+PERIOD_0_HZ = 0x105A02 / 2048
+PERIOD_COUNT = 0xEF4
+# A note's pitch index is (note - 2) * 32 (GaxChannelSetNote), plus the
+# instrument sequence's note ((2 - 2) * 32 for a new instrument), plus the
+# wave row's tune. XM's middle C, C-4, is note 49, and plays a sample with
+# no relative note or finetune at 8363 Hz.
+XM_C4 = 49
+XM_C4_RATE = 8363
+# Instrument numbers are bytes in a pattern row and in GAX_fx_ex's queue
+# (GaxChannelState.pendingInstrument), sample numbers in the instrument's
+# waveIdx; instrument and sample 0 are the empty placeholders.
+MAX_INDEX = 255
+# GaxChannelMix keeps sample positions in Q11 in an s32.
+MAX_SAMPLE_LENGTH = (1 << 20) - 1
+# An envelope's point count is a byte (GaxEnvelope.count).
+MAX_ENVELOPE_POINTS = 255
+# A note when the new samples grow the ROM a lot, and the music block's
+# limit: the GBA maps 32 MiB of ROM, and the ROM's other data is about 8.
+LARGE_SAMPLES = 1024 * 1024
+MAX_BLOCK = 24 * 1024 * 1024
+
+INSTRUMENT_FIELDS = ('sample', 'rate', 'loop', 'loop_start', 'loop_end', 'volume', 'envelope', 'vibrato',
+                     'comment')
+LOOP_KINDS = ('none', 'forward', 'pingpong')
+
+
+def tune_for_rate(rate, fixed_pitch):
+    """The wave row's tune that plays a sample at `rate` Hz on XM's C-4
+    (49), or at every note for a fixed-pitch instrument (a sound effect's)."""
+    t = round(384 * math.log2(rate / PERIOD_0_HZ))
+    return t if fixed_pitch else t - (XM_C4 - 2) * 32
+
+
+def pitch_index(note, tune):
+    """The gGaxPeriodTable index a pattern note plays a new instrument at."""
+    return (note - 2) * 32 + tune
+
+
+def note_name(note):
+    return ['C-', 'C#', 'D-', 'D#', 'E-', 'F-', 'F#', 'G-', 'G#', 'A-', 'A#', 'B-'][(note - 1) % 12] + \
+        str((note - 1) // 12)
+
+
+def to_8bit(frames, width, fail):
+    """Signed 8-bit samples from little-endian PCM `width` bytes wide
+    (8-bit unsigned, wider signed, as in a WAV). GAX2's samples and its
+    output are 8-bit, so wider ones are rounded to their top byte."""
+    if width == 1:
+        return bytes((b - 128) & 0xFF for b in frames)
+    if width not in (2, 3, 4):
+        fail(f"{width * 8}-bit samples: a sample is 8, 16, 24 or 32-bit PCM (rounded to 8 bits)")
+    out = bytearray()
+    shift = 8 * width - 8
+    for i in range(0, len(frames) - width + 1, width):
+        v = int.from_bytes(frames[i:i + width], 'little', signed=True)
+        out.append(max(-128, min(127, (v + (1 << (shift - 1))) >> shift)) & 0xFF)
+    return bytes(out)
+
+
+def load_wav(path, fail):
+    """(signed 8-bit samples, the WAV's rate) of a mono PCM WAV."""
+    rel = os.path.relpath(path, ROOT)
+    try:
+        with wave.open(path, 'rb') as w:
+            channels, width, rate = w.getnchannels(), w.getsampwidth(), w.getframerate()
+            frames = w.readframes(w.getnframes())
+    except (wave.Error, EOFError) as e:
+        fail(f"{rel}: not a PCM WAV ({str(e) or 'it ends early'})")
+    if channels != 1:
+        fail(f"{rel}: {channels} channels: GAX2 mixes mono, so a sample is mono")
+    return to_8bit(frames, width, fail), rate
+
+
+def check_sample(spec, fail):
+    """The limits a new instrument's sample and loop must keep."""
+    n = len(spec['sample'])
+    if n == 0:
+        fail("the sample is empty")
+    if n > MAX_SAMPLE_LENGTH:
+        fail(f"the sample is {n} samples long: GAX2 keeps sample positions in Q11 in 32 bits, "
+             f"so at most {MAX_SAMPLE_LENGTH}")
+    if spec['loop'] != 'none' and not (isinstance(spec['loop_start'], int) and isinstance(spec['loop_end'], int)
+                                       and 0 <= spec['loop_start'] < spec['loop_end'] <= n):
+        fail(f"the loop {spec['loop_start']}-{spec['loop_end']} isn't inside the sample (0-{n}, the end "
+             "exclusive)")
+
+
+def gax_envelope(env, fail):
+    """A GAX2 volume envelope from XM's form: points (tick, volume 0-64),
+    the first at tick 0, and an optional sustain point and loop (point
+    indices). None is no envelope: full volume, cut at the note-off.
+
+    Without a sustain point the note-off doesn't cut the note, as in XM:
+    the sustain is then the last point, where the envelope stops anyway
+    (GaxEnvelopeTick), and GaxChannelSetNote only cuts a note whose
+    envelope has none."""
+    if env is None:
+        return {'sustain': None, 'loop_start': None, 'loop_end': None,
+                'points': [{'x': 0, 'interpolation': 0, 'y': 255, 'byte_05': 0, 'ushort_06': 0}]}
+    pts = env['points']
+    if not 1 <= len(pts) <= MAX_ENVELOPE_POINTS:
+        fail(f"the envelope has {len(pts)} points (1-{MAX_ENVELOPE_POINTS})")
+    if any(not isinstance(v, int) for p in pts for v in p):
+        fail("the envelope's ticks and volumes are integers")
+    if pts[0][0] != 0:
+        fail("the envelope's first point isn't at tick 0")
+    for (x0, _), (x1, _) in zip(pts, pts[1:]):
+        if not x0 < x1 <= 0xFFFF:
+            fail(f"the envelope's points must be at increasing ticks up to 65535 ({x0}, then {x1})")
+    for x, y in pts:
+        if not 0 <= y <= 64:
+            fail(f"the envelope's point at tick {x} has volume {y} (0-64)")
+    last = len(pts) - 1
+    sustain, ls, le = env.get('sustain'), env.get('loop_start'), env.get('loop_end')
+    for what, v in (('sustain point', sustain), ('loop start', ls), ('loop end', le)):
+        if v is not None and not (isinstance(v, int) and 0 <= v <= last):
+            fail(f"the envelope's {what} {v} isn't one of its points (0-{last})")
+    if (ls is None) != (le is None) or ls is not None and ls > le:
+        fail("the envelope's loop needs both a start and an end point, the start first")
+    points = []
+    for i, (x, y) in enumerate(pts):
+        v = min(255, y * 4)
+        slope = 0
+        if i:
+            # GaxEnvelopePoint.slope: Q8 per tick from the point before,
+            # rounded toward 0 as in the ROM's; past the s16 only between
+            # points a tick apart, where it isn't used
+            px, pv = pts[i - 1][0], points[-1]['y']
+            q = abs(v - pv) * 256 // (x - px)
+            slope = max(-0x7FFF, min(0x7FFF, q if v >= pv else -q))
+        points.append({'x': x, 'interpolation': slope, 'y': v, 'byte_05': 0, 'ushort_06': 0})
+    return {'sustain': last if sustain is None else sustain, 'loop_start': ls, 'loop_end': le, 'points': points}
+
+
+def instrument_entry(spec, sample_index, fail):
+    """A new instrument in the manifest's form (Instrument), as the ROM's
+    one-sample instruments are: one wave row; a one-step sequence that
+    starts it at the note (or at its fixed pitch) and sets the sample's
+    volume; the volume envelope; and the second envelope (`unknown12`,
+    one flat point) every ROM instrument has and the engine never reads."""
+    loop = spec['loop']
+    empty_row = {'byte_02': 0, 'is_bidirectional': False, 'start_position': 0, 'loop_start': 0, 'loop_end': 0,
+                 'int_10': 0, 'ushort_14': 0, 'ushort_16': 0, 'pitch': 0}
+    row = dict(empty_row, is_bidirectional=loop == 'pingpong', pitch=spec['tune'])
+    if loop != 'none':
+        row.update(loop_start=spec['loop_start'], loop_end=spec['loop_end'])
+    volume = spec['volume']
+    effect = {'type': 12, 'param': volume * 4} if volume < 64 else {'type': 0, 'param': 0}
+    delay, depth, speed = spec['vibrato']
+    return {
+        'byte_00': 0, 'sample_indices': [sample_index, 0, 0, 0], 'byte_05': 0, 'byte_06': 0, 'byte_07': 0,
+        'vibrato_delay': delay, 'vibrato_depth': depth, 'vibrato_speed': speed, 'byte_0b': 0,
+        'unknown12': [1, 255, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0], 'row_speed': 1, 'ushort_12': 0,
+        'samples': [row, dict(empty_row), dict(empty_row), dict(empty_row)],
+        'rows': [{'relative_note_number': 2, 'dont_use_note_pitch': spec['fixed_pitch'], 'sample_index': 1,
+                  'byte_03': 0, 'effects': [effect, {'type': 0, 'param': 0}]}],
+        'envelope': gax_envelope(spec['envelope'], fail),
+    }
+
+
+def xm_instrument_spec(xi, sample_no, fail):
+    """A new instrument from an XM instrument and one of its samples: the
+    sample (8-bit), its loop, volume, relative note and finetune, the
+    volume envelope and the auto-vibrato. Stops on what GAX2 can't
+    play."""
+    if sample_no >= len(xi['samples']):
+        fail(f"its key map plays sample {sample_no}, which it doesn't have")
+    xs = xi['samples'][sample_no]
+    if xs['packing'] == 0xAD:
+        fail("its sample is ADPCM-compressed (ModPlug): save it uncompressed")
+    if xs['type'] & 0x20:
+        fail("its sample is stereo: GAX2 mixes mono, so a sample is mono")
+    wide = xs['type'] & 0x10
+    # XM stores the sample as deltas
+    raw, acc = bytearray(), 0
+    if wide:
+        for (d,) in struct.iter_unpack('<h', xs['data'][:len(xs['data']) & ~1]):
+            acc = (acc + d + 0x8000) % 0x10000 - 0x8000
+            raw += struct.pack('<h', acc)
+        data = to_8bit(bytes(raw), 2, fail)
+    else:
+        for d in xs['data']:
+            acc = (acc + d) & 0xFF
+            raw.append(acc)
+        data = bytes(raw)
+    unit = 2 if wide else 1
+    kind = xs['type'] & 3
+    if kind == 3:
+        fail("its sample's loop type is 3, which isn't one (none, forward or ping-pong)")
+    spec = {
+        'sample': data, 'loop': LOOP_KINDS[kind] if xs['loop_len'] else 'none',
+        'loop_start': xs['loop_start'] // unit, 'loop_end': (xs['loop_start'] + xs['loop_len']) // unit,
+        'volume': min(64, xs['volume']),
+        'tune': round(384 * math.log2(XM_C4_RATE / PERIOD_0_HZ) + 32 * xs['relnote'] + xs['finetune'] / 4)
+        - (XM_C4 - 2) * 32,
+        'fixed_pitch': False, 'envelope': None, 'vibrato': (0, 0, 0),
+    }
+    check_sample(spec, fail)
+    if xi.get('pan_type', 0) & 1:
+        fail("it has a panning envelope: GAX2 mixes mono, so nothing pans (switch the envelope off)")
+    if xi.get('vol_type', 0) & 1:
+        if xi['fadeout']:
+            fail(f"its volume fadeout is {xi['fadeout']}: GAX2 has no fadeout (set it to 0 and shape the "
+                 "release with envelope points after the sustain point)")
+        if not 1 <= xi['vol_count'] <= 12:
+            fail(f"its volume envelope has {xi['vol_count']} points (1-12)")
+        spec['envelope'] = {
+            'points': xi['vol_points'],
+            'sustain': xi['vol_sustain'] if xi['vol_type'] & 2 else None,
+            'loop_start': xi['vol_loop_start'] if xi['vol_type'] & 4 else None,
+            'loop_end': xi['vol_loop_end'] if xi['vol_type'] & 4 else None,
+        }
+    if xi.get('vib_depth') and xi.get('vib_rate'):
+        if xi['vib_type'] != 0:
+            fail("its auto-vibrato isn't a sine: GAX2's vibrato is one (gGaxVibratoTable)")
+        if xi['vib_sweep']:
+            fail("its auto-vibrato has a sweep: GAX2's vibrato starts at full depth (set the sweep to 0)")
+        # XM's depth d swings the pitch by d/64 semitones, GAX2's by
+        # gGaxVibratoTable (+-127) * depth >> 8 in 1/32 semitones: the same
+        # number. XM steps through 256 phases a cycle, GAX2 through 64.
+        spec['vibrato'] = (0, xi['vib_depth'], max(1, min(63, round(xi['vib_rate'] / 4))))
+    return spec
+
+
+def json_instrument_spec(name, fixed_pitch, fail):
+    """A new instrument from sound/instruments/<name>.json and its WAV
+    (docs/audio.md, "New instruments")."""
+    path = os.path.join(INSTRUMENTS_DIR, f'{name}.json')
+    rel = os.path.relpath(path, ROOT)
+
+    def bad(msg):
+        fail(f"{rel}: {msg}")
+
+    try:
+        m = json.load(open(path))
+    except ValueError as e:
+        bad(f"not JSON ({e})")
+    unknown = sorted(set(m) - set(INSTRUMENT_FIELDS))
+    if unknown:
+        bad(f"unknown fields {', '.join(unknown)} (an instrument's are {', '.join(INSTRUMENT_FIELDS)})")
+    if 'sample' not in m:
+        bad('no "sample" (the WAV, a path under sound/, e.g. "samples/lead.wav")')
+    wav = os.path.normpath(os.path.join(SOUND_DIR, m['sample']))
+    if not os.path.isfile(wav):
+        bad(f"its sample {m['sample']} isn't a file under sound/")
+    data, wav_rate = load_wav(wav, bad)
+    rate = m.get('rate', wav_rate)
+    if isinstance(rate, bool) or not isinstance(rate, (int, float)) or rate <= 0:
+        bad(f"rate {rate!r}: the rate is a number of Hz")
+    loop = m.get('loop', 'none')
+    if loop not in LOOP_KINDS:
+        bad(f"loop {loop!r}: one of {', '.join(LOOP_KINDS)}")
+    volume = m.get('volume', 64)
+    if isinstance(volume, bool) or not isinstance(volume, int) or not 0 <= volume <= 64:
+        bad(f"volume {volume!r}: 0-64")
+    vib = m.get('vibrato', {})
+    unknown = sorted(set(vib) - {'delay', 'depth', 'speed'})
+    if unknown:
+        bad(f"unknown vibrato fields {', '.join(unknown)} (delay, depth, speed)")
+    vibrato = (vib.get('delay', 0), vib.get('depth', 0), vib.get('speed', 0))
+    for what, v, top in zip(('delay', 'depth', 'speed'), vibrato, (255, 255, 63)):
+        if isinstance(v, bool) or not isinstance(v, int) or not 0 <= v <= top:
+            bad(f"vibrato {what} {v!r}: 0-{top}")
+    env = m.get('envelope')
+    if env is not None:
+        unknown = sorted(set(env) - {'points', 'sustain', 'loop_start', 'loop_end'})
+        if unknown:
+            bad(f"unknown envelope fields {', '.join(unknown)} (points, sustain, loop_start, loop_end)")
+        if not all(isinstance(p, list) and len(p) == 2 for p in env.get('points', [])):
+            bad("the envelope's points are [tick, volume] pairs")
+        env = dict(env, points=[tuple(p) for p in env.get('points', [])])
+    spec = {
+        'sample': data, 'loop': loop, 'loop_start': m.get('loop_start', 0), 'loop_end': m.get('loop_end', len(data)),
+        'volume': volume, 'tune': tune_for_rate(rate, fixed_pitch), 'fixed_pitch': fixed_pitch,
+        'envelope': env, 'vibrato': vibrato,
+    }
+    check_sample(spec, bad)
+    if fixed_pitch and not 0 <= spec['tune'] < PERIOD_COUNT:
+        bad(f"rate {rate} Hz: a sound effect plays at {PERIOD_0_HZ:.0f}-"
+            f"{PERIOD_0_HZ * 2 ** ((PERIOD_COUNT - 1) / 384):.0f} Hz (gGaxPeriodTable)")
+    gax_envelope(env, bad)
+    return spec
+
+
+class Pool:
+    """A data set's instrument and sample pool (the music's or the sound
+    effects'), which new instruments are appended to: after the ROM's
+    instruments, each new sample after the ROM's samples. Both are
+    deduplicated by content: an instrument or a sample the pool already
+    has (the ROM's, or an earlier song's) is that one."""
+
+    def __init__(self, manifest, instruments, samples, label):
+        self.instruments = instruments
+        self.samples = samples
+        self.label = label
+        self.rom_instruments = max(instruments) + 1
+        self.sample_ids = {}
+        for idx in sorted(samples):
+            self.sample_ids.setdefault(samples[idx], idx)
+        self.instrument_ids = {}
+        for k in sorted(manifest['instruments'], key=int):
+            self.instrument_ids.setdefault(json.dumps(manifest['instruments'][k], sort_keys=True), int(k))
+        self.named = {}
+        self.new_instruments = []
+        self.new_samples = []
+
+    def add(self, spec, fail):
+        data = spec['sample']
+        sidx = self.sample_ids.get(data)
+        if sidx is None:
+            sidx = max(self.samples, default=0) + 1
+            if sidx > MAX_INDEX:
+                fail(f"{self.label} would have sample {sidx}: an instrument names its samples by a byte "
+                     f"(at most {MAX_INDEX})")
+            self.samples[sidx] = data
+            self.sample_ids[data] = sidx
+            self.new_samples.append(sidx)
+        entry = instrument_entry(spec, sidx, fail)
+        key = json.dumps(entry, sort_keys=True)
+        idx = self.instrument_ids.get(key)
+        if idx is None:
+            idx = max(self.instruments) + 1
+            if idx > MAX_INDEX:
+                fail(f"{self.label} would have instrument {idx}: a pattern row and GAX_fx_ex name an "
+                     f"instrument by a byte (at most {MAX_INDEX})")
+            self.instruments[idx] = Instrument(entry)
+            self.instrument_ids[key] = idx
+            self.new_instruments.append(idx)
+        return idx
+
+    def add_named(self, name, fixed_pitch, fail):
+        """sound/instruments/<name>.json's instrument: one pool entry
+        however many songs or sound effects use it."""
+        if name not in self.named:
+            self.named[name] = self.add(json_instrument_spec(name, fixed_pitch, fail), fail)
+        return self.named[name]
+
+    def report(self):
+        """A line on what the new instruments add, for the build log."""
+        if not self.new_instruments:
+            return
+        size = sum(len(self.samples[i]) for i in self.new_samples)
+        print(f"{self.label}: {len(self.new_instruments)} new instruments (from {self.new_instruments[0]}), "
+              f"{len(self.new_samples)} new samples, {size} bytes of sample data")
+        if size > LARGE_SAMPLES:
+            print(f"note: the new samples grow the ROM by {size / (1024 * 1024):.1f} MiB "
+                  "(a GBA ROM is at most 32 MiB, this one about 8 without them)")
+
+
+def named_instrument(name):
+    """Whether an XM instrument's name is sound/instruments/<name>.json's."""
+    return bool(name) and os.path.basename(name) == name and \
+        os.path.isfile(os.path.join(INSTRUMENTS_DIR, f'{name}.json'))
+
+
+# ---------------------------------------------------------------------------
 # Top-level build
 # ---------------------------------------------------------------------------
 
@@ -928,16 +1326,48 @@ def load_pool(manifest, samples_dir):
     return instruments, samples
 
 
+def sfx_pool(manifest_path=None, samples_dir=None, table_path=None):
+    """The sound-effect set's pool, with the new instruments sound effects
+    name (sound/sfx_table.json's entries with an "instrument",
+    sound/instruments/<name>.json, docs/audio.md "Adding a sound
+    effect"), and {name: its instrument number}, which tools/sfx_table.py
+    writes as the entry's slot_id."""
+    manifest_path = manifest_path or SFX_MANIFEST
+    table_path = table_path or SFX_TABLE
+    manifest = json.load(open(manifest_path))
+    instruments, samples = load_pool(manifest, samples_dir or SFX_SAMPLES_DIR)
+    pool = Pool(manifest, instruments, samples, 'the sound-effect set')
+    rel = os.path.relpath(table_path, ROOT)
+    slots = {}
+    for i, e in enumerate(json.load(open(table_path))['entries']):
+        def fail(msg, i=i):
+            sys.exit(f"{rel}: entry {i} ({e.get('name', 'unnamed')}): {msg}")
+
+        if ('slot_id' in e) == ('instrument' in e):
+            fail('an entry has either a "slot_id" (one of the set\'s instruments) or an "instrument" '
+                 '(sound/instruments/<name>.json)')
+        if 'slot_id' in e:
+            if not 0 < e['slot_id'] < pool.rom_instruments:
+                fail(f"slot_id {e['slot_id']}: the set's instruments are 1-{pool.rom_instruments - 1}")
+            continue
+        name = e['instrument']
+        if not named_instrument(name):
+            fail(f"instrument {name!r}: there is no sound/instruments/{name}.json")
+        slots[name] = pool.add_named(name, True, fail)
+    return pool, slots
+
+
 def build_sfx(manifest_path, samples_dir):
-    """The sound-effect set (sound/gax_sfx_manifest.json, sound/sfx_samples/)
-    and the handler-type array the music block starts with.
+    """The sound-effect set (sound/gax_sfx_manifest.json, sound/sfx_samples/,
+    and the new instruments sound/sfx_table.json names) and the
+    handler-type array the music block starts with.
 
     Returns (the set's Allocator, the sfxTypes Chunk). Every pointer is a
     relocation, so the set can change size (a longer sample) and the
     blocks can move."""
     manifest = json.load(open(manifest_path))
-    instruments, samples = load_pool(manifest, samples_dir)
-    alloc, handler_addr = link_sfx(instruments, samples, SongInfo(manifest['song_info']))
+    pool, _ = sfx_pool(manifest_path, samples_dir)
+    alloc, handler_addr = link_sfx(pool.instruments, pool.samples, SongInfo(manifest['song_info']))
     # GaxSongHeader.sfxTypes (StartSong): the handler type of each
     # sound-effect voice, all the same one
     sfx_types = Chunk()
@@ -1145,7 +1575,111 @@ def title_text(title, artist):
     return text.encode('latin-1')
 
 
-def new_song(key, xm_path, xm, instruments):
+# The mix rates GAX2 plays at (gGaxMixRates, lib/gax/data/gax_tables.c):
+# GAX2_init rounds a song's up to the next one.
+GAX_MIX_RATES = (5735, 10513, 11469, 13380, 15769, 18158, 21025, 26760, 31537, 36316, 40138, 42049)
+# AudioContext::gaxWork, the work RAM StartSong gives GAX2_init, and the
+# sound-effect voices it asks for.
+GAX_WORK_SIZE = 0x2000
+GAX_GAME_SFX_VOICES = 3
+
+
+def work_size(num_channels, sample_rate, half_rate_fx, mixer_data_bytes):
+    """GAX2_estimate's work-RAM size for a song StartSong plays: the player
+    state, the handler array (the song's 3 + channels and the 3 sound-effect
+    voices) and format, each handler's header, instance and children (the
+    mixer 0xc, the Info handler 0x1c, a channel 0x48 and its child; the
+    third item, the empty list of alternative layouts, is skipped), the
+    voices, the echo line for the longest echo tap, the resampler and two
+    frame-sized buffers."""
+    fx = GAX_GAME_SFX_VOICES
+    rate = next((r for r in GAX_MIX_RATES if r >= sample_rate), GAX_MIX_RATES[-1])  # GaxFindMixRate
+    size = 0x18c + (3 + num_channels + fx) * 4 + 8
+    size += 0xc + 0xc + num_channels * 4 + fx * 4  # the mixer
+    size += 0xc + 0x1c  # the Info handler
+    size += num_channels * (0xc + 0x48 + 4)
+    size += fx * 0x58
+    taps = struct.unpack_from('<6I', bytes(mixer_data_bytes))
+    longest = max(taps[1], taps[3], taps[5])
+    if longest:
+        size += longest * rate // 1000 * 2 + 0x18
+    size += 0x130 if half_rate_fx else 0xdc
+    frames = rate * 1000 // 0xe94f
+    return size + frames * 4 + 0x20
+
+
+def new_song_instruments(xm, order_rows, pool, fail):
+    """The pool instrument each XM instrument the song plays is
+    (`gax_instrument_indices` of a ROM song's XM; None for the others): an
+    `Instrument N` is the ROM pool's N, an instrument named like
+    sound/instruments/<name>.json is that one, any other one is a new
+    instrument from its own sample (Pool.add). Also checks that the notes
+    a new instrument plays are in GAX2's period table.
+
+    order_rows: the rows of each order position, every note with its
+    instrument filled in."""
+    xis = xm['instruments']
+    first_use, notes = [], {}
+    for rows in order_rows:
+        for row in rows:
+            for cell in row:
+                if cell.instrument:
+                    if cell.instrument not in first_use:
+                        first_use.append(cell.instrument)
+                    if 1 <= cell.note <= 96:
+                        notes.setdefault(cell.instrument, set()).add(cell.note)
+    out = [None] * len(xis)
+    for n in first_use:
+        xi = xis[n - 1]
+        name = xi['name']
+
+        def bad(msg, n=n, name=name):
+            fail(f"instrument {n} ({name!r}): {msg}")
+
+        if name.startswith('Instrument ') and name[len('Instrument '):].isdigit():
+            idx = int(name[len('Instrument '):])
+            if not 0 < idx < pool.rom_instruments:
+                bad(f"there is no Instrument {idx}: the pool's instruments are 1-{pool.rom_instruments - 1} "
+                    f"({pool.label}); give a new instrument another name")
+            out[n - 1] = idx
+            continue
+        if named_instrument(name):
+            idx = pool.add_named(name, False, bad)
+        else:
+            if not xi['samples']:
+                bad("it has no sample: name it \"Instrument N\" for the pool's instrument N, name it after "
+                    "sound/instruments/<name>.json, or give it a sample")
+            keymap = xi.get('keymap', [0] * 96)
+            used = sorted({keymap[k - 1] for k in notes.get(n, ())}) or [keymap[XM_C4 - 1]]
+            if len(used) > 1:
+                bad(f"its key map plays samples {', '.join(map(str, used))}: a GAX2 instrument has one sample "
+                    "for every note (split it into one instrument per sample)")
+            idx = pool.add(xm_instrument_spec(xi, used[0], bad), bad)
+        out[n - 1] = idx
+        tune = pool.instruments[idx].samples[0].pitch
+        for note in sorted(notes.get(n, ())):
+            if not 0 <= pitch_index(note, tune) < PERIOD_COUNT:
+                bad(f"note {note_name(note)} is pitch {pitch_index(note, tune)}, past the ends of GAX2's period "
+                    f"table (0-{PERIOD_COUNT - 1}): play it in another octave, or retune the sample")
+    return out
+
+
+def gax_effect(cell):
+    return _xm_effect_to_gax(cell.effect, cell.param, cell.volume)[0]
+
+
+def set_effect(rows, row, effect, param, why, fail):
+    """Puts a GAX2 effect (`effect`, `param`) on `row` of an order
+    position, in the first channel with no effect there: a GAX2 row has
+    one."""
+    for cell in rows[row]:
+        if gax_effect(cell) == 0:
+            cell.effect, cell.param, cell.volume = effect, param, 0
+            return
+    fail(f"{why}, but row {row} has an effect on every channel (a GAX2 row has one)")
+
+
+def new_song(key, xm_path, xm, pool):
     """A song with no ROM history: its scaffold derived from the XM, with
     the settings of the optional sound/songs/<key>.json next to it.
 
@@ -1156,11 +1690,12 @@ def new_song(key, xm_path, xm, instruments):
     - identical patterns stored once (a pattern the order repeats, or the
       same notes on two channels); no transposes.
 
-    The XM's instruments name the shared pool's (`Instrument N`, as in the
-    ROM's songs). Every pattern the order plays must have the same number
-    of rows, and the module's speed must be 6, GAX2's starting speed
-    (change it with an Fxx effect). The BPM is ignored: GAX2 steps a tick
-    per frame."""
+    The XM's instruments are the shared pool's (`Instrument N`, as in the
+    ROM's songs), sound/instruments/<name>.json's by name, or new ones
+    from their own samples (new_song_instruments). GAX2 songs have one
+    pattern length and start at speed 6: a shorter pattern gets a pattern
+    break (D00) on its last row, and another speed an Fxx on the first
+    row. The BPM is ignored: GAX2 steps a tick per frame."""
     where = os.path.relpath(xm_path, ROOT)
 
     def fail(msg):
@@ -1177,34 +1712,61 @@ def new_song(key, xm_path, xm, instruments):
         settings.update(given)
     if len(settings['mixer_data_bytes']) != 28:
         fail("mixer_data_bytes must be 28 bytes")
+    if settings['sample_rate'] not in GAX_MIX_RATES:
+        fail(f"sample_rate {settings['sample_rate']}: GAX2 mixes at {', '.join(map(str, GAX_MIX_RATES))} Hz "
+             "(gGaxMixRates)")
 
     order = xm['order']
     if not order:
         fail("the order list is empty")
     if any(p >= len(xm['patterns']) for p in order):
         fail("the order list plays a pattern the module doesn't have")
-    rows = {len(xm['patterns'][p]) for p in order}
-    if len(rows) != 1:
-        fail(f"the patterns the order plays have {sorted(rows)} rows: a GAX2 song has one pattern length")
-    if xm['tempo'] != 6:
-        fail(f"speed {xm['tempo']}: a GAX2 song starts at speed 6 (set another with an Fxx effect on the first row)")
     if xm['restart'] >= len(order):
         fail(f"restart position {xm['restart']} is past the order list")
-    used = xm['gax_instrument_indices']
-    for i, idx in enumerate(used):
-        if idx not in instruments:
-            fail(f"instrument {i + 1} must be named \"Instrument N\", N one of the {len(instruments)} "
-                 "instruments of the pool (sound/gax_manifest.json)")
-    for p in order:
-        for row in xm['patterns'][p]:
-            for cell in row:
-                if cell.instrument > len(used):
-                    fail(f"pattern {p} plays instrument {cell.instrument}, which the module doesn't have")
-
+    if not 1 <= xm['tempo'] < 0x20:
+        fail(f"speed {xm['tempo']}: a speed is 1-31")
     num_channels = xm['num_channels']
+
+    # each order position's rows, a copy to add effects to, every note
+    # with its instrument: a note with none plays the channel's last one
+    order_rows = []
+    current = [0] * num_channels
+    for pos, p in enumerate(order):
+        rows = [[copy.copy(cell) for cell in row] for row in xm['patterns'][p]]
+        for r, row in enumerate(rows):
+            for c, cell in enumerate(row):
+                if cell.instrument > len(xm['instruments']):
+                    fail(f"pattern {p} plays instrument {cell.instrument}, which the module doesn't have")
+                if cell.instrument:
+                    current[c] = cell.instrument
+                elif 1 <= cell.note <= 96:
+                    if not current[c]:
+                        fail(f"pattern {p}, row {r}, channel {c}: a note before the channel has an instrument")
+                    cell.instrument = current[c]
+        order_rows.append(rows)
+
+    # one pattern length: the longest, the others end on a pattern break
+    num_rows = max(len(rows) for rows in order_rows)
+    for pos, rows in enumerate(order_rows):
+        last = len(rows) - 1
+        if len(rows) < num_rows and all(gax_effect(cell) != 13 for cell in rows[last]):
+            set_effect(rows, last, 13, 0, f"pattern {order[pos]} has {len(rows)} rows, under the song's "
+                       f"{num_rows}, so it needs a pattern break (D00) on its last row", fail)
+    # the starting speed: GaxInfoResetPosition starts every song at 6
+    if xm['tempo'] != 6 and all(gax_effect(cell) != 15 for cell in order_rows[0][0]):
+        speeds = any(gax_effect(cell) == 15 for rows in order_rows for row in rows for cell in row)
+        if xm['restart'] == 0 and speeds:
+            fail(f"speed {xm['tempo']}: GAX2 starts a song at speed 6, so the tool sets {xm['tempo']} with an "
+                 "Fxx on the first row, which this song plays again when it loops (restart position 0) "
+                 "after its own Fxx: start the module at speed 6, or put the Fxx on the first row yourself")
+        set_effect(order_rows[0], 0, 15, xm['tempo'], f"speed {xm['tempo']}: GAX2 starts a song at speed 6, "
+                   "so the first row needs an Fxx", fail)
+
+    used = new_song_instruments(xm, order_rows, pool, fail)
+
     entry = {
         'num_channels': num_channels,
-        'num_rows_per_pattern': rows.pop(),
+        'num_rows_per_pattern': num_rows,
         'num_patterns_per_channel': len(order),
         'loop_point': xm['restart'],
         'ushort_0a': 0,
@@ -1212,13 +1774,18 @@ def new_song(key, xm_path, xm, instruments):
     }
     for field in ('artist', 'volume', 'sample_rate', 'num_fx_channels', 'half_rate_fx', 'mixer_data_bytes'):
         entry[field] = settings[field]
+    need = work_size(num_channels, settings['sample_rate'], settings['half_rate_fx'], settings['mixer_data_bytes'])
+    if need > GAX_WORK_SIZE:
+        fail(f"GAX2 needs {need:#x} bytes of work RAM for {num_channels} channels at {settings['sample_rate']} Hz "
+             f"(GAX2_estimate), but StartSong gives it {GAX_WORK_SIZE:#x} (AudioContext::gaxWork): "
+             "use fewer channels, a lower sample_rate or shorter echo taps")
     song = Song(entry, num_items=3 + num_channels, unk_ptr=0)
 
     groups = {}  # packed pattern -> its group
     for ci in range(num_channels):
         ch = Channel()
-        for p in order:
-            pat = build_pattern_from_xm([row[ci] for row in xm['patterns'][p]], used, instruments, 0)
+        for rows in order_rows:
+            pat = build_pattern_from_xm([row[ci] for row in rows], used, pool.instruments, 0)
             ch.patterns.append(pat)
             ch.pattern_headers.append((0, 0))
             ch.pattern_groups.append(groups.setdefault(pat.pack(), len(groups)))
@@ -1241,6 +1808,8 @@ def build(manifest_path, songs_dir, samples_dir, out_path, layout_path=None, hea
     manifest = json.load(open(manifest_path))
 
     instruments, samples = load_pool(manifest, samples_dir)
+    # the new songs' new instruments are appended to it
+    pool = Pool(manifest, instruments, samples, 'the music pool')
 
     keys = block_songs(manifest)
     songs = []
@@ -1250,12 +1819,16 @@ def build(manifest_path, songs_dir, samples_dir, out_path, layout_path=None, hea
         if key in manifest['songs']:
             songs.append(rom_song(manifest['songs'][key], xm, instruments))
         else:
-            songs.append(new_song(key, xm_path, xm, instruments))
+            songs.append(new_song(key, xm_path, xm, pool))
+    pool.report()
 
     default = default_song(manifest['default_song'])
     _, header_prefix = build_sfx(SFX_MANIFEST, SFX_SAMPLES_DIR)
 
     alloc = link(instruments, songs + [default], samples, header_prefix)
+    if len(alloc.buf) > MAX_BLOCK:
+        sys.exit(f"the music block is {len(alloc.buf)} bytes: with the ROM's other 8 MiB it doesn't fit "
+                 "the GBA's 32 MiB of ROM")
     # The default song's own song struct is the layout the code references
     # as gGaxDefaultSong: a separate output, so it can have that label.
     # Its pointers are relocations against gGaxMusicData too, so data/data.s
@@ -1279,9 +1852,11 @@ def asm_path(bin_path):
 SFX_MANIFEST = os.path.join(SOUND_DIR, 'gax_sfx_manifest.json')
 MUSIC_JSON = os.path.join(SOUND_DIR, 'music.json')
 SFX_SAMPLES_DIR = os.path.join(SOUND_DIR, 'sfx_samples')
+SFX_TABLE = os.path.join(SOUND_DIR, 'sfx_table.json')
 
 if __name__ == '__main__':
     if len(sys.argv) == 3 and sys.argv[1] == '--sfx':
+        sfx_pool()[0].report()
         alloc, _ = build_sfx(SFX_MANIFEST, SFX_SAMPLES_DIR)
         n = alloc.write(sys.argv[2], asm_path(sys.argv[2]))
         print(f"wrote {sys.argv[2]}: {n} bytes")
