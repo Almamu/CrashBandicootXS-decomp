@@ -63,6 +63,14 @@ jobs:
           --frames 1000 --every 1 --timeout 300 --out host_link_screens.json
         python3 tools/boottest.py compare platform/pc/tests/link_mgba_screens.json host_link_screens.json
 
+    # The editors' preview (#1167, docs/editors.md "Preview"): a level's
+    # room started from the level select, headless, its first picture
+    # written (a polar stage, by folder and room index).
+    - name: Preview a room
+      run: |
+        python3 tools/preview.py snow_crash 1 --no-build --headless --out host_preview.png --json
+        test -s host_preview.png
+
     # Phase 6: GAX2 on the host mixes what the GBA's mixes, byte for byte:
     # tests/boot_gax.trace is mGBA 0.10.5's trace of the game's GAX2 calls
     # and blocks in the boot (tools/boottest.py `gax-trace`), which

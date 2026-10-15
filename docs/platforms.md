@@ -278,6 +278,7 @@ platform/pc/units/                 units built in place of engine/src/'s and lib
                                    ("The sound")
 platform/pc/libc_names.txt         the game's functions named as the C library's,
                                    and its operator new and delete
+platform/pc/preview.keys           tools/preview.py's input: the menus to the level select
 platform/pc/tests/boot.keys        the headless boot's input (CI)
 platform/pc/tests/boot_mgba.json   mGBA's log of it (boottest.py), what CI compares
 platform/pc/tests/intro.keys       the boot to New Game and the whole intro cutscene
@@ -308,7 +309,9 @@ N reads its keys under. `--save FILE` keeps the EEPROM there. `--wav
 FILE` writes the sound there (see "The sound"), in a window or headless.
 `--level N` makes the first level select pick level N (gLevelTable's
 index) and `--room R` start it in its room R, as boottest's level scripts
-do on mGBA. At the end it prints `audio BLOCKS HASH`: how many blocks
+do on mGBA. `tools/preview.py` (`make preview LEVEL=... ROOM=...`,
+[editors.md](./editors.md), "Preview") builds the port and runs it with
+them and `platform/pc/preview.keys`, which reaches the level select. At the end it prints `audio BLOCKS HASH`: how many blocks
 GAX2 mixed and a SHA-1 of them.
 
 A game frame is a read of REG_KEYINPUT (KeyInput::Update reads it once a frame; the
