@@ -13,8 +13,8 @@ read by `report generate`) is generated fresh by `make report` every time
 (see "One unit per matched file" below) and gitignored - never hand-edit or
 commit it.
 
-CI also uploads it as an artifact for
-[decompilati.onl](https://decompilati.onl) (see "decompilati.onl" below).
+CI also sends it to two progress sites, decompilati.onl and bytematch.dev
+(see "Progress sites" below).
 The report used to be uploaded for [decomp.dev](https://decomp.dev), which
 has since closed.
 
@@ -570,19 +570,34 @@ the `badges` job (the only one with `contents: write`) replaces the
 single commit of the `badges` branch with them, and the README links to
 the files on that branch.
 
-## decompilati.onl
+## Progress sites
 
-[decompilati.onl](https://decompilati.onl) ([API docs](https://decompilati.onl/docs))
-reads objdiff reports the way decomp.dev did. The "Upload progress report
-artifact" step uploads `report.json` as the `europe_report` artifact on
-every run; with the decompilati.onl GitHub App installed on the
-repository, it imports the artifact of each successful run on `main`, with
-the run's commit. The version is the artifact name's prefix, `europe`.
+Two sites track the project from this report:
+[decompilati.onl](https://decompilati.onl) ([docs](https://decompilati.onl/docs))
+and [bytematch.dev](https://bytematch.dev/Almamu/CrashBandicootXS-decomp)
+([docs](https://bytematch.dev/docs)), decomp.dev's successor. Both read
+objdiff reports as decomp.dev did, and CI sends them the report two ways:
 
-decompilati.onl counts matched code as matching, fuzzy-matched code beyond
-that as non-matching and objdiff's matched data as data, and makes an
-area of each progress category (see "Categorizing the still-raw majority
-of the ROM" above), with its units inside.
+- **The artifact.** "Upload progress report artifact" uploads `report.json`
+  as `europe_report` on every run. Each site's GitHub App, installed on the
+  repository, imports the artifact of each successful push run on `main`,
+  with the run's commit; the version is the artifact name's prefix,
+  `europe`.
+- **The upload APIs.** On pushes to `main`, the same report, gzip-compressed,
+  goes to each site's upload API with the commit and `version=europe`:
+  - "Send progress to decompilati.onl": `POST /api/v1/progress`, with the
+    repository secret `DECOMPILATION_PROGRESS_TOKEN` as the bearer token;
+  - "Send progress to bytematch.dev":
+    `POST /api/v1/projects/Almamu/CrashBandicootXS-decomp/reports`, with the
+    commit's message and time too, and the secret `BYTEMATCH_TOKEN` (an
+    upload token from the project's manage page).
 
-This project doesn't use the webhook (`/api/v1/progress`); it stays for
-another project.
+  Without its secret a step does nothing, and a failed upload doesn't fail
+  the build (`continue-on-error`); its log shows the site's reply.
+
+A report the site already has, by either way, is accepted and not stored
+again. decompilati.onl counts matched code as matching, fuzzy-matched code
+beyond that as non-matching and objdiff's matched data as data, and makes
+an area of each progress category (see "Categorizing the still-raw majority
+of the ROM" above), with its units inside; bytematch.dev shows the
+categories, the units and their functions.
