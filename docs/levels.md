@@ -1613,17 +1613,47 @@ other console's (`SaveTransfer`), for "load from link" and for the Crash
 2/3 bonus. The ROM sends and expects 0x200 bytes, and so do Crash 2 and
 3: a receiver counts the bytes in until it has exactly 0x200, so a longer
 record would be written past its buffer. So the link record stays
-`SAVE_LINK_SIZE`, 0x200 bytes, in every build: a 64 Kbit build sends its
-record's first 0x200 bytes, and copies the 0x200 it receives over the
-start of `linkSave` (which `BeginLinkTransfer` has just reset). The
-other console finds no trailer where it looks, and the 64 Kbit build
-checks the received slots against its own blank trailer, so both show
-"connection failed". (The one exception is a peer record whose first
-0x200 bytes sum to 0, an empty one: it checks out with the blank trailer,
-whose four slots are all empty, so nothing can be loaded.) A 64 Kbit
-build can't load slots over the link cable, even from the same build,
-but it can't break the other console either. A 4 Kbit modified build
-sends whole records, which its own build can load.
+`SAVE_LINK_SIZE`, 0x200 bytes, in every build. A 4 Kbit build (the ROM,
+or modified levels that still fit) sends its record as it is.
+
+A 64 Kbit build sends a 0x200-byte view of its record instead, a
+`LinkRecord` (`save_data.hpp`), and turns the view it receives back into
+a record (`SAVE_LINK_VIEW`, `SAVE_DATA_SIZE != SAVE_LINK_SIZE`: a
+constant condition, so `LinkExchange` keeps only the ROM's side with the
+ROM's data). The view has the ROM's layout:
+
+| offset | the ROM's record | the view |
+|---|---|---|
+| 0x000 | four 0x70-byte slots | the four slots, with the first 25 level words (`SAVE_LINK_LEVELS`), no extra flags |
+| 0x1C0 | unused, 0 (`Reset` clears it) | the sender's `SAVE_CHECKSUM_SEED`, then its `slotEmpty` |
+| 0x1F4 | `slotEmpty` | 1, 1, 1, 1 |
+| 0x1F8 | `'C'`, the version, the flags, 0 | `'C'`, the sender's version, its flags, 0 |
+| 0x1FC | the checksum from `SAVE_CHECKSUM_SEED` | the checksum from 0, the ROM's seed (`SAVE_LINK_CHECKSUM_SEED`) |
+
+What each side gets:
+
+| the other console | it reads the view as | the 64 Kbit build reads its record as |
+|---|---|---|
+| the ROM | a Crash XS record (game id 1) with four empty slots: "load link game" shows nothing to load | a Crash XS record with four empty slots, since the seed in its gap isn't the build's |
+| Crash 2 or 3 | a Crash XS record, as from the ROM | the Crash 2 or 3 record: the bonus (`SetFlags(2)` or `(4)`) and its message |
+| a 4 Kbit build of other level data | "connection failed": it checks the view from its own seed | "connection failed": the record's checksum isn't from 0 |
+| a 64 Kbit build of other level data | a Crash XS record with four empty slots | the same |
+| a 64 Kbit build of the same level data | the sender's slots: the version and the seed in the gap are the build's | the same |
+
+`LinkRecord::Pack` marks the four slots empty in the ROM's trailer: they
+mean something only with the sender's levels, and the ROM would load them
+as its own. Only a build with the same version and seed takes them back
+(`Unpack`), and then only what the view holds: a loaded slot has the
+first 25 level words, and the levels past them and the extra progress
+flags are 0. A view whose checksum fails is "connection failed"
+(`LinkExchange` returns 2).
+
+Tested on two mGBA 0.10.5 cores linked by its lockstep link cable, with
+a 31-level build: with the ROM, both show four empty slots and load none;
+with the ROM patched to version 0x22 and 0x32 (as Crash 2 and 3 identify
+themselves), the 31-level build stores flag 2 or 4 and shows the Crash 2
+or 3 message; between two 31-level builds, a slot loads with its first
+25 level words.
 
 ### Extra progress flags
 
@@ -1687,10 +1717,12 @@ ROM matches. With any other data:
 
 The version nibble alone would only give 15 values, a 1-in-15 chance
 that two modified builds accept each other's saves; the seed is what
-makes it 32 bits. It costs the link bonus: a modified build checks the
-Crash 2/3 records against its own seed, so their checksum fails
-("connection failed"), and they will likely refuse its records for the
-same reason. The original data keeps the bonus.
+makes it 32 bits. It costs a 4 Kbit modified build the link bonus: it
+checks the Crash 2/3 records against its own seed, so their checksum
+fails ("connection failed"), and they will likely refuse its records for
+the same reason. The original data keeps the bonus, and so does a 64 Kbit
+build, whose link record is checked from the ROM's seed ("The link
+cable").
 
 ## Numbers
 
