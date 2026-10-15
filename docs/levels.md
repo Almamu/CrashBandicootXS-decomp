@@ -1437,6 +1437,41 @@ cell animation of another geometry or with the other banks, a sky of
 another size or too many tiles, a sky on a polar category, a palette of
 another count.
 
+**Colours the engine replaces** (#1089). Two things load over a
+category's own cell animation palette. `levels.py categories` (the
+`actor_categories.inc` rule) warns about each, and the build goes on, so
+a mod can keep the colours on purpose:
+
+- **The polar palette cycle.** `ActorPaletteCycle::Update` DMAs a
+  0x1C0-byte frame to BG palettes 0-13 every moving frame, for a polar
+  category only. So a polar cell animation of its own keeps only banks
+  14-15 of its palette. The warning lists the colours its pixels use in
+  banks 0-13 that differ from the ice wall's, the colours a mod changed
+  (the ice wall's own banks 0-13 don't show either: its palette differs
+  from every cycle frame). Recolour such an animation through its pixels
+  (each cell's indices in its bank), or through banks 14-15.
+- **A sky.** `LoadBgPicture` (from `ActorCategory::Init`, and again
+  after the pause menu) loads the sky's whole 256-colour palette over
+  the cell animation's (`CellAnim::ResetBg`). The warning lists the
+  colours a jetpack or hovercraft category's own cell animation uses
+  that its sky's palette doesn't have at the same index. Give the sky
+  those colours.
+
+Only a category's own cell animation is checked, not the type's: the
+ROM's skies recolour the type's clouds on purpose (blimp bonanza's and
+no fly zone's palettes differ from the clouds' in all 15 of their
+colours). Bank colour 0 isn't checked: it is transparent in a cell.
+
+Tested in scratch with four new cell animations made from the ROM's. The
+ice wall with bank 2's colours inverted in its palette warns (indices 33
+on); the ice wall with each pixel's index reversed in its bank, its
+palette unchanged, doesn't; neither does the ice wall itself named as a
+category's. The clouds with red and blue swapped in the palette warn
+under rocket racket's and no fly zone's skies (a hovercraft category);
+the clouds copied as they are don't under rocket racket's sky (the same
+colours) but warn under blimp bonanza's; the type's clouds under blimp
+bonanza's sky, as the ROM has them, don't.
+
 **What is generated.** `actor_categories.inc` defines the new graphics the
 categories name, each once, between the new spawn lists and the
 descriptors: a `struct category_cell_anim_<symbol>` or `struct
