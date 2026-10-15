@@ -25,7 +25,7 @@ using Engine::Sys::Irq;
  * `(self[0]>>4) + hash` tail - reconstructing `hash` from the just-
  * stored bytes 6/7 rather than reusing the register - reduces to plain
  * `hash & 0xF`). Called once by `LinkSession::ResetState`, on the
- * session's own `id`, which it then copies into every player record.
+ * session's outgoing packet, which it then copies into every player record.
  *
  * Once a NAKED transcription; it matches as plain C under old_agbcc
  * (link_handshake.o is on the Makefile's OLD_AGBCC_OBJS) with no pins

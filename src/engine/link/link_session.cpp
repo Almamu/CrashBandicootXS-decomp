@@ -144,19 +144,20 @@ s32 LinkSession::Update()
  * one), `playerId` (SIOCNT bits 4-5) and `peerMask` (every other
  * player's bit) from that. Once connected, every exchange moves one
  * 8-byte packet per console, four SIOMULTI halfwords at a time
- * (`sendWordIndex`, `sendRound`). The outgoing packet is `id`: byte 0
+ * (`sendWordIndex`, `sendRound`). The outgoing packet is
+ * `packets[OUT_PACKET]` (a link_packet, link_session.hpp): byte 0
  * holds a check nibble and an ack counter, byte 1 a sequence number and
  * the payload length (0-4 bytes popped from the outgoing `ring`, counted
  * in `totalSent`), bytes 2-5 the payload and bytes 6-7 a CRC-16
  * (`gCrc16Table`, as in MakeLinkHandshakeId) chained from the previous
- * packet. Each player record keeps the peer's last packet (`id`, `hash`,
+ * packet. Each player record keeps the peer's last packet (`packet`,
  * `prevHash`), its incoming words (`rx`, `rxCount`), the expected
  * sequence (`rxSeq`) and its incoming `ring` (`totalReceived`). A new
  * packet is built once every peer has acknowledged ours (`ackedMask` ==
  * `peerMask`), our ack counter is bumped once every peer's new data has
  * arrived (`receivedMask`), and every fourth round re-sends the previous
- * packet (`prevPacket`). `progressed` tells LinkSession::Update the link
- * moved.
+ * packet (`packets[PREV_PACKET]`). `progressed` tells LinkSession::Update
+ * the link moved.
  *
  * Once a NAKED transcription (1488 bytes, this project's biggest); it
  * now matches as plain C under old_agbcc (link_handshake.o is on the
@@ -174,7 +175,7 @@ struct link_rx_word {
 
 #define LINK_NIB(p) (*(struct nibble_pair *)(p))
 
-/* The CRC-16 walk MakeLinkHandshakeId also uses, over bytes 1-5 of an id. */
+/* The CRC-16 walk MakeLinkHandshakeId also uses, over bytes 1-5 of a packet. */
 #define LINK_HASH(hash, p)                                                     \
     {                                                                          \
         s32 _k;                                                                \
@@ -186,8 +187,8 @@ struct link_rx_word {
         }                                                                      \
     }
 
-/* Copies an 8-byte id as four byte-assembled halfwords. */
-#define LINK_COPY_ID(dst, src)                                                 \
+/* Copies an 8-byte packet as four byte-assembled halfwords. */
+#define LINK_COPY_PACKET(dst, src)                                                 \
     {                                                                          \
         s32 _j;                                                                \
                                                                                \
@@ -220,7 +221,7 @@ void LinkSession::HandleSerial(u16 *data)
     inSerialIrq = one;
     siocnt = REG_SIOCNT;
     changed = 0;
-    nib = LINK_NIB(&id[1]).lo + 1;
+    nib = LINK_NIB(&packets[OUT_PACKET].fields.seq).lo + 1;
     nib &= 0xf;
     if ((siocnt >> 6) & one)
         goto send;
@@ -298,7 +299,7 @@ void LinkSession::HandleSerial(u16 *data)
         }
         if (!ok)
             continue;
-        if ((q[1] & 0xf) == (p->id[1] & 0xf)) {
+        if ((q[1] & 0xf) == (p->packet.fields.seq & 0xf)) {
             u16 want = (q[7] << 8) | q[6];
             u16 hash = p->prevHash;
 
@@ -315,7 +316,7 @@ void LinkSession::HandleSerial(u16 *data)
             if (LINK_NIB(&q[1]).lo != p->rxSeq)
                 continue;
             want = (q[7] << 8) | q[6];
-            hash = p->hash;
+            hash = p->packet.fields.hash;
             LINK_HASH(hash, &q[1]);
             if (want != hash)
                 continue;
@@ -327,17 +328,17 @@ void LinkSession::HandleSerial(u16 *data)
              * order gives `n` r7 as in the ROM. Read first (55), `n`
              * shares r8 with the id byte and is copied at each use.
              * Until #662 round 10 a MATCH_USE(n) stood in. */
-            payload = &p->id[2];
-            n = p->id[1] >> 4;
+            payload = p->packet.fields.payload;
+            n = p->packet.fields.seq >> 4;
             p->ring.Push(payload, n);
             p->totalReceived += n;
-            p->prevHash = p->hash;
+            p->prevHash = p->packet.fields.hash;
             p->rxSeq = (p->rxSeq + 1) & 0xf;
             receivedMask |= 1 << i;
         }
     copy:
-        LINK_COPY_ID(p->id, q);
-        if (LINK_NIB(&p->id[0]).hi == nib)
+        LINK_COPY_PACKET(p->packet.bytes, q);
+        if (LINK_NIB(&p->packet.fields.ack).hi == nib)
             ackedMask |= 1 << i;
         p->rxCount = 0;
         changed = 1;
@@ -348,23 +349,23 @@ void LinkSession::HandleSerial(u16 *data)
         if (ackedMask == peerMask) {
             s32 n, k;
             u16 hash;
-            u8 *id;
+            union link_packet *out;
             LinkRing *ring;
 
             ackedMask = 0;
-            id = this->id;
-            /* prevPacket = id, one halfword at a time. The loop's `d` and
-             * `s` (#662 round 10) are loop invariants that loop.c's first
-             * pass moves out (threshold 26 -> 20), and with `v` a u16 the
-             * first pass sees 21 insns, so the 0xff mask isn't moved
-             * until the second pass: the ROM's order, `d`, `s` (the
+            out = &packets[OUT_PACKET];
+            /* packets[PREV_PACKET] = packets[OUT_PACKET], one halfword at a
+             * time. The loop's `d` and `s` (#662 round 10) are loop
+             * invariants that loop.c's first pass moves out (threshold 26
+             * -> 20), and with `v` a u16 the first pass sees 21 insns, so
+             * the 0xff mask isn't moved until the second pass: the ROM's order, `d`, `s` (the
              * strength-reduced pointers), then 0xff, then the reversed
              * counter. Written with the pointers outside the loop, or `v`
              * as a u32, the mask is moved first and the allocation after
              * it changes (190 lines). */
             for (k = 0; k <= 3; k++) {
-                u8 *d = prevPacket;
-                u8 *s = this->id;
+                u8 *d = packets[PREV_PACKET].bytes;
+                u8 *s = packets[OUT_PACKET].bytes;
                 u16 v = (s[k * 2 + 1] << 8) | s[k * 2];
                 u16 lo = v & 0xff;
 
@@ -381,45 +382,50 @@ void LinkSession::HandleSerial(u16 *data)
             ring = &this->ring;
             n = ring->count;
             LIMIT_MAX(n, 4);
-            LINK_NIB(&id[1]).hi = n;
-            ring->Pop(&this->id[2], n);
+            LINK_NIB(&out->fields.seq).hi = n;
+            ring->Pop(packets[OUT_PACKET].fields.payload, n);
             totalSent += n;
 
             /* A signed QImode read-modify-write: the ROM's mask is
              * -16 and `nib` (already masked) is not masked again. */
-            s8 *b = (s8 *)&this->id[1];
+            s8 *b = (s8 *)&packets[OUT_PACKET].fields.seq;
 
             *b = (*b & ~0xf) | nib;
-            hash = this->hash;
-            LINK_HASH(hash, &this->id[1]);
+            hash = packets[OUT_PACKET].fields.hash;
+            LINK_HASH(hash, &packets[OUT_PACKET].bytes[1]);
 
             /* The ROM sets this 0 before the hash store. */
             s32 z = 0;
 
-            this->hash = hash;
+            packets[OUT_PACKET].fields.hash = hash;
             sendRound = z;
             changed = 1;
         }
         if (receivedMask == peerMask) {
             receivedMask = 0;
-            LINK_NIB(&id[0]).hi = (LINK_NIB(&id[0]).hi + 1) & 0xf;
+            LINK_NIB(&packets[OUT_PACKET].fields.ack).hi =
+                (LINK_NIB(&packets[OUT_PACKET].fields.ack).hi + 1) & 0xf;
             changed = 1;
         }
         if (changed) {
             sendWordIndex = 0;
             progressed = 1;
 
-            u8 *id = this->id;
-            u32 n = LINK_NIB(&id[0]).hi;
-            u32 v = (id[7] << 8) | id[6];
+            u8 *out = packets[OUT_PACKET].bytes;
+            u32 n = LINK_NIB(&out[0]).hi;
+            u32 v = (out[7] << 8) | out[6];
             s32 w = (n + v) & 0xf;
 
-            LINK_NIB(&id[0]).lo = w;
+            LINK_NIB(&out[0]).lo = w;
         }
     }
 
     u8 *lo, *hi;
 
+    /* The halfword of packets[PREV_PACKET] (+0x28) or packets[OUT_PACKET]
+     * (+0x30): written as `&packets[k].bytes[sendWordIndex * 2]` (or over
+     * packetBytes) the address is built base-first, not as the ROM's
+     * this + sendWordIndex * 2 + 0x28. */
     if ((sendRound & 3) == 3) {
         u8 *b = (u8 *)this + sendWordIndex * 2;
 

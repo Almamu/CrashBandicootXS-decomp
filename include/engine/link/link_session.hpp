@@ -38,7 +38,7 @@ extern "C" {
 #include "engine/util/util.h"
 }
 
-/* The session's packed bit views (src/engine/link/*.cpp). See
+/* The session's packed bit views (the .cpp files in src/engine/link/). See
  * docs/matching/archive/issue-4-6-8-naked-retry.md. */
 struct nibble_pair {
     u8 lo:4;
@@ -52,6 +52,18 @@ union link_id_word {
         u16 hi:12;
     } __attribute__((packed)) bits;
     u16 raw;
+};
+
+/* One 8-byte link packet (LinkSession::HandleSerial), sent as four
+ * halfwords and copied whole through `bytes`. */
+union link_packet {
+    u8 bytes[8];
+    struct {
+        u8 ack;        // 0x00 - lo nibble: check, (hi + hash) & 0xf; hi: ack counter
+        u8 seq;        // 0x01 - lo nibble: sequence number; hi: payload length (0-4)
+        u8 payload[4]; // 0x02
+        u16 hash;      // 0x06 - CRC-16 of bytes 1-5, chained from the previous packet
+    } fields;
 };
 
 namespace Engine
@@ -137,10 +149,9 @@ public:
 class LinkPlayer
 {
 public:
-    /* 0x00 - with `hash`, the peer's last 8-byte packet (first a copy of
-     * the session's handshake id) */
-    u8 id[6];
-    u16 hash;          // 0x06 - the packet's CRC-16; 0x1234 after ResetState
+    /* 0x00 - the peer's last packet (first a copy of the session's
+     * handshake id; its hash 0x1234 after ResetState) */
+    union link_packet packet;
     u16 prevHash;      // 0x08 - the hash before the latest packet
     u16 rx[16];        // 0x0a - last 16 received words, written at rxCount
     s32 rxCount;       // 0x2c - write index into rx (& 0xf)
@@ -154,6 +165,11 @@ public:
 class LinkSession
 {
 public:
+    enum {
+        PREV_PACKET, // packets[0]
+        OUT_PACKET   // packets[1]
+    };
+
     u8 unused_00[4];
     u8 inSerialIrq;     // 0x04 - HandleSerial's re-entrancy guard
     u8 enabled;         // 0x05 - SaveMenu's Begin/EndLinkTransfer; Update idles while 0
@@ -167,11 +183,13 @@ public:
     s32 playerCount;    // 0x1c - consoles that answered the handshake
     union link_id_word handshakeWord; // 0x20 - 0xF0B, low nibble = answers seen
     s32 totalSent;                    // 0x24 - payload bytes popped from `ring`
-    u8 prevPacket[8];                 // 0x28 - the previous `id`, re-sent every fourth round
-    /* 0x30 - with `hash`, the outgoing 8-byte packet (first
-     * MakeLinkHandshakeId's id) */
-    u8 id[6];
-    u16 hash;              // 0x36 - the packet's CRC-16
+    union {
+        /* 0x28 - packets[OUT_PACKET] is the outgoing packet (first
+         * MakeLinkHandshakeId's id), packets[PREV_PACKET] the one before it,
+         * re-sent every fourth round */
+        union link_packet packets[2];
+        u8 packetBytes[16]; // 0x28 - the two, as ResetState copies one into the other
+    };
     s32 sendWordIndex;     // 0x38 - which of the packet's 4 halfwords goes out next
     s32 sendRound;         // 0x3c - full packets sent since the last new one
     LinkRing ring;         // 0x40 - outgoing bytes
