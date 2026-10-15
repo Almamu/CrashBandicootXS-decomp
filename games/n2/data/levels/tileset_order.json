@@ -1,9 +1,9 @@
 {
-  "gStaticData_085346AC": ["level01/main", "level17/main"],
-  "gStaticData_081E5394": ["level01/main", "level05/main", "level12/main", "level17/main"],
-  "gStaticData_08538320": ["level05/main"],
-  "gStaticData_0853B250": ["level04/main", "level07/main", "level15/main", "level20/main"],
-  "gStaticData_0826FE48": ["level04/main", "level07/main", "level15/main", "level20/main", "level21/main"],
-  "gStaticData_0853FD10": ["level06/main", "level10/main", "level13/main", "level18/main"],
-  "gStaticData_08220840": ["level06/main", "level10/main", "level13/main", "level18/main", "level23/main"]
+  "gStaticData_085346AC": ["prints_of_persia/main", "rock_the_casaba/main"],
+  "gStaticData_081E5394": ["prints_of_persia/main", "runaway_rug/main", "now_its_istanbul/main", "rock_the_casaba/main"],
+  "gStaticData_08538320": ["runaway_rug/main"],
+  "gStaticData_0853B250": ["pharaohs_funhouse/main", "hoppin_coffins/main", "slip_n_slidin_sphinx/main", "king_too_uncommon/main"],
+  "gStaticData_0826FE48": ["pharaohs_funhouse/main", "hoppin_coffins/main", "slip_n_slidin_sphinx/main", "king_too_uncommon/main", "wild_nile_ride/main"],
+  "gStaticData_0853FD10": ["tiki_torture/main", "magma_mania/main", "mister_lava_lava/main", "eruption_disruption/main"],
+  "gStaticData_08220840": ["tiki_torture/main", "magma_mania/main", "mister_lava_lava/main", "eruption_disruption/main", "fire_walker/main"]
 }

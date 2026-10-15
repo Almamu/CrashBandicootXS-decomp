@@ -37,7 +37,7 @@ derived from those again.
                                               another game's rooms only (N-Tranced:
                                               DIR games/n2/data/levels, TABLE its
                                               gLevelTable 0x081D0430): each room's
-                                              folder (level<NN>/<slot>), a levels.json
+                                              folder (<level>/<slot>), a levels.json
                                               of the rooms, regions and assets, and
                                               tileset_order.json, checked like extract
                                               (docs/n_tranced.md)
@@ -3850,7 +3850,9 @@ def extract_rooms_from_table(rom_path, table):
     """extract-rooms: another game's rooms, from its level table at `table`
     (struct level_info, LEVEL_INFO_SIZE each; it ends at the first entry
     that isn't a level), into LEVELS_DIR (`--levels-dir`). The folders are
-    level<NN>/<slot>, NN the level's index and the slot as in data/levels:
+    <level>/<slot>: the level's name from levels.json's "level_names" (one
+    per level, hand-written and kept, as XS's names; level<NN> by its index
+    without them) and the slot as in data/levels:
     main (or part1, part2, ... for several played rooms), bonus (extra1),
     gem_path (extra2). The rooms are numbered (gRoomNN) in the order of
     their struct level_room in the ROM. Writes each room (extract_rooms),
@@ -3860,6 +3862,7 @@ def extract_rooms_from_table(rom_path, table):
     rom = Rom(rom_path)
     isrom = lambda p: ROM_BASE <= p < ROM_BASE + len(rom.data)  # noqa: E731
     folders = {}
+    level_names = read_json(LEVELS_JSON).get("level_names", []) if LEVELS_JSON.exists() else []
     for i in range(1 << 10):
         rl = rom.w(table + i * LEVEL_INFO_SIZE + 0x20)
         if not isrom(rl) or not 1 <= rom.w(rl) <= 8 or not isrom(rom.w(rl + 4)):
@@ -3868,7 +3871,7 @@ def extract_rooms_from_table(rom_path, table):
         played = [("main" if n == 1 else "part%d" % (k + 1), rom.w(rom.w(rl + 4) + 4 * k)) for k in range(n)]
         for slot, r in played + [(ROOM_SLOTS[x], rom.w(rl + o)) for x, o in (("extra1", 8), ("extra2", 12))]:
             if isrom(r) and rom.w(r + 4) and r not in folders:
-                folders[r] = "level%02d/%s" % (i, slot)
+                folders[r] = "%s/%s" % (level_names[i] if i < len(level_names) else "level%02d" % i, slot)
     records = sorted(folders)
     rooms = [(rom.w(r), rom.w(r + 4)) for r in records]
     raw = {rom.w(d + 0x14): raw_asset_size(rom, d) for _, d in rooms if not rom.b(d + 0x18)}
@@ -3903,9 +3906,10 @@ def extract_rooms_from_table(rom_path, table):
             regions.append({"name": "level_rooms_%d" % len(regions), "rooms": []})
         regions[-1]["rooms"].append(name)
         end = stop
-    levels = {"rooms": names, "regions": regions,
-              "assets": {"name": "level_assets", "rooms": [n for _, n in sorted(assets)]},
-              "room_layout": list(full[0]), "entity_types": min(counts)}
+    levels = ({"level_names": level_names} if level_names else {})
+    levels.update({"rooms": names, "regions": regions,
+                   "assets": {"name": "level_assets", "rooms": [n for _, n in sorted(assets)]},
+                   "room_layout": list(full[0]), "entity_types": min(counts)})
     LEVELS_JSON.write_text(json.dumps(levels, indent=2) + "\n")
     check_tilesets(levels, names, rom_tiles, set_blocks, decoded, list(set_blocks))
     print("%d rooms, %d tile sets: the ROM's" % (len(names), len(set_blocks)), file=sys.stderr)
