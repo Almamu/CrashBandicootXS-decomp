@@ -4,22 +4,33 @@
 N-Tranced has no objdiff report yet: its code is a disassembly
 (games/n2/asm/) with the shared sources of games/n2/objects.txt linked in
 place of their part of it, and its data is the original's bytes. So its
-progress is what the build says (docs/n_tranced.md, "Progress"):
+progress is what the build says (docs/n_tranced.md, "Progress"), in the
+same terms as XS's report:
 
-  code.total     the code's bytes: the .text of every code object
-  code.matching  the shared sources' .text: built from src/, byte-identical
-  data.total     the rest of the ROM (ntranced.gba's size less the code)
-  data.done      0: all of it is still incbin'd from baserom_n2.gba
+  code.total         the code's bytes, 0x08000000 to the end of the code
+  code.matching      the shared sources' (built from src/, byte-identical)
+  functions.total    every function in ntranced.elf
+  functions.matching the shared sources' functions
+  data.total         the rest of the ROM (ntranced.gba's size less the code)
+  data.done          0: all of it is still incbin'd from baserom_n2.gba
 
-The areas are the shared sources (one each) and the disassembly (one per
-games/n2/asm/ file). Run it after `make GAME=n2`; it prints the JSON
-document decompilati.onl's webhook takes (https://decompilati.onl/docs).
+The areas are XS's report categories (System, Graphics, Actor, ...,
+tools/report_units.py). A function gets its category from the XS function
+of the same name: the disassembly names a function after XS's where the
+XS/N-Tranced comparison found it (games/n2/gbadisasm.cfg). The rest,
+N-Tranced's own code and what isn't identified yet, are "Not identified
+yet". This needs the XS build too (crashbandicootxs.elf, for the XS
+functions' addresses); without it every function is in that one area.
+Run it after `make GAME=n2`; it prints the JSON document decompilati.onl's
+webhook takes (https://decompilati.onl/docs).
 
 Usage:
   games/n2/progress.py [--version NAME] [--commit SHA] [--message TEXT]
 """
 
 import argparse
+import bisect
+import collections
 import json
 import os
 import subprocess
@@ -27,30 +38,53 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 N2_DIR = os.path.join(ROOT, "games", "n2")
-OBJ_DIR = os.path.join(ROOT, "build", "ntranced")
 ROM = os.path.join(ROOT, "ntranced.gba")
-SIZE = os.environ.get("SIZE", "arm-none-eabi-size")
+ELF = os.path.join(ROOT, "ntranced.elf")
+XS_ELF = os.path.join(ROOT, "crashbandicootxs.elf")
+READELF = os.environ.get("READELF", "arm-none-eabi-readelf")
+CODE_START = 0x08000000
+UNIDENTIFIED = "Not identified yet"
+
+sys.path.insert(0, os.path.join(ROOT, "tools"))
+sys.path.insert(0, N2_DIR)
+import report_units  # noqa: E402  (XS's report categories)
+from disasm import CODE_END  # noqa: E402  (where the incbin'd data starts)
 
 
-def text_size(obj):
-    """The .text size of an object, from `size -A`."""
-    out = subprocess.run([SIZE, "-A", obj], check=True, capture_output=True, text=True).stdout
+def functions(elf):
+    """{name: address} of the ELF's function symbols (STT_FUNC)."""
+    out = subprocess.run([READELF, "-sW", elf], check=True, capture_output=True, text=True).stdout
+    funcs = {}
     for line in out.splitlines():
         parts = line.split()
-        if parts and parts[0] == ".text":
-            return int(parts[1])
-    return 0
+        if len(parts) >= 8 and parts[3] == "FUNC" and parts[6] != "UND":
+            funcs.setdefault(parts[7], int(parts[1], 16) & ~1)
+    return funcs
 
 
-def shared_sources():
-    """(source, its object) for each line of objects.txt, in ROM order."""
+def shared_ranges():
+    """(start, end, source) of each line of objects.txt."""
     out = []
     with open(os.path.join(N2_DIR, "objects.txt")) as f:
         for line in f:
             fields = line.split("#", 1)[0].split()
             if fields:
-                src = fields[2]
-                out.append((src, os.path.join(OBJ_DIR, os.path.splitext(src)[0] + ".o")))
+                start, size = int(fields[0], 16), int(fields[1], 16)
+                out.append((start, start + size, fields[2]))
+    return out
+
+
+def xs_categories():
+    """XS function name -> its report category id, or {} without the XS build."""
+    if not os.path.exists(XS_ELF):
+        return {}
+    units = [(a, c) for a, _, c in report_units.UNITS if a >= CODE_START]
+    starts = [a for a, _ in units]
+    out = {}
+    for name, addr in functions(XS_ELF).items():
+        i = bisect.bisect_right(starts, addr) - 1
+        if i >= 0 and units[i][1]:
+            out[name] = units[i][1]
     return out
 
 
@@ -60,41 +94,50 @@ def main():
     ap.add_argument("--commit", help="commit hash shown as the last change")
     ap.add_argument("--message", help="commit message shown as the last change")
     args = ap.parse_args()
-
-    for path in [ROM] + [o for _, o in shared_sources()]:
+    for path in (ROM, ELF):
         if not os.path.exists(path):
             sys.exit("progress.py: %s is missing; build N-Tranced first (make GAME=n2)" % path)
 
-    shared = []
-    for src, obj in shared_sources():
-        size = text_size(obj)
-        shared.append({"name": os.path.basename(src), "description": src,
-                       "code": {"total": size, "matching": size, "non_matching": 0}})
-    asm_dir = os.path.join(N2_DIR, "asm")
-    disasm = []
-    for name in sorted(os.listdir(asm_dir)):
-        if name.endswith(".s"):
-            size = text_size(os.path.join(OBJ_DIR, "games", "n2", "asm", name[:-2] + ".o"))
-            disasm.append({"name": name, "description": "games/n2/asm/" + name,
-                           "code": {"total": size, "matching": 0, "non_matching": 0}})
+    shared = shared_ranges()
+    code_end = CODE_END
+    funcs = sorted((a, n) for n, a in functions(ELF).items() if CODE_START <= a < code_end)
 
-    def total(areas, key):
-        return sum(a["code"][key] for a in areas)
+    cats = xs_categories()
+    starts = [s for s, _, _ in shared]
+    areas = collections.OrderedDict()
+    total_matching = matched_funcs = 0
+    for i, (addr, name) in enumerate(funcs):
+        size = (funcs[i + 1][0] if i + 1 < len(funcs) else code_end) - addr
+        k = bisect.bisect_right(starts, addr) - 1
+        matching = k >= 0 and addr < shared[k][1]
+        cat = report_units.CATEGORY_NAMES.get(cats[name], cats[name].capitalize()) if name in cats else UNIDENTIFIED
+        a = areas.setdefault(cat, {"code": collections.Counter(), "functions": collections.Counter()})
+        a["code"]["total"] += size
+        a["functions"]["total"] += 1
+        if matching:
+            a["code"]["matching"] += size
+            a["functions"]["matching"] += 1
+            total_matching += size
+            matched_funcs += 1
 
-    code = {k: total(shared, k) + total(disasm, k) for k in ("total", "matching", "non_matching")}
-    data_total = os.path.getsize(ROM) - code["total"]
-    areas = [
-        {"name": "Shared with Crash XS", "description": "games/n2/objects.txt: sources built from src/",
-         "code": {k: total(shared, k) for k in code}, "children": shared},
-        {"name": "Disassembly", "description": "games/n2/asm/: the code still to decompile",
-         "code": {k: total(disasm, k) for k in code}, "children": disasm},
-        # the map sizes tiles by code, and the data has none: draw it as big
-        # as all the code (it is 20 times bigger)
-        {"name": "ROM data", "description": "incbin'd from baserom_n2.gba",
-         "data": {"total": data_total, "done": 0}, "weight": code["total"]},
-    ]
-    doc = {"version": args.version, "unit": "bytes", "code": code,
-           "data": {"total": data_total, "done": 0}, "layout": "treemap", "areas": areas}
+    code_total = code_end - CODE_START
+    data_total = os.path.getsize(ROM) - code_total
+    area_list = []
+    for name in sorted(areas, key=lambda n: (n == UNIDENTIFIED, n)):
+        c = areas[name]["code"]
+        f = areas[name]["functions"]
+        area_list.append({"name": name,
+                          "description": "%d of %d functions matching" % (f["matching"], f["total"]),
+                          "code": {"total": c["total"], "matching": c["matching"], "non_matching": 0}})
+    # the map sizes tiles by code, and the data has none: draw it as big as
+    # all the code (it is 20 times bigger)
+    area_list.append({"name": "ROM data", "description": "incbin'd from baserom_n2.gba",
+                      "data": {"total": data_total, "done": 0}, "weight": code_total})
+    doc = {"version": args.version, "unit": "bytes",
+           "code": {"total": code_total, "matching": total_matching, "non_matching": 0},
+           "data": {"total": data_total, "done": 0},
+           "functions": {"total": len(funcs), "matching": matched_funcs},
+           "layout": "treemap", "areas": area_list}
     if args.commit:
         doc["commit"] = args.commit
     if args.message:
