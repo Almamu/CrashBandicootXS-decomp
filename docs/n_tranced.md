@@ -241,15 +241,27 @@ What differs from XS, in `levels.py`:
   [`collision_legend.json`](../games/n2/data/levels/collision_legend.json)
   is XS's legend plus those, not identified yet.
 
-**The level assets are built from these sources** (#1113), as XS's are:
-[`games/n2/levels.mk`](../games/n2/levels.mk) makes the BG tile sets
-from the pictures, each room's asset (LZ77-packed with gbagfx where the
-ROM has it packed), and `level_assets.inc`, and
-`src/game/level/data/level_assets.cpp`, shared with XS, holds them at
-`0x08544638`-`0x0869B8CC` (1,405,588 bytes), in place of the incbin.
-The rest of the rooms' data (their descriptors, chunk grids, palettes
-and entity lists), the tile sets, then the level table, its themes and
-the level select, are the rest of #1113.
+**N-Tranced's level data is built from these sources** (#1113), as XS's
+is, by [`games/n2/levels.mk`](../games/n2/levels.mk) with
+`tools/levels.py --levels-dir`, in place of the incbin:
+
+| What | Where (ROM) | Source |
+|---|---|---|
+| The rooms' data (level_desc, layers, chunk grids, palette, entity lists), 4 regions | `0x081E44C4`-`0x082B3914`, between the BG0 tile sets | `games/n2/src/game/level/data/level_rooms_<N>.cpp` (`levels.py c`) |
+| The 3 BG0 tile sets (8bpp) | between the regions | `level_bg0_tiles_<N>.cpp` (`levels.py tileset`) |
+| The 5 BG1-3 tile sets (4bpp, LZ77) | `0x085346AC`-`0x08544635`, in two runs | `level_bg_tiles_<N>.cpp` |
+| The 36 level assets | `0x08544638`-`0x0869B8CC` | `src/game/level/data/level_assets.cpp` (shared) |
+
+That's 2,313,432 bytes, 28.9% of its data. A room's parts are in another
+order than XS's (`levels.json`'s `"room_layout"`: the type counts, entity
+list and links before the chunk grids, the groups before the layer
+descriptors) and N-Tranced has 110 entity types (`"entity_types"`; XS
+93): `levels.py` takes both from the game's `levels.json`. The tile
+sets' names (`gStaticData_<address>`) and the regions' (`level_rooms_<N>`)
+are placeholders until the themes and levels have names, and
+`constants/levels.h` and `constants/categories.h` are empty for now
+(`levels.mk`). Still to do for #1113: the level table, its themes and the
+level select, and names.
 
 ## Progress
 

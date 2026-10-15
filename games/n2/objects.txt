@@ -9,4 +9,13 @@
 0x080010AC 0x074 src/engine/util/time_format.cpp
 0x08001794 0x01C src/engine/sys/iwram_alloc.cpp
 0x08007514 0x10C src/engine/sys/vram_dma_queue.cpp
+0x081E44C4 0x00ED0 games/n2/src/game/level/data/level_rooms_0.cpp
+0x081E5394 0x32104 games/n2/src/game/level/data/level_bg0_tiles_0.cpp
+0x08217498 0x093A8 games/n2/src/game/level/data/level_rooms_1.cpp
+0x08220840 0x46944 games/n2/src/game/level/data/level_bg0_tiles_1.cpp
+0x08267184 0x08CC4 games/n2/src/game/level/data/level_rooms_2.cpp
+0x0826FE48 0x327C4 games/n2/src/game/level/data/level_bg0_tiles_2.cpp
+0x082A260C 0x11308 games/n2/src/game/level/data/level_rooms_3.cpp
+0x085346AC 0x09CCF games/n2/src/game/level/data/level_bg_tiles_0.cpp
+0x0853FD10 0x04925 games/n2/src/game/level/data/level_bg_tiles_1.cpp
 0x08544638 0x157294 src/game/level/data/level_assets.cpp

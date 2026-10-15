@@ -101,6 +101,14 @@ LABEL = re.compile(r'^(\w+): @ 0x([0-9A-Fa-f]{8})$')
 LOCAL = re.compile(r'^(_([0-9A-F]{8})):')
 
 
+def object_path(src):
+    """A source's object, under the build directory: games/n2/src/<path>
+    builds src/<path>'s object (game.mk)."""
+    if src.startswith('games/n2/src/'):
+        src = src[len('games/n2/'):]
+    return src.rsplit('.', 1)[0]
+
+
 def objects():
     out = []
     for line in (HERE / 'objects.txt').read_text().splitlines():
@@ -216,9 +224,7 @@ def main():
             (asm / (name + '.s')).write_text(HEADER % (at, o[0] if o else CODE_END) + body + '\n\t.align 2, 0\n')
             script.append('\t\t%s/games/n2/asm/%s.o(.text);' % (BUILD, name))
         if o:
-            # games/n2/src/<path> builds src/<path>'s object (game.mk)
-            src = o[2][len('games/n2/'):] if o[2].startswith('games/n2/src/') else o[2]
-            script.append('\t\t%s/%s.o(.text);' % (BUILD, src.rsplit('.', 1)[0]))
+            script.append('\t\t%s/%s.o(.text);' % (BUILD, object_path(o[2])))
             at = o[0] + o[1]
         pos = ce
 
@@ -250,7 +256,7 @@ def main():
             (HERE / 'data' / (name + '.s')).write_text(DATA_HEADER % (pos, start) + align + '\n'.join(body) + '\n')
             data_script.append('\t\t%s/games/n2/data/%s.o(.rodata);' % (BUILD, name))
         if src:
-            data_script.append('\t\t%s/%s.o(.rodata);' % (BUILD, src.rsplit('.', 1)[0]))
+            data_script.append('\t\t%s/%s.o(.rodata);' % (BUILD, object_path(src)))
         pos = end
     (HERE / 'ldscript.txt').write_text(LDSCRIPT % ('\n'.join(script + data_script)))
 
