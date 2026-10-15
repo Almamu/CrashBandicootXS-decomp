@@ -367,7 +367,6 @@ for r in R:
             c = candidates(cls, lx[2], lx[1], text)
             if not c:
                 unattributed[lx[2] != ln[2]] += 1
-                if lx[2] != ln[2] and os.environ.get("DBG"): print("UNATTR", rel, lx[:3], ln[2], path, lineno, text.strip()[:90], file=sys.stderr)
                 continue
             for outer, own, mem, relo, how in c:
                 votes[(own, mem, relo)][(outer, lx[2], ln[2], how)] += 1
