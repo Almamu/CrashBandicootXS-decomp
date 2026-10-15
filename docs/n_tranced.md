@@ -121,3 +121,27 @@ The pointers in the code are still raw addresses, so the ROM can't shift
 yet (unlike XS's, docs/shifting.md): adding or removing a byte anywhere
 in the code breaks every absolute address after it. Symbols for the data
 and the RAM, and shiftable pointers, are the next steps of #1110.
+
+## Progress
+
+N-Tranced has its own project on [decompilati.onl](https://decompilati.onl).
+It has no objdiff report yet, so
+[`games/n2/progress.py`](../games/n2/progress.py) reads its progress from
+the build and prints the document decompilati.onl's webhook takes
+([docs](https://decompilati.onl/docs)), in bytes:
+
+- **code:** the `.text` of every code object. **Matching** is the shared
+  sources' (`games/n2/objects.txt`, built from `src/`, byte-identical); the
+  disassembly (`games/n2/asm/`) is still to do.
+- **data:** the rest of the ROM, all of it still incbin'd from
+  `baserom_n2.gba`.
+- **areas:** "Shared with Crash XS", one per shared source; "Disassembly",
+  one per `games/n2/asm/` file; and "ROM data".
+
+On pushes to `main`, `build.yml`'s "Send N-Tranced's progress to
+decompilati.onl" step runs it after the N-Tranced compare and POSTs the
+result to `/api/v1/progress`, with the commit and version `europe`, using
+the repository secret `DECOMPILATION2_PROGRESS_TOKEN`. Without the secret
+the step does nothing, and a failed upload doesn't fail the build. To see
+what would be sent: `make GAME=n2 && games/n2/progress.py`.
+

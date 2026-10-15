@@ -66,3 +66,4 @@ report.json
 
 # Python cache
 __pycache__/
+ntranced_progress.json
