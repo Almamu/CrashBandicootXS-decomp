@@ -15,11 +15,11 @@ Five now match as real C:
 
 | Function | File | Compiler | Was | Technique |
 |---|---|---|---|---|
-| `UpdateSlotCrate` | `src/game/crates/crate_break.c` | old_agbcc | 7 | count update split into in-place steps on a fresh local; one earlier `"+r"` barrier dropped |
-| `ActionCtrlStateCrouch` | `src/game/crash/action_ctrl_states.c` | old_agbcc | 1 insn | scoped `volatile u8 *` for the facing block's second read-modify-write |
-| `LoadLevelSelectRecord` | `src/game/ui/level_select.c` | old_agbcc | spill | a second local for the record pointer (the ROM's spilled copy) |
-| `UpdateExtraLife` | `src/game/objects/extra_life.c` | old_agbcc | 22 | plain re-reads instead of `volatile` ones; two extra references per velocity |
-| `ConvertHovercraftTiles` | `src/game/bosses/hovercraft.c` | both | 29 | opaque 0xf mask (`asm("" : "=r"(m) : "0"(0xf))`) ANDed as `m & b`; own counter for the second loop; row header in ROM order |
+| `UpdateSlotCrate` | `engine/src/game/crates/crate_break.c` | old_agbcc | 7 | count update split into in-place steps on a fresh local; one earlier `"+r"` barrier dropped |
+| `ActionCtrlStateCrouch` | `engine/src/game/crash/action_ctrl_states.c` | old_agbcc | 1 insn | scoped `volatile u8 *` for the facing block's second read-modify-write |
+| `LoadLevelSelectRecord` | `engine/src/game/ui/level_select.c` | old_agbcc | spill | a second local for the record pointer (the ROM's spilled copy) |
+| `UpdateExtraLife` | `engine/src/game/objects/extra_life.c` | old_agbcc | 22 | plain re-reads instead of `volatile` ones; two extra references per velocity |
+| `ConvertHovercraftTiles` | `engine/src/game/bosses/hovercraft.c` | both | 29 | opaque 0xf mask (`asm("" : "=r"(m) : "0"(0xf))`) ANDed as `m & b`; own counter for the second loop; row header in ROM order |
 
 All four files were already on their compiler (`hovercraft.c` matches
 under both), so no Makefile change. Every empty `asm` has a comment at

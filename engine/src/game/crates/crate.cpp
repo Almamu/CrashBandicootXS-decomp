@@ -13,7 +13,7 @@ extern "C" {
 using Game::Crates::Crate;
 
 /* The crate's overlap test, stack links, constructor and destructor
- * (#664, include/game/crates/crate.hpp), with the player's collision pass, and the
+ * (#664, engine/include/game/crates/crate.hpp), with the player's collision pass, and the
  * out-of-line copies of the line steppers (FindLineCrossingYMajor,
  * FindLineCrossingXMajor; no caller), from line_steppers.hpp. */
 

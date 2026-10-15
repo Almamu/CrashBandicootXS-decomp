@@ -3,14 +3,14 @@
 
 /* The level select's classes as C++ (#664, docs/cplusplus.md, part 10):
  *
- *   CameraLead          0x80  gCameraLeadVtable       src/game/objects/camera_lead.cpp
- *   LaunchPad           0x78  gLaunchPadVtable        src/game/objects/launch_pad.cpp
- *   LevelSelect         0xAC                          src/game/ui/level_select.cpp,
+ *   CameraLead          0x80  gCameraLeadVtable       engine/src/game/objects/camera_lead.cpp
+ *   LaunchPad           0x78  gLaunchPadVtable        engine/src/game/objects/launch_pad.cpp
+ *   LevelSelect         0xAC                          engine/src/game/ui/level_select.cpp,
  *                                                     level_select_pages.cpp
- *   LevelSelectPageBg   0x28                          src/game/ui/level_select_page_bg.cpp
- *   ZoomBg              0x8C                          src/game/ui/zoom_bg.cpp
- *   LevelSelectEntry    0x14  gLevelSelectEntryVtable src/game/ui/level_select_entry.cpp
- *   LevelSelectCursor   0x54                          src/game/ui/level_select_cursor.cpp
+ *   LevelSelectPageBg   0x28                          engine/src/game/ui/level_select_page_bg.cpp
+ *   ZoomBg              0x8C                          engine/src/game/ui/zoom_bg.cpp
+ *   LevelSelectEntry    0x14  gLevelSelectEntryVtable engine/src/game/ui/level_select_entry.cpp
+ *   LevelSelectCursor   0x54                          engine/src/game/ui/level_select_cursor.cpp
  *
  * The sizes are the ROM's (the `new`s in InputCtrl::StateStart,
  * SpawnLaunchPad, LevelSelect::Run and InitLevelSelect). Only three have a

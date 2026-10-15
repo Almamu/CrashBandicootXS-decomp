@@ -63,7 +63,7 @@ when the file moved to old_agbcc; the only shape left is its
 SImode `-0x21`). The mask clears bit 5 only (`~0x20`), not `~0x21` as
 the older notes said.
 
-`include/game/entities/sprite_flags.h` gained the fields these functions read:
+`engine/include/game/entities/sprite_flags.h` gained the fields these functions read:
 `moveAxes` (+0x24), `physMode` (+0x4D), `state` (+0x4E), `hitAxes`
 (+0x68), `probeTries` (+0x69) and `hitMask` (+0x74).
 

@@ -2,13 +2,13 @@
 #define __BITMAP_FONT_H__
 
 /* The glyph metrics of the game's bitmap fonts (class Font,
- * include/engine/text/font.hpp, src/engine/text/; formerly `struct icon_manager`). Font has
+ * engine/include/engine/text/font.hpp, engine/src/engine/text/; formerly `struct icon_manager`). Font has
  * no C view: `struct bitmap_font` went with its last C reader (#754). */
 
 /* A single glyph's draw metrics - Font's `glyphRecords` is an array of
  * these, 12 bytes apart, indexed by its `charLookup`.
  * Established by GitHub issue #46's chunk (`FontDrawGlyph`/`FontMeasureChars`/
- * `FontMeasureText`, src/game/ui/hud_slide.cpp): `width` is the glyph's
+ * `FontMeasureText`, engine/src/game/ui/hud_slide.cpp): `width` is the glyph's
  * horizontal advance (added to `posX` after each draw, and what
  * `FontMeasureText`/`FontMeasureChars` sum to measure a run of text); `shape`
  * feeds a small (2-bit, `<<6` into a byte) shape/size selector;

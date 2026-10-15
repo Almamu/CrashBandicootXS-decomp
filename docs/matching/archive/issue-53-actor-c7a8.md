@@ -5,7 +5,7 @@ own `0x0802C99C` chunk start) was the one function GitHub issue #53
 identified as a good semantics-understood candidate outside its literal
 chunk boundary. It sat between `polar_pickups.c`'s `UpdatePolarNitroCrate` and
 `polar_crates.c`'s `UpdatePolarAkuAkuCrate` - directly adjacent to both once
-matched, so it gets a new file, `src/vehicle/polar_nitro.c`, slotted
+matched, so it gets a new file, `engine/src/vehicle/polar_nitro.c`, slotted
 into `ldscript.txt` at its real ROM address in place of the removed
 `asm/code_3_2_20_28568_c7a8.s`.
 
@@ -15,7 +15,7 @@ issue #53's own chunk (`0x0802C99C`-`0x0802CC9C`, directly adjacent to
 `UpdatePolarFourWumpaCrate`, `UpdatePolarBasicCrate`, `InitPolarCrate`, `CreatePolarTimeCrate`,
 `CreatePolarQuestionCrate`, `CreatePolarAkuAkuCrate`, `CreatePolarNitroCrate`, `CreatePolarLifeCrate`,
 `CreatePolarFourWumpaCrate`, `CreatePolarBasicCrate` - all genuinely **matched as real C**, in
-a new file `src/vehicle/polar_crates.c`. The raw
+a new file `engine/src/vehicle/polar_crates.c`. The raw
 `asm/code_3_2_20_28568_c99c.s` fragment (which spanned far beyond this
 chunk) was cut at that boundary and its remainder renamed
 `asm/code_3_2_20_28568_c99c_cc9c.s`, starting at `UpdatePolarElectricFence` - the
@@ -44,7 +44,7 @@ just the `x`/`y`/`z` fields (the `sizeX`/`sizeY`/`sizeZ` half stays raw
 - these are extents, not absolute coordinates). Both boxes are then run
 through `MemCopy32` - the same confirmed no-op `memcpy(dst, dst,
 0xc)` self-copy documented in `yeti_update.c` (`MemCopy32`'s own
-definition lives in `src/system/boot.c`, a real `CpuSet`-wrapper
+definition lives in `engine/src/system/boot.c`, a real `CpuSet`-wrapper
 `memcpy`) - kept byte-faithful, not simplified away. The 3-axis overlap
 test itself compares Z, then Y, then X (matching the ROM's own
 instruction order, not storage order), exactly like `UpdateYeti`/
@@ -73,7 +73,7 @@ check (since `self` is itself a member of the same list).
 
 This is the exact same heavy-stack-AABB-plus-register-reuse shape this
 project already NAKED-parked twice for `UpdateYeti`/`IsTouchingYeti`
-(`src/vehicle/yeti_update.c`/`yeti_graphics.c`, `docs/matching/issue-54-actor-
+(`engine/src/vehicle/yeti_update.c`/`yeti_graphics.c`, `docs/matching/issue-54-actor-
 d3a8.md`) - two 12-byte scratch AABB records built via raw `ldm`/`stm`
 block copies inside one 0x24-byte stack frame, with the second box's
 scratch address (`add r7, sp, #0x18`) computed once and held in `r7`
@@ -103,7 +103,7 @@ low register each time depending on how the two boxes' temp/final
 locals are split. This is the same categorical "r7 cannot be pinned in
 this toolchain, ever" limitation from `matching_decomp_register_pinning`
 memory point 10, already on file for `CheckSpritePickup`
-(`src/game/entities/sprite.c`) and `MovePolarAkuAku` (this issue's own
+(`engine/src/game/entities/sprite.c`) and `MovePolarAkuAku` (this issue's own
 sibling, `docs/matching/archive/issue-54-actor-d3a8.md`) - not something more
 C-level rephrasing was likely to fix, so parked the same way as its two
 closest siblings rather than continuing to chase it.
@@ -122,7 +122,7 @@ inferred control-flow guess.
 
 Directly adjacent to `UpdatePolarAkuAkuCrate` (`polar_crates.c`), the first 12
 functions of issue #53's own `0x0802C99C` chunk start are genuinely
-matched as plain C, in `src/vehicle/polar_crates.c`:
+matched as plain C, in `engine/src/vehicle/polar_crates.c`:
 
 - **`UpdatePolarTimeCrate`** - the type-byte-dispatch/proximity family
   (`UpdatePolarQuestionCrate`'s shape, `polar_pickups.c`): on `IsTouchingPlayer`
@@ -142,7 +142,7 @@ matched as plain C, in `src/vehicle/polar_crates.c`:
   the `c` parameter's own range (`<= 0x2b`, `<= 6`) - selecting one of
   up to 18 per-kind anim records from the part table (`self[0]`, stride
   `0xc`) to seed `self+0x10`/`self+0x12`/`self+8`, the same idiom as
-  `CreatePolarBoostPad` (`src/vehicle/polar_aku_aku.c`).
+  `CreatePolarBoostPad` (`engine/src/vehicle/polar_aku_aku.c`).
 - **`CreatePolarTimeCrate`**, **`CreatePolarQuestionCrate`**, **`CreatePolarAkuAkuCrate`**,
   **`CreatePolarNitroCrate`**, **`CreatePolarFourWumpaCrate`**, **`CreatePolarBasicCrate`** - thin
   `InitPolarCrate`-forwarding constructors, each installing a different

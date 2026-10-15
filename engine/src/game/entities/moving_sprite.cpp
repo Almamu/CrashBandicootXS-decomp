@@ -13,7 +13,7 @@ using Game::Crash::Player;
 using Game::Entities::MovingSprite;
 using Game::Entities::Sprite;
 
-/* MovingSprite's contact with the player (#664, include/game/entities/sprite_obj.hpp). */
+/* MovingSprite's contact with the player (#664, engine/include/game/entities/sprite_obj.hpp). */
 
 /* IsPlayerInvulnerable, inlined: the player's invulnerability deadline is
  * still ahead of the frame counter. */
@@ -84,7 +84,7 @@ void MovingSprite::ResolvePlayerContact()
     }
 }
 
-/* MovingSprite's methods (#664, include/game/entities/sprite_obj.hpp): the motion, the
+/* MovingSprite's methods (#664, engine/include/game/entities/sprite_obj.hpp): the motion, the
  * constructor and destructor, and the update. */
 
 /* Steps each speed towards its ramp's target by the ramp's step, never

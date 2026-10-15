@@ -66,7 +66,7 @@ SHIFTS = [
 # one, check that the word is really data (pixels, PCM, a compressed
 # stream) before adding it; the failure prints the entry.
 KNOWN_DATA = {
-    # sound-effect sample PCM (sound/sfx_samples/*.wav)
+    # sound-effect sample PCM (games/xs/sound/sfx_samples/*.wav)
     ("data/data.o", ".rodata.084C0006"): {
         0x2F670: 0x0801071D, 0x3E884: 0x08000621, 0x4BE44: 0x08000519, 0x7A2D8: 0x08170C0C,
     },

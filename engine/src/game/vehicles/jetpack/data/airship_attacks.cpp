@@ -9,11 +9,11 @@ extern "C" {
 using Game::Vehicles::Jetpack::Airship;
 
 /*
- * ROM 0x0817C2D0-0x0817C3FC. Linked in ROM order between data/data.s
+ * ROM 0x0817C2D0-0x0817C3FC. Linked in ROM order between games/xs/data/data.s
  * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
-/* Airship::attacks (include/game/vehicles/jetpack/airship.hpp): the airship's attack
+/* Airship::attacks (engine/include/game/vehicles/jetpack/airship.hpp): the airship's attack
  * parameters (struct airship_attack, bosses.h).
  * SpawnAirship picks one by gAirshipLevel. */
 const struct airship_attack Airship::attacks[6] = {

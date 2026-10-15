@@ -4,7 +4,7 @@
 /* The save menu as C++ (#664, docs/cplusplus.md, the final cleanup):
  * class SaveMenu, the object SaveMenu::Open allocates (`new SaveMenu`, 0xE4
  * bytes) into SaveMenu::instance and SaveMenu::Close deletes. Its code is
- * src/game/ui/save_menu.cpp, save_menu_draw.cpp and save_menu_input.cpp
+ * engine/src/game/ui/save_menu.cpp, save_menu_draw.cpp and save_menu_input.cpp
  * (save_menu_draw.cpp has save_menu_ui.cpp since #771); cxx_symbols.txt maps the methods onto their C names
  * (SaveMenuInput, DrawSaveMenu, ...). The save data it holds and the
  * link transfer it drives are classes SaveData and SaveTransfer
@@ -31,7 +31,7 @@ extern "C" {
 /* A save slot's summary: five totals counted from the slot's 0x70 bytes
  * (SaveData::ReadSlot). SaveMenu keeps the current game's (`currentStats`) and
  * the four slots' (`rowStats`, RefreshSlotSummaries in
- * src/game/ui/save_menu_draw.cpp), and the slot list reads them as one
+ * engine/src/game/ui/save_menu_draw.cpp), and the slot list reads them as one
  * 5-entry array. */
 struct settings_row_stats {
     s32 percent;
@@ -95,11 +95,11 @@ public:
     static u8 Run(u32 state, u32 cursor); // RunSaveMenu (save_menu_input.cpp)
     static void Close();                  // CloseSaveMenu (save_menu.cpp)
 
-    /* src/game/ui/save_menu.cpp */
+    /* engine/src/game/ui/save_menu.cpp */
     void MessageInput(u32 keys); // SaveMenuMessageInput
     void CommitFrame();          // CommitSaveMenuFrame
 
-    /* src/game/ui/save_menu_draw.cpp */
+    /* engine/src/game/ui/save_menu_draw.cpp */
     s32 LinkExchange();                                        // LinkExchangeSaveData
     void DrawMessageLines(const u8 *label1, const u8 *label2); // DrawSaveMenuMessageLines
     void DrawCancel(u8 highlight);                             // DrawSaveMenuCancel
@@ -109,7 +109,7 @@ public:
     void DrawSlots(Engine::Save::SaveData *handle, s32 selectedIndex); // DrawSaveSlots
     void InitIcons();                                                  // InitSaveMenuIcons
 
-    /* src/game/ui/save_menu_input.cpp */
+    /* engine/src/game/ui/save_menu_input.cpp */
     void Input(u32 keys);                                     // SaveMenuInput
     void MainInput(u32 keys);                                 // SaveMenuMainInput
     void MoveCursor(u32 keys);                                // SaveMenuMoveCursor
@@ -122,7 +122,7 @@ public:
     void ConfirmDeleteInput(u32 keys);                        // SaveMenuConfirmDeleteInput
     void DrawMain();                                          // DrawSaveMenuMain
 
-    /* src/game/ui/save_menu_draw.cpp (was save_menu_ui.cpp) */
+    /* engine/src/game/ui/save_menu_draw.cpp (was save_menu_ui.cpp) */
     void LoadBg();                                             // LoadSaveMenuBg
     void RefreshSlotSummaries(Engine::Save::SaveData *handle); // RefreshSaveSlotSummaries
     void LoadData();                                           // LoadSaveMenuData

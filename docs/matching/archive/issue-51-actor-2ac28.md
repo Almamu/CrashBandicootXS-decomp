@@ -7,7 +7,7 @@ NAKED) and `DispensePolarWumpa`-`PolarPlayerStateBoost` in `polar_player_states.
 ([issue-50-actor-bc68.md](./issue-50-actor-bc68.md)). This pass did the
 first seven functions, the whole of what was left in
 `asm/code_3_2_20_8b7c_ac28.s`. They are now real C in
-`src/game/vehicles/polar/polar_actor_factory.c`, and the raw file is retired.
+`engine/src/game/vehicles/polar/polar_actor_factory.c`, and the raw file is retired.
 
 | function | what it is |
 |---|---|
@@ -27,7 +27,7 @@ agbcc like the rest of this zone (`actor.c`/
 ## The pieces
 
 **`gActorAnimTable`** is the category's animation table, a pointer to
-`struct anim_table_record` (`include/engine/actor/actor_anim.h`, 0x28 bytes). This pass
+`struct anim_table_record` (`engine/include/engine/actor/actor_anim.h`, 0x28 bytes). This pass
 named the record's tail. `InitActorPart` copies +0x14..+0x20 into the
 object at +0x38 (`vector_14`), and the factory adds +0x20/+0x24 to the
 spawn position (`spawnX`/`spawnY`). The data dump says these are 0 in

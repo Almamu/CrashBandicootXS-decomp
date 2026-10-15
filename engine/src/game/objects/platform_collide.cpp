@@ -12,7 +12,7 @@ extern "C" {
 using Game::Crash::Player;
 using Game::Objects::Platform;
 
-/* Platform::ResolveCollision (#664, include/game/objects/platform.hpp), ROM
+/* Platform::ResolveCollision (#664, engine/include/game/objects/platform.hpp), ROM
  * 0x0801AB98-0x0801B208: ResolvePlatformCollision, the player-vs-platform
  * collision CheckPlayerContact runs (see
  * docs/matching/archive/issue-25-level-objects.md for what it computes). */

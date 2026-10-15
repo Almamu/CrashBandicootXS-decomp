@@ -53,8 +53,8 @@ not attempted this pass; see "Left raw" below.
 
 ## Matched (4 functions, full clean `make compare` passing)
 
-- **`GetBgSetupControl`** (`src/engine/gfx/graphics_package.c`)
-- **`SetScaledSpriteColor`** (`src/engine/gfx/graphics_package.c`) - the DMA3
+- **`GetBgSetupControl`** (`engine/src/engine/gfx/graphics_package.c`)
+- **`SetScaledSpriteColor`** (`engine/src/engine/gfx/graphics_package.c`) - the DMA3
   tile-fill. Getting this one byte-exact needed two real fixes beyond
   the arithmetic itself: the DAD constant (`0x06017800`) has to be
   loaded into its own local *before* the stack scratch halfword's
@@ -69,7 +69,7 @@ not attempted this pass; see "Left raw" below.
   compare` caught it - see `docs/workflow.md`'s standing warning about
   isolated compiles not being proof.
 - **`SetScaledSpritePos`**, **`ResetScaledSpriteAttrs`**
-  (`src/engine/gfx/graphics_package.c`) - the last function in this
+  (`engine/src/engine/gfx/graphics_package.c`) - the last function in this
   object needed an explicit trailing `asm(".align 2, 0")` to zero-pad
   the 2-byte gap up to `SpawnStartMarker`'s 4-aligned start, instead of this
   compiler's default Thumb NOP-fill (`0x46C0`) for an implicit end-of-
@@ -91,7 +91,7 @@ are visible in `SetScaledSpriteColor`/`ResetScaledSpriteAttrs`'s final C.
 
 ## Parked (`NON_MATCHING`) - 2 functions
 
-- **`InitBgSetup`** (`src/engine/gfx/graphics_package.c`, real bytes
+- **`InitBgSetup`** (`engine/src/engine/gfx/graphics_package.c`, real bytes
   in `asm/code_3_2_17_1e644.s` under `.if NON_MATCHING == 0`): every
   instruction's operation matches the ROM and every technique above was
   tried (explicit local copies for each mask, matching statement order,
@@ -99,7 +99,7 @@ are visible in `SetScaledSpriteColor`/`ResetScaledSpriteAttrs`'s final C.
   register copies away, and pushes/pops one extra callee-saved register
   (`r7`) in every phrasing tried that got the copies back. Parked rather
   than keep guessing.
-- **`SetScaledSpritePriority`** (`src/engine/gfx/graphics_package.c`, real bytes
+- **`SetScaledSpritePriority`** (`engine/src/engine/gfx/graphics_package.c`, real bytes
   in `asm/code_3_2_17_1e950.s` under `.if NON_MATCHING == 0`): matches
   in full shape except one instruction - the ROM reloads the `-0xd` mask
   constant fresh (`movs r2,#0xd; rsbs r2,r2,#0`), while this compiler
@@ -142,7 +142,7 @@ never responded to further plain-C restructuring, so both were
 converted to `NAKED` and their ROM disassembly transcribed
 instruction-for-instruction - the same escape hatch this project
 already established for `MakeLinkHandshakeId`/`ResetLinkSessionState`
-(`src/engine/link/link_handshake.c`, see
+(`engine/src/engine/link/link_handshake.c`, see
 `docs/matching/archive/issue-4-sio-settings-sync.md`'s "The general strategy
 for the rest" section).
 
@@ -162,9 +162,9 @@ the running matched/parked list.
 `LoadGraphicsPackage` (the cluster's own namesake, `0x0801E578`-`0x0801E640`,
 real bytes now guarded at the tail of `asm/code_3_2_17_188d0.s`) is fully
 understood: it uses the same 5-field `struct bg_package` descriptor
-`LoadTitleScreenBg`/`LoadTitleScreenObjTiles` (`src/frontend/title_screen_init.c`,
+`LoadTitleScreenBg`/`LoadTitleScreenObjTiles` (`engine/src/frontend/title_screen_init.c`,
 issue #65) already established for package loading - moved to a shared
-`include/graphics_package.h` header per docs/workflow.md step 7's "check
+`engine/include/graphics_package.h` header per docs/workflow.md step 7's "check
 whether a struct for the same object already exists elsewhere first" rule,
 rather than re-declaring it a third time. It loads a palette
 (`LoadTaggedAsset` into `0x05000000` + a bank offset from the `self+8`
@@ -202,7 +202,7 @@ but ABI-incorrect towards the caller - a real bug, not a cosmetic
 mismatch) or ABI-correct with r6 landing on a different scratch register
 than the ROM picked. This is the same first-pass-vs-second-pass
 register-pressure artifact category already documented for
-`LoadTitleScreenBg` (`src/frontend/title_screen_init.c`, issue #65) and
+`LoadTitleScreenBg` (`engine/src/frontend/title_screen_init.c`, issue #65) and
 `InitBgSetup` above - parked under `NON_MATCHING` (the ABI-correct
 variant) rather than force either a broken function or a fake match.
 
@@ -225,7 +225,7 @@ wasn't rushed this pass. Left raw for whoever picks this up next.
 
 Picked up the pair the third pass deliberately left alone. Both are now
 real, semantically-confident C in the new
-`src/engine/gfx/graphics_package.c` (real bytes still guarded at
+`engine/src/engine/gfx/graphics_package.c` (real bytes still guarded at
 `asm/code_3_2_17_1e644.s` under `.if NON_MATCHING == 0`).
 
 **`FitScaledSprite`** (`self`, `arg1`, `arg2`) is a best-fit box selector: it
@@ -385,7 +385,7 @@ the ROM disassembly instead - confirmed byte-identical against the ROM
 bytes (compared via `arm-none-eabi-objdump` on both the isolated
 compile and the raw ROM disassembly reassembled standalone) before
 integrating. Cut out of `asm/code_3_2_17_1e990.s` (was the first
-function in that file) into the new `src/game/level/spawn_start_marker.c`,
+function in that file) into the new `engine/src/game/level/spawn_start_marker.c`,
 with `ldscript.txt` updated to place the new object immediately before
 the now-trimmed raw file (which starts at `SpawnCrystal` instead).
 
@@ -546,10 +546,10 @@ though the function body still writes and later reads it through the
 whole outer loop. This is the exact same "compiler drops a genuinely
 live register from its own auto-generated prologue/epilogue list under
 register pressure" limitation already closed this session for
-`SetupRoomBlend` (`src/level/room_frame.c`, PR #334) and `FitScaledSprite`
-(`src/engine/gfx/graphics_package.c`, PR #336, "Seventh pass"
+`SetupRoomBlend` (`engine/src/level/room_frame.c`, PR #334) and `FitScaledSprite`
+(`engine/src/engine/gfx/graphics_package.c`, PR #336, "Seventh pass"
 above), and documented as still-open for `LoadTitleScreenBg`
-(`src/frontend/title_screen_init.c`, issue #65) - given the extensive
+(`engine/src/frontend/title_screen_init.c`, issue #65) - given the extensive
 prior iteration already recorded in the third pass's write-up (every
 plausible C-level restructuring already tried and exhausted), this pass
 skipped straight to the NAKED escape hatch rather than re-attempt
@@ -609,7 +609,7 @@ sidesteps this compiler's addressing-mode-folding pass entirely: there
 is no C-level codegen left to fight, since every instruction is
 written literally with its own explicit register and immediate-offset
 encoding. This is the exact same escape hatch this cluster's sibling
-`FitScaledSprite` (`src/engine/gfx/graphics_package.c`, "Seventh pass"
+`FitScaledSprite` (`engine/src/engine/gfx/graphics_package.c`, "Seventh pass"
 above) was just closed with earlier today, for the same underlying
 `r7`-addressing-mode-folding bug class (just reached via a different
 mechanism there - `r7` never entering the compiler's own synthesized
@@ -666,7 +666,7 @@ crashbandicootxs.map && make compare` (`La suma coincide`).
 
 The last raw stretch of this issue, `asm/code_3_2_17_1e990.s`
 (`0x0801EA5C`-`0x0801EF0C`, six functions), is now real C in
-`src/game/objects/spawn_gems.c`, and the raw file is retired.
+`engine/src/game/objects/spawn_gems.c`, and the raw file is retired.
 
 These are the "trigger effect type N" spawners the fifth pass flagged
 as likely to hit the same register-rotation gap that parked
@@ -717,7 +717,7 @@ The only things the C has to get right:
   SpawnCortexBossGem(...); }` - the other nesting puts the hand-off first.
 
 The part object is `struct gfx_part`, moved out of
-`cortex.c` into the new shared `include/engine/gfx/sprite_piece_flags.h` (bits 0-3
+`cortex.c` into the new shared `engine/include/engine/gfx/sprite_piece_flags.h` (bits 0-3
 of +0x28 split into two 2-bit fields for `SpawnCrateGem`'s write; nothing
 in `cortex.c` used them, and it still matches).
 

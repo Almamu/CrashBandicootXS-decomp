@@ -15,12 +15,12 @@ using Engine::Gfx::OamBuffer;
 using Engine::Gfx::SpriteRenderer;
 using Game::Entities::Sprite;
 
-/* The sprite renderer (gSpriteRenderer; SpriteRenderer, include/game/entities/sprite_obj.hpp):
+/* The sprite renderer (gSpriteRenderer; SpriteRenderer, engine/include/game/entities/sprite_obj.hpp):
  * DrawPieces, DrawAffinePieces, DrawAt, Draw and the empty constructor and
  * destructor. An old_agbcp object (OLD_AGBCC_OBJS). */
 
 /* SpriteRenderer::DrawPieces (DrawSpritePieces, 0x080073DC-0x08007634;
- * #664 cleanup, include/game/entities/sprite_obj.hpp), the plain (non-affine) sibling of
+ * #664 cleanup, engine/include/game/entities/sprite_obj.hpp), the plain (non-affine) sibling of
  * DrawAffinePieces (below). Split out of graphics.c
  * (now graphics.cpp) when that was still built with agbcc: it needs
  * old_agbcc, and old_agbcp as C++ (Makefile OLD_AGBCC_OBJS) - the ROM loads the piece id's
@@ -102,7 +102,7 @@ void SpriteRenderer::DrawPieces(Sprite *part, s32 *pos)
 }
 
 /* GitHub issue #9: SpriteRenderer::DrawAffinePieces (DrawAffineSpritePieces,
- * 0x08007634-0x08007A48; #664 cleanup, include/game/entities/sprite_obj.hpp), the affine
+ * 0x08007634-0x08007A48; #664 cleanup, engine/include/game/entities/sprite_obj.hpp), the affine
  * (rotation/scaling) sibling of DrawPieces (above) - see
  * docs/matching/archive/issue-9-0x08007634-actor.md. Moved here from
  * asm/code_3_2.s in the issue #9 raw-asm pass.

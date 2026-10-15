@@ -11,7 +11,7 @@ using Game::Bosses::Hovercraft;
 /* The hovercraft's accessors and state changes (#664 part 11h). The
  * hovercraft is a bare AnimPart (anim, Create) and variables (x, state,
  * ...), like the airship, all static members of Hovercraft
- * (include/game/bosses/hovercraft.hpp, #772); its weapons (include/game/bosses/boss_actors.hpp)
+ * (engine/include/game/bosses/hovercraft.hpp, #772); its weapons (engine/include/game/bosses/boss_actors.hpp)
  * read it through the getters here. The members keep their C names
  * (cxx_symbols.txt). See
  * docs/matching/archive/issue-62-0x08033804-actor.md. */
@@ -26,7 +26,7 @@ void Hovercraft::StartHitFlash(void)
 }
 
 /* Colour 15 of the hovercraft's palettes, white or the saved colour
- * (ApplyHovercraftFlashColor, include/game/bosses/boss_actors.hpp). */
+ * (ApplyHovercraftFlashColor, engine/include/game/bosses/boss_actors.hpp). */
 void Hovercraft::SetFlashColor(u8 flag)
 {
     ApplyFlashColor(flag);

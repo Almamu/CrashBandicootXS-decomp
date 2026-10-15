@@ -7,7 +7,7 @@ extern "C" {
 }
 
 /*
- * ROM 0x0817A880-0x0817AA6C. Linked in ROM order between data/data.s
+ * ROM 0x0817A880-0x0817AA6C. Linked in ROM order between games/xs/data/data.s
  * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
@@ -16,12 +16,12 @@ extern "C" {
 using Engine::Gfx::YetiFrameSet;
 using Game::Vehicles::Polar::Yeti;
 
-/* Yeti::frames (include/game/vehicles/polar/yeti.hpp): the yeti animation's frame table (its
+/* Yeti::frames (engine/include/game/vehicles/polar/yeti.hpp): the yeti animation's frame table (its
  * `frameAddrs`, set up by CreateYeti in yeti.cpp next to the
  * gYetiKeyframes animation records): 123 pointers to compressed
  * frames of YetiFrameSet::frames (polar_rle_sprites.cpp). The offsets come
  * from the header tools/rle_sprites.py generates, so they follow edits to
- * graphics/vehicles/polar/yeti.png. */
+ * games/xs/graphics/vehicles/polar/yeti.png. */
 const u8 *const Yeti::frames[123] = {
     YetiFrameSet::frames + RLE_SPRITES_YETI_FRAME_000,
     YetiFrameSet::frames + RLE_SPRITES_YETI_FRAME_001,

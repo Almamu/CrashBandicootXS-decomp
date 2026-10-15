@@ -11,7 +11,7 @@ using Game::Level::PooledBgLayer;
 using Game::Level::TileSlotPool;
 
 /* GitHub issue #42: the overrides of BgLayer's tile-slot-pooled subclass
- * used for BG layer 0 (PooledBgLayer, include/game/level/bg_layer.hpp), then (GitHub
+ * used for BG layer 0 (PooledBgLayer, engine/include/game/level/bg_layer.hpp), then (GitHub
  * issue #43) its destructor, constructor and GetPriority, which were in
  * tile_slot_pool.cpp until #770. The class is BgLayer extended with a
  * TileSlotPool at `+0x5C`: the constructor sets the 256-colour bit and
@@ -143,7 +143,7 @@ void PooledBgLayer::LoadTiles()
     pool->SetSource(GetCharBase(), tiles + 4);
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked asm/, games/xs/expected/, src/
+/* UNUSED - no caller anywhere in the ROM (checked asm/, games/xs/expected/, engine/src/
  * and every word-aligned Thumb pointer in baserom.gba). Empty and in no
  * method table (PooledBgLayer's slots all point elsewhere), so it keeps
  * the nullsub_N name (docs/naming.md). */
@@ -167,7 +167,7 @@ PooledBgLayer::PooledBgLayer(s32 bgIndex) : BgLayer(bgIndex)
     pool = new TileSlotPool;
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the
+/* UNUSED - no caller anywhere in the ROM (checked engine/src/, asm/ and the
  * method tables). Layer 0's BG priority, BGnCNT bits 0-1. */
 u32 PooledBgLayer::GetPriority()
 {

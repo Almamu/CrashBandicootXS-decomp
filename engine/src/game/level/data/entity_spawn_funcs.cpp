@@ -25,7 +25,7 @@ using Game::Objects::Wumpa;
 using Game::Objects::Stopwatch;
 
 /*
- * ROM 0x0816C6A4-0x0816C814. Linked in ROM order between data/data.s
+ * ROM 0x0816C6A4-0x0816C814. Linked in ROM order between games/xs/data/data.s
  * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 

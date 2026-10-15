@@ -36,7 +36,7 @@ using Game::Objects::Pickups;
  * destructor and constructor, so the controllers' boundaries put these
  * functions in one original unit.
  *
- * - TinyCtrl's (include/game/bosses/boss_ctrl.hpp, gTinyVtable) per-frame Update and
+ * - TinyCtrl's (engine/include/game/bosses/boss_ctrl.hpp, gTinyVtable) per-frame Update and
  *   "enter state" SetState (issue #22, ROM 0x08018008-0x080187FC, formerly
  *   asm/code_3_2_17_18008.s; details in
  *   docs/matching/archive/issue-22-0x08018008-hopper.md): Tiny hops his
@@ -44,7 +44,7 @@ using Game::Objects::Pickups;
  *   between gTouchableList's anchors, stomping them. PickHopTarget picks
  *   the next anchor from a per-round table, SpawnFallingLeaves spawns a
  *   falling hazard.
- * - Two controllers (include/game/entities/ctrl.hpp, issue #22, ROM
+ * - Two controllers (engine/include/game/entities/ctrl.hpp, issue #22, ROM
  *   0x080187FC-0x08018884): the stomped hop pad's, and OneShotAnimCtrl's
  *   Update.
  * - The one-shot animation controllers' constructors and destructors,
@@ -52,11 +52,11 @@ using Game::Objects::Pickups;
  *   #23, docs/matching/archive/issue-23-graphics.md).
  *
  * UNUSED - no caller anywhere in the ROM (checked the asm/ and games/xs/expected/
- * sources, every .c file under src/, and every word-aligned Thumb pointer
+ * sources, every .c file under engine/src/, and every word-aligned Thumb pointer
  * in baserom.gba): UnusedOneShotAnimCtrl's constructor
  * (CreateUnusedOneShotAnimCtrl). Matched anyway. */
 
-/* The player's HandleEvent (Player, include/game/crash/player.hpp). */
+/* The player's HandleEvent (Player, engine/include/game/crash/player.hpp). */
 static inline void HitPlayer(Player *pl)
 {
     pl->HandleEvent(0, EVENT_HIT, 0);

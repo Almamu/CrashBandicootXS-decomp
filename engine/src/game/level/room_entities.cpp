@@ -52,7 +52,7 @@ using Game::Level::LevelEntityFlags;
  * and moves that crate's stack (`GetAbove`/`SetEntityPos`) up by the
  * height of its box (`GetBounds()->h`, a virtual call).
  *
- * C++ since the #664 cleanup (include/game/crates/crate.hpp's Crate), built with
+ * C++ since the #664 cleanup (engine/include/game/crates/crate.hpp's Crate), built with
  * old_agbcp (room_entities.o is on OLD_AGBCC_OBJS; this file holds only
  * this function; agbcp loads the group count into another register). Earlier passes had it NAKED (153, then 219
  * halfwords off); the third pass (docs/matching/archive/big-naked-retry-3.md)

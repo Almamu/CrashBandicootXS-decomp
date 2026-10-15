@@ -29,7 +29,7 @@ using Game::Vehicles::Jetpack::JetpackCollectedWumpa;
 using Game::Vehicles::Jetpack::JetpackPlayer;
 
 /* JetpackPlayer's small methods, five of its states, its destructor and
- * its state dispatch (#664 part 11e, include/game/vehicles/vehicle.hpp). See
+ * its state dispatch (#664 part 11e, engine/include/game/vehicles/vehicle.hpp). See
  * docs/matching/archive/issue-56-0x0802f0dc-actor.md. */
 
 /* Drains the `gJetpackQueuedWumpa` reward accumulator QueueWumpa fills:

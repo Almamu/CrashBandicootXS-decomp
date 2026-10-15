@@ -25,7 +25,7 @@ using Game::Vehicles::Polar::PolarPlayer;
 using Game::Vehicles::Polar::PolarQuestionCrate;
 using Game::Vehicles::Polar::Yeti;
 
-/* The polar crates' shared update (#664 part 11d, include/game/vehicles/vehicle.hpp),
+/* The polar crates' shared update (#664 part 11d, engine/include/game/vehicles/vehicle.hpp),
  * ROM 0x0802C4C8-0x0802C7A8, between polar_pickups.cpp and
  * polar_nitro.cpp: PolarCrate's Update (its key method, so
  * gPolarCrateVtable is emitted here) and three crate kinds'. */

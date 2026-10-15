@@ -8,9 +8,9 @@
  *
  * No `#pragma interface`: g++ emits each vtable in the object that
  * defines the class's key method, its destructor (BgStreamer's in
- * src/game/level/bg_streamer.cpp, BgLayerBase's in src/game/level/bg_layer_base.cpp,
- * PooledBgLayer's in src/game/level/pooled_bg_layer.cpp; BgLayer's is inline,
- * so its key method is Reset, in src/game/level/bg_layer.cpp),
+ * engine/src/game/level/bg_streamer.cpp, BgLayerBase's in engine/src/game/level/bg_layer_base.cpp,
+ * PooledBgLayer's in engine/src/game/level/pooled_bg_layer.cpp; BgLayer's is inline,
+ * so its key method is Reset, in engine/src/game/level/bg_layer.cpp),
  * and games/xs/ldscript.txt places them at their ROM addresses (docs/cplusplus.md,
  * "Emitting the vtables"). cxx_symbols.txt maps the mangled names onto
  * the C names. The classes have no C view (bg_scroll_layer.h's `struct
@@ -35,7 +35,7 @@ namespace Level
  * 128x64-pixel chunk (`tileX`, `tileY`). `subX`/`subY` are the ring's
  * block (mod 4) at the window's left and top edges. Scroll streams in
  * the chunk row or column the camera has just reached, Fill seeds the
- * whole window. Its code is in src/game/level/bg_streamer.cpp. */
+ * whole window. Its code is in engine/src/game/level/bg_streamer.cpp. */
 class BgStreamer
 {
 public:
@@ -70,7 +70,7 @@ public:
 LAYOUT_ASSERT(bg_layer_hpp, sizeof(BgStreamer) == 0x24);
 
 /* A scrolling layer's position and size (0x34 bytes): the base of
- * BgLayer. Its methods are in src/game/level/bg_layer_base.cpp. Scroll scales
+ * BgLayer. Its methods are in engine/src/game/level/bg_layer_base.cpp. Scroll scales
  * a move by the layer's parallax factors and steps the position by it,
  * ClampScrollStep (virtual) limiting each axis's step. */
 class BgLayerBase
@@ -114,7 +114,7 @@ LAYOUT_ASSERT(bg_layer_hpp, sizeof(BgLayerBase) == 0x34);
  * window of the level's tile map resident in its BG screen block, rows
  * rowLo..rowHi and columns colLo..colHi, drawing and clipping one row or
  * column at a time as the window moves. Screen entries wrap modulo 32 on
- * both axes. Its methods are in src/game/level/bg_layer.cpp.
+ * both axes. Its methods are in engine/src/game/level/bg_layer.cpp.
  *
  * The destructor and the small accessors are inline: the subclasses and
  * the methods expand them, and bg_layer.cpp, which has the class's key
@@ -221,7 +221,7 @@ LAYOUT_ASSERT(bg_layer_hpp, sizeof(BgLayer) == 0x5C);
 #define TILE_SLOT_NONE 0x200
 
 /* Layer 0's VRAM tile-slot pool (PooledBgLayer::pool, 0x480C bytes;
- * src/game/level/tile_slot_pool.cpp): up to 0x2000 source tiles mapped onto
+ * engine/src/game/level/tile_slot_pool.cpp): up to 0x2000 source tiles mapped onto
  * 0x200 reference-counted VRAM tile slots. PooledBgLayer's constructor
  * allocates it (`new TileSlotPool`, no constructor) and Reset empties it.
  * It has no vtable. */
@@ -275,10 +275,10 @@ private:
 LAYOUT_ASSERT(bg_layer_hpp, sizeof(TileSlotPool) == 0x480C);
 
 /* BG layer 0 (0x60 bytes): a BgLayer whose tiles go through a VRAM tile
- * slot pool (TileSlotPool, src/game/level/tile_slot_pool.cpp) instead
+ * slot pool (TileSlotPool, engine/src/game/level/tile_slot_pool.cpp) instead
  * of the layer's own character block, releasing the tiles of the rows and
  * columns that scroll out. Its methods are in
- * src/game/level/pooled_bg_layer.cpp. */
+ * engine/src/game/level/pooled_bg_layer.cpp. */
 class PooledBgLayer : public BgLayer
 {
 public:
@@ -308,9 +308,9 @@ LAYOUT_ASSERT(bg_layer_hpp, sizeof(PooledBgLayer) == 0x60);
  * slot `(nextSlot - 1) & 0xf`, the slot filled just before the cursor).
  * `source` is the level_layer_desc SetSource was given, read as a pointer
  * to the record grid. It has no vtable. Its methods are in
- * src/game/level/tile_cache.cpp (GetChunk, the terrain lookups, DecodeChunk,
+ * engine/src/game/level/tile_cache.cpp (GetChunk, the terrain lookups, DecodeChunk,
  * the constructor, destructor and GetTerrainType) and
- * src/game/level/tile_cache_cell.cpp (GetCell, SetSource). */
+ * engine/src/game/level/tile_cache_cell.cpp (GetCell, SetSource). */
 class TileCache
 {
 public:
@@ -352,7 +352,7 @@ private:
 LAYOUT_ASSERT(bg_layer_hpp, sizeof(TileCache) == 0x1064);
 
 /* The level-layers singleton (gLevelLayersSingleton, gLevelLayers;
- * src/game/level/level_layers.cpp): BG layer 0, the three other BG layers, the
+ * engine/src/game/level/level_layers.cpp): BG layer 0, the three other BG layers, the
  * collision tile cache and the level asset.
  * It has no vtable. */
 class LevelLayers

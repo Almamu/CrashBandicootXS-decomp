@@ -13,7 +13,7 @@ using Engine::Gfx::PaletteFade;
 using Engine::Sys::FrameLimiter;
 using Engine::Sys::Irq;
 
-/* Sits right after StepBresenhamLine (ROM 0x08001254, in src/engine/util/line_step.cpp)
+/* Sits right after StepBresenhamLine (ROM 0x08001254, in engine/src/engine/util/line_step.cpp)
  * and before whatever's still raw in asm/code_3_1_7.s. */
 
 /* A per-frame screen-brightness fade tick: every `state.period`

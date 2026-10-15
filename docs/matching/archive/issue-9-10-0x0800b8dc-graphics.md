@@ -343,7 +343,7 @@ coincide`).
 
 `asm/code_3_2_17.s` (which held this whole cluster, `UpdateEnemyCtrl`
 through `InitEffectCtrl`) is removed entirely. `UpdateEnemyCtrl`/`HitEnemy`
-now live in the new `src/game/enemies/enemy_ctrl_update.c`; the unchanged
+now live in the new `engine/src/game/enemies/enemy_ctrl_update.c`; the unchanged
 remainder (`UpdateEnemyShooter` onward - the cluster's other ~41 functions,
 still fully raw and unexamined) moved to the new
 `asm/code_3_2_17_bfa8.s`. `ldscript.txt` now reads:
@@ -394,7 +394,7 @@ trigger" primitive.** The delegate differs per function:
 
 - **`SetEnemyMotionY(self, mode)`**: `self->0x7c = mode;` then calls the
   *already-matched* `StartCtrlTargetMotionYFromSet(self, self->0x70 /* owner */, mode)`
-  (`src/game/entities/ctrl.c`). `StartCtrlTargetMotionYFromSet` itself: looks up an
+  (`engine/src/game/entities/ctrl.c`). `StartCtrlTargetMotionYFromSet` itself: looks up an
   8-byte record at `(*(self+4))[mode]`, reads that record's **second**
   word (`+4`) as a type index into the shared, 12-byte-stride
   `gCtrlMotionRecords` table, then reads `self->0xc`'s "anchor"
@@ -455,7 +455,7 @@ trigger" primitive.** The delegate differs per function:
 All three matched as real C on the first structured attempt (raw
 pointer-arithmetic casts, matching the established convention of the
 immediately-neighboring already-matched `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet` in
-`src/game/entities/ctrl.c` - no named structs committed yet, same
+`engine/src/game/entities/ctrl.c` - no named structs committed yet, same
 reasoning as the Phase 1 pass: several of the object's fields are still
 not fully reconciled across all its callers). `SetEnemyMotionY`/
 `SetEnemyMotionX` compiled byte-exact immediately. `SetEnemyAnimMode` needed one
@@ -485,7 +485,7 @@ coincide`).
 
 ### Build layout
 
-The three functions now live in the new `src/game/enemies/enemy_ctrl.c`.
+The three functions now live in the new `engine/src/game/enemies/enemy_ctrl.c`.
 `asm/code_3_2_17_bfa8.s` is trimmed to end right before `SetEnemyMotionY`
 (unchanged otherwise - still holds `UpdateEnemyShooter` through `SetEnemyRangeX`,
 raw); the remainder from `UpdateEnemyOscillateX` onward (`UpdateEnemyBob` through
@@ -689,9 +689,9 @@ the same wall four times.
 
 ### Build layout
 
-The four functions now live in three new files: `src/game/enemies/
-enemy_motion.c` (`UpdateEnemyPatrol`), `src/game/enemies/enemy_motion.c`
-(`UpdateEnemyHop`), and `src/game/enemies/enemy_ctrl.c` (`UpdateEnemyAttackCycle` +
+The four functions now live in three new files: `engine/src/game/enemies/
+enemy_motion.c` (`UpdateEnemyPatrol`), `engine/src/game/enemies/enemy_motion.c`
+(`UpdateEnemyHop`), and `engine/src/game/enemies/enemy_ctrl.c` (`UpdateEnemyAttackCycle` +
 `UpdateEnemyTriggerBox`, contiguous in ROM with no gap). The single raw
 `asm/code_3_2_17_bfa8.s` (which held `UpdateEnemyShooter` through
 `SetEnemyRangeX`) is split into four pieces around the newly-matched
@@ -713,8 +713,8 @@ another parallel session was assigned (`UpdateEnemyPatrol`/`UpdateEnemyAttackCyc
 
 **Closed, real C**: `LaunchHarmfulEffectPart` (the floating-popup spawner, state
 18's `LaunchHarmfulEffectPart(0x1D, 0, 0, 0x2B, 0, owner)` callee - a thin
-`LaunchEffectPart` wrapper, `src/game/enemies/enemy_ctrl.c`) and `CreateKnockedEnemyCtrl`
-(`src/game/enemies/enemy_ctrl.c`, see below).
+`LaunchEffectPart` wrapper, `engine/src/game/enemies/enemy_ctrl.c`) and `CreateKnockedEnemyCtrl`
+(`engine/src/game/enemies/enemy_ctrl.c`, see below).
 
 **Closed, NAKED**: `UpdateEnemyHomingX`/`UpdateEnemyHomingY` (`enemy_motion.c`),
 `UpdateEnemyFlipCycle` (`enemy_motion.c`), `UpdateEnemyOscillateX`/`UpdateEnemyBob`/
@@ -751,13 +751,13 @@ tempted to re-attempt them:
 - **`UpdateEnemyFlipCycle`**: an isolated attempt reproduced the entire
   dispatch/switch structure exactly, and even reproduced the
   established `(s32)(x << 27) < 0` mirror-flag-bit-test idiom
-  (`src/game/entities/ctrl.c`) correctly for both of this
+  (`engine/src/game/entities/ctrl.c`) correctly for both of this
   function's own bit-toggle sites - but could not reproduce the ROM's
   own instruction *sequencing* for folding the toggled bit back into
   the byte (compute 0/1 flag via the shift-test, shift it into bit
   position, materialize the "clear that bit" mask via a
   `movs #imm; rsbs r,r,#0` negate-trick, AND, OR - all as one shared
-  tail, matching the exact shape `src/bosses/tiny_hop_pad.c`'s
+  tail, matching the exact shape `engine/src/bosses/tiny_hop_pad.c`'s
   `UpdateOneShotAnimCtrl` doc comment already documents needing heavy register
   pinning for on a related idiom). Every C rephrasing tried (nested
   ternary, a separate `bit = cond ? 0 : 1;` statement, full if/else
@@ -828,11 +828,11 @@ resistant. Good next targets given `SetEnemyMotionY`/`SetEnemyMotionX`/
 `UpdateEnemyPatrol` (still raw, `UpdateEnemyPatrol` is one of the other parallel
 session's four `self+0x68` targets). The removed
 `UpdateEnemyHomingX`/`UpdateEnemyHomingY` now live in the new
-`src/game/enemies/enemy_motion.c`. `UpdateEnemyHop` (untouched, another
+`engine/src/game/enemies/enemy_motion.c`. `UpdateEnemyHop` (untouched, another
 `self+0x68` target) was carved into its own new `asm/code_3_2_17_c244.s`
 so it wouldn't need to move again once its own session closes it. The
 removed `UpdateEnemyFlipCycle` now lives in the new
-`src/game/enemies/enemy_motion.c`. `UpdateEnemyAttackCycle` onward (through
+`engine/src/game/enemies/enemy_motion.c`. `UpdateEnemyAttackCycle` onward (through
 `SetEnemyRangeX` - `UpdateEnemyAttackCycle`/`UpdateEnemyTriggerBox` untouched `self+0x68`
 targets, plus `SetEnemyState`/`SetEnemyRangeXSpeed`/`SetEnemyRangeYSpeed`/`SetEnemyRangeX`,
 none of this pass's or the parallel session's concern) moved to the new
@@ -840,10 +840,10 @@ none of this pass's or the parallel session's concern) moved to the new
 
 Likewise, `asm/code_3_2_17_c8f8.s` is fully consumed: the removed
 `UpdateEnemyOscillateX`/`UpdateEnemyBob`/`UpdateEnemyOscillateY`/`LaunchHarmfulEffectPart` now live in the
-new `src/game/enemies/enemy_ctrl.c`; the untouched, still-raw
+new `engine/src/game/enemies/enemy_ctrl.c`; the untouched, still-raw
 `AttachEnemyCtrl`-`DestroyKnockedEnemyCtrl` remainder moved to the new
 `asm/code_3_2_17_ca04.s`; the removed `CreateKnockedEnemyCtrl` now lives in the
-new `src/game/enemies/enemy_ctrl.c`; the untouched, still-raw
+new `engine/src/game/enemies/enemy_ctrl.c`; the untouched, still-raw
 `UpdateEffectCtrl` onward (through `InitEffectCtrl`) moved to the new
 `asm/code_3_2_17_cbf4.s`.
 
@@ -1099,7 +1099,7 @@ coincide`).
 
 ### Build layout
 
-All four functions now live in the new `src/enemies/enemy_attack.c`.
+All four functions now live in the new `engine/src/enemies/enemy_attack.c`.
 `asm/code_3_2_17_c6a8.s` is fully consumed and removed. `ldscript.txt`'s
 single `build/crashbandicootxs/asm/code_3_2_17_c6a8.o(.text);` line is
 replaced with `build/crashbandicootxs/src/enemies/enemy_attack.o(.text);`
@@ -1145,7 +1145,7 @@ this doc.
   independently gated: once when a `_call_via_r1(other + offset, fn)`
   hit-probe - reading its `{s16 offset, void *fn}` pair from
   `other->table+0x28`/`+0x2c`, the exact shape
-  `src/level/room_frame.c`'s `UpdateRoomFrame` already matches as real C -
+  `engine/src/level/room_frame.c`'s `UpdateRoomFrame` already matches as real C -
   reports *no* hit; once when `other->0xc` bit 3 is already set; and
   once when `other->0x38` is nonzero. `other` shares `struct actor`'s
   leading header layout (id @8, flags @0xc, table @0x18) but is read at
@@ -1212,7 +1212,7 @@ compare` (`crashbandicootxs.gba: La suma coincide`).
 
 ### Build layout
 
-All five functions now live in the new `src/game/entities/effect_ctrl.c`.
+All five functions now live in the new `engine/src/game/entities/effect_ctrl.c`.
 `asm/code_3_2_17_cbf4.s` is now empty and deleted; `ldscript.txt`'s
 `build/crashbandicootxs/asm/code_3_2_17_cbf4.o(.text);` line is replaced
 with `build/crashbandicootxs/src/game/entities/effect_ctrl.o(.text);`,
@@ -1315,7 +1315,7 @@ coincide`).
 This was the last function in `asm/code_3_2_17_bfa8.s` - the file is
 now empty and has been deleted, with its `ldscript.txt` entry replaced
 by `build/crashbandicootxs/src/game/enemies/enemy_shooter.o(.text);`
-(new file, `src/game/enemies/enemy_shooter.c`).
+(new file, `engine/src/game/enemies/enemy_shooter.c`).
 
 ## Closing the small gap: `asm/code_3_2_17_ca04.s` (19 functions)
 
@@ -1416,7 +1416,7 @@ idiom already matched elsewhere in this cluster:
   read - only `other` matters. Reads `other+0x18`'s own table pointer,
   fires a `_call_via_r1` hit-probe against its `+0x28`/`+0x2c`
   `{s16 offset, void *fn}` pair (the same convention
-  `src/level/room_frame.c`'s `UpdateRoomFrame` and `effect_ctrl.c`'s
+  `engine/src/level/room_frame.c`'s `UpdateRoomFrame` and `effect_ctrl.c`'s
   `UpdateEffectCtrl` both already read from their own `table+0x28`/`+0x2c`),
   and - only when that probe reports *no* hit - runs the "flag active +
   bitmap-set" idiom on `other` (`other+0xc` bit 0; unless `other+8`'s
@@ -1484,7 +1484,7 @@ coincide`).
 
 ### Build layout
 
-All 19 functions now live in the new `src/game/enemies/enemy_ctrl.c`.
+All 19 functions now live in the new `engine/src/game/enemies/enemy_ctrl.c`.
 `asm/code_3_2_17_ca04.s` is fully consumed and deleted;
 `ldscript.txt`'s `build/crashbandicootxs/asm/code_3_2_17_ca04.o(.text);`
 line is replaced with
@@ -1506,7 +1506,7 @@ cross-jumping, bit-toggle sequencing and the gate's CFG diamond all
 turned out to be source shape or compiler choice. `UpdateEnemyCtrl`,
 `HitEnemy`, `UpdateEnemyHop`, `UpdateEnemyTriggerBox` and the oscillator trio
 are still NAKED. All but `UpdateEnemyCtrl` have C drafts under
-`NON_MATCHING`. The `self`/owner layout is now `include/part_ctrl.h`.
+`NON_MATCHING`. The `self`/owner layout is now `engine/include/part_ctrl.h`.
 See [issue-10-naked-retry.md](issue-10-naked-retry.md).
 
 ## Later pass (issue #9-#11 NAKED retry)

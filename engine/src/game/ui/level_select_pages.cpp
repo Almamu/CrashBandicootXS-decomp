@@ -12,7 +12,7 @@ using Engine::Sys::FrameLimiter;
 using Game::Ui::LevelSelect;
 
 /* GitHub issue #27: 0x0801CEE0-0x0801DA38. The rest of the level-select
- * screen (LevelSelect, level_select.cpp; #664, include/game/ui/level_select.hpp),
+ * screen (LevelSelect, level_select.cpp; #664, engine/include/game/ui/level_select.hpp),
  * LevelSelect::TurnPage-ReloadPalette: the page-turn animation (TurnPage,
  * driven by the Down/Up handlers PrevWorld/NextWorld), the frame loops of
  * the A (Confirm) and Start (Exit) exits, the "previous/next page open"
@@ -20,7 +20,7 @@ using Game::Ui::LevelSelect;
  * SetEntryBoxes, also inlined into TurnPage). Its two background layers
  * that followed are level_select_page_bg.cpp and zoom_bg.cpp since #767.
  *
- * UNUSED - no `bl`/`.4byte` reference in asm/, data/ or src/ and no Thumb
+ * UNUSED - no `bl`/`.4byte` reference in asm/, games/xs/data/ or engine/src/ and no Thumb
  * pointer anywhere in the ROM: LevelSelect::CommitFrame. Matched anyway.
  *
  * old_agbcp (Makefile OLD_AGBCC_OBJS), as its C was old_agbcc: it builds

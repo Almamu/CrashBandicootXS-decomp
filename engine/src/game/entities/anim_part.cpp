@@ -13,7 +13,7 @@ extern "C" {
 using Engine::Gfx::CategorySpriteSheet;
 using Game::Entities::AnimPart;
 
-/* AnimPart's methods (#664 part 11a, include/game/entities/actor_self.hpp): the frame
+/* AnimPart's methods (#664 part 11a, engine/include/game/entities/actor_self.hpp): the frame
  * accessors and SetAnim (SetActorAnim). ROM 0x0803B058-0x0803B0C4, the
  * first of the ROM-tail functions the polar, jetpack and boss actors'
  * destructors follow (actor_destructors.cpp; this was the head of

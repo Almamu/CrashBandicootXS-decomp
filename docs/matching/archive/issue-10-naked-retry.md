@@ -1,12 +1,12 @@
 # Issue #10: NAKED retry (0x0800B3F0-0x0800CA60)
 
 This pass retried the 13 NAKED functions in issue #10's range, the
-`UpdateEnemyCtrl` controller cluster in `src/game/enemies/enemy_ctrl_update.c`-
+`UpdateEnemyCtrl` controller cluster in `engine/src/game/enemies/enemy_ctrl_update.c`-
 `enemy_attack.c`. 6 are now real C.
 
 The controller (`self`) and the part it steers (`self+0x70`, "owner"
 in the older docs) now have a shared layout in the new
-`include/part_ctrl.h`: `struct part_ctrl` and `struct ctrl_target`.
+`engine/include/part_ctrl.h`: `struct part_ctrl` and `struct ctrl_target`.
 
 ## Compiler
 

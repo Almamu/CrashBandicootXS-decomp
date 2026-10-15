@@ -9,7 +9,7 @@ extern "C" {
 using Game::Entities::GroundSprite;
 using Game::Entities::MovingSprite;
 
-/* GroundSprite's terrain collision (#664, include/game/entities/sprite_obj.hpp): the
+/* GroundSprite's terrain collision (#664, engine/include/game/entities/sprite_obj.hpp): the
  * floor and wall probes that keep a ground sprite on the terrain. */
 
 /* Slot 1. A sprite that collides runs the terrain probes

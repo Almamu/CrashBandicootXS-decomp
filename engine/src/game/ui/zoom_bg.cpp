@@ -1,4 +1,4 @@
-/* ZoomBg (include/game/ui/level_select.hpp): the level picture on the affine BG2
+/* ZoomBg (engine/include/game/ui/level_select.hpp): the level picture on the affine BG2
  * layer (`LevelSelect::bg2`). Its constructor clears its screen block,
  * writes an 8x4 tile block and spawns four corner sprites ("twinkles",
  * mirrored per corner). It zooms out to swap in the selected level's

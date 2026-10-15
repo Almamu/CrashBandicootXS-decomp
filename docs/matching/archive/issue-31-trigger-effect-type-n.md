@@ -7,7 +7,7 @@
 Follow-up to the third pass recorded in
 [issue-31-graphics-loading.md](./issue-31-graphics-loading.md) ("the
 'trigger effect type N' twin family matched via NAKED transcription"),
-which converted all four `src/game/objects/spawn_gem_platforms.c` functions to
+which converted all four `engine/src/game/objects/spawn_gem_platforms.c` functions to
 `NAKED` after concluding plain-C restructuring couldn't reproduce two
 register-allocation spots. This pass revisits `SpawnRedGemPlatform` with
 techniques established by *later* passes in this same document (the
@@ -343,7 +343,7 @@ already been flagged as unreproduced before this pass even started.
 
 ## Old-compiler pass: all four matched as plain C
 
-All four functions are now plain C in `src/game/objects/spawn_gem_platforms.c`,
+All four functions are now plain C in `engine/src/game/objects/spawn_gem_platforms.c`,
 with no register pins, inline asm or `goto`s. The object is on the
 Makefile's `OLD_AGBCC_OBJS` list. The earlier passes above all used the
 current agbcc. The ROM's `mov rA, #mask` before `ldrb rB` is old_agbcc's
@@ -352,7 +352,7 @@ tell, the same one that closed the neighbouring spawners
 Under old_agbcc the pinned drafts that were kept under `#if NON_MATCHING`
 were further off, not closer, so they were thrown away. The file was
 rewritten as the obvious C. It follows `spawn_gems.c`'s
-conventions: `struct gfx_part` from `include/engine/gfx/sprite_piece_flags.h`, and a `u8 tag`
+conventions: `struct gfx_part` from `engine/include/engine/gfx/sprite_piece_flags.h`, and a `u8 tag`
 local set before the `CreateSpriteObj` call.
 
 Only one thing needed care. The sound arm is two separate `CreatePlatform`

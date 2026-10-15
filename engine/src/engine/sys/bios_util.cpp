@@ -13,7 +13,7 @@ using Game::Entities::MovingSprite;
 /* Sits right after the permanent hand-written `start`/`init_vector`
  * boot stub in platform/gba/asm/crt0.s (never decompiled - it's the CPU-mode/stack
  * setup and BIOS RegisterRamReset call every GBA ROM needs before
- * `AgbMain` in src/engine/sys/main.cpp can run) and before main.cpp itself. */
+ * `AgbMain` in engine/src/engine/sys/main.cpp can run) and before main.cpp itself. */
 
 /* BIOS `Div` (SWI 6) wrapper exposing both the quotient (return value)
  * and the remainder (via `remainderOut`). The SWI takes the dividend and
@@ -59,9 +59,9 @@ void *MemCopy32(void *dst, const void *src, u32 byteCount)
 }
 
 /* The controllers' base Update (gCtrlVtable's slot 1, UpdateCtrl): does
- * nothing. It's Ctrl's key method, its first virtual one (include/game/entities/ctrl.hpp),
+ * nothing. It's Ctrl's key method, its first virtual one (engine/include/game/entities/ctrl.hpp),
  * so g++ emits gCtrlVtable here (games/xs/ldscript.txt places it); Ctrl's other
- * methods are in src/game/entities/ctrl.cpp. Built as C++ (agbcp) for that
+ * methods are in engine/src/game/entities/ctrl.cpp. Built as C++ (agbcp) for that
  * since #664 step 10b; DivMod and MemCopy32 compile the same. */
 void Ctrl::Update(MovingSprite *part)
 {

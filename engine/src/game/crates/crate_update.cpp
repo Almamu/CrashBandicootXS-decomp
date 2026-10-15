@@ -7,7 +7,7 @@ extern "C" {
 
 using Game::Crates::Crate;
 
-/* Crate::Update (#664, include/game/crates/crate.hpp). */
+/* Crate::Update (#664, engine/include/game/crates/crate.hpp). */
 
 /* The per-frame tick. While `timer` runs, it counts down, and on each
  * tick a lit TNT crate counts down (and the crate list is marked

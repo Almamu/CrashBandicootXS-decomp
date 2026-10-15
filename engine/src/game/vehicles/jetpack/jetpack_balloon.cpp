@@ -13,7 +13,7 @@ using Game::Vehicles::Jetpack::JetpackBalloon;
 using Game::Vehicles::Jetpack::JetpackBalloonCrate;
 
 /* 0x080317E0-0x08031A6C (#664 part 11f): the balloon the jetpack
- * levels' crates hang from, JetpackBalloon (include/game/vehicles/vehicle.hpp). See
+ * levels' crates hang from, JetpackBalloon (engine/include/game/vehicles/vehicle.hpp). See
  * docs/matching/archive/issue-59-0x08031784-actor.md. */
 
 /* Slot 2: the depth; once it has fallen behind the camera (more than

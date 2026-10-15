@@ -14,7 +14,7 @@ using Game::Level::TileSlotPool;
  * constructor, destructor and GetPriority were here until #770 and are
  * now at the end of pooled_bg_layer.cpp) owns.
  *
- * The pool (TileSlotPool, include/game/level/bg_layer.hpp; a class since #752) maps
+ * The pool (TileSlotPool, engine/include/game/level/bg_layer.hpp; a class since #752) maps
  * up to 0x2000 source tiles onto 0x200 reference-counted VRAM tile slots:
  * - `Reset` (ResetTileSlotPool) - every slot free, every source tile
  *   non-resident, all counts zero.

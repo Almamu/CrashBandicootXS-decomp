@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """XS's data objects N-Tranced has whole (#1131, docs/n_tranced.md "Tables
-shared with XS"): each `src/*/data/` or `lib/*/data/` object of XS's build
+shared with XS"): each `engine/src/*/data/` or `lib/*/data/` object of XS's build
 whose `.rodata` is in N-Tranced's ROM as one run, its pointer words aside,
 and whether every pointer is right there: to the N-Tranced address of the
 symbol XS's relocation names (ntranced.map's), or into the object itself.

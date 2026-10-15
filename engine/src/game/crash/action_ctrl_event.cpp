@@ -18,7 +18,7 @@ extern "C" {
 using Game::Crash::ActionCtrl;
 using Game::Crash::Player;
 
-/* ActionCtrl's Reset and event handler (include/game/crash/action_ctrl.hpp; #664,
+/* ActionCtrl's Reset and event handler (engine/include/game/crash/action_ctrl.hpp; #664,
  * docs/cplusplus.md). Built by old_agbcp (the Makefile's OLD_AGBCC_OBJS),
  * like the old_agbcc C it replaces: under agbcc the handler's C was 36
  * halfwords off. */
@@ -321,7 +321,7 @@ void ActionCtrl::HandleEvent(s32, s32 event, s32 arg)
     }
 }
 
-/* ActionCtrl's KillPlayer, skid animation and facing (include/
+/* ActionCtrl's KillPlayer, skid animation and facing (engine/include/
  * action_ctrl.hpp; #664, docs/cplusplus.md). Built by old_agbcp (the
  * Makefile's OLD_AGBCC_OBJS): KillPlayer has old_agbcc's
  * constant-before-`ldrb`, which the C, built by agbcc, got with 44 pins

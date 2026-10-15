@@ -6,7 +6,7 @@ using Game::Vehicles::Jetpack::JetpackPlane;
 /*
  * ROM 0x0817C260-0x0817C2B8: two pointer-to-member tables (#664 part
  * 11f); the third, the airship fireball's, follows in
- * airship_fireball_state_table.cpp. Linked in ROM order between data/data.s sections
+ * airship_fireball_state_table.cpp. Linked in ROM order between games/xs/data/data.s sections
  * by games/xs/ldscript.txt - see docs/data.md.
  */
 

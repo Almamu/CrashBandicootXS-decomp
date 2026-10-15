@@ -1,6 +1,6 @@
 # `FindLineCrossing` converted from NAKED transcription to real matched C
 
-`FindLineCrossing` (`src/game/crates/crate_reset.c`, the full 4-octant
+`FindLineCrossing` (`engine/src/game/crates/crate_reset.c`, the full 4-octant
 Bresenham-line-style line-stepper `FindLineCrossingYMajor`/`FindLineCrossingXMajor`
 (crate.c) are fixed single-octant variants of) had been parked
 as a byte-correct NAKED asm transcription - see

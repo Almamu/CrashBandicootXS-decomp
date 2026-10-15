@@ -23,7 +23,7 @@ using Game::Level::EntitySpawner;
 using Game::Objects::Wumpa;
 
 /* The wumpa's pick-up check, pick-up, update and spawn (#664,
- * include/game/objects/pickups.hpp). An old_agbcp object (OLD_AGBCC_OBJS), built with
+ * engine/include/game/objects/pickups.hpp). An old_agbcp object (OLD_AGBCC_OBJS), built with
  * -fno-cse-skip-blocks (NO_CSE_SKIP_BLOCKS_OBJS). */
 
 /* As ExtraLife::CheckPickup, but a player in the spin attack (kind 0x13)

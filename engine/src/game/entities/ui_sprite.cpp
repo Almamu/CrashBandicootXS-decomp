@@ -3,7 +3,7 @@
 using Game::Entities::UiSprite;
 
 /* UiSprite, the sprite with its own OBJ priority (#664,
- * include/game/entities/sprite_obj.hpp): GetPriority, its key method (g++ emits
+ * engine/include/game/entities/sprite_obj.hpp): GetPriority, its key method (g++ emits
  * gUiSpriteObjVtable here), and the empty destructor and constructor.
  * An old_agbcp object (OLD_AGBCC_OBJS). */
 

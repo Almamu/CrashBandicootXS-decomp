@@ -8,7 +8,7 @@ anticipated (because later matching work discovered/renamed it) has to
 be patched onto the assembled object instead - never onto the source.
 
 Also used per-file (see tools/report_units.py) against small slices of
-those frozen sources, one per matched src/*.c file - the full
+those frozen sources, one per matched engine/src/*.c file - the full
 corrections.txt is passed every time, and entries that don't apply to
 a given slice (the renamed symbol isn't in it, or the split address
 falls outside its range) are silently skipped rather than erroring, so
@@ -88,7 +88,7 @@ def main():
             argv.remove(arg)
 
     if base_object:
-        # A copy of a unit's compiled src/*.c object (see report_units.py):
+        # A copy of a unit's compiled engine/src/*.c object (see report_units.py):
         # only its sizes need fixing, never its names or boundaries.
         if len(argv) != 1:
             sys.exit(f"usage: {sys.argv[0]} --base-object <base_copy.o>")
@@ -179,7 +179,7 @@ def set_function_sizes(obj_path, unlabelled=(), grow_only=False):
     their bytes go to the function before.
 
     `grow_only` is for base objects (report_units.py patches a copy of
-    each unit's compiled src/*.c object): agbcc's own `.size` is right for
+    each unit's compiled engine/src/*.c object): agbcc's own `.size` is right for
     plain C, but it stops before anything the assembler emitted after the
     function - the literal pool of an inline-asm `ldr rN, =sym`, or bytes
     a NAKED function wrote with `.byte` after its last label - and a

@@ -1,7 +1,7 @@
 #ifndef GUARD_IRQ_HPP
 #define GUARD_IRQ_HPP
 
-/* The interrupt handlers (src/engine/sys/irq.cpp, #915): the per-IRQ handler
+/* The interrupt handlers (engine/src/engine/sys/irq.cpp, #915): the per-IRQ handler
  * table IntrMain (platform/gba/asm/intr_main.s) dispatches through, the handlers each
  * IrqSetHandler call replaced, and the VBlank handler with its eight
  * callback slots. The audio (the VCount IRQ), the link (serial, timer 3),

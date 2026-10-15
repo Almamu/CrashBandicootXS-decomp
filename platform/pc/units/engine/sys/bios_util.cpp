@@ -1,4 +1,4 @@
-/* The pc platform's src/engine/sys/bios_util.cpp (platform/pc/platform.mk,
+/* The pc platform's engine/src/engine/sys/bios_util.cpp (platform/pc/platform.mk,
  * "Units"): the GBA's DivMod is an inline `svc #6` with its operands
  * bound to r0/r1, which no host compiler takes, so the platform builds
  * this copy of the unit in its place. MemCopy32 and Ctrl::Update (Ctrl's

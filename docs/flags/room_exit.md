@@ -2,7 +2,7 @@
 
 How a room ended: what LevelProgress::PlayRoom (through RunRoom) and
 InitActorCategory return. LevelState::UpdateGameFrame keeps it in its
-local `status`. The names sit in include/constants/rooms.h, next to
+local `status`. The names sit in engine/include/constants/rooms.h, next to
 `ROOM_KIND_*`.
 
 They are not the `CATEGORY_EXIT_*` values (categories.h). Those are what

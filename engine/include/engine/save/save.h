@@ -1,11 +1,11 @@
 #ifndef GUARD_SAVE_H
 #define GUARD_SAVE_H
 
-/* The save subsystem (src/engine/save/): the cartridge save data in EEPROM, the
+/* The save subsystem (engine/src/engine/save/): the cartridge save data in EEPROM, the
  * save menu, and the save transfer over the link cable. The save data
  * and the transfer are classes SaveData and SaveTransfer
  * (save_data.hpp), the menu's class is in save_menu.hpp, with their
- * types. C (src/game/ui/data/menu_tables.cpp) needs only the tables and the
+ * types. C (engine/src/game/ui/data/menu_tables.cpp) needs only the tables and the
  * C-linkage functions below.
  *
  * Declarations here are the functions' real prototypes, copied from
@@ -16,16 +16,16 @@
 #include "core.h"
 
 /* Set until the first EEPROM access has run AgbEepromInit
- * (src/engine/sys/iwram_data.cpp). */
+ * (engine/src/engine/sys/iwram_data.cpp). */
 extern u8 gEepromNeedsInit;
 
 /* The "data from Crash Bandicoot 2/3" messages SaveMenuLinkInput shows
  * when the save received over the link cable is another game's
- * (src/engine/sys/iwram_data.cpp). */
+ * (engine/src/engine/sys/iwram_data.cpp). */
 extern const u8 *gCrash2LinkTextPtr;
 extern const u8 *gCrash3LinkTextPtr;
 
-/* The save menu's tables (src/game/ui/data/menu_tables.cpp): the main
+/* The save menu's tables (engine/src/game/ui/data/menu_tables.cpp): the main
  * options' text ids, the cursor text and the four menu palettes. */
 extern const s32 gSaveMenuOptions[5];
 extern const u8 gMenuCursorText[];
@@ -35,10 +35,10 @@ extern const u16 gSaveMenuPalette2[16];
 extern const u16 gSaveMenuPalette3[16];
 
 /* The save data's and the save transfer's methods (C++,
- * include/engine/save/save_data.hpp: classes SaveData and SaveTransfer) have no C
+ * engine/include/engine/save/save_data.hpp: classes SaveData and SaveTransfer) have no C
  * caller and no C prototype. */
 
-/* The save menu (C++, include/game/ui/save_menu.hpp: class SaveMenu; the methods,
+/* The save menu (C++, engine/include/game/ui/save_menu.hpp: class SaveMenu; the methods,
  * SaveMenu::Open, Run and Close among them, have no C caller and no C
  * prototype). */
 

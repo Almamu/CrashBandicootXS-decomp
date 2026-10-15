@@ -49,7 +49,7 @@ void mem_collect(s32 heaps);
 void mem_heap_shutdown(void);
 
 /* The C++ new/delete operators: EWRAM allocations through mem_alloc/
- * mem_free. src/engine/sys/operator_new.cpp defines them as the global
+ * mem_free. engine/src/engine/sys/operator_new.cpp defines them as the global
  * `operator new` & co.; these are their C names (cxx_symbols.txt),
  * for the code that calls them by name. */
 extern void OperatorDeleteArray(void *ptr);
@@ -60,7 +60,7 @@ extern void *OperatorNew(u32 size);
 /* operator new[] of a type with a destructor stores the element count in
  * the word before the array (the block OperatorNewArray returned), and
  * the destructor reads it back to walk the array and frees that block.
- * The game builds these by hand (InitHud, src/game/ui/hud_init.cpp). */
+ * The game builds these by hand (InitHud, engine/src/game/ui/hud_init.cpp). */
 #define NEW_ARRAY_COUNT(array) (((s32 *)(array))[-1])
 #define NEW_ARRAY_BLOCK(array) ((void *)((s32 *)(array) - 1))
 

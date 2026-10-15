@@ -507,14 +507,15 @@ msgctxt "ui.misc.pause"
 msgid "pause"
 msgstr "pause"
 
-#. Cutscene 1, page 0 (over graphics/cutscenes/00_space_station.png).
+#. Cutscene 1, page 0 (over games/xs/graphics/cutscenes/00_space_station.png).
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene01.page0.0"
 msgid "on a mysterious space station orbiting high above the earth ..."
 msgstr "su una misteriosa stazione spaziale in orbita sulla terra ..."
 
-#. Cutscene 1, page 1 (over graphics/cutscenes/01_uka_uka_and_cortex.png).
+#. Cutscene 1, page 1 (over
+#. games/xs/graphics/cutscenes/01_uka_uka_and_cortex.png).
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene01.page1.0"
@@ -525,7 +526,7 @@ msgstr ""
 "uka uka: cortex, non so perché ti permetto di restare. mi hai deluso una "
 "volta di troppo!"
 
-#. Cutscene 1, page 2 (over graphics/cutscenes/02_cortex.png).
+#. Cutscene 1, page 2 (over games/xs/graphics/cutscenes/02_cortex.png).
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene01.page2.0"
@@ -538,8 +539,8 @@ msgstr ""
 "sconfiggere quell'inetto di un bandicoot! ma lui non conta ... domineremo il "
 "mondo!"
 
-#. Cutscene 1, page 3 (over graphics/cutscenes/01_uka_uka_and_cortex.png),
-#. string 1 of 2.
+#. Cutscene 1, page 3 (over
+#. games/xs/graphics/cutscenes/01_uka_uka_and_cortex.png), string 1 of 2.
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene01.page3.0"
@@ -550,8 +551,8 @@ msgstr ""
 "uka uka:  questa l'ho già sentita, scienziato! cosa c'è di diverso questa "
 "volta?!"
 
-#. Cutscene 1, page 3 (over graphics/cutscenes/01_uka_uka_and_cortex.png),
-#. string 2 of 2.
+#. Cutscene 1, page 3 (over
+#. games/xs/graphics/cutscenes/01_uka_uka_and_cortex.png), string 2 of 2.
 msgctxt "cutscene01.page3.1"
 msgid ""
 "cortex:  trust me uka, i have a little plan to bring earth's puny "
@@ -560,28 +561,31 @@ msgstr ""
 "cortex: fidati di me uka, ho un piano che ridimensionerà gli abitanti della "
 "terra ..."
 
-#. Cutscene 2, page 0 (over graphics/cutscenes/00_space_station.png).
+#. Cutscene 2, page 0 (over games/xs/graphics/cutscenes/00_space_station.png).
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene02.page0.0"
 msgid "cortex:  at last, my planetary minimizer is complete!"
 msgstr "cortex: il miniaturizzatore planetario è pronto!"
 
-#. Cutscene 2, page 1 (over graphics/cutscenes/03_cortex_hologram.png).
+#. Cutscene 2, page 1 (over
+#. games/xs/graphics/cutscenes/03_cortex_hologram.png).
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene02.page1.0"
 msgid "cortex: earthlings will bow to my superior intellect!"
 msgstr "cortex: i terrestri dovranno inchinarsi al mio genio!"
 
-#. Cutscene 2, page 2 (over graphics/cutscenes/04_minimizer_console.png).
+#. Cutscene 2, page 2 (over
+#. games/xs/graphics/cutscenes/04_minimizer_console.png).
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene02.page2.0"
 msgid "cortex:  muahahahahaha!"
 msgstr "cortex: muahahahahaha!"
 
-#. Cutscene 2, page 5 (over graphics/cutscenes/07_cortex_on_monitors.png).
+#. Cutscene 2, page 5 (over
+#. games/xs/graphics/cutscenes/07_cortex_on_monitors.png).
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene02.page5.0"
@@ -594,8 +598,8 @@ msgstr ""
 "microbo ... io, neo cortex, sono il vostro padrone. inchinatevi al mio "
 "potere! hahaha!"
 
-#. Cutscene 2, page 7 (over graphics/cutscenes/08_aku_aku_crash_and_coco.png),
-#. string 1 of 2.
+#. Cutscene 2, page 7 (over
+#. games/xs/graphics/cutscenes/08_aku_aku_crash_and_coco.png), string 1 of 2.
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene02.page7.0"
@@ -606,8 +610,8 @@ msgstr ""
 "aku: crash, coco, il mondo ha bisogno del vostro aiuto. cortex ha "
 "rimpicciolito la terra. dobbiamo fermarlo!"
 
-#. Cutscene 2, page 7 (over graphics/cutscenes/08_aku_aku_crash_and_coco.png),
-#. string 2 of 2.
+#. Cutscene 2, page 7 (over
+#. games/xs/graphics/cutscenes/08_aku_aku_crash_and_coco.png), string 2 of 2.
 msgctxt "cutscene02.page7.1"
 msgid ""
 "coco:  it looks as if cortex is using the crystals to power his shrinking "
@@ -618,7 +622,8 @@ msgstr ""
 "miniaturizzatore ... crash, se riesci a trovare i cristalli giusti, potrò "
 "costruire un apparecchio per contrastarne gli effetti."
 
-#. Cutscene 2, page 6 (over graphics/cutscenes/09_cortex_holding_earth.png).
+#. Cutscene 2, page 6 (over
+#. games/xs/graphics/cutscenes/09_cortex_holding_earth.png).
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene02.page6.0"
@@ -629,7 +634,7 @@ msgstr ""
 "cortex: ho vinto io, alla fine! nulla potrà fermarmi, nemmeno quel microbo "
 "di bandicoot!"
 
-#. Cutscene 2, page 8 (over graphics/cutscenes/10_aku_aku.png).
+#. Cutscene 2, page 8 (over games/xs/graphics/cutscenes/10_aku_aku.png).
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene02.page8.0"
@@ -640,7 +645,8 @@ msgstr ""
 "aku: buona fortuna, crash. trova i cristalli e potremo sventare i diabolici "
 "piani di cortex."
 
-#. Cutscene 3, page 0 (over graphics/cutscenes/11_cortex_on_screen.png).
+#. Cutscene 3, page 0 (over
+#. games/xs/graphics/cutscenes/11_cortex_on_screen.png).
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene03.page0.0"
@@ -651,7 +657,8 @@ msgstr ""
 "cortex: so cosa stai cercando di fare, bandicoot, ma non funzionerà. i miei "
 "scagnozzi ti aspettano al varco!"
 
-#. Cutscene 4, page 0 (over graphics/cutscenes/11_cortex_on_screen.png).
+#. Cutscene 4, page 0 (over
+#. games/xs/graphics/cutscenes/11_cortex_on_screen.png).
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene04.page0.0"
@@ -662,7 +669,7 @@ msgstr ""
 "cortex: marsupiale impiccione! sei stato fortunato, ma la prossima volta non "
 "la passerai liscia."
 
-#. Cutscene 5, page 0 (over graphics/cutscenes/12_coco_on_screen.png).
+#. Cutscene 5, page 0 (over games/xs/graphics/cutscenes/12_coco_on_screen.png).
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene05.page0.0"
@@ -673,7 +680,8 @@ msgstr ""
 "coco: ottimo lavoro, crash! abbiamo metà dei cristalli. portami gli altri e "
 "finirò la mia macchina. ma sta attento, cortex ti sorveglia!"
 
-#. Cutscene 6, page 0 (over graphics/cutscenes/01_uka_uka_and_cortex.png).
+#. Cutscene 6, page 0 (over
+#. games/xs/graphics/cutscenes/01_uka_uka_and_cortex.png).
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene06.page0.0"
@@ -684,7 +692,7 @@ msgstr ""
 "uka: cortex, sapevo che sarebbe successo! crash ha sconfitto tre dei tuoi "
 "scagnozzi! dobbiamo fermarlo, non tollererò un altro fallimento."
 
-#. Cutscene 6, page 1 (over graphics/cutscenes/02_cortex.png).
+#. Cutscene 6, page 1 (over games/xs/graphics/cutscenes/02_cortex.png).
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene06.page1.0"
@@ -695,7 +703,7 @@ msgstr ""
 "cortex: mi dispiace, uka! ma non preoccuparti, il mio miniaturizzatore "
 "planetario lo fermerà!"
 
-#. Cutscene 7, page 0 (over graphics/cutscenes/12_coco_on_screen.png).
+#. Cutscene 7, page 0 (over games/xs/graphics/cutscenes/12_coco_on_screen.png).
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene07.page0.0"
@@ -708,14 +716,16 @@ msgstr ""
 "riportare la terra alle sue condizioni originali, dovrai distruggere il "
 "miniaturizzatore. userò l'ingranditore per renderti più potente!"
 
-#. Cutscene 10, page 0 (over graphics/cutscenes/13_minimizer_overload.png).
+#. Cutscene 10, page 0 (over
+#. games/xs/graphics/cutscenes/13_minimizer_overload.png).
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene10.page0.0"
 msgid "cortex:  you fool!  it will take me forever to fix this mess!"
 msgstr "cortex: stupido! mi ci vorrà una vita per rimediare!"
 
-#. Cutscene 8, page 0 (over graphics/cutscenes/13_minimizer_overload.png).
+#. Cutscene 8, page 0 (over
+#. games/xs/graphics/cutscenes/13_minimizer_overload.png).
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene08.page0.0"
@@ -726,28 +736,30 @@ msgstr ""
 "cortex: idiota, cos'hai combinato?! hai distrutto i cristalli "
 "stabilizzatori! non c'è modo di sapere cosa accadrà, ora!"
 
-#. Cutscene 8, page 1 (over graphics/cutscenes/14_bosses_shocked.png).
+#. Cutscene 8, page 1 (over games/xs/graphics/cutscenes/14_bosses_shocked.png).
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene08.page1.0"
 msgid "arrgh!  ahhh!!!"
 msgstr "arrgh!  ahhh!!!"
 
-#. Cutscene 8, page 2 (over graphics/cutscenes/15_monster.png).
+#. Cutscene 8, page 2 (over games/xs/graphics/cutscenes/15_monster.png).
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene08.page2.0"
 msgid "monster:  what have you done to us?"
 msgstr "mostro: cosa ci hai fatto?!"
 
-#. Cutscene 8, page 3 (over graphics/cutscenes/16_monster_and_crash.png).
+#. Cutscene 8, page 3 (over
+#. games/xs/graphics/cutscenes/16_monster_and_crash.png).
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene08.page3.0"
 msgid "monster:  you will pay little bandicoot!"
 msgstr "mostro: la pagherai, piccolo bandicoot!"
 
-#. Cutscene 9, page 1 (over graphics/cutscenes/18_coco_at_enlarger.png).
+#. Cutscene 9, page 1 (over
+#. games/xs/graphics/cutscenes/18_coco_at_enlarger.png).
 #. Also shown as cutscene 10's page 2.
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
@@ -759,14 +771,14 @@ msgstr ""
 "coco: grandioso, hai trovato tutti i cristalli! speriamo siano abbastanza "
 "potenti da contrastare i malefici piani di cortex ..."
 
-#. Cutscene 9, page 5 (over graphics/cutscenes/22_reversed_beam.png).
+#. Cutscene 9, page 5 (over games/xs/graphics/cutscenes/22_reversed_beam.png).
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene09.page5.0"
 msgid "the end?!"
 msgstr "fine?!"
 
-#. Cutscene 10, page 5 (over graphics/cutscenes/10_aku_aku.png).
+#. Cutscene 10, page 5 (over games/xs/graphics/cutscenes/10_aku_aku.png).
 #. The cutscene text is drawn in the small font, word-wrapped into a 228x30 px
 #. box (3 lines) under the picture; longer text goes on after a key press.
 msgctxt "cutscene10.page5.0"

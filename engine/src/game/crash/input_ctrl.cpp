@@ -26,7 +26,7 @@ using Game::Objects::CameraLead;
  * The first six functions, the swim controller's motion-queue accessors,
  * are at the end of swim_ctrl.cpp since #768.
  *
- * The other 19 are InputCtrl's (include/game/crash/input_ctrl.hpp, gInputCtrlVtable;
+ * The other 19 are InputCtrl's (engine/include/game/crash/input_ctrl.hpp, gInputCtrlVtable;
  * #664, docs/cplusplus.md), the controller play_room.cpp attaches in room
  * kind 2, where the player uses sprite bank 2 (Crash riding a hover
  * vehicle; anim 1 is it blowing up). Each frame Update reads the held
@@ -39,7 +39,7 @@ using Game::Objects::CameraLead;
  * calls the current state's method through `stateFuncs`
  * (gInputCtrlStateFuncs) and applies the queued motion.
  *
- * UNUSED - no `bl`/`.4byte` reference in src/, and no Thumb pointer
+ * UNUSED - no `bl`/`.4byte` reference in engine/src/, and no Thumb pointer
  * anywhere in the ROM: SetMotionYPending, SetMotionXPending, CancelMotionY, CancelMotionX and
  * IsMotionYPending. Matched anyway.
  *

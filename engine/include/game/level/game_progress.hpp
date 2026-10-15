@@ -4,8 +4,8 @@
 /* The 0x68-byte progress block as C++ (#766, docs/cplusplus.md, "The
  * progress block as a class"): class GameProgress, until #766
  * level_state.h's struct game_progress. Its count functions are const
- * methods (src/game/level/game_progress.cpp) under their C names
- * (cxx_symbols.txt). No C file reads the layout (src/.../data/ and lib/ never
+ * methods (engine/src/game/level/game_progress.cpp) under their C names
+ * (cxx_symbols.txt). No C file reads the layout (engine/src/.../data/ and lib/ never
  * name it), so the fields are the class's.
  *
  * No vtable, constructor or destructor: the level state, its snapshots
@@ -109,7 +109,7 @@ public:
     // are saved with the rest of the block (docs/levels.md, "The save")
     u8 extraFlags[PROGRESS_EXTRA_FLAG_BYTES];
 
-    /* src/game/level/game_progress.cpp */
+    /* engine/src/game/level/game_progress.cpp */
     s32 GetLives() const;             // GetProgressLives
     s32 CountPlatinumRelics() const;  // CountPlatinumRelics
     s32 CountGoldRelics() const;      // CountGoldRelics

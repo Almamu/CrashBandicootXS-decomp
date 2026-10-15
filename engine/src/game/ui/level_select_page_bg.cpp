@@ -1,4 +1,4 @@
-/* LevelSelectPageBg (include/game/ui/level_select.hpp): the level-select screen's
+/* LevelSelectPageBg (engine/include/game/ui/level_select.hpp): the level-select screen's
  * BG1, the page strip whose vertical scroll eases 8 per frame toward a Q8
  * target (0x100 = one page). GitHub issue #27; split from
  * level_select_pages.cpp (#767), same flags (old_agbcc). */

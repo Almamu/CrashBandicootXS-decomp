@@ -46,7 +46,7 @@ using Game::Ui::SaveMenu;
  * IWRAM 0x030007CC-0x030009E8 (stored in ROM at 0x087E5DB0-0x087E5FCC):
  * the initialised IWRAM globals, the end of the IWRAM image crt0 copies
  * to 0x03000000 at boot. The image is IntrMain (platform/gba/asm/intr_main.s), the ARM
- * code (src/engine/util/string_arm.cpp, src/engine/gfx/sprite_arm.cpp) and this file's
+ * code (engine/src/engine/util/string_arm.cpp, engine/src/engine/gfx/sprite_arm.cpp) and this file's
  * .data, linked to run at 0x03000000 and stored after the vtables in ROM
  * (the `iwram` section in games/xs/ldscript.txt, docs/progress_report.md). Everything
  * after 0x030009E8 is uninitialised (games/xs/sym_iwram.txt).
@@ -58,7 +58,7 @@ using Game::Ui::SaveMenu;
  */
 
 
-/* src/engine/sys/memory.cpp's heaps, and their free space right after
+/* engine/src/engine/sys/memory.cpp's heaps, and their free space right after
  * mem_heap_init (checked by mem_heap_shutdown). */
 struct mem_heap *mem_iwram_heap_pointer = 0;
 struct mem_heap *mem_ewram_heap_pointer = 0;
@@ -85,7 +85,7 @@ s32 BrightnessFade::step = 0;
 s32 BrightnessFade::timer = 0;
 u32 gSfxVoiceToggle = 0;
 
-/* Link cable (src/engine/link/*.cpp, src/engine/save/*.cpp): gLinkSession is the
+/* Link cable (engine/src/engine/link/*.cpp, engine/src/engine/save/*.cpp): gLinkSession is the
  * session object the link IRQ handlers work on. gEepromNeedsInit is the
  * save code's (save_data.cpp): set until its first EEPROMConfigure. */
 u8 gLinkSessionReset = 1;
@@ -93,7 +93,7 @@ LinkSession *gLinkSession = 0;
 u8 gEepromNeedsInit = 1;
 SaveMenu *SaveMenu::instance = 0;
 /* The two link compatibility messages, stored after the CRC table
- * (src/engine/link/data/link_crc_table.cpp): "crash 1 <-> crash 2", "crash 1 <-> crash 3". */
+ * (engine/src/engine/link/data/link_crc_table.cpp): "crash 1 <-> crash 2", "crash 1 <-> crash 3". */
 const u8 *gCrash2LinkTextPtr = (const u8 *)gCrash2LinkText;
 const u8 *gCrash3LinkTextPtr = (const u8 *)gCrash3LinkText;
 
@@ -109,7 +109,7 @@ u32 gRoomFrameCount = 0;
 u8 LevelProgress::roomExitRequested = 0;
 
 /* The cutscene text of each language, indexed by gLanguage
- * (src/game/ui/data/cutscenes.cpp, level_cutscene.cpp). */
+ * (engine/src/game/ui/data/cutscenes.cpp, level_cutscene.cpp). */
 const struct cutscene_page *const *gCutsceneTexts[6] = {
     gCutsceneTextEnglish, gCutsceneTextFrench,  gCutsceneTextGerman,
     gCutsceneTextSpanish, gCutsceneTextItalian, gCutsceneTextDutch,
@@ -118,7 +118,7 @@ const struct cutscene_page *const *gCutsceneTexts[6] = {
 LevelLayers *gLevelLayersSingleton = 0;
 
 /* Per-language string tables (main_loop.cpp indexes them by
- * gLanguage), src/game/ui/data/ui_text.cpp. */
+ * gLanguage), engine/src/game/ui/data/ui_text.cpp. */
 const u8 *const *gUiTextTables[6] = {
     gUiTextEnglish, gUiTextFrench, gUiTextGerman, gUiTextSpanish, gUiTextItalian, gUiTextDutch,
 };
@@ -149,7 +149,7 @@ u16 *gFlashBgPalette = BG_PALETTE(1);
 u16 *gFlashObjPalette = OBJ_PALETTE(10);
 
 /* title_screen.cpp: the four OBJ sprite packages of
- * src/game/ui/data/title_screen_gfx.cpp. */
+ * engine/src/game/ui/data/title_screen_gfx.cpp. */
 const void *gTitleObjPackages[4] = {
     &gTitleCrashObj,
     &gTitleArrow2Obj,

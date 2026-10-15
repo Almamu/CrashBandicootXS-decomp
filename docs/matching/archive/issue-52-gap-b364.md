@@ -2,7 +2,7 @@
 
 A scoping investigation of the actor zone found this 2308-byte range -
 the tail of `asm/code_3_2_20_8b7c_ac28.s` right before its own already-
-matched literal tail (`DispensePolarWumpa` onward, `src/game/vehicles/
+matched literal tail (`DispensePolarWumpa` onward, `engine/src/game/vehicles/
 polar_player_states.c`, `docs/matching/archive/issue-50-actor-bc68.md`) - still
 completely raw. `tools/report_units.py`'s `(0x0802AC28, None, "actor")`
 entry covers the still-raw `CreateActor`-`SpawnActor` run before this
@@ -21,7 +21,7 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
 
 ## Matched (4 of 11 functions)
 
-- **`PolarPlayerStateShocked`** (`src/vehicle/polar_player.c`) - frame-counter
+- **`PolarPlayerStateShocked`** (`engine/src/vehicle/polar_player.c`) - frame-counter
   threshold DMA driver: past `0x2c` frames, DMAs a gauge-strip pair and
   resets `self` to state 6/table-index 5 (arming `gPolarPauseLocked`
   and kicking the mode transition, the same shared idiom `HurtPolarPlayer`
@@ -33,7 +33,7 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
   literal per store instead of reusing the two already-loaded registers
   the ROM keeps live across both.
 
-- **`HurtPolarPlayer`**/**`ShockPolarPlayer`** (`src/vehicle/polar_player.c`) -
+- **`HurtPolarPlayer`**/**`ShockPolarPlayer`** (`engine/src/vehicle/polar_player.c`) -
   the once-only spawn/reset trigger pair described below, promoted from
   NAKED using the **`goto`-shared-tail idiom**: instead of a plain
   `if (already_used) return 1; ... return 0;` guard clause (which this
@@ -73,7 +73,7 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
     plain (unregistered) local declared *before* the register variable
     forced the load-then-materialize order the ROM actually uses.
 
-- **`PolarPlayerStateRun`** (`src/vehicle/polar_player.c`) - the state-0x12
+- **`PolarPlayerStateRun`** (`engine/src/vehicle/polar_player.c`) - the state-0x12
   anim-frame edge reset described below, promoted using the same
   `goto`-shared-tail idiom but for an *interior* shared tail rather than
   the whole function's epilogue: explicit `goto tail;`/`goto gated;`/
@@ -96,7 +96,7 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
-The remaining 7 in `src/vehicle/polar_player.c` (`HurtPolarPlayer`,
+The remaining 7 in `engine/src/vehicle/polar_player.c` (`HurtPolarPlayer`,
 `ShockPolarPlayer`, and `PolarPlayerStateRun` were promoted to the "Matched" section
 above in a later pass). Every one was fully understood semantically;
 each resisted a byte-exact plain-C reconstruction for a different
@@ -181,7 +181,7 @@ make compare`): `crashbandicootxs.gba: La suma coincide`. (This
 session's sandbox lacked a working Pillow install for the graphics
 pipeline; the `build/crashbandicootxs/graphics`/`sound` binary outputs
 were reused verbatim from another worktree after confirming byte-
-identical `graphics/`/`sound/` source trees via `diff -rq` - every
+identical `games/xs/graphics/`/`games/xs/sound/` source trees via `diff -rq` - every
 `.c`/`.s` file that actually changed was still fully recompiled and
 relinked from scratch.) `make NON_MATCHING=1 report` also compiled
 clean, no warnings for `polar_player.c`.

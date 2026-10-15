@@ -1,7 +1,7 @@
 #ifndef GUARD_COLLECTED_SPAWNS_HPP
 #define GUARD_COLLECTED_SPAWNS_HPP
 
-/* The collected spawns (src/engine/actor/actor_spawn_collected.cpp, #915): the
+/* The collected spawns (engine/src/engine/actor/actor_spawn_collected.cpp, #915): the
  * spawn records of the 3D stages' crates the player has broken, at most
  * 15. The factories skip them when the category restarts from a
  * checkpoint; ActorCategory::Init clears the list.

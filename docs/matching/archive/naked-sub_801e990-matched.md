@@ -1,6 +1,6 @@
 # `SpawnStartMarker`: matched
 
-`SpawnStartMarker` (`src/game/level/spawn_start_marker.c`, sound-trigger
+`SpawnStartMarker` (`engine/src/game/level/spawn_start_marker.c`, sound-trigger
 dispatch/position writer) was a byte-correct NAKED asm transcription
 for a long time - see [issue-30-graphics-loading.md](./issue-30-graphics-loading.md)'s
 "Fifth pass" for the original parking rationale. This doc originally
@@ -17,7 +17,7 @@ section) both compile to fully correct, byte-exact C:
 
 - **The `movs r0,#1`/`subs r0,#0x12` negative-mask idiom** - the exact
   same technique as `SpawnBasicCrate`'s (`spawn_crates.c`) and
-  `UPDATE_ICON_FRAME_NIBBLE`'s (`src/game/ui/pause_menu_pages_init.c`): an
+  `UPDATE_ICON_FRAME_NIBBLE`'s (`engine/src/game/ui/pause_menu_pages_init.c`): an
   `asm volatile("sub %0, %0, #0x12" : "+r"(one))` materializes the
   mask instead of a plain C `-0x11`/`~...` expression this compiler
   folds differently.
@@ -84,7 +84,7 @@ structural insight from earlier sessions, now falling out naturally
 from the type change instead of needing a separate workaround.
 
 This is consistent with the pattern seen closing `CollidePlayer`'s
-`kindZero` gap the same session (`src/game/crash/player_collide.c`,
+`kindZero` gap the same session (`engine/src/game/crash/player_collide.c`,
 docs comment point 7): a register-choice gap caused by *what value a
 pinned register is asked to hold* (an address vs. a dereferenced
 value) can resist every register-pinning/matching-constraint trick and

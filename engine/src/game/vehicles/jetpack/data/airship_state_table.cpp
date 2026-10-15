@@ -6,7 +6,7 @@ using Game::Vehicles::Jetpack::Airship;
  * ROM 0x0817C3FC-0x0817C414. The two pointer-to-member tables that
  * followed, the balloon's and the balloon crate's, are split into
  * jetpack_balloon_state_table.cpp and jetpack_balloon_crate_state_table.cpp (#664 part 11f). Linked in
- * ROM order between data/data.s sections by games/xs/ldscript.txt - see
+ * ROM order between games/xs/data/data.s sections by games/xs/ldscript.txt - see
  * docs/data.md.
  */
 

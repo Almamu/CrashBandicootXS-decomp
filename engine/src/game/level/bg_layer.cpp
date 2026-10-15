@@ -8,7 +8,7 @@ extern "C" {
 using Game::Level::BgLayer;
 using Game::Level::BgLayerBase;
 
-/* GitHub issue #42: BgLayer's own methods (include/game/level/bg_layer.hpp,
+/* GitHub issue #42: BgLayer's own methods (engine/include/game/level/bg_layer.hpp,
  * gBgLayerVtable): first the constructor and the grow/clip methods
  * (bg_layer_init.cpp until #771), then the rest. Reset is the class's
  * key method, so g++ emits gBgLayerVtable here, and after the methods

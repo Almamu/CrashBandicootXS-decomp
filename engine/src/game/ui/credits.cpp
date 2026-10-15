@@ -27,10 +27,10 @@ using Game::Ui::Credits;
 using Game::Ui::Starfield;
 
 /* GitHub issue #64 (0x08034AA4-0x080354E0, 13 functions), C++ since
- * #664 part 10c (include/game/ui/frontend.hpp): the credits screen (Credits). The
+ * #664 part 10c (engine/include/game/ui/frontend.hpp): the credits screen (Credits). The
  * file started with the last five methods of the continue prompt
  * (ContinuePrompt: Draw, Blink, CommitFrame, the destructor and Run),
- * which are at the end of src/game/ui/continue_prompt.cpp since #767. See
+ * which are at the end of engine/src/game/ui/continue_prompt.cpp since #767. See
  * docs/matching/archive/issue-64-0x08034aa4-actor.md.
  *
  * old_agbcp (OLD_AGBCC_OBJS), as its C was old_agbcc. */

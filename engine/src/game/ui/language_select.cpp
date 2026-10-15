@@ -123,7 +123,7 @@ void LanguageSelect::Draw()
 }
 
 /* Resets several OAM-manager globals, then hand-fills
- * `gPaletteCache`'s (PaletteCache, include/game/entities/sprite_obj.hpp)
+ * `gPaletteCache`'s (PaletteCache, engine/include/game/entities/sprite_obj.hpp)
  * `slots[0]`-`slots[3]` with 4 fixed 32-byte OBJ tiles copied from
  * `gLanguageSelectPalette0`..`gLanguageSelectPalette3`, and finally sets
  * `gSmallFont`'s/`gLargeFont`'s tile base (Font::SetTileBase, which

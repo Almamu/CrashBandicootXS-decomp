@@ -1,7 +1,7 @@
 #ifndef GUARD_FADE_HPP
 #define GUARD_FADE_HPP
 
-/* The screen fades (src/engine/gfx/fade.cpp, fade_to_black.cpp, #915), two
+/* The screen fades (engine/src/engine/gfx/fade.cpp, fade_to_black.cpp, #915), two
  * all-static classes:
  * - BrightnessFade, the hardware brightness fade: 17 steps of REG_BLDY
  *   toward white or black, run in a loop or one step a frame from a

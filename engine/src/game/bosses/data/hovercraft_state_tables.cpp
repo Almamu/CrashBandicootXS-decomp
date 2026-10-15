@@ -6,7 +6,7 @@ using Game::Bosses::HovercraftCannon;
 using Game::Bosses::HovercraftLauncher;
 
 /*
- * ROM 0x0817C4C8-0x0817C510. Linked in ROM order between data/data.s
+ * ROM 0x0817C4C8-0x0817C510. Linked in ROM order between games/xs/data/data.s
  * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 

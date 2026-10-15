@@ -1,6 +1,6 @@
 # `SwimCtrl::state` and `mode`: the swim controller (#843)
 
-The swim controller (`class SwimCtrl`, include/game/crash/swim_ctrl.hpp) drives the
+The swim controller (`class SwimCtrl`, engine/include/game/crash/swim_ctrl.hpp) drives the
 diving Crash in the underwater rooms. It has two small-number fields:
 
 - `state` (Ctrl's, +0x08) is the state method Update runs, the

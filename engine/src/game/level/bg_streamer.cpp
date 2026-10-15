@@ -15,7 +15,7 @@ extern "C" {
 using Game::Level::BgStreamer;
 
 /* GitHub issue #39: 0x08024960-0x08024D74 (game_loop), split from
- * src/game/ui/cutscene_player.cpp (#770). docs/rom_map.md's "A new
+ * engine/src/game/ui/cutscene_player.cpp (#770). docs/rom_map.md's "A new
  * find: a custom RLE/delta token-stream decoder" and its two follow-up
  * sections ("Follow-up: resolved the semantics by tracing callers", "The
  * background streamer's missing 'level load' half") characterized it
@@ -36,7 +36,7 @@ using Game::Level::BgStreamer;
  * load" half - seeds the ring buffer's *entire* initial contents the
  * same way, from a fresh camera position. `GetColumn`/`GetRow`/`GetCell`
  * convert a world pixel position into the ring buffer's wrapped (col,
- * row) address. The class is in include/game/level/bg_layer.hpp; its destructor is
+ * row) address. The class is in engine/include/game/level/bg_layer.hpp; its destructor is
  * its key method, so g++ emits its vtable here.
  *
  * Built with old_agbcp (the Makefile's OLD_AGBCC_OBJS) - see

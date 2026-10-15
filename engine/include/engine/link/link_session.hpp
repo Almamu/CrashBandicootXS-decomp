@@ -4,9 +4,9 @@
 /* The link-cable session as C++ (#751, docs/cplusplus.md, "The link
  * session, the save data and the save transfer"): class LinkSession, the
  * object the save menu's constructor
- * makes with `new LinkSession` (src/game/ui/save_menu_input.cpp) into
+ * makes with `new LinkSession` (engine/src/game/ui/save_menu_input.cpp) into
  * gLinkSession (link.h declares it as a `LinkSession *` to C++) and its
- * destructor deletes. Its code is src/engine/link/: link_sio.cpp (Start, Reset,
+ * destructor deletes. Its code is engine/src/engine/link/: link_sio.cpp (Start, Reset,
  * the constructor and destructor), link_handshake.cpp (Stop),
  * link_session.cpp (Update, HandleSerial) and link_session_reset.cpp
  * (ResetState); cxx_symbols.txt maps the methods onto their C names. It
@@ -38,7 +38,7 @@ extern "C" {
 #include "engine/util/util.h"
 }
 
-/* The session's packed bit views (the .cpp files in src/engine/link/). See
+/* The session's packed bit views (the .cpp files in engine/src/engine/link/). See
  * docs/matching/archive/issue-4-6-8-naked-retry.md. */
 struct nibble_pair {
     u8 lo:4;
@@ -73,7 +73,7 @@ namespace Link
 
 /* A 0x90-byte byte ring: the session's outgoing ring at +0x40 and each
  * player record's incoming ring at +0x38 (SaveTransfer::SendChunk and
- * ReceiveChunk, src/engine/save/save_transfer.cpp, stream the save data through
+ * ReceiveChunk, engine/src/engine/save/save_transfer.cpp, stream the save data through
  * them). */
 class LinkRing
 {
@@ -161,7 +161,7 @@ public:
 };
 
 /* The link session object (`*gLinkSession`). Update and HandleSerial
- * (src/engine/link/link_session.cpp) describe the protocol. */
+ * (engine/src/engine/link/link_session.cpp) describe the protocol. */
 class LinkSession
 {
 public:
@@ -206,18 +206,18 @@ public:
     LinkSession();  // InitLinkSession
     ~LinkSession(); // DestroyLinkSession
 
-    /* src/engine/link/link_sio.cpp */
+    /* engine/src/engine/link/link_sio.cpp */
     s32 Start(u32 flags); // LinkStart (UNUSED): `this` is unused
     s32 Reset();          // ResetLinkSession
 
-    /* src/engine/link/link_handshake.cpp */
+    /* engine/src/engine/link/link_handshake.cpp */
     s32 Stop(); // LinkStop: `this` is unused
 
-    /* src/engine/link/link_session.cpp */
+    /* engine/src/engine/link/link_session.cpp */
     s32 Update();                 // UpdateLinkSession
     void HandleSerial(u16 *data); // HandleLinkSerial
 
-    /* src/engine/link/link_session_reset.cpp */
+    /* engine/src/engine/link/link_session_reset.cpp */
     s32 ResetState(); // ResetLinkSessionState
 
     static void *operator new(size_t size)

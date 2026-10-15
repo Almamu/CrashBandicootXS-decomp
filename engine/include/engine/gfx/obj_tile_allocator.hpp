@@ -1,7 +1,7 @@
 #ifndef GUARD_OBJ_TILE_ALLOCATOR_HPP
 #define GUARD_OBJ_TILE_ALLOCATOR_HPP
 
-/* The OBJ tile allocator (src/engine/gfx/sprite_frame.cpp, #915): a next-fit
+/* The OBJ tile allocator (engine/src/engine/gfx/sprite_frame.cpp, #915): a next-fit
  * allocator of OBJ tile VRAM, from `base` to the end of OBJ_VRAM0. It
  * keeps its blocks in a separate pool of `struct vram_tile_block` records
  * (sprite_frame.cpp), and a per-tile index back to them. The sprite frame

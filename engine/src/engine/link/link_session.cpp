@@ -137,7 +137,7 @@ s32 LinkSession::Update()
 }
 
 /* The Serial IRQ's half of the link (called from `LinkSerialIntr` in
- * src/engine/link/link_sio.cpp with the SIOMULTI0-3 words). `inSerialIrq` guards
+ * engine/src/engine/link/link_sio.cpp with the SIOMULTI0-3 words). `inSerialIrq` guards
  * against re-entry: a nested call only re-sends `sendWord`. Before the
  * session is `connected` it runs the handshake: it counts the consoles
  * answering with `handshakeWord` (0xF0B), takes `playerCount` (more than

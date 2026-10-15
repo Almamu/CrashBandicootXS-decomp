@@ -104,7 +104,7 @@ its real ROM address (`0x08009914`) does **not** sit adjacent to
 its own translation unit. Per `docs/workflow.md` step 4 ("a function
 whose real address isn't adjacent to an existing matched file's
 functions needs its own new `.c` file"), `ResetCrateList` moved to a new
-`src/game/crates/crate_list_reset.c` instead - the same reasoning that gave
+`engine/src/game/crates/crate_list_reset.c` instead - the same reasoning that gave
 `CollideCrateGridPartWithPlayer` its own `crate_grid_collide.c` earlier, `CollideCrateGrid` its own
 `crate_grid_collide.c`, `LinkCrateToActiveBucket` its own `crate_grid_link.c`, and
 `DrawCrateList` its own `crate_list_draw.c` - `ResetCrateList` landed on "i"

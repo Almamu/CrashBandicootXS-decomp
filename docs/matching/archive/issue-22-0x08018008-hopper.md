@@ -2,8 +2,8 @@
 
 This pass finishes issue #22. The last raw block, `asm/code_3_2_17_18008.s`
 (`UpdateTiny`, `SetTinyState`, `PickTinyHopTarget`, `SpawnTinyFallingLeaves`), is now
-`src/bosses/tiny_update.c`. `UpdateMegaMix`
-(`src/game/bosses/mega_mix_update.c`), which was a NAKED transcription, is
+`engine/src/bosses/tiny_update.c`. `UpdateMegaMix`
+(`engine/src/game/bosses/mega_mix_update.c`), which was a NAKED transcription, is
 now real C too. All five match under the older compiler, old_agbcc, and
 both files are on the Makefile's `OLD_AGBCC_OBJS` list.
 

@@ -32,7 +32,7 @@ using Game::Level::GameProgress;
 using Game::Ui::SaveMenu;
 
 /* SaveMenu's link exchange, slot list drawing, setup helpers and per-state
- * draw routines (include/game/ui/save_menu.hpp, #664's final cleanup). The second
+ * draw routines (engine/include/game/ui/save_menu.hpp, #664's final cleanup). The second
  * half, from LoadBg on, was save_menu_ui.cpp until #771.
  *
  * The first half (ROM 0x08003B40-0x080041BC) were NAKED transcriptions
@@ -506,7 +506,7 @@ void SaveMenu::InitIcons()
  * #771). Built with old_agbcp (the C was agbcc): under it LoadBg matches
  * without the C's r1 pin. */
 
-/* Same shape as LoadLanguageSelectBg (src/game/ui/language_select_setup.cpp) - reset
+/* Same shape as LoadLanguageSelectBg (engine/src/game/ui/language_select_setup.cpp) - reset
  * the DISPCNT shadow (`dispcnt`) and set its fields (mode 1, 1D OBJ
  * mapping, BG0 and OBJ on; each byte is read, masked and written back),
  * request a BG tile/map graphics package, set BG0's
@@ -601,7 +601,7 @@ void SaveMenu::DrawEmptySlotLabel(s32 x, s32 y, u8 highlight)
 
 /* Draws a centred title (a GetUiText label) at Y=6 in gLargeFont; `this`
  * is unused. The same centred-label shape as PowerDialog::Draw's
- * (src/game/ui/power_dialog_draw.cpp), for a single label. */
+ * (engine/src/game/ui/power_dialog_draw.cpp), for a single label. */
 void SaveMenu::DrawTitle(s32 labelIndex)
 {
     gLargeFont->SetPalette(0);

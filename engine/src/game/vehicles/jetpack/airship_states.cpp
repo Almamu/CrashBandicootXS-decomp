@@ -23,7 +23,7 @@ using Game::Vehicles::Jetpack::JetpackExplosion;
 using Game::Vehicles::Jetpack::JetpackPlayer;
 
 /* The airship's states (#664 part 11i, Airship's since #772,
- * include/game/vehicles/jetpack/airship.hpp):
+ * engine/include/game/vehicles/jetpack/airship.hpp):
  * gAirshipStateFuncs[1-5], the attack states, the explosion and the
  * fall (the last two airship_explode.cpp and airship_fall.cpp until
  * #771; state 0 is AirshipStateInactive, airship_graphics.cpp). See

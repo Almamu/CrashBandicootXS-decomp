@@ -3,7 +3,7 @@
 using Game::Vehicles::Polar::Yeti;
 
 /*
- * ROM 0x0817A840-0x0817A850. Linked in ROM order between data/data.s
+ * ROM 0x0817A840-0x0817A850. Linked in ROM order between games/xs/data/data.s
  * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 

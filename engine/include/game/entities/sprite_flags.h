@@ -7,7 +7,7 @@
 /* The sprite objects' flag and direction bits, as the C++ code tests
  * them through the bytes (entity.hpp's `union EntityFlags` and Sprite's
  * `dir`). The C view this header was named after, `struct box_part` (a
- * MovingSprite, include/game/entities/sprite_obj.hpp), its `struct keyframe` records
+ * MovingSprite, engine/include/game/entities/sprite_obj.hpp), its `struct keyframe` records
  * and `struct part_list` (PartList) went with their last users (#656). */
 
 /* The entity flags bytes at 0x0C/0x0D: actor.h's ENTITY_FLAG_* and

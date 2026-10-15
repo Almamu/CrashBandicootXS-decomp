@@ -12,7 +12,7 @@ extern "C" {
 using Game::Ui::Hud;
 using Game::Ui::HudPart;
 
-/* Hud's constructor and ConfigureParts (#664 cleanup, include/game/ui/hud.hpp).
+/* Hud's constructor and ConfigureParts (#664 cleanup, engine/include/game/ui/hud.hpp).
  * Built with old_agbcp, as the C was with old_agbcc - see
  * docs/matching/archive/game-loop-old-agbcc.md. */
 

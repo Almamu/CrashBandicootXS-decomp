@@ -5,11 +5,11 @@
  * the part list, the player's collision queue, the palette cycles and
  * the HUD part.
  *
- *   PartList        src/game/entities/part_list.cpp, part_list_collide.cpp
+ *   PartList        engine/src/game/entities/part_list.cpp, part_list_collide.cpp
  *                   (the class is in sprite_obj.hpp)
- *   CollisionQueue  src/game/crates/collision_queue.cpp
- *   PaletteCycles   src/engine/gfx/palette_cycle.cpp
- *   HudPart         src/game/ui/hud_part.cpp (gHudPartVtable)
+ *   CollisionQueue  engine/src/game/crates/collision_queue.cpp
+ *   PaletteCycles   engine/src/engine/gfx/palette_cycle.cpp
+ *   HudPart         engine/src/game/ui/hud_part.cpp (gHudPartVtable)
  *
  * PaletteCycles is in the namespace Engine::Gfx (#1033, docs/cplusplus.md
  * "Namespaces"), CollisionQueue in Game::Crates (the crates' collisions,

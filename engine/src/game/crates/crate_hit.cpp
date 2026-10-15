@@ -9,7 +9,7 @@ extern "C" {
 using Game::Crash::Player;
 using Game::Crates::Crate;
 
-/* Crate::PlayerAnimWouldTouch (#664, include/game/crates/crate.hpp). */
+/* Crate::PlayerAnimWouldTouch (#664, engine/include/game/crates/crate.hpp). */
 
 /* Whether the player's box for animation `action` would touch the crate
  * when its box for the current animation doesn't (PlayerHasRoomForAnim
@@ -101,7 +101,7 @@ u8 Crate::PlayerAnimWouldTouch(s32 action)
     return 1;
 }
 
-/* The player's hits on a crate and its stack (#664, include/game/crates/crate.hpp):
+/* The player's hits on a crate and its stack (#664, engine/include/game/crates/crate.hpp):
  * QueueCratePlayerCollision's two helpers and the body slam's break. */
 
 /* Whether the player's box `quad`, at (xOffset, yOffset) and mirrored

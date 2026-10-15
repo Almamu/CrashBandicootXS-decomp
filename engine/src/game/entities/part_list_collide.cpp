@@ -20,7 +20,7 @@ using Game::Entities::PartList;
 using Game::Entities::Sprite;
 using Game::Level::BgLayer;
 
-/* The part list's per-frame passes (#664, part 7c; include/game/entities/part_list.hpp):
+/* The part list's per-frame passes (#664, part 7c; engine/include/game/entities/part_list.hpp):
  * Update, Collide and CollideWithPlayer, then Cull, Clear and
  * CollideClass, and CollideWithObject. An old_agbcp object
  * (OLD_AGBCC_OBJS): CollideClass's flag test takes old_agbcp's registers.

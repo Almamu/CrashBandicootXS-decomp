@@ -2,10 +2,10 @@
 #define GUARD_CRATE_HPP
 
 /* The crate as C++ (#664, docs/cplusplus.md, parts 7e and 7g): the class
- * behind gCrateVtable (src/game/crates/), with its types (the outline group,
+ * behind gCrateVtable (engine/src/game/crates/), with its types (the outline group,
  * the placement record, the state bits). It has no C view. The object
  * the issue #12 "physics/collision" cluster (ROM 0x0800D040-0x0800FC70,
- * src/game/crates/crate_hit.cpp/crate_break.cpp) turned out to be is this
+ * engine/src/game/crates/crate_hit.cpp/crate_break.cpp) turned out to be is this
  * class; see docs/matching/archive/issue-12-physics-collision.md.
  *
  * No `#pragma interface`: g++ emits the vtable in crate_update.cpp (see

@@ -6,25 +6,25 @@ extern "C" {
 
 /*
  * ROM 0x084b414c-0x084b9d7c: sprite banks 22-38 of the sprite-bank
- * animation system (gSpriteBankTable, include/engine/gfx/sprite_bank.h). Linked in
- * ROM order between data/data.s sections by games/xs/ldscript.txt - see
+ * animation system (gSpriteBankTable, engine/include/engine/gfx/sprite_bank.h). Linked in
+ * ROM order between games/xs/data/data.s sections by games/xs/ldscript.txt - see
  * docs/data.md and docs/data_map.md ("gSpriteBankTable").
  *
  * Extracted once from baserom.gba by tools/sprite_banks.py; this file is
  * the source now. Per bank: the animations (a frame-index sequence each),
  * the frame pointer array, the frames (header plus the boxes/anchor of
  * their layout type), then every frame's piece positions and piece bytes.
- * The pieces and the frames' tiles come from graphics/sprites/bankNN_<name>/
+ * The pieces and the frames' tiles come from games/xs/graphics/sprites/bankNN_<name>/
  * (a PNG per frame and bank.json, see docs/graphics.md "Sprite banks"):
  * tools/sprite_frames.py generates the piece arrays (sprites/bankNN_pieces.inc),
  * and sprites/sprite_frames.h declares the frames and gives each one's
- * offset in the sprite tile pool (src/engine/gfx/data/sprite_tiles.cpp),
+ * offset in the sprite tile pool (engine/src/engine/gfx/data/sprite_tiles.cpp),
  * SPRITE_TILES_BANKnn_FRAMEkkk. A frame's struct type has to match its
  * "layout" in bank.json.
  */
 
 /* ---------------------------------------------------------------------- */
-/* Bank 22: 2 animations, 31 frames, graphics/sprites/bank22_homing_sewer_enemy/. */
+/* Bank 22: 2 animations, 31 frames, games/xs/graphics/sprites/bank22_homing_sewer_enemy/. */
 
 extern const u16 gSpriteBank22Anim00Seq[16];
 extern const u16 gSpriteBank22Anim01Seq[15];
@@ -169,11 +169,11 @@ const struct sprite_frame gSpriteBank22Frame028 = SPRITE_FRAME(gSpriteBank22Fram
 const struct sprite_frame gSpriteBank22Frame029 = SPRITE_FRAME(gSpriteBank22Frame029, SPRITE_TILES_BANK22_FRAME029);
 const struct sprite_frame gSpriteBank22Frame030 = SPRITE_FRAME(gSpriteBank22Frame030, SPRITE_TILES_BANK22_FRAME030);
 
-/* The piece arrays, from graphics/sprites/bank22_homing_sewer_enemy/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank22_homing_sewer_enemy/bank.json. */
 #include "sprites/bank22_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 23: 5 animations, 59 frames, graphics/sprites/bank23_flamethrower_lab_assistant/. */
+/* Bank 23: 5 animations, 59 frames, games/xs/graphics/sprites/bank23_flamethrower_lab_assistant/. */
 
 extern const u16 gSpriteBank23Anim00Seq[6];
 extern const u16 gSpriteBank23Anim01Seq[14];
@@ -539,11 +539,11 @@ const struct sprite_frame_1box gSpriteBank23Frame058 = {
     { { -53, -3, 11, 4 } },
 };
 
-/* The piece arrays, from graphics/sprites/bank23_flamethrower_lab_assistant/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank23_flamethrower_lab_assistant/bank.json. */
 #include "sprites/bank23_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 24: 6 animations, 74 frames, graphics/sprites/bank24_patrolling_space_enemy/. */
+/* Bank 24: 6 animations, 74 frames, games/xs/graphics/sprites/bank24_patrolling_space_enemy/. */
 
 extern const u16 gSpriteBank24Anim00Seq[13];
 extern const u16 gSpriteBank24Anim01Seq[11];
@@ -996,11 +996,11 @@ const struct sprite_frame_2box gSpriteBank24Frame073 = {
     { { -15, -17, 30, 24 }, { -27, 8, 57, 4 } },
 };
 
-/* The piece arrays, from graphics/sprites/bank24_patrolling_space_enemy/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank24_patrolling_space_enemy/bank.json. */
 #include "sprites/bank24_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 25: 1 animation, 16 frames, graphics/sprites/bank25_laser_barrier/. */
+/* Bank 25: 1 animation, 16 frames, games/xs/graphics/sprites/bank25_laser_barrier/. */
 
 extern const u16 gSpriteBank25Anim00Seq[16];
 
@@ -1103,11 +1103,11 @@ const struct sprite_frame_1box gSpriteBank25Frame015 = {
     { { -17, -1, 18, 17 } },
 };
 
-/* The piece arrays, from graphics/sprites/bank25_laser_barrier/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank25_laser_barrier/bank.json. */
 #include "sprites/bank25_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 26: 2 animations, 14 frames, graphics/sprites/bank26_piston_crusher/. */
+/* Bank 26: 2 animations, 14 frames, games/xs/graphics/sprites/bank26_piston_crusher/. */
 
 extern const u16 gSpriteBank26Anim00Seq[9];
 extern const u16 gSpriteBank26Anim01Seq[5];
@@ -1212,11 +1212,11 @@ const struct sprite_frame_1box gSpriteBank26Frame013 = {
     { { -11, -38, 21, 83 } },
 };
 
-/* The piece arrays, from graphics/sprites/bank26_piston_crusher/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank26_piston_crusher/bank.json. */
 #include "sprites/bank26_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 27: 2 animations, 30 frames, graphics/sprites/bank27_stationary_space_enemy/. */
+/* Bank 27: 2 animations, 30 frames, games/xs/graphics/sprites/bank27_stationary_space_enemy/. */
 
 extern const u16 gSpriteBank27Anim00Seq[15];
 extern const u16 gSpriteBank27Anim01Seq[15];
@@ -1401,11 +1401,11 @@ const struct sprite_frame_1box gSpriteBank27Frame029 = {
     { { -13, -8, 26, 17 } },
 };
 
-/* The piece arrays, from graphics/sprites/bank27_stationary_space_enemy/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank27_stationary_space_enemy/bank.json. */
 #include "sprites/bank27_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 28: 1 animation, 3 frames, graphics/sprites/bank28_launch_pad/. */
+/* Bank 28: 1 animation, 3 frames, games/xs/graphics/sprites/bank28_launch_pad/. */
 
 extern const u16 gSpriteBank28Anim00Seq[8];
 
@@ -1434,11 +1434,11 @@ const struct sprite_frame gSpriteBank28Frame000 = SPRITE_FRAME(gSpriteBank28Fram
 const struct sprite_frame gSpriteBank28Frame001 = SPRITE_FRAME(gSpriteBank28Frame001, SPRITE_TILES_BANK28_FRAME001);
 const struct sprite_frame gSpriteBank28Frame002 = SPRITE_FRAME(gSpriteBank28Frame002, SPRITE_TILES_BANK28_FRAME002);
 
-/* The piece arrays, from graphics/sprites/bank28_launch_pad/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank28_launch_pad/bank.json. */
 #include "sprites/bank28_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 29: 4 animations, 42 frames, graphics/sprites/bank29_saucer_lab_assistant/. */
+/* Bank 29: 4 animations, 42 frames, games/xs/graphics/sprites/bank29_saucer_lab_assistant/. */
 
 extern const u16 gSpriteBank29Anim00Seq[20];
 extern const u16 gSpriteBank29Anim01Seq[6];
@@ -1708,11 +1708,11 @@ const struct sprite_frame_1box gSpriteBank29Frame041 = {
     { { -18, -6, 42, 19 } },
 };
 
-/* The piece arrays, from graphics/sprites/bank29_saucer_lab_assistant/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank29_saucer_lab_assistant/bank.json. */
 #include "sprites/bank29_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 30: 3 animations, 42 frames, graphics/sprites/bank30_mega_mix/. */
+/* Bank 30: 3 animations, 42 frames, games/xs/graphics/sprites/bank30_mega_mix/. */
 
 extern const u16 gSpriteBank30Anim00Seq[20];
 extern const u16 gSpriteBank30Anim01Seq[14];
@@ -1970,11 +1970,11 @@ const struct sprite_frame_1box gSpriteBank30Frame041 = {
     { { -39, -44, 58, 77 } },
 };
 
-/* The piece arrays, from graphics/sprites/bank30_mega_mix/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank30_mega_mix/bank.json. */
 #include "sprites/bank30_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 31: 36 animations, 112 frames, graphics/sprites/bank31_crates/. */
+/* Bank 31: 36 animations, 112 frames, games/xs/graphics/sprites/bank31_crates/. */
 
 extern const u16 gSpriteBank31Anim00Seq[1];
 extern const u16 gSpriteBank31Anim01Seq[9];
@@ -2728,11 +2728,11 @@ const struct sprite_frame_1box gSpriteBank31Frame111 = {
     { { -12, -13, 25, 26 } },
 };
 
-/* The piece arrays, from graphics/sprites/bank31_crates/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank31_crates/bank.json. */
 #include "sprites/bank31_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 32: 9 animations, 17 frames, graphics/sprites/bank32_gems/. */
+/* Bank 32: 9 animations, 17 frames, games/xs/graphics/sprites/bank32_gems/. */
 
 extern const u16 gSpriteBank32Anim00Seq[8];
 extern const u16 gSpriteBank32Anim01Seq[8];
@@ -2912,11 +2912,11 @@ const struct sprite_frame_1box gSpriteBank32Frame016 = {
     { { -20, -14, 41, 28 } },
 };
 
-/* The piece arrays, from graphics/sprites/bank32_gems/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank32_gems/bank.json. */
 #include "sprites/bank32_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 33: 3 animations, 16 frames, graphics/sprites/bank33_trial_icons/. */
+/* Bank 33: 3 animations, 16 frames, games/xs/graphics/sprites/bank33_trial_icons/. */
 
 extern const u16 gSpriteBank33Anim00Seq[8];
 extern const u16 gSpriteBank33Anim01Seq[8];
@@ -3043,11 +3043,11 @@ const struct sprite_frame_1box gSpriteBank33Frame015 = {
     { { -12, -22, 25, 45 } },
 };
 
-/* The piece arrays, from graphics/sprites/bank33_trial_icons/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank33_trial_icons/bank.json. */
 #include "sprites/bank33_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 34: 5 animations, 22 frames, graphics/sprites/bank34_aku_aku/. */
+/* Bank 34: 5 animations, 22 frames, games/xs/graphics/sprites/bank34_aku_aku/. */
 
 extern const u16 gSpriteBank34Anim00Seq[4];
 extern const u16 gSpriteBank34Anim01Seq[4];
@@ -3228,11 +3228,11 @@ const struct sprite_frame_1box gSpriteBank34Frame021 = {
     { { -8, 13, 15, 4 } },
 };
 
-/* The piece arrays, from graphics/sprites/bank34_aku_aku/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank34_aku_aku/bank.json. */
 #include "sprites/bank34_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 35: 2 animations, 28 frames, graphics/sprites/bank35_wumpa/. */
+/* Bank 35: 2 animations, 28 frames, games/xs/graphics/sprites/bank35_wumpa/. */
 
 extern const u16 gSpriteBank35Anim00Seq[14];
 extern const u16 gSpriteBank35Anim01Seq[14];
@@ -3323,11 +3323,11 @@ const struct sprite_frame gSpriteBank35Frame025 = SPRITE_FRAME(gSpriteBank35Fram
 const struct sprite_frame gSpriteBank35Frame026 = SPRITE_FRAME(gSpriteBank35Frame026, SPRITE_TILES_BANK35_FRAME026);
 const struct sprite_frame gSpriteBank35Frame027 = SPRITE_FRAME(gSpriteBank35Frame027, SPRITE_TILES_BANK35_FRAME027);
 
-/* The piece arrays, from graphics/sprites/bank35_wumpa/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank35_wumpa/bank.json. */
 #include "sprites/bank35_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 36: 1 animation, 10 frames, graphics/sprites/bank36_stopwatch/. */
+/* Bank 36: 1 animation, 10 frames, games/xs/graphics/sprites/bank36_stopwatch/. */
 
 extern const u16 gSpriteBank36Anim00Seq[10];
 
@@ -3370,11 +3370,11 @@ const struct sprite_frame gSpriteBank36Frame007 = SPRITE_FRAME(gSpriteBank36Fram
 const struct sprite_frame gSpriteBank36Frame008 = SPRITE_FRAME(gSpriteBank36Frame008, SPRITE_TILES_BANK36_FRAME008);
 const struct sprite_frame gSpriteBank36Frame009 = SPRITE_FRAME(gSpriteBank36Frame009, SPRITE_TILES_BANK36_FRAME009);
 
-/* The piece arrays, from graphics/sprites/bank36_stopwatch/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank36_stopwatch/bank.json. */
 #include "sprites/bank36_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 37: 1 animation, 8 frames, graphics/sprites/bank37_crystal/. */
+/* Bank 37: 1 animation, 8 frames, games/xs/graphics/sprites/bank37_crystal/. */
 
 extern const u16 gSpriteBank37Anim00Seq[8];
 
@@ -3413,11 +3413,11 @@ const struct sprite_frame gSpriteBank37Frame005 = SPRITE_FRAME(gSpriteBank37Fram
 const struct sprite_frame gSpriteBank37Frame006 = SPRITE_FRAME(gSpriteBank37Frame006, SPRITE_TILES_BANK37_FRAME006);
 const struct sprite_frame gSpriteBank37Frame007 = SPRITE_FRAME(gSpriteBank37Frame007, SPRITE_TILES_BANK37_FRAME007);
 
-/* The piece arrays, from graphics/sprites/bank37_crystal/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank37_crystal/bank.json. */
 #include "sprites/bank37_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 38: 4 animations, 60 frames, graphics/sprites/bank38_powers/. */
+/* Bank 38: 4 animations, 60 frames, games/xs/graphics/sprites/bank38_powers/. */
 
 extern const u16 gSpriteBank38Anim00Seq[15];
 extern const u16 gSpriteBank38Anim01Seq[15];
@@ -3596,5 +3596,5 @@ const struct sprite_frame gSpriteBank38Frame057 = SPRITE_FRAME(gSpriteBank38Fram
 const struct sprite_frame gSpriteBank38Frame058 = SPRITE_FRAME(gSpriteBank38Frame058, SPRITE_TILES_BANK38_FRAME058);
 const struct sprite_frame gSpriteBank38Frame059 = SPRITE_FRAME(gSpriteBank38Frame059, SPRITE_TILES_BANK38_FRAME059);
 
-/* The piece arrays, from graphics/sprites/bank38_powers/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank38_powers/bank.json. */
 #include "sprites/bank38_pieces.inc"

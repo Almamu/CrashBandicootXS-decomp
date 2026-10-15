@@ -1,8 +1,8 @@
 #ifndef GUARD_SPRITE_FRAME_CACHE_HPP
 #define GUARD_SPRITE_FRAME_CACHE_HPP
 
-/* The sprite frame cache (src/engine/gfx/sprite_frame.cpp and the ARM Lookup in
- * src/engine/gfx/sprite_arm.cpp, #915): the animation frames whose pixels are
+/* The sprite frame cache (engine/src/engine/gfx/sprite_frame.cpp and the ARM Lookup in
+ * engine/src/engine/gfx/sprite_arm.cpp, #915): the animation frames whose pixels are
  * in OBJ VRAM, as nodes (`struct sprite_frame_cache_node`, gfx.h) on two
  * ring lists: `current`, this frame's, newest first, and `previous`, last
  * frame's, which LoadTiles evicts from the tail when OBJ VRAM is full. Age

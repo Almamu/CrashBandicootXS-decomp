@@ -4,10 +4,10 @@
 /* The pause menu and the power dialog as C++ (#664, docs/cplusplus.md,
  * part 10d):
  *
- *   PauseMenu    0xD4  src/game/ui/pause_menu.cpp, pause_menu_draw.cpp,
+ *   PauseMenu    0xD4  engine/src/game/ui/pause_menu.cpp, pause_menu_draw.cpp,
  *                      _collectibles.cpp, _info.cpp, _pages_init.cpp,
  *                      _widgets.cpp, _pages_draw.cpp
- *   PowerDialog  0x2C  src/game/ui/power_dialog.cpp, power_dialog_draw.cpp
+ *   PowerDialog  0x2C  engine/src/game/ui/power_dialog.cpp, power_dialog_draw.cpp
  *
  * The sizes are the ROM's (RunPauseMenu's and ShowPowerDialog's `new`s).
  * Neither has a vtable: they are plain classes with a constructor and a
@@ -20,7 +20,7 @@
  * frontend.hpp.
  *
  * Below the includes are the menus' records and tables (the level
- * select's, the pause menu's and the continue prompt's, which src/.../data
+ * select's, the pause menu's and the continue prompt's, which engine/src/.../data
  * defines), the data the C++ shares with them, and the menus' entry
  * points.
  *
@@ -69,9 +69,9 @@ struct image_pair {
     const u8 *tiles;
 };
 
-/* The level-select tables (src/game/ui/data/level_select_layout.cpp,
+/* The level-select tables (engine/src/game/ui/data/level_select_layout.cpp,
  * level_select_anims.cpp, level_select_picture_table.cpp, level_select_page_bg_package.cpp,
- * data/data.s). */
+ * games/xs/data/data.s). */
 extern const struct vec2 gLevelSelectWorldPos;
 extern const struct vec2 gLevelSelectCrashIconPos;
 extern const struct vec2 gLevelSelectCrystalPos;
@@ -93,7 +93,7 @@ extern const u32 gLevelSelectCursorAnims[4];
 extern const struct image_pair gLevelSelectPictures[LEVEL_SELECT_PICTURE_COUNT];
 extern const struct bg_package gLevelSelectPageBg;
 
-/* The pause menu tables (src/game/ui/data/menu_tables.cpp,
+/* The pause menu tables (engine/src/game/ui/data/menu_tables.cpp,
  * pause_menu_rows.cpp, pause_menu_bg.cpp). */
 extern const s32 gPauseMenuPageTitles[5];
 extern const struct vec2 gPauseCrystalIconPos;
@@ -108,7 +108,7 @@ extern const struct pause_row gPauseMenuRows[5];
 extern const u16 gPauseMenuPalette[16];
 extern const struct bg_package gPauseMenuBg;
 
-/* The continue prompt's graphics (src/game/ui/data/continue_prompt_bgs.cpp,
+/* The continue prompt's graphics (engine/src/game/ui/data/continue_prompt_bgs.cpp,
  * continue_prompt_palettes.cpp). */
 extern const struct bg_package gContinuePromptSmokeBg;
 extern const struct bg_package gContinuePromptGlowBg;
@@ -123,16 +123,16 @@ extern const u16 gContinuePromptPalette3[17];
  * linkage: the free functions' own names, and the C names of the methods
  * (cxx_symbols.txt). */
 
-/* src/game/ui/continue_prompt.cpp (frontend.hpp: ContinuePrompt::Run) */
+/* engine/src/game/ui/continue_prompt.cpp (frontend.hpp: ContinuePrompt::Run) */
 extern "C" u8 RunContinuePrompt(void);
 
-/* src/game/ui/pause_menu.cpp (below: PauseMenu::Run) */
+/* engine/src/game/ui/pause_menu.cpp (below: PauseMenu::Run) */
 extern "C" s32 RunPauseMenu(void);
 
-/* src/game/ui/pause_menu_widgets.cpp */
+/* engine/src/game/ui/pause_menu_widgets.cpp */
 extern "C" s32 FormatDecimal(s32 value, u8 *dest);
 
-/* src/game/ui/power_dialog_draw.cpp (the free functions around PowerDialog,
+/* engine/src/game/ui/power_dialog_draw.cpp (the free functions around PowerDialog,
  * below) */
 extern "C" void ShowTurboRunDialog(void);
 extern "C" void ShowTornadoSpinDialog(void);

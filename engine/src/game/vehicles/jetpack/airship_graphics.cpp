@@ -15,7 +15,7 @@ using Game::Entities::AnimPart;
 using Game::Vehicles::Jetpack::Airship;
 
 /* The airship's damage, graphics, HP gauge and teardown (#664 parts
- * 11f and 11i, Airship since #772, include/game/vehicles/jetpack/airship.hpp): DamageAirship, its graphics
+ * 11f and 11i, Airship since #772, engine/include/game/vehicles/jetpack/airship.hpp): DamageAirship, its graphics
  * (LoadAirshipGraphics, ConvertAirshipTiles and the flash/palette
  * updates) and the end of its code. DamageAirship and
  * LoadAirshipGraphics were airship_damage.cpp and
@@ -367,7 +367,7 @@ void Airship::Destroy()
     delete anim;
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked every src/ .c file, the
+/* UNUSED - no caller anywhere in the ROM (checked every engine/src/ .c file, the
  * category vtables and every word-aligned Thumb pointer in baserom.gba).
  * Empty; it has no table slot to name it after, so it keeps the nullsub_N
  * name (docs/naming.md). */

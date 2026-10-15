@@ -19,7 +19,7 @@ using Game::Ui::LanguageSelect;
 using Game::Ui::Starfield;
 
 /* The rest of LanguageSelect's methods (#664, part 10b,
- * include/game/ui/frontend.hpp; language_select.cpp has the others).
+ * engine/include/game/ui/frontend.hpp; language_select.cpp has the others).
  *
  * old_agbcp (Makefile OLD_AGBCC_OBJS): LoadBg's DISPCNT bitfield stores
  * load each constant before the byte, as old_agbcc does. The C was built

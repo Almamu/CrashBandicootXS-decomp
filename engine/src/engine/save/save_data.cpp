@@ -35,7 +35,7 @@ using Engine::Save::SaveData;
  * The IME-save/IE-clear/IME-restore snippet (repeated once per exit
  * path) matches the ROM's exact "no extra copy" shape here as plain
  * C (`u16 savedIme = REG_IME; ...`), the same phrasing already proven
- * for `LinkSession::Stop` (src/engine/link/link_handshake.cpp) - the previously
+ * for `LinkSession::Stop` (engine/src/engine/link/link_handshake.cpp) - the previously
  * suspected register-pressure gap didn't reproduce with this
  * function's actual field/loop structure. Byte-identical to the ROM,
  * confirmed via a direct `.text`-section `cmp` against
@@ -148,7 +148,7 @@ fail_restore:
 
 /* Loads the settings record from EEPROM (`SaveData::Read`, retried up to
  * 3 times), muting the music player across the transfer (stop before,
- * resume after, matching `src/engine/audio/audio.cpp`'s established
+ * resume after, matching `engine/src/engine/audio/audio.cpp`'s established
  * `AudioContext` helpers), then validates the loaded record's two
  * marker bytes and checksum. Returns 4 (EEPROM read failed after
  * retries), 2 (bad `magic` marker), 1 (`versionNibble` isn't
@@ -238,7 +238,7 @@ u8 SaveData::CheckChecksum()
  * the words before `checksum` (127 in the ROM), from SAVE_CHECKSUM_SEED (0 with
  * the ROM's levels, constants/save.h), into `checksum`. Every function
  * that mutates `flags`/`slotEmpty` calls this afterward to keep the
- * checksum in sync - see src/engine/save/save_data.cpp's header
+ * checksum in sync - see engine/src/engine/save/save_data.cpp's header
  * comment, which already anticipated this function (it was matched
  * from a later chunk, issue #5, before this one). */
 void SaveData::UpdateChecksum()
@@ -261,7 +261,7 @@ u32 SaveData::GetGameId()
 
 /* Saves the settings record to EEPROM (`SaveData::Write`, retried up to 5
  * times), muting the music player across the transfer the same way
- * `SaveData::Load` (src/engine/save/save_data.cpp) does (checksum
+ * `SaveData::Load` (engine/src/engine/save/save_data.cpp) does (checksum
  * refreshed first via `SaveData::UpdateChecksum`, before the mute). Returns 4
  * (EEPROM write failed after retries) or 0 (success). */
 s32 SaveData::Store()
@@ -329,7 +329,7 @@ void SaveData::WriteSlot(s32 row, void *src)
 }
 
 /* Marks row `row` as explicitly selected/edited and refreshes the
- * checksum. See `include/engine/save/save_data.hpp`'s `slotEmpty` field
+ * checksum. See `engine/include/engine/save/save_data.hpp`'s `slotEmpty` field
  * comment, which already anticipated this function (matched from a
  * later chunk, issue #5, before this one). */
 void SaveData::EraseSlot(s32 row)

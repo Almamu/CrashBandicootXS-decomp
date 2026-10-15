@@ -5,9 +5,9 @@ extern "C" {
 
 /*
  * IWRAM 0x030000D4-0x03000198 (stored in ROM at 0x087E56B8): ARM copies
- * of the string helpers the Thumb code also has (src/engine/util/string.cpp),
+ * of the string helpers the Thumb code also has (engine/src/engine/util/string.cpp),
  * part of the IWRAM image crt0 copies to 0x03000000 at boot (see
- * src/engine/sys/iwram_data.cpp and docs/data.md). The ARM itoa that follows
+ * engine/src/engine/sys/iwram_data.cpp and docs/data.md). The ARM itoa that follows
  * them, itoa_arm, is assembly (asm/itoa_arm.s): its ROM code isn't gcc
  * output (#662).
  *

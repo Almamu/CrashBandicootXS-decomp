@@ -1,7 +1,7 @@
 #ifndef GUARD_ACTOR_CATEGORY_STATS_HPP
 #define GUARD_ACTOR_CATEGORY_STATS_HPP
 
-/* The actor category's run statistics (src/engine/actor/actor_category_stats.cpp,
+/* The actor category's run statistics (engine/src/engine/actor/actor_category_stats.cpp,
  * #915): the deaths since the checkpoint (the mask assist, the spawns'
  * bonus kinds and the boss's retry level count them), the nitro crates
  * the player has missed (the room's pending switch crates) and the

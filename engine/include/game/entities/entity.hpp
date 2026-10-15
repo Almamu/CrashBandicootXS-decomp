@@ -1,8 +1,8 @@
 #ifndef GUARD_ENTITY_HPP
 #define GUARD_ENTITY_HPP
 
-/* The entity base class (#664, docs/cplusplus.md; src/game/entities/entity.cpp,
- * gEntityVtable). include/game/entities/sprite_obj.hpp builds the sprite classes on it.
+/* The entity base class (#664, docs/cplusplus.md; engine/src/game/entities/entity.cpp,
+ * gEntityVtable). engine/include/game/entities/sprite_obj.hpp builds the sprite classes on it.
  *
  * This header has no `#pragma interface`, unlike the other class
  * headers: its destructor is inline (the subclasses' destructors inline

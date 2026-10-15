@@ -88,7 +88,7 @@ it is the outgoing-argument area), then a call through a 4-argument
 function-pointer view. A constant QImode store to a stack slot
 legitimizes the `sp` address first, which gives the ROM's order. The
 struct, the `CreatePlatformMover` prototype and `MOVER_NEW` moved from
-`include/gobj_1a794.h` into a new `include/mover_new.h`, which both files
+`engine/include/gobj_1a794.h` into a new `engine/include/mover_new.h`, which both files
 include. This form matches under the current agbcc too.
 
 ## What didn't close, and what the old_agbcc diff looked like

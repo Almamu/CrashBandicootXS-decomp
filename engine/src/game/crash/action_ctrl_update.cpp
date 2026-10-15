@@ -18,7 +18,7 @@ using Game::Crash::Player;
 using Game::Entities::MovingSprite;
 
 /* ActionCtrl's Update, and its double jump and in-air input helpers
- * (include/game/crash/action_ctrl.hpp; #664, docs/cplusplus.md). Built by old_agbcp
+ * (engine/include/game/crash/action_ctrl.hpp; #664, docs/cplusplus.md). Built by old_agbcp
  * (the Makefile's OLD_AGBCC_OBJS), like the old_agbcc C it replaces. The
  * C wrote the state dispatch out as 20 lines of pointer-to-member
  * arithmetic; here it is `(this->*stateFuncs[state])()`. */

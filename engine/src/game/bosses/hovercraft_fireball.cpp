@@ -20,8 +20,8 @@ using Game::Bosses::HovercraftFireball;
 using Game::Entities::ActorSelf;
 using Game::Entities::HpActor;
 
-/* The hovercraft's fireball (#664 part 11h, include/game/bosses/boss_actors.hpp), ROM
- * 0x08032910-0x08032AF8, between src/game/vehicles/jetpack/jetpack_collected_wumpa.cpp
+/* The hovercraft's fireball (#664 part 11h, engine/include/game/bosses/boss_actors.hpp), ROM
+ * 0x08032910-0x08032AF8, between engine/src/game/vehicles/jetpack/jetpack_collected_wumpa.cpp
  * and hovercraft.cpp. In hovercraft.cpp until #769; built with old_agbcp,
  * as that was. See docs/matching/archive/issue-60-61-gap-31a6c-part2.md. */
 

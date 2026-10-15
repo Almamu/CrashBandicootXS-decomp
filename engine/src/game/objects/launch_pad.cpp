@@ -1,4 +1,4 @@
-/* The launch pad (LaunchPad, gLaunchPadVtable; include/game/ui/level_select.hpp):
+/* The launch pad (LaunchPad, gLaunchPadVtable; engine/include/game/ui/level_select.hpp):
  * a 0x78-byte moving sprite with a factory, a player-contact check that
  * sends the player EVENT_LAUNCH_PAD, a constructor and a destructor: the
  * green pad of entity type 0x3D (sprite bank 28). The event makes the
@@ -6,7 +6,7 @@
  * charge (Y motion 0x13, or 0x14 with A held). Its key method is here, so
  * g++ emits its vtable here (games/xs/ldscript.txt places it).
  *
- * UNUSED - no `bl`/`.4byte` reference in asm/, games/xs/expected/ or src/: the
+ * UNUSED - no `bl`/`.4byte` reference in asm/, games/xs/expected/ or engine/src/: the
  * out-of-line constructor (Spawn has it inlined). Matched anyway.
  *
  * Split from menus/level_select.cpp (GitHub issue #26) in #767, with its
@@ -77,7 +77,7 @@ void LaunchPad::ClearVulnerable()
     f.b.vulnerable = 0;
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked asm/, data/, src/ and a
+/* UNUSED - no caller anywhere in the ROM (checked asm/, games/xs/data/, engine/src/ and a
  * whole-ROM Thumb-pointer scan; Spawn inlines it instead). */
 LaunchPad::LaunchPad()
 {

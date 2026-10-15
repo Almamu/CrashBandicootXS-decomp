@@ -14,7 +14,7 @@ using Game::Crates::CrateList;
 using Game::Level::BgLayer;
 
 /* CrateList's constructor and Unlink (#664, part 7f;
- * include/game/crates/crate_list.hpp). An old_agbcp object (OLD_AGBCC_OBJS). */
+ * engine/include/game/crates/crate_list.hpp). An old_agbcp object (OLD_AGBCC_OBJS). */
 
 /* InitCrateList: an empty list for `n` sprites (play_room.cpp's
  * `new CrateList(0xc0)`), the slots cleared and every
@@ -129,7 +129,7 @@ void CrateList::Unlink(Crate *sprite)
     }
 }
 
-/* CrateList::LinkActive (#664, part 7f; include/game/crates/crate_list.hpp). An
+/* CrateList::LinkActive (#664, part 7f; engine/include/game/crates/crate_list.hpp). An
  * old_agbcp object (OLD_AGBCC_OBJS; was agbcc): the flag test is
  * old_agbcp's `ldrb r1; lsrs r0, r1, #4`. The C reproduced it under
  * agbcc with 9 pins and a `MATCH_KEEP_VOLATILE`; with Append inlined,
@@ -164,7 +164,7 @@ void CrateList::LinkActive(Crate *sprite)
     }
 }
 
-/* CrateList::Update (#664, part 7f; include/game/crates/crate_list.hpp). An
+/* CrateList::Update (#664, part 7f; engine/include/game/crates/crate_list.hpp). An
  * old_agbcp object (OLD_AGBCC_OBJS). */
 
 /* `s` again, as the inlined call's own value: each Copy is a register

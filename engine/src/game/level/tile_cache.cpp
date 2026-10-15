@@ -9,7 +9,7 @@ extern "C" {
 
 using Game::Level::TileCache;
 
-/* The collision tile cache (TileCache, include/game/level/bg_layer.hpp), ROM
+/* The collision tile cache (TileCache, engine/include/game/level/bg_layer.hpp), ROM
  * 0x08024F24-0x080254C0: its chunk cache and terrain lookups (in
  * bg_layer_base.cpp until #770; free functions taking a `struct
  * tile_cache *` until #752), its destructor and constructor, which

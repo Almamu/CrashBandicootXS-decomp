@@ -12,7 +12,7 @@ using Game::Crash::InputCtrl;
 using Game::Crash::Player;
 using Game::Crash::SwimCtrl;
 
-/* The player's resets (Player, include/game/crash/player.hpp). */
+/* The player's resets (Player, engine/include/game/crash/player.hpp). */
 
 /* The player's state for a new life: GroundSprite::Reset's fields, the
  * player's own, a fresh invulnerability deadline, and Aku Aku's palette

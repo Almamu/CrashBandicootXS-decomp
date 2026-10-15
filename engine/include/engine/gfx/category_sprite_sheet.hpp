@@ -1,7 +1,7 @@
 #ifndef GUARD_CATEGORY_SPRITE_SHEET_HPP
 #define GUARD_CATEGORY_SPRITE_SHEET_HPP
 
-/* The category sprite sheet (src/engine/gfx/sprite_frame.cpp, #915): the 3D
+/* The category sprite sheet (engine/src/engine/gfx/sprite_frame.cpp, #915): the 3D
  * stages' sprite sheet, LZ77-compressed in the ROM (the category
  * descriptor's `sprite_sheet`) and decompressed into an EWRAM buffer
  * while the category runs. The animation records' frame offsets are

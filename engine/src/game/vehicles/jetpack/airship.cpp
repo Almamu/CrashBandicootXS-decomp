@@ -21,7 +21,7 @@ using Game::Entities::AnimPart;
 using Game::Vehicles::Jetpack::Airship;
 
 /* N. Gin's airship (#664 part 11i), the all-static class Airship
- * (#772, include/game/vehicles/jetpack/airship.hpp): a bare AnimPart, `anim` (gAirship), and
+ * (#772, engine/include/game/vehicles/jetpack/airship.hpp): a bare AnimPart, `anim` (gAirship), and
  * static data members under their C names (gAirshipX, ...). See
  * docs/matching/archive/issue-58-0x08030334-actor.md.
  *

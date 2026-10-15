@@ -1,4 +1,4 @@
-# The cutscenes (docs/data.md, "Cutscenes", #1092): data/cutscenes.json
+# The cutscenes (docs/data.md, "Cutscenes", #1092): games/xs/data/cutscenes.json
 # lists them, their slides and the page of text each slide shows, and
 # tools/cutscenes.py writes, from it and the text template (the pages'
 # strings, text.mk), the C++ that game/ui/data/<table>.cpp #include:
@@ -6,12 +6,12 @@
 #   slide lists;
 # - cutscene_slides: the other five languages' pages and the slides.
 # The generator stops on a slide whose picture isn't a cutscene picture of
-# graphics/manifest.json, on a page the template lacks and on a page or
+# games/xs/graphics/manifest.json, on a page the template lacks and on a page or
 # slide that no cutscene uses.
-CUTSCENES_JSON := data/cutscenes.json
+CUTSCENES_JSON := $(XS_DIR)/data/cutscenes.json
 CUTSCENES_BUILDDIR := $(OBJ_DIR)/cutscenes
 CUTSCENE_TABLES := cutscenes cutscene_slides
-CUTSCENE_DEPS := $(CUTSCENES_JSON) $(TEXT_POT) graphics/manifest.json tools/cutscenes.py tools/text.py
+CUTSCENE_DEPS := $(CUTSCENES_JSON) $(TEXT_POT) $(XS_DIR)/graphics/manifest.json tools/cutscenes.py tools/text.py
 
 $(CUTSCENES_BUILDDIR)/%.inc: $(CUTSCENE_DEPS)
 	python3 tools/cutscenes.py cpp $* $@

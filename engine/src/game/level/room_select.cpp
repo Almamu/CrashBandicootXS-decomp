@@ -11,7 +11,7 @@ extern "C" {
 using Game::Level::LevelProgress;
 
 /* The room cursor of the level state's room block (LevelProgress,
- * include/game/level/level_state.hpp): the room's music, the next room, the gem
+ * engine/include/game/level/level_state.hpp): the room's music, the next room, the gem
  * path and bonus rooms and SelectRoom. ROM 0x08024498-0x08024590, the end
  * of GitHub issue #38's chunk; split from level_query.cpp (#770). Built
  * with old_agbcp. See docs/matching/archive/issue-38-medal-results-tally.md. */
@@ -26,7 +26,7 @@ using Game::Level::LevelProgress;
  * `PlaySong`. The `IsInBonusRoom` call's result is truncated to `u8`
  * before the nonzero test, matching this codebase's established
  * `(u8)funcCall(...) != 0` idiom for a callee whose real return value
- * is only byte-wide (see e.g. src/game/crash/action_ctrl_moves.cpp). */
+ * is only byte-wide (see e.g. engine/src/game/crash/action_ctrl_moves.cpp). */
 void LevelProgress::PlayRoomMusic()
 {
     u32 id;

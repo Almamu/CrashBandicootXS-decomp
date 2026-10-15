@@ -3,7 +3,7 @@
 
 /* The enemy controllers as C++ (#664, docs/cplusplus.md): the enemy
  * controller, the knocked controller HitEnemy hands a knocked-away enemy
- * to, and the periodic spawner (src/game/enemies/).
+ * to, and the periodic spawner (engine/src/game/enemies/).
  *
  * No `#pragma interface`: g++ emits their vtables (EnemyCtrl's in
  * enemy_ctrl_update.cpp, the others in periodic_spawner.cpp and
@@ -28,7 +28,7 @@ extern "C" {
  * (`target`): `state` picks what Update does each frame (patrol, attack
  * cycle, oscillate, home in, ...; SetState), and `mode` is the part's
  * animation mode (SetAnimMode), which the per-state updaters step
- * through. The enemy spawners (src/game/enemies/spawn_enemies.cpp) make them
+ * through. The enemy spawners (engine/src/game/enemies/spawn_enemies.cpp) make them
  * with `new EnemyCtrl`, a 0x8C-byte block. It doesn't use
  * Ctrl's `owner` and `state`: Attach sets `target`, and its own `state`
  * at 0x74 hides Ctrl's. */
@@ -122,7 +122,7 @@ public:
     virtual void Attach(Game::Entities::MovingSprite *part); // AttachEnemyCtrl
     virtual ~EnemyCtrl();                                    // DestroyEnemyCtrl
 
-    /* src/game/enemies/enemy_ctrl.cpp */
+    /* engine/src/game/enemies/enemy_ctrl.cpp */
     void SetMotionY(s32 mode);
     void SetMotionX(s32 mode);
     void SetAnimMode(s32 mode);
@@ -137,7 +137,7 @@ public:
     void SetModeTable(const s32 *anims);
     void SetKind(s32 kind);
 
-    /* src/game/enemies/enemy_ctrl.cpp */
+    /* engine/src/game/enemies/enemy_ctrl.cpp */
     void UpdateAttackCycle();
     void UpdateTriggerBox();
     void SetState(s32 state);
@@ -145,17 +145,17 @@ public:
     void SetRangeYSpeed(s32 radius, s32 speed, s32 accel);
     void SetRangeX(s32 radius);
 
-    /* src/game/enemies/enemy_motion.cpp */
+    /* engine/src/game/enemies/enemy_motion.cpp */
     void UpdateHomingX();
     void UpdateHomingY();
     void UpdateHop();
     void UpdateFlipCycle();
 
-    /* src/game/enemies/enemy_patrol.cpp, src/game/enemies/enemy_shooter.cpp */
+    /* engine/src/game/enemies/enemy_patrol.cpp, engine/src/game/enemies/enemy_shooter.cpp */
     void UpdatePatrol();
     void UpdateShooter();
 
-    /* The enemy spawners (src/game/enemies/spawn_enemies.cpp, #915), under their
+    /* The enemy spawners (engine/src/game/enemies/spawn_enemies.cpp, #915), under their
      * C names: each creates an enemy, a MovingSprite moved by a new
      * EnemyCtrl. gEntitySpawnFuncs' enemy slots, and SpawnSeal (the seal
      * spawner's callback, PeriodicSpawner::Spawn). */
@@ -190,7 +190,7 @@ public:
 LAYOUT_ASSERT(enemy_ctrl_hpp, sizeof(EnemyCtrl) == 0x8C);
 
 /* The knocked enemy's controller (gKnockedEnemyCtrlVtable,
- * src/game/enemies/knocked_enemy_ctrl.cpp): HitEnemy
+ * engine/src/game/enemies/knocked_enemy_ctrl.cpp): HitEnemy
  * hands a spun or slid enemy's part to one, and it marks the part gone
  * once it has left the screen. */
 class KnockedEnemyCtrl : public Game::Entities::Ctrl
@@ -205,9 +205,9 @@ public:
 LAYOUT_ASSERT(enemy_ctrl_hpp, sizeof(KnockedEnemyCtrl) == 0x10);
 
 /* A periodic trigger entity (gPeriodicSpawnerVtable, 0x28 bytes;
- * src/game/enemies/periodic_spawner.cpp): calls `callback` at its own position
+ * engine/src/game/enemies/periodic_spawner.cpp): calls `callback` at its own position
  * once every `period` frames while near the camera. PeriodicSpawner::Spawn
- * (src/game/objects/spawn_objects.cpp) makes one with SpawnSeal. */
+ * (engine/src/game/objects/spawn_objects.cpp) makes one with SpawnSeal. */
 class PeriodicSpawner : public Game::Entities::Entity
 {
 public:

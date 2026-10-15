@@ -7,7 +7,7 @@ extern "C" {
 }
 
 /*
- * ROM 0x0817CFF4-0x0817D6C0. Linked in ROM order between data/data.s
+ * ROM 0x0817CFF4-0x0817D6C0. Linked in ROM order between games/xs/data/data.s
  * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
@@ -48,7 +48,7 @@ const u16 gTitleMenuBlinkPalette[16] = {
 };
 
 /* The four OBJ sprites LoadTitleScreenObjTiles (title_screen.cpp) uploads,
- * through the IWRAM table gTitleObjPackages (src/engine/sys/iwram_data.cpp),
+ * through the IWRAM table gTitleObjPackages (engine/src/engine/sys/iwram_data.cpp),
  * which lists them in the order 0817D0A8, 0817D0D0, 0817D0BC, 0817D094. */
 const struct bg_package gTitleBandicootObj = { 4, 6, (void *)TitleBandicootObj::palette, (void *)TitleBandicootObj::tiles, (void *)TitleBandicootObj::map };
 const struct bg_package gTitleCrashObj = { 8, 40, (void *)TitleCrashObj::palette, (void *)TitleCrashObj::tiles, (void *)TitleCrashObj::map };
@@ -143,7 +143,7 @@ extern const struct delta_record gTitleLogoPieceMotion8[6] = {
  * part from (actor_anim.h's `struct anim_table_record`; this file had its
  * own view, `struct anim_record_view`). The keyframes and frames are
  * record 0's of the categories 0-2 family (Crash riding the polar bear),
- * right after gPolarCategoryPalette (data/levels/anim_tables/polar.json,
+ * right after gPolarCategoryPalette (games/xs/data/levels/anim_tables/polar.json,
  * polar_anim_family.cpp). */
 extern const struct anim_frame_record gPolarPlayerKeyframes[];
 extern const u8 *const gPolarPlayerFrames[];

@@ -13,7 +13,7 @@ extern "C" {
 using Engine::Sys::FrameLimiter;
 using Engine::Text::Font;
 
-/* Sits right after InitBresenhamLine (ROM 0x08000E6C, in src/engine/util/line.cpp) and
+/* Sits right after InitBresenhamLine (ROM 0x08000E6C, in engine/src/engine/util/line.cpp) and
  * before FormatCentiseconds (still raw in asm/code_3_1_3.s). C++ since the
  * #664 cleanup: the font draws are Font's virtual methods (font.hpp),
  * which the C spelled out as hand-written method-table slot calls.

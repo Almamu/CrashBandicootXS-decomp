@@ -1,8 +1,8 @@
 # N-Tranced's level data (#1113, docs/n_tranced.md "Levels"), from
 # games/n2/data/levels/ with tools/levels.py --levels-dir, as levels.mk
-# builds XS's from data/levels/: the BG tile sets the rooms' pictures make,
+# builds XS's from games/xs/data/levels/: the BG tile sets the rooms' pictures make,
 # each room's level asset, and the assets' definitions
-# (src/game/level/data/level_assets.cpp, shared with XS, in objects.txt).
+# (engine/src/game/level/data/level_assets.cpp, shared with XS, in objects.txt).
 # Included by games/n2/game.mk.
 
 N2_LEVELS_DIR      := $(N2_DIR)/data/levels

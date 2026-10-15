@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Find the common operations that are written out by hand (#667).
 
-Scans the C sources under src/ and include/ (not the data tables in
+Scans the C sources under engine/src/ and engine/include/ (not the data tables in
 the data/ directories) for the expression shapes that the shared helpers in
-include/engine/util/math_util.h and include/game/level/entity_bits.h can name, and for the
+engine/include/engine/util/math_util.h and engine/include/game/level/entity_bits.h can name, and for the
 file-local helper macros that several files define for themselves.
 Comments and strings are blanked out first, and #define bodies aren't
 use sites (they're listed by --macros instead). It doesn't run the
@@ -43,7 +43,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from magic_numbers import blank_directives, line_of, strip_comments  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SCAN_DIRS = ("src", "include", "platform")
+SCAN_DIRS = (os.path.join("engine", "src"), os.path.join("engine", "include"), "platform")
 SKIP_DIRS = ()  # the data/ directories, below
 
 # An operand: an identifier, a field chain or a parenthesized group with
@@ -248,6 +248,8 @@ def duplicated_macros(defs):
 
 def subsystem(rel):
     parts = rel.split(os.sep)
+    if parts[0] == "engine" and len(parts) > 1:
+        parts = parts[1:]
     if parts[0] == "src" and len(parts) > 2:
         return parts[1]
     return parts[0]

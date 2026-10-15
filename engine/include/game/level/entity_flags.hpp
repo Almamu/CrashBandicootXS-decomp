@@ -15,7 +15,7 @@ namespace Game
 namespace Level
 {
 
-/* The entity flags (`gEntityFlags`, 0x408 bytes; src/game/level/entity_flags.cpp,
+/* The entity flags (`gEntityFlags`, 0x408 bytes; engine/src/game/level/entity_flags.cpp,
  * room_entities.cpp): the room's entity list and two pairs of bitmaps,
  * one bit per entity id. SpawnRoomEntities skips the entities set in
  * `bits0` and copies `bits0`/`bits1` to `bits0Copy`/`bits1Copy` when the
@@ -55,7 +55,7 @@ public:
 
 LAYOUT_ASSERT(entity_flags_hpp, sizeof(LevelEntityFlags) == 0x408);
 
-/* A 32-word (1024-bit) bitmap (src/game/level/entity_bitmap.cpp, ROM
+/* A 32-word (1024-bit) bitmap (engine/src/game/level/entity_bitmap.cpp, ROM
  * 0x08025554-0x080255D4). UNUSED: nothing in the ROM calls its code or
  * makes one; LevelEntityFlags::SetGone uses the same bit idiom. */
 class Bitmap

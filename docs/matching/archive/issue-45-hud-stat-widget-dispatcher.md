@@ -12,14 +12,14 @@ HUD stat-widget dispatcher and its callees (`UpdateHud`/`UpdateHudBoss`/
 This pass picks up that remainder. Net result: **1 more function matched
 (`UpdateHud`), 9 still untouched** - the issue stays open.
 
-## Matched: `UpdateHud` (new `src/game/ui/hud.c`)
+## Matched: `UpdateHud` (new `engine/src/game/ui/hud.c`)
 
 The dispatcher itself. Takes the same `struct hud_counter *self` that
 `UpdateHudLives` (already matched, `hud_lives.c`) receives - confirmed by
 the dispatcher calling `UpdateHudLives(self)` directly with its own
 argument, and every field it touches (`mode`, `field_08` (new),
 `icon_flag` (new), `parts`) already fitting inside `struct hud_counter`'s
-existing 0x68-byte layout (`include/hud.h`) rather than needing a bigger
+existing 0x68-byte layout (`engine/include/hud.h`) rather than needing a bigger
 struct.
 
 Control flow, reading the disassembly directly rather than trusting
@@ -67,8 +67,8 @@ prefers a fresh caller-saved-adjacent `r8` slot over reusing `r7` once
 The natural first fix - `register s32 *layout_addr asm("r7") = ...` -
 compiles *without* emitting `r7` in the function's `push`/`pop` list at
 all (a known bug in this `gcc 2.9` build when a `register ... asm("r7")`
-local is live across a `bl`: see `src/game/bosses/hovercraft_launcher.c`'s comment
-on the identical bug, and `src/game/level/bg_layer_base.c`'s note that even
+local is live across a `bl`: see `engine/src/game/bosses/hovercraft_launcher.c`'s comment
+on the identical bug, and `engine/src/game/level/bg_layer_base.c`'s note that even
 un-pinning both sides of a swapped `r7`/`r3` pair doesn't help there
 either). Shipping that version would silently corrupt the caller's `r7`.
 
@@ -83,7 +83,7 @@ function, exactly like the ROM) rather than overflowing to `r8`. No
 pin at all - beyond `self` - was the correct move here, the opposite of
 the instinct to pin harder when a register mismatches.
 
-### `include/hud.h` field additions
+### `engine/include/hud.h` field additions
 
 Extended `struct hud_counter` (previously only characterized up to what
 `UpdateHudLives` touches) with four fields inside what were opaque padding
@@ -162,7 +162,7 @@ untouched (see "Still untouched - all 9 remaining functions" above).
 
 ### Matched: `TickPaletteCycles`/`AddPaletteCycle` (the fx ring-buffer pair)
 
-Both now live in `src/engine/gfx/palette_cycle.c`, placed at the top of
+Both now live in `engine/src/engine/gfx/palette_cycle.c`, placed at the top of
 the file (ROM order puts them immediately before `ClearPaletteCycles`, which
 this file already held). `struct palette_cycler` (previously a stub with
 two named `s32[3]` arrays and unlabelled padding, in this same file)
@@ -281,7 +281,7 @@ documented for this same function family:
 - **Never pin `self` (or anything else) to `r7` when it's live across a
   `bl`.** Confirmed yet again (`docs/matching/
   issue-45-hud-stat-widget-dispatcher.md`'s own second-pass note, and
-  `src/game/bosses/hovercraft_launcher.c`): an explicit `register ... asm("r7")`
+  `engine/src/game/bosses/hovercraft_launcher.c`): an explicit `register ... asm("r7")`
   parameter live across a call compiles *without* emitting r7's
   push/pop at all, silently corrupting the caller's r7. `self` reaches
   r7 here purely through natural allocation, arrived at only once every
@@ -289,13 +289,13 @@ documented for this same function family:
   through a direct pin.
 
 Verified via a full clean `make compare` (`La suma coincide`) with both
-functions cut into `src/engine/gfx/palette_cycle.c` and their
+functions cut into `engine/src/engine/gfx/palette_cycle.c` and their
 `asm/code_3_2_17_26f54.s` fragment (now empty) removed from
 `ldscript.txt`.
 
 ### Parked: `UpdateHudBoss`/`UpdateHudClock` (real gap, not a budget cut)
 
-Both fully understood and reconstructed as C (`src/game/ui/
+Both fully understood and reconstructed as C (`engine/src/game/ui/
 hud_boss_clock.c`, guarded by `#if NON_MATCHING`; real bytes stay in
 `asm/code_3_2_17_2757c.s`, now itself split into two
 `.if NON_MATCHING == 0` blocks, one per function) but not byte-matched:
@@ -329,7 +329,7 @@ hud_boss_clock.c`, guarded by `#if NON_MATCHING`; real bytes stay in
   something unrelated moves" churn `TickPaletteCycles` hit before its offset
   ended up correctly cached).
 - **`UpdateHudClock`**: three more change-detection-gated widgets, keyed
-  off `sync_value_a`/`b`/`c` (`include/hud.h`, already named from the
+  off `sync_value_a`/`b`/`c` (`engine/include/hud.h`, already named from the
   second pass) against `GetClockMinutes`/`GetClockSeconds`/`GetClockTenths`. The
   first two split their value into tens/ones digits
   (`__udivsi3`/`__umodsi3`, div/mod by 10) across a slot pair each
@@ -362,7 +362,7 @@ time already spent on the six functions above:
   (`+0x0c`/`+0x10`/`+0x14`, still nameless - meaning not established),
   then loops over all 35 slots wiring each one's `anim_data` from a
   triple-indirected shared table (`**gSpriteBankSet`, the same
-  global `src/game/ui/pause_menu_pages_init.c` already names and uses via its
+  global `engine/src/game/ui/pause_menu_pages_init.c` already names and uses via its
   own `(**gSpriteBankSet) + (const << N)` idiom) and either a
   per-slot glyph table (`gHudPartAnims[i]`) or, for slot 22
   specifically, `GetBossIndex(...)+ 6`. `ConfigureHudParts` is the exact same
@@ -371,7 +371,7 @@ time already spent on the six functions above:
   clamp idiom as `UpdateHudBoss`/`UpdateHudClock` above. Both make heavy use
   of the high registers (`sl`/`sb`/`r8`) throughout the loop body - the
   same class of "loop/self pointer never lands in r8/sb no matter how
-  the source is phrased" difficulty `src/game/ui/pause_menu_pages_init.c`'s
+  the source is phrased" difficulty `engine/src/game/ui/pause_menu_pages_init.c`'s
   own `UPDATE_ICON_FRAME_NIBBLE` comment already documents giving up on
   for four near-identical functions in that file; near-certain to hit
   the same wall here, on top of needing `UpdateHudBoss`'s r7 blocker
@@ -405,7 +405,7 @@ raw.
 
 ## Cross-references (third pass)
 
-- `src/hud/hud_boss_clock.c` - new file, `UpdateHudBoss`/
+- `engine/src/hud/hud_boss_clock.c` - new file, `UpdateHudBoss`/
   `UpdateHudClock`'s `NON_MATCHING` reconstructions.
 - `docs/status/hud.md` - matched and parked lists both updated.
 
@@ -416,7 +416,7 @@ parked above. Both are now byte-exact matched, converted from their
 `NON_MATCHING`-guarded plain-C reconstructions to `NAKED` functions
 whose bodies are a direct instruction-for-instruction transcription of
 the ROM's own disassembly, following this project's established escape
-hatch for this exact class of problem (`src/engine/link/link_handshake.c`'s
+hatch for this exact class of problem (`engine/src/engine/link/link_handshake.c`'s
 several `NAKED` functions, `lib/gax/src/gax_swi.c`'s `GaxHuffUnComp`,
 `docs/matching/archive/issue-4-sio-settings-sync.md`'s "NAKED transcription,
 byte-verified" section for the worked-out general method).
@@ -478,7 +478,7 @@ issue #45 stays open.
 
 ### Cross-references
 
-- `src/hud/hud_boss_clock.c` - `UpdateHudBoss`/`UpdateHudClock`, now
+- `engine/src/hud/hud_boss_clock.c` - `UpdateHudBoss`/`UpdateHudClock`, now
   `NAKED`, no `NON_MATCHING` guard.
 - `tools/report_units.py` - `0x0802757C` entry now points at
   `src/hud/hud_boss_clock.o` instead of `None`.
@@ -510,7 +510,7 @@ immediate siblings:
 - `ConfigureHudParts`'s own loop additionally keeps a running byte offset in
   `r8` and two more loop-invariant values in `sb`/`sl` live across the
   entire ~10-`bl`-per-iteration loop body - the same "loop/self-pointer
-  register allocation difficulty `src/game/ui/pause_menu_pages_init.c`'s own
+  register allocation difficulty `engine/src/game/ui/pause_menu_pages_init.c`'s own
   comment documents giving up on for four near-identical functions"
   the third pass's read-through already named for this exact function.
 
@@ -520,7 +520,7 @@ register-pin tricks here first would have just re-derived the same
 negative result at several times the cost. Both groups went straight to
 full `NAKED` instruction-for-instruction transcription instead -
 this project's established escape hatch for this exact class of problem
-(`src/engine/link/link_handshake.c`'s several `NAKED` functions,
+(`engine/src/engine/link/link_handshake.c`'s several `NAKED` functions,
 `docs/matching/archive/issue-4-sio-settings-sync.md`'s "NAKED transcription,
 byte-verified" section for the general method, and this same doc's own
 "NAKED-transcription pass" above for the worked example on this
@@ -528,7 +528,7 @@ family). Semantics for all 5 were read and understood in full first (see
 the field-by-field comments in the two new files below) - nothing here
 is unreviewed opaque asm, just asm written by hand rather than by gcc.
 
-### Matched: `InitHud`/`ConfigureHudParts` (new `src/game/ui/hud_init.c`)
+### Matched: `InitHud`/`ConfigureHudParts` (new `engine/src/game/ui/hud_init.c`)
 
 `InitHud` allocates the 35-slot `struct hud_digit_part` array
 (`OperatorNewArray(0x8C4)` - a leading 4-byte header word holding the count
@@ -556,7 +556,7 @@ specific ones (13, 22, 29) depending on the current level/game-mode and
 struct, address kept raw in the transcribed asm the same way that file
 keeps it).
 
-### Matched: `UpdateHudCrates`/`UpdateHudWumpa`/`UpdateHudPercentCounters` (new `src/game/ui/hud_counters.c`)
+### Matched: `UpdateHudCrates`/`UpdateHudWumpa`/`UpdateHudPercentCounters` (new `engine/src/game/ui/hud_counters.c`)
 
 `UpdateHudCrates` is a much larger sibling of the already-matched
 `UpdateHudLives`: two independent 3-digit displays (change-detection cache
@@ -597,9 +597,9 @@ in `ldscript.txt`'s link order.
 
 ### Cross-references
 
-- `src/game/ui/hud_init.c` - new file, `InitHud`/
+- `engine/src/game/ui/hud_init.c` - new file, `InitHud`/
   `ConfigureHudParts`, both `NAKED`.
-- `src/game/ui/hud_counters.c` - new file, `UpdateHudCrates`/
+- `engine/src/game/ui/hud_counters.c` - new file, `UpdateHudCrates`/
   `UpdateHudWumpa`/`UpdateHudPercentCounters`, all three `NAKED`.
 - `tools/report_units.py` - the `0x08027138` and `0x08027940` entries
   now point at these two new object files instead of `None`.

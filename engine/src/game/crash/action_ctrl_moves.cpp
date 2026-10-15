@@ -26,7 +26,7 @@ using Game::Level::LevelProgress;
 
 /* ActionCtrl's state methods for leaving the ground, dying, warping in
  * and hanging, the super body slam's shockwave and the tornado spin's
- * turns (include/game/crash/action_ctrl.hpp; #664, docs/cplusplus.md). Built by
+ * turns (engine/include/game/crash/action_ctrl.hpp; #664, docs/cplusplus.md). Built by
  * old_agbcp (the Makefile's OLD_AGBCC_OBJS), like the old_agbcc C it
  * replaces. */
 
@@ -587,7 +587,7 @@ void ActionCtrl::StartTornadoSpin(s32 turnState, s32 endState)
     tornadoFallQueued = 0;
 }
 
-/* ActionCtrl's moves (include/game/crash/action_ctrl.hpp; #664, docs/cplusplus.md):
+/* ActionCtrl's moves (engine/include/game/crash/action_ctrl.hpp; #664, docs/cplusplus.md):
  * the tornado fall, the end and steering of a spin, SetMode, the starts
  * of the spin, hang spin, run, high jump and mask-hit jump, Attach, and
  * the short state methods (hang grab, hang spin, warp out, crawl stop,

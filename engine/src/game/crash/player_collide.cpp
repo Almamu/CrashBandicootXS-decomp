@@ -12,7 +12,7 @@ extern "C" {
 using Game::Crash::Player;
 using Game::Entities::GroundSprite;
 
-/* Player::CheckPlayerContact (include/game/crash/player.hpp; CollidePlayer): the
+/* Player::CheckPlayerContact (engine/include/game/crash/player.hpp; CollidePlayer): the
  * player's collision with the objects and the terrain. Built by old_agbcp
  * (the `movs #0x40`/`movs #8` before their `ldrb`). */
 

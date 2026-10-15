@@ -9,7 +9,7 @@ extern "C" {
 using Engine::Gfx::PauseMenuBg;
 
 /*
- * ROM 0x0816B284-0x0816B298. Linked in ROM order between data/data.s
+ * ROM 0x0816B284-0x0816B298. Linked in ROM order between games/xs/data/data.s
  * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 

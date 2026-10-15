@@ -8,7 +8,7 @@ progress is what the build says (docs/n_tranced.md, "Progress"), in the
 same terms as XS's report:
 
   code.total         the code's bytes, 0x08000000 to the end of the code
-  code.matching      the shared sources' (built from src/, byte-identical)
+  code.matching      the shared sources' (built from engine/src/, byte-identical)
   functions.total    every function in ntranced.elf
   functions.matching the shared sources' functions
   data.total         the rest of the ROM (ntranced.gba's size less the code)

@@ -1,8 +1,8 @@
 #ifndef __LINE_UTIL_H__
 #define __LINE_UTIL_H__
 
-/* Bresenham-line state: set up by InitBresenhamLine (src/engine/util/line.cpp) and
- * advanced one step at a time by StepBresenhamLine (src/engine/util/line_step.cpp).
+/* Bresenham-line state: set up by InitBresenhamLine (engine/src/engine/util/line.cpp) and
+ * advanced one step at a time by StepBresenhamLine (engine/src/engine/util/line_step.cpp).
  * The two functions are declared in util.h. */
 struct bresenham_line {
     s32 x0;

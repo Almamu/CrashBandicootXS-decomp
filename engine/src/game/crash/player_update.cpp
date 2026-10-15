@@ -25,7 +25,7 @@ using Game::Level::EntitySpawner;
 using Game::Level::LevelProgress;
 using Game::Level::LevelState;
 
-/* The player's (Player, include/game/crash/player.hpp) object pass, event handler and
+/* The player's (Player, engine/include/game/crash/player.hpp) object pass, event handler and
  * draw method. Built by old_agbcp (Makefile OLD_AGBCC_OBJS). */
 
 /* The pass over the objects the player touches, once a frame (the
@@ -340,7 +340,7 @@ void Player::Draw()
         f.b.bit3 = 0;
 }
 
-/* The player's (Player, include/game/crash/player.hpp) motion, update, body box test
+/* The player's (Player, engine/include/game/crash/player.hpp) motion, update, body box test
  * and destructor. */
 
 /* Steps each speed toward its ramp's target by the ramp's step, stopping

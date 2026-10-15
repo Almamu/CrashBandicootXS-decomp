@@ -23,13 +23,13 @@ using Game::Objects::Stopwatch;
 using Game::Objects::Wumpa;
 
 /* The pickup spawners: the powers, the stopwatch, the blue gem, the
- * crate gem's marker and the wumpa (#664, include/game/level/spawners.hpp), ROM
+ * crate gem's marker and the wumpa (#664, engine/include/game/level/spawners.hpp), ROM
  * 0x08021D80-0x08022188. The player starts, the entity spawner's calls
  * and InitLevelState follow in spawn_markers.cpp. Built with
  * old_agbcp. Since #915 the stopwatch's and the wumpa's are static
  * members of their classes (Stopwatch::Spawn, Wumpa::Spawn), and the
  * powers' and the blue gem's, which build a plain Sprite, are Pickups'
- * (Pickups::SpawnPowerBodySlam, ..., include/game/objects/pickups.hpp). The crate
+ * (Pickups::SpawnPowerBodySlam, ..., engine/include/game/objects/pickups.hpp). The crate
  * gem's marker (no sprite) and the UNUSED CreateTouchableSprite stay
  * free. */
 
@@ -131,7 +131,7 @@ void SpawnCrateGemMarker(u32 id, u16 x, u16 y, u16 param)
     gLevelState->SetCrateGemPos(&point.x);
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the spawn
+/* UNUSED - no caller anywhere in the ROM (checked engine/src/, asm/ and the spawn
  * table). Builds a CreateSpriteObj part and adds it to gTouchableList,
  * like the pickup spawners above.
  *

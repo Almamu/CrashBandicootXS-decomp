@@ -16,7 +16,7 @@ using Engine::Gfx::CellAnim;
 using Game::Entities::ActorSelf;
 using Game::Entities::AnimPart;
 
-/* The 3D actor base class, ActorSelf (#664 part 11a, include/game/entities/actor_self.hpp):
+/* The 3D actor base class, ActorSelf (#664 part 11a, engine/include/game/entities/actor_self.hpp):
  * the constructor, Update and Draw, the depth and draw-order key, the
  * accessors and the destructor (the key method: g++ emits gActorVtable
  * here). The C-linkage helpers around it in the ROM are in

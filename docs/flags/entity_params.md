@@ -11,9 +11,9 @@ through two views:
 - `struct crate_placement.flags` (crate.hpp): Crate::Create.
 
 What a bit means depends on the entity type. The names are in
-include/constants/entity_params.h (`ENTITY_PARAMS_*`), which level_data.h
+engine/include/constants/entity_params.h (`ENTITY_PARAMS_*`), which level_data.h
 includes, except for the crate placement bits, which stay in crate.hpp.
-The counts below are from data/levels/*/room.json.
+The counts below are from games/xs/data/levels/*/room.json.
 
 | Bit | Name | Who reads it | Set in the data |
 |---|---|---|---|

@@ -2,9 +2,9 @@
 
 A scoping investigation of the actor zone found this whole 1804-byte
 gap - the remainder of `asm/code_3_2_20_28568_c99c_cc9c.s`, right after
-issue #53's own matched batch (`CreatePolarBasicCrate`, `src/game/vehicles/
+issue #53's own matched batch (`CreatePolarBasicCrate`, `engine/src/game/vehicles/
 polar_crates.c`) and right before issue #54's chunk (`MovePolarAkuAku`,
-`src/vehicle/polar_objects.c`) - still completely raw.
+`engine/src/vehicle/polar_objects.c`) - still completely raw.
 `docs/matching/archive/issue-53-actor-c7a8.md`'s "What's left" section had
 already flagged `UpdatePolarElectricFence` onward as "a larger,
 `IsTouchingYeti`/`IsTouchingPlayer`/`ShockPolarPlayer`-calling state machine ... not
@@ -21,7 +21,7 @@ trampoline table).
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
-- **`UpdatePolarElectricFence`** (`src/vehicle/polar_objects.c`) - a per-frame
+- **`UpdatePolarElectricFence`** (`engine/src/vehicle/polar_objects.c`) - a per-frame
   hazard/proximity state machine: latches `self+0x2c` once `self+0x34`
   (a cached depth) exceeds `0x15FF`. If not already "used" (`self+0xc
   == 0`), snapshots the owning part table's own `+0x14` 12-byte record
@@ -60,7 +60,7 @@ trampoline table).
 
 ## Matched (12 of 13 functions)
 
-All in `src/vehicle/polar_objects.c`.
+All in `engine/src/vehicle/polar_objects.c`.
 
 - **`CreatePolarElectricFence`** - `InitActorPart`-based constructor: forwards
   `a`/`b`/`c`/`d` straight through, installs `self+0x50 =

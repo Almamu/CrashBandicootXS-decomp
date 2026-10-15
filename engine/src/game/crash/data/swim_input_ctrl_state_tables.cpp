@@ -11,7 +11,7 @@ using Game::Crash::SwimCtrl;
 /*
  * ROM 0x0816C250-0x0816C2D8: two per-state member-function-pointer
  * tables of the player-controller objects, then an entry set. Linked in
- * ROM order between data/data.s sections by games/xs/ldscript.txt - see
+ * ROM order between games/xs/data/data.s sections by games/xs/ldscript.txt - see
  * docs/data.md.
  */
 

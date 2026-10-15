@@ -17,7 +17,7 @@ using Game::Level::PooledBgLayer;
 using Game::Level::TileCache;
 
 /* GitHub issue #43: the level-layers singleton (LevelLayers,
- * include/game/level/bg_layer.hpp; `gLevelLayersSingleton`, 0x2C bytes, created on
+ * engine/include/game/level/bg_layer.hpp; `gLevelLayersSingleton`, 0x2C bytes, created on
  * first use by `Get`) - the object `gLevelLayers` also points at: the
  * camera (`camera.cpp`) clamps into its scroll fields via `SetScroll`, and
  * `terrain.cpp` reaches its terrain tile cache at `+0x20`.
@@ -43,7 +43,7 @@ using Game::Level::TileCache;
  *   each enabled layer's scroll registers.
  * - `sub_80269DC`/`sub_80269F8` - identical predicates: 0 if `cond1`,
  *   `*cond2` and `cond3` are all nonzero, else 1. `sub_8026A14` returns 0.
- *   All three are UNUSED: no caller anywhere in the ROM (checked src/,
+ *   All three are UNUSED: no caller anywhere in the ROM (checked engine/src/,
  *   asm/, the method tables and every word-aligned Thumb pointer in
  *   baserom.gba). They keep their `sub_XXXXXXXX` names (docs/naming.md):
  *   with no caller and no table slot, nothing shows what the arguments

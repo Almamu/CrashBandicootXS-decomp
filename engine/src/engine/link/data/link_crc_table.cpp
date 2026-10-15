@@ -4,7 +4,7 @@ extern "C" {
 }
 
 /*
- * ROM 0x0816AF10-0x0816B138. Linked in ROM order between data/data.s
+ * ROM 0x0816AF10-0x0816B138. Linked in ROM order between games/xs/data/data.s
  * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
@@ -48,6 +48,6 @@ const u16 gCrc16Table[256] = {
 };
 
 /* The two link-cable pairing names. The IWRAM data points at them
- * (gCrash2LinkTextPtr/gCrash3LinkTextPtr, src/engine/sys/iwram_data.cpp). */
+ * (gCrash2LinkTextPtr/gCrash3LinkTextPtr, engine/src/engine/sys/iwram_data.cpp). */
 const char gCrash2LinkText[] = "crash 1 <-> crash 2";
 const char gCrash3LinkText[] = "crash 1 <-> crash 3";

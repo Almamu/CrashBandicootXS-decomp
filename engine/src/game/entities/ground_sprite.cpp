@@ -10,7 +10,7 @@ using Game::Entities::GroundSprite;
 using Game::Entities::MovingSprite;
 using Game::Entities::Sprite;
 
-/* GroundSprite's update (#664, include/game/entities/sprite_obj.hpp). */
+/* GroundSprite's update (#664, engine/include/game/entities/sprite_obj.hpp). */
 
 /* Keeps the side of the hitbox the sprite rests on in place when the
  * hitbox changes (a new animation frame): if the hitbox record
@@ -48,14 +48,14 @@ void GroundSprite::Update()
     KeepHitboxAnchored(this);
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the
+/* UNUSED - no caller anywhere in the ROM (checked engine/src/, asm/ and the
  * method tables). The hitbox anchoring alone. */
 void GroundSprite::AnchorHitbox()
 {
     KeepHitboxAnchored(this);
 }
 
-/* GroundSprite's methods (#664, include/game/entities/sprite_obj.hpp): the constructor
+/* GroundSprite's methods (#664, engine/include/game/entities/sprite_obj.hpp): the constructor
  * and destructor and the flag accessors. */
 
 void GroundSprite::Draw()

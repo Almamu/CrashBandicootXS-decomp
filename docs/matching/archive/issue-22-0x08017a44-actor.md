@@ -27,13 +27,13 @@ descriptive names; see `tools/file_layout_plan.tsv` for the mapping.)
 
 ## Matched
 
-- `src/game/crash/input_ctrl_queue.c` (new file, ROM 0x08017A44-0x08017AAC):
+- `engine/src/game/crash/input_ctrl_queue.c` (new file, ROM 0x08017A44-0x08017AAC):
   `IsInputCtrlMotionXPending`-`GetCtrlTarget` (9 functions) - trivial `self+0x14`/
   `self+0x17`/`self+0x18` byte/word accessors, plus the
   `DestroyBossCtrl`/`CreateBossCtrl` table-pointer-reset pair (same
   `gBossCtrlVtable`/`DestroyCtrl`/`InitCtrl` double-set pattern
   seen throughout this object family).
-- `src/game/bosses/mega_mix.c` (new file, ROM 0x08017ECC-0x08017FE8,
+- `engine/src/game/bosses/mega_mix.c` (new file, ROM 0x08017ECC-0x08017FE8,
   non-adjacent to `input_ctrl_queue.c` since the raw `UpdateMegaMix` sits
   between them): `SetMegaMixMotionYFromSet`, `SetMegaMixMotionXFromSet`, `StartMegaMixMotionYFromSet`,
   `StartMegaMixMotionXFromSet`, `ResetMegaMixCtrl`, `DestroyMegaMixCtrl`, `CreateMegaMixCtrl` - a
@@ -42,7 +42,7 @@ descriptive names; see `tools/file_layout_plan.tsv` for the mapping.)
   `gMegaMixMotionRecords` per-vector-component trampoline table, with
   `part+0x28` bit 4/bit 5 mirror-flag X/Z negation exactly like
   `SetCtrlTargetMotionX`/`StartCtrlTargetMotionX`/`SetCtrlTargetMotionY`/`StartCtrlTargetMotionY`.
-- `src/bosses/tiny_hop_pad.c` (new file, ROM 0x080187FC-0x08018884,
+- `engine/src/bosses/tiny_hop_pad.c` (new file, ROM 0x080187FC-0x08018884,
   non-adjacent to `mega_mix.c` since the raw `UpdateTiny`-
   `SpawnTinyFallingLeaves` block sits between them): `UpdateStompedHopPad` (a two-state
   "charge" handler), `DestroyStompedHopPadCtrl`/`CreateStompedHopPadCtrl` (another table-pointer

@@ -2,12 +2,12 @@
 
 using Game::Crash::InputCtrl;
 
-/* GitHub issue #22, ROM 0x08017A44-0x08017A70 (include/game/crash/input_ctrl.hpp):
+/* GitHub issue #22, ROM 0x08017A44-0x08017A70 (engine/include/game/crash/input_ctrl.hpp):
  * InputCtrl's IsMotionXPending .. QueueMotionX finish the input
  * controller's accessor run that ends input_ctrl.cpp
  * (SetInputCtrlMotionYPending .. IsInputCtrlMotionYPending,
  * 0x08017A20-0x08017A40): its motion queue. Nothing calls them. BossCtrl
- * follows in src/game/bosses/boss_ctrl.cpp. */
+ * follows in engine/src/game/bosses/boss_ctrl.cpp. */
 
 u8 InputCtrl::IsMotionXPending()
 {

@@ -2,7 +2,7 @@
 #define GUARD_AIRSHIP_HPP
 
 /* N. Gin's airship, the jetpack levels' boss (#772, docs/cplusplus.md "The
- * airship as an all-static class"): src/vehicle/jetpack/airship*.cpp. A
+ * airship as an all-static class"): engine/src/vehicle/jetpack/airship*.cpp. A
  * class whose members are all `static`: the ROM loads a separate address
  * for each of its variables (even two adjacent bytes in one function), so
  * they were separate globals, not one object's fields, and static data
@@ -19,10 +19,10 @@
  * (boss_actors.hpp).
  *
  * The ROM tables only it reads are static data members too, defined in
- * their src/.../data/*.cpp files (`const struct airship_attack
+ * their engine/src/.../data/*.cpp files (`const struct airship_attack
  * Airship::attacks[6] = ...`): `_Q44Game8Vehicles7Jetpack7Airship.attacks`
  * is renamed to gAirshipAttacks. The actor category table
- * (src/engine/actor/data/actor_categories.cpp) points at Create, Update,
+ * (engine/src/engine/actor/data/actor_categories.cpp) points at Create, Update,
  * UpdateBg2, Destroy and LoadGraphics.
  *
  * Airship is in the namespace Game::Vehicles::Jetpack (#1033,
@@ -162,7 +162,7 @@ private:
      * (ConvertTiles fills them; a u32 store may alias its heights[]). */
     static uintptr_t mapFrames[]; // gAirshipMapFrames
 
-    /* The ROM tables (src/.../data) */
+    /* The ROM tables (engine/src/.../data) */
     static void (*const stateFuncs[6])();          // gAirshipStateFuncs (airship_state_table.cpp)
     static const struct airship_attack attacks[6]; // gAirshipAttacks (airship_attacks.cpp)
     static const u16 hitFlashPalettes[3][16];      // gAirshipHitFlashPalettes

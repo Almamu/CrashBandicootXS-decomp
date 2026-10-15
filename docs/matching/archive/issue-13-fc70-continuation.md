@@ -9,7 +9,7 @@ second pass against those five.
 
 ## Matched (7 of 12 remaining functions)
 
-- **`OpenLifeCrate`** (`src/crates/crate_stack.c`, new file) - plays
+- **`OpenLifeCrate`** (`engine/src/crates/crate_stack.c`, new file) - plays
   cue-3 SFX, then - unless `self->field_08` is the sentinel `0xffff` -
   consumes a slot from the per-record bit-grid (`gEntityFlags`,
   the same `IsEntityIdActivated`/`SetEntityIdActivated` accessor pair entity_flags.c already establish) keyed by `self->field_08`, setting
@@ -17,7 +17,7 @@ second pass against those five.
   (`DropExtraLife`, itself still parked as of entity_spawner.c) three tiles
   below `self`'s own position, tagged with the caller's own byte
   argument. `self` here is a `struct actor *` - `self->x`/`self->y`/
-  `self->field_08` (include/engine/actor/actor.h) match the record's `+0`/`+4`/`+8`
+  `self->field_08` (engine/include/engine/actor/actor.h) match the record's `+0`/`+4`/`+8`
   fields exactly, and `field_08`'s own doc comment already calls out
   its use "as a 32-bit-word bitmap index", confirmed here by the
   `IsEntityIdActivated`/`SetEntityIdActivated` calls. Two gotchas:
@@ -39,7 +39,7 @@ second pass against those five.
     purely to make this compiler reserve the same 8-byte outgoing-
     argument stack slot pair the ROM's own `sub sp, #8`/`add sp, #8`
     frame does.
-- **`DestroyCrate`/`InitCrate`** (`src/game/crates/crate.c`, new
+- **`DestroyCrate`/`InitCrate`** (`engine/src/game/crates/crate.c`, new
   file) - a part-object table-set/tail-call-`DestroySpriteObj` helper (same
   shape as `DestroyWumpa`, `wumpa.c`) that additionally frees
   `self+0x48` (unless it's the sentinel `-1` or already `NULL`) and
@@ -49,7 +49,7 @@ second pass against those five.
   via `ResetCrate` (`crate_reset.c`). Both take/return `struct actor *`
   (matching `DestroySpriteObj`/`InitSpriteObj`'s own already-matched
   prototypes in `sprite_obj.c`).
-- **`FindLineCrossingYMajor`/`FindLineCrossingXMajor`** (`src/game/crates/crate.c`) - two
+- **`FindLineCrossingYMajor`/`FindLineCrossingXMajor`** (`engine/src/game/crates/crate.c`) - two
   fixed single-octant variants of the Bresenham-line-style stepper
   `FindLineCrossing` (below) implements in full - each walks a fixed number
   of steps along one axis (the 3rd/4th parameters, doubled into the
@@ -60,7 +60,7 @@ second pass against those five.
   walk completes without ever reaching it. Both matched with no
   register-allocation gotchas - straightforward translations of the
   ROM's own loop shape.
-- **`CollideCrateWithPlayer`** (`src/crates/crate_stack.c`, new file) - unless
+- **`CollideCrateWithPlayer`** (`engine/src/crates/crate_stack.c`, new file) - unless
   `self`'s own `+0x4d & 0x7f` state is 1, and `testX`/`testY` are both
   within `0x3fff` of `self`'s own `+0`/`+4` position, and `self`'s
   `+0x4e` byte isn't `5`, fires `QueueCratePlayerCollision(self)` (the subsystem's
@@ -93,7 +93,7 @@ second pass against those five.
 
 ## Parked (NAKED transcription) - 4 functions
 
-- **`UpdateCrateFall`** (`src/game/crates/crate_break.c`, new file) - a
+- **`UpdateCrateFall`** (`engine/src/game/crates/crate_break.c`, new file) - a
   per-frame position-wrap advance keeping `sb`/`r8` live as two extra
   callee-saved accumulators throughout - the same "two extra
   high-register accumulators live throughout" gap already parked (and
@@ -103,7 +103,7 @@ second pass against those five.
   bytes (not 4-aligned), and the ROM pads the 2-byte gap before
   `FindLineCrossing` with a zero halfword rather than the assembler's
   default `nop` (`matching_decomp_alignment_fix`).
-- **`FindLineCrossing`** (`src/game/crates/crate_reset.c`, new file) - the full
+- **`FindLineCrossing`** (`engine/src/game/crates/crate_reset.c`, new file) - the full
   4-octant Bresenham-line-style line-stepper `FindLineCrossingYMajor`/
   `FindLineCrossingXMajor` above are fixed single-octant variants of. Every
   branch/field/octant-selection is understood and was written as plain
@@ -124,7 +124,7 @@ second pass against those five.
   elsewhere, so it's transcribed instead; the full octant-by-octant C
   reconstruction (verified matching in isolation before this gap
   surfaced) is preserved in the function's doc comment for reference.
-- **`GetTopCrate`/`GetBottomCrate`** (`src/crates/crate_stack.c`) - two
+- **`GetTopCrate`/`GetBottomCrate`** (`engine/src/crates/crate_stack.c`) - two
   "get prev"/"get next" neighbor-list-walk-and-filter helpers: each
   walks its own list direction, returning the furthest node reachable
   while every node visited has a `+0x4d & 0x7f` state != 1, falling
@@ -279,7 +279,7 @@ transcribed byte-exact instead - every instruction checked directly
 against the ROM's raw bytes, confirmed via a full clean
 `make NON_MATCHING=1 report` (no warnings) and `make compare`
 ("La suma coincide") from scratch. Lives in new file
-`src/game/crates/collision_queue.c` (the next free `game_loopNN` slot in this
+`engine/src/game/crates/collision_queue.c` (the next free `game_loopNN` slot in this
 file family; it sits between the still-differently-addressed
 `crate_draw.o` and `crate.o` in ROM order, so - like
 `DrawCrate` before it - it needs its own file rather than joining

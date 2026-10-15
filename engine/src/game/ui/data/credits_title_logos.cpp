@@ -13,7 +13,7 @@ using Engine::Gfx::CreditsUniversalLogo;
 using Engine::Gfx::CreditsVvLogo;
 
 /*
- * ROM 0x0817CF40-0x0817CFF4. Linked in ROM order between data/data.s
+ * ROM 0x0817CF40-0x0817CFF4. Linked in ROM order between games/xs/data/data.s
  * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 

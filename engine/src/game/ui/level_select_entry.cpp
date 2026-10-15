@@ -1,5 +1,5 @@
 /* LevelSelectEntry (gLevelSelectEntryVtable: 1 Animate, the bob;
- * 2 SetLevel; 3 SetPos; 4 Draw; 5 the destructor; include/game/ui/level_select.hpp),
+ * 2 SetLevel; 3 SetPos; 4 Draw; 5 the destructor; engine/include/game/ui/level_select.hpp),
  * a level-select page entry. Its key method is here, so g++ emits its
  * vtable here (games/xs/ldscript.txt places it).
  *

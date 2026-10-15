@@ -13,14 +13,14 @@ using Game::Entities::GroundSprite;
 using Game::Entities::MovingSprite;
 using Game::Entities::Sprite;
 
-/* The enemy spawners (#664, include/game/level/spawners.hpp), ROM
+/* The enemy spawners (#664, engine/include/game/level/spawners.hpp), ROM
  * 0x0801EF0C-0x08020E84; read as "two-line text popup" spawners at
  * first. Each builds a moving sprite, attaches a new EnemyCtrl to it
  * (twice: once before and once after the controller's kind and the
  * part's `mover`), mirrors it by its parameter record and adds it to the
  * collidable list; the tails set the controller's animations, ranges and
  * state. Built with old_agbcp. Since #915 they are EnemyCtrl's static
- * members (include/game/enemies/enemy_ctrl.hpp; SpawnLizard is EnemyCtrl::SpawnLizard,
+ * members (engine/include/game/enemies/enemy_ctrl.hpp; SpawnLizard is EnemyCtrl::SpawnLizard,
  * ...): gEntitySpawnFuncs' enemy slots, and SpawnSeal, the seal spawner's
  * callback. */
 

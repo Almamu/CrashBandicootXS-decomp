@@ -9,7 +9,7 @@ extern "C" {
 using Engine::Gfx::UniversalLogoBg;
 
 /*
- * ROM 0x0817D7A4-0x0817E714. Linked in ROM order between data/data.s
+ * ROM 0x0817D7A4-0x0817E714. Linked in ROM order between games/xs/data/data.s
  * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 

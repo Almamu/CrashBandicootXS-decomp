@@ -11,11 +11,11 @@ using Game::Entities::MovingSprite;
 /* GitHub issue #25, ROM 0x0801A794-0x0801A878 (see
  * docs/matching/archive/issue-25-level-objects.md): DingodileShieldCtrl's
  * constructor and DingodileCtrl's StartMotion, destructor, constructor
- * and two setters (include/game/bosses/boss_ctrl.hpp). StartMotion is the same
+ * and two setters (engine/include/game/bosses/boss_ctrl.hpp). StartMotion is the same
  * mirror-gated speed-ramp copy as MegaMixCtrl::SetMotionXFromSet
  * (mega_mix.cpp), indexed straight into gDingodileMotionEntries.
  *
- * UNUSED - no caller anywhere in the ROM (checked asm/ .s files, src/ .c files
+ * UNUSED - no caller anywhere in the ROM (checked asm/ .s files, engine/src/ .c files
  * and the ROM for Thumb pointers): SetStep, SetNextState. */
 
 DingodileShieldCtrl::DingodileShieldCtrl()

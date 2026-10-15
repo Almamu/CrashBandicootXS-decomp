@@ -24,7 +24,7 @@ real detail.
 - Category labels (`game_loop`, `actor`, `graphics`, `overlay_ui`,
   `graphics_loading`, `audio`, `hud`, `system`, `util`) tell you roughly
   what part of the game an issue is about.
-- `python3 tools/cleanup_scan.py [FILE]` scans the C in `src/` and `lib/`
+- `python3 tools/cleanup_scan.py [FILE]` scans the C in `engine/src/` and `lib/`
   for raw pointer-arithmetic field access and raw hardware addresses,
   and lists every site by subsystem and file (to stdout, or to `FILE`).
   The progress report uses the same scan to mark a unit complete
@@ -58,7 +58,7 @@ matched code - read it before starting.** In short:
   otherwise leave it, with a one-line comment saying why.
   [docs/matching_techniques.md](docs/matching_techniques.md) explains
   each technique and what it does to the compiler, and
-  [include/match.h](include/match.h) has the named macros for the
+  [engine/include/match.h](engine/include/match.h) has the named macros for the
   one-statement idioms (`MATCH_CONST`, `MATCH_KEEP`, `BOX_ADDR`, ...):
   use those rather than spelling the `asm` out. CI runs
   `tools/match_idioms.py --check`, which fails on a hand-spelled idiom
@@ -76,16 +76,16 @@ matched code - read it before starting.** In short:
   fixed point, rebuilding just that object through the Makefile's own
   rules (its compiler and per-object flags, into a temporary directory)
   and keeping the removals that leave the object byte-identical. It
-  covers every `include/match.h` macro (a `MATCH_HOLD_REG` pin becomes
+  covers every `engine/include/match.h` macro (a `MATCH_HOLD_REG` pin becomes
   a plain local, `MATCH_CONST(v, K)` becomes `v = K;`, the empty-asm
   statements are deleted, ...), the spelled-out empty asm, instruction
   asm it can translate to C, and `T x = x;`:
 
   ```
-  tools/match_prune.py src/                 # dry run: per-file tried/removable/kept and a summary
-  tools/match_prune.py -v src/engine/util/aabb.cpp   # also each kept site and why (doesn't compile / object differs)
-  tools/match_prune.py --write src/engine/gfx/     # apply the removals, verified once more as written
-  tools/match_prune.py --list src/          # the sites, without building
+  tools/match_prune.py engine/src/                 # dry run: per-file tried/removable/kept and a summary
+  tools/match_prune.py -v engine/src/engine/util/aabb.cpp   # also each kept site and why (doesn't compile / object differs)
+  tools/match_prune.py --write engine/src/engine/gfx/     # apply the removals, verified once more as written
+  tools/match_prune.py --list engine/src/          # the sites, without building
   ```
 
   `-j N` sets the number of parallel builds. A dry run never touches
@@ -100,7 +100,7 @@ matched code - read it before starting.** In short:
   renaming touches" checklist, including the `rename` line in
   `games/xs/expected/corrections.txt` so the progress report still pairs the
   symbol. An honest placeholder is better than a wrong name.
-- **Files:** a new file goes in the `src/` subsystem directory that fits
+- **Files:** a new file goes in the `engine/src/` subsystem directory that fits
   what it holds and is named after its subject (see
   [Source layout](#source-layout) below); library code goes
   under `lib/` (see [docs/libraries.md](docs/libraries.md)), GBA hardware
@@ -109,13 +109,13 @@ matched code - read it before starting.** In short:
   splitting or merging files means updating `games/xs/ldscript.txt` and
   `tools/report_units.py` too.
 - **C++:** the game was C++. An object rewritten as C++ is a
-  `src/<dir>/<name>.cpp` (the Makefile's `CXX_OBJS`), its classes go in
+  `engine/src/<dir>/<name>.cpp` (the Makefile's `CXX_OBJS`), its classes go in
   a `.hpp` header, in their namespace (`Engine::Sys`, ..., #1033), and
   its mangled names in `cxx_symbols.txt`; see
   [docs/cplusplus.md](docs/cplusplus.md) ("Namespaces").
 - **Data and assets** are rebuilt from source by the Makefile (see
   [README.md](README.md#data-and-assets)): edit the PNG, the level JSON,
-  the `.po` file or the table in `src/*/data/`, never anything under
+  the `.po` file or the table in `engine/src/*/data/`, never anything under
   `build/`.
 - **Frozen files:** `games/xs/expected/` (the progress report's targets, see
   [games/xs/expected/README.md](games/xs/expected/README.md)) and
@@ -130,12 +130,16 @@ matched code - read it before starting.** In short:
 
 The tree follows the namespaces of the code (#1033,
 [docs/cplusplus.md](docs/cplusplus.md) "Namespaces"; #1071 moved the files
-there): the reusable engine under `engine/`, the Crash-specific game under
-`game/`, one directory per namespace, and `include/` mirrors `src/`.
+there): the code both games build is under `engine/` (#1167), the reusable
+engine in `engine/src/engine/`, the Crash-specific game in
+`engine/src/game/`, one directory per namespace, and `engine/include/`
+mirrors `engine/src/`. Each game's own files are under `games/<game>/`:
+XS's data (`games/xs/data/`, `graphics/`, `sound/`, `text/`), its .mk
+files, linker script and checksum; N-Tranced's in `games/n2/`.
 [docs/file_layout.md](docs/file_layout.md) has the full map from the old
 paths and the decisions behind it.
 
-| Directory (`src/` and `include/`) | Namespace | What goes there |
+| Directory (`engine/src/` and `engine/include/`) | Namespace | What goes there |
 |---|---|---|
 | `engine/sys/` | `Engine::Sys` | Boot (`AgbMain`), the heap and IWRAM allocator, `operator new`, IRQs and the frame limiter, the key input, the display registers, the VRAM DMA queue, the BIOS helpers, the IWRAM image's data |
 | `engine/gfx/` | `Engine::Gfx` | Asset loading, fades, palettes and palette cycles, the OAM buffer, the OBJ VRAM and tile allocators, the sprite frame cache and renderer, sprite banks, graphics packages, the cell animation, the bitmap screen, the ARM sprite routines |
@@ -156,10 +160,10 @@ paths and the decisions behind it.
 | `game/ui/` | `Game::Ui` | The HUD, the pause menu and power dialog, the level select, the continue prompt, the save menu, the front end (title, logos, language select, credits), the cutscenes |
 | `<dir>/data/` | | The ROM data tables of that directory's code |
 
-`include/` keeps at its root only the headers every part of the program
+`engine/include/` keeps at its root only the headers every part of the program
 shares: `core.h`, `globals.h`, `match.h`, `byte_arg.h`, `screen.h` and
 `constants/`. Every other header is in the directory of what
-it declares, and is included by its path from `include/`:
+it declares, and is included by its path from `engine/include/`:
 `#include "engine/gfx/cell_anim.hpp"`, `#include "game/crash/player.hpp"`.
 
 The hardware is the platform's, not the game's
@@ -184,7 +188,7 @@ File names:
 - **No addresses in file names.** The ROM order is `games/xs/ldscript.txt`'s, and
   each file's header comment gives its ROM range: a name says what the
   file holds.
-- **Code:** `src/<area>/<namespace>/<subject>[_<role>].cpp`, lowercase
+- **Code:** `engine/src/<area>/<namespace>/<subject>[_<role>].cpp`, lowercase
   snake_case. The subject is the class or feature, spelled as its
   functions spell it (`CrateList*` is `crate_list`, `PauseMenu*` is
   `pause_menu`). Add a role suffix taken from the file's own functions
@@ -193,11 +197,11 @@ File names:
 - **Mixed files** are named after the subject with the most functions;
   the header comment lists the rest. Each file opens with one line
   saying what it holds.
-- **Data tables** are `src/<area>/<namespace>/data/<content>.cpp`, named
+- **Data tables** are `engine/src/<area>/<namespace>/data/<content>.cpp`, named
   after what they hold. Several tables of one kind are named after their
   owner (`polar_player_state_table.cpp`, `jetpack_player_state_table.cpp`),
   not their address. The text tables `#include` what `tools/text.py`
-  generates from `text/` ([docs/text.md](docs/text.md)).
+  generates from `games/xs/text/` ([docs/text.md](docs/text.md)).
 
 ### Verification
 
@@ -213,7 +217,7 @@ rm -rf build objdiff.json && make NON_MATCHING=1 report && objdiff-cli report ge
 `origin/main` to find the one that changed, rather than guessing. The report must still show 2062/2062 functions and 100%
 data. The Makefile tracks header
 dependencies, so a plain `make` is fine while you work, but the PR check
-is always from clean. A change under `text/` also needs `make text-check`
+is always from clean. A change under `games/xs/text/` also needs `make text-check`
 ([docs/text.md](docs/text.md)).
 
 If your change touches what a `docs/` page says, update it in the same
@@ -227,10 +231,10 @@ things themselves. [docs/headers.md](docs/headers.md) has the
 full rules (#574). For new code:
 
 - **Which header:** a function or global goes in the header of the
-  subsystem that owns it - `include/<subsystem>.h` or `.hpp`, named after
-  its `src/` directory (`crates.h`, `level.h`, `player.hpp`, ...). A global
+  subsystem that owns it - `engine/include/<subsystem>.h` or `.hpp`, named after
+  its `engine/src/` directory (`crates.h`, `level.h`, `player.hpp`, ...). A global
   that three or more subsystems use (`gPlayer`, `gLevelState`, `gKeys`,
-  ...) goes in `include/globals.h`. GAX engine internals (what one GAX
+  ...) goes in `engine/include/globals.h`. GAX engine internals (what one GAX
   object calls in another) go in `lib/gax/src/gax_internal.h`. A struct
   that several subsystems share gets its own small type header
   (`aabb.h`, `hitbox_quad.h`, `line_util.h`).
@@ -253,7 +257,7 @@ full rules (#574). For new code:
   The call still links to `RandRange`, and the file can include the
   header. Add the alias to the "Codegen exceptions" table in
   [docs/headers.md](docs/headers.md#codegen-exceptions).
-- **What stays local:** references from one `src/*/data/` table to
+- **What stays local:** references from one `engine/src/*/data/` table to
   another. `_call_via_r0`..`_call_via_r7` are never declared: an
   indirect call is a call through a typed function pointer, a virtual
   call or a member function call (docs/headers.md, rule 5).
@@ -291,8 +295,8 @@ full rules (#574). For new code:
   view of a class (a codegen view), and after, to check the view and the
   class agree.
 - **Raw IDs, kinds and states:** `python3 tools/magic_numbers.py` (#655)
-  lists the literals in src/ and include/ where the game has a named
-  value (include/constants/ and the generated build/include/constants/:
+  lists the literals in engine/src/ and engine/include/ where the game has a named
+  value (engine/include/constants/ and the generated build/include/constants/:
   run make first): sound and song IDs, events, action states, mask
   levels, entity/crate/enemy/attack kinds, level ids, room kinds, boss
   ids, category exits, level-flag bits. Its rules are written per call
@@ -311,7 +315,7 @@ full rules (#574). For new code:
 
   ```
   tools/magic_numbers.py --min-confidence high [--show]   # the sites to name, `-> NAME` when one exists
-  tools/magic_numbers.py --json --path src/game/bosses         # for agents: value, names, confidence, why
+  tools/magic_numbers.py --json --path engine/src/game/bosses         # for agents: value, names, confidence, why
   tools/magic_numbers.py --report OUT                     # Markdown counts per topic and directory, samples
   tools/magic_numbers.py --topic event --fix              # high-confidence sites with exactly one name
   ```
@@ -320,7 +324,7 @@ full rules (#574). For new code:
   keeps its number (docs/naming.md): rebuild and compare after `--fix`.
 - **Raw sizes, strides, offsets and hardware values:**
   `python3 tools/magic_numbers.py --sizes` (#820) lists the literals in
-  src/ (not src/*/data/) that have a `sizeof`, a member or a named
+  engine/src/ (not engine/src/*/data/) that have a `sizeof`, a member or a named
   constant: allocation sizes and heap flags (`alloc`), copy and fill
   lengths (`copy`), index strides (`stride`), byte offsets into a struct
   (`offset`), VRAM/palette/OAM/I/O addresses (`hwaddr`) and register
@@ -337,7 +341,7 @@ full rules (#574). For new code:
   tools/magic_numbers.py --sizes --db /tmp/sizes.json [--show]       # by directory, with counts
   tools/magic_numbers.py --sizes --db /tmp/sizes.json --json         # for agents: expr, suggestions, confidence
   tools/magic_numbers.py --sizes --db /tmp/sizes.json --report OUT   # Markdown counts and samples
-  tools/magic_numbers.py --sizes --category stride --min-confidence medium --path src/engine/link
+  tools/magic_numbers.py --sizes --category stride --min-confidence medium --path engine/src/engine/link
   ```
 
   A suggestion keeps the value, not always the type (`sizeof` is
@@ -347,7 +351,7 @@ full rules (#574). For new code:
   `PALETTE_SIZE_16`, `BG_SCREEN_SIZE`, `BG_CHAR_SIZE`); add it to
   platform/gba/include/gba/defines.h with the first use.
 - **Casts:** `python3 tools/magic_numbers.py --casts` (#855) lists the
-  casts in src/ (not src/*/data/) and include/, grouped by the thing cast (a
+  casts in engine/src/ (not engine/src/*/data/) and engine/include/, grouped by the thing cast (a
   field, a local or parameter, a global, a function's result, an address,
   an address macro), with its declared type, how many of its reads are
   cast and each cast's kind (`scalar`, `ptrint`, `pointer`, `derived`,
@@ -358,7 +362,7 @@ full rules (#574). For new code:
   ```
   tools/magic_numbers.py --casts [--samples N]           # per thing, ranked, with its sites
   tools/magic_numbers.py --casts --report OUT            # Markdown: counts, candidates, per kind
-  tools/magic_numbers.py --casts --json --path src/game/ui # for agents: every cast
+  tools/magic_numbers.py --casts --json --path engine/src/game/ui # for agents: every cast
   tools/magic_numbers.py --casts --kind byteoff          # one kind (repeatable)
   ```
 
@@ -367,9 +371,9 @@ full rules (#574). For new code:
 - **Screen size:** `python3 tools/magic_numbers.py --screen` (#979) lists
   the literals that may come from the 240x160 screen (240/160, 239/159,
   120/80, their Q8 forms, frame sizes, the screen in tiles, OAM masks and
-  wraps, and the layouts' fixed positions, src/*/data's tables included)
+  wraps, and the layouts' fixed positions, engine/src/*/data's tables included)
   and classifies each as derived from the screen (spell it with
-  `include/screen.h`: `DISPLAY_CENTER_X`, `CAMERA_MAX_X(w)`, a layout from
+  `engine/include/screen.h`: `DISPLAY_CENTER_X`, `CAMERA_MAX_X(w)`, a layout from
   `DISPLAY_ART_X/Y` or the screen's edges, ...), fixed by the hardware or
   a coincidence. Screen positions and sizes use `screen.h`'s types
   (`screen_x_t`, ...). See
@@ -385,7 +389,7 @@ full rules (#574). For new code:
 
 - **Fixed point:** positions, speeds, accelerations, the speed-ramp
   tables and affine scales are Q8 (and a few Q4/Q12/Q16). Spell a
-  fixed-point value with `include/engine/util/math_util.h`: `INT_TO_Q8(2)` for 2 px,
+  fixed-point value with `engine/include/engine/util/math_util.h`: `INT_TO_Q8(2)` for 2 px,
   `Q8(1.5)` for a short fraction, `Q8_TO_INT(x)` for `x >> 8`, and a
   named constant for a tuning value (`PLAYER_GRAVITY`). `python3
   tools/magic_numbers.py --fixed` (#916) lists the literals, shifts and
@@ -401,7 +405,7 @@ full rules (#574). For new code:
 
 - **Simplifications:** `python3 tools/simplify_scan.py` (#846) lists the
   bare blocks, single-use locals and copies, nested ifs and duplicate
-  cases left in src/, and `--try` applies them one at a time, keeping
+  cases left in engine/src/, and `--try` applies them one at a time, keeping
   each only when the object stays byte-identical (`--annotate` comments
   the ones the match needs). See [docs/simplify.md](docs/simplify.md):
 
@@ -423,10 +427,10 @@ full rules (#574). For new code:
     bank, gfx.h's `union dispcnt` every DISPCNT copy).
   - **C++:** a derived class inherits its base (`class Player : public
     GroundSprite`); it doesn't redeclare the base's fields.
-  - **No C views of classes:** every game file is C++, and src/*/data/ and
+  - **No C views of classes:** every game file is C++, and engine/src/*/data/ and
     lib/ never read an object's fields, so a class has no C struct
     mirroring it (#754). Where a C header needs a pointer to a class (a
-    record src/*/data/ fills, a prototype a C vtable names), it names the
+    record engine/src/*/data/ fills, a prototype a C vtable names), it names the
     class's own tag, `struct Crate *` (objects.h's `struct
     collision_candidate`): incomplete to C, the class to C++.
   - **Codegen views** (a second type for the same bytes that a function
@@ -516,10 +520,10 @@ change in.
 
 Common operations have shared `#define` helpers (#667): fixed-point
 conversions, min/max/abs/clamp and the sine lookups in
-`include/engine/util/math_util.h` (`Q8_TO_INT(x)`, `INT_TO_Q8(x)`, `Q8_MUL(a, b)`,
+`engine/include/engine/util/math_util.h` (`Q8_TO_INT(x)`, `INT_TO_Q8(x)`, `Q8_MUL(a, b)`,
 `Q8_DIV(a, b)`, `Q12_MUL(a, b)`, `MIN`, `CLAMP_MIN`, `ABS_BRANCHLESS`,
 `CLAMP_INDEX`, `ANIM_REWIND`, `SIN_Q8`, ...), the entity "gone" bitmap set in
-`include/game/level/entity_bits.h` (`ENTITY_MARK_GONE`, `ENTITY_SET_GONE_BIT`) and
+`engine/include/game/level/entity_bits.h` (`ENTITY_MARK_GONE`, `ENTITY_SET_GONE_BIT`) and
 `ARRAY_COUNT` in `core.h`. [docs/naming.md](docs/naming.md#helper-macros)
 has the list and the rules. In short:
 
@@ -558,7 +562,7 @@ Format with the script rather than calling clang-format directly:
 
 ```
 python3 tools/format.py               # format the whole tree in place
-python3 tools/format.py src/foo       # format just this file or directory
+python3 tools/format.py engine/src/foo       # format just this file or directory
 python3 tools/format.py --check       # what CI runs; changes nothing
 ```
 
@@ -574,8 +578,8 @@ statement (and every one-line one longer than 100 columns) in
 operand layout stay as written. Do the same by hand for anything else
 whose layout is the point, such as a table aligned in columns.
 
-All the C is formatted (`src/`, `include/` and `lib/`) except the data:
-`src/*/data` and `lib/*/data` (`UNFORMATTED` in `tools/format.py`). Those
+All the C is formatted (`engine/src/`, `engine/include/` and `lib/`) except the data:
+`engine/src/*/data` and `lib/*/data` (`UNFORMATTED` in `tools/format.py`). Those
 files are ROM-order tables emitted by the extraction tools, laid out one
 entry per line with row labels; that layout is their documentation, and
 clang-format would pack the entries into columns and split the labels

@@ -12,7 +12,7 @@ extern "C" {
 using Engine::Text::Font;
 
 /* GitHub issue #46: Font's MeasureText, UploadTiles and palette setters
- * (include/engine/text/font.hpp), then the out-of-line copies of its inline methods.
+ * (engine/include/engine/text/font.hpp), then the out-of-line copies of its inline methods.
  * MeasureText is the class's key method, its first non-inline virtual
  * one, so g++ emits gFontVtable here, and with it a copy of every inline
  * method of the class at the end of the object, in the reverse of their

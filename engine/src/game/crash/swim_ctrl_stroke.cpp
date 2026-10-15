@@ -16,7 +16,7 @@ using Game::Crash::SwimCtrl;
 using Game::Entities::MovingSprite;
 using Game::Level::EntitySpawner;
 
-/* The swim controller's (SwimCtrl, include/game/crash/swim_ctrl.hpp) Reset and
+/* The swim controller's (SwimCtrl, engine/include/game/crash/swim_ctrl.hpp) Reset and
  * Restart, then its three jump-table dispatchers. Reset and Restart were
  * the end of action_ctrl.cpp (agbcp), which they follow in the ROM, until
  * #768; they compile the same under old_agbcp. */
@@ -60,7 +60,7 @@ void SwimCtrl::Restart()
 }
 
 /* GitHub issue #19: 0x080159F8-0x08015FDC, the three jump-table
- * dispatchers of the swim controller, SwimCtrl (include/game/crash/swim_ctrl.hpp;
+ * dispatchers of the swim controller, SwimCtrl (engine/include/game/crash/swim_ctrl.hpp;
  * #664, docs/cplusplus.md), documented in
  * docs/matching/archive/issue-19-0x08015840-actor.md. All three are called
  * from swim_ctrl.cpp's state methods.

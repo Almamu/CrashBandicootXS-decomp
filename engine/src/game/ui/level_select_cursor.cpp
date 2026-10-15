@@ -1,10 +1,10 @@
-/* LevelSelectCursor (include/game/ui/level_select.hpp), the level-select screen's
+/* LevelSelectCursor (engine/include/game/ui/level_select.hpp), the level-select screen's
  * cursor (`LevelSelect::panel`). It glides between entries along a
  * Bresenham line (two steps per frame), plays an idle animation cycle at
  * random intervals, and grows in (state 4) / shrinks away (state 5) as an
  * affine OBJ drawn straight into the OAM shadow buffer.
  *
- * UNUSED - no `bl`/`.4byte` reference in asm/, data/ or src/, and no
+ * UNUSED - no `bl`/`.4byte` reference in asm/, games/xs/data/ or engine/src/, and no
  * Thumb pointer anywhere in the ROM: IsHidden, IsGrowing and MoveTo (Park
  * has it inlined). Matched anyway.
  *

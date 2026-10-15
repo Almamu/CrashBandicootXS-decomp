@@ -4,7 +4,7 @@
 using Game::Entities::Sprite;
 using Game::Objects::Platform;
 
-/* The rest of Platform's methods (#664, include/game/objects/platform.hpp), ROM
+/* The rest of Platform's methods (#664, engine/include/game/objects/platform.hpp), ROM
  * 0x0801B208-0x0801B304. PlatformMover follows in platform_mover.cpp.
  *
  * UNUSED - no caller anywhere in the ROM: the out-of-line constructor

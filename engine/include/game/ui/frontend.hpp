@@ -4,15 +4,15 @@
 /* The front end's classes as C++ (#664, docs/cplusplus.md, parts 10b,
  * 10c and 10c-2):
  *
- *   Starfield       0x14                     src/game/ui/starfield.cpp
- *   Credits         0x98                     src/game/ui/credits.cpp
- *   ContinuePrompt  0x24                     src/game/ui/continue_prompt*.cpp
- *   TitleScreen     0x220                    src/game/ui/title_screen.cpp
- *   CompanyLogos    0x44C                    src/game/ui/company_logos.cpp,
+ *   Starfield       0x14                     engine/src/game/ui/starfield.cpp
+ *   Credits         0x98                     engine/src/game/ui/credits.cpp
+ *   ContinuePrompt  0x24                     engine/src/game/ui/continue_prompt*.cpp
+ *   TitleScreen     0x220                    engine/src/game/ui/title_screen.cpp
+ *   CompanyLogos    0x44C                    engine/src/game/ui/company_logos.cpp,
  *                                            company_logos_ctor.cpp
- *   LogoActor       0x54   gLogoActorVtable  src/game/ui/company_logos.cpp,
+ *   LogoActor       0x54   gLogoActorVtable  engine/src/game/ui/company_logos.cpp,
  *                                            company_logos_ctor.cpp
- *   LanguageSelect  0x14                     src/game/ui/language_select.cpp,
+ *   LanguageSelect  0x14                     engine/src/game/ui/language_select.cpp,
  *                                            language_select_setup.cpp
  *
  * The sizes are the ROM's (the allocations in RunCredits,
@@ -70,7 +70,7 @@ struct slot_seed {
 };
 
 /* The language select, between OpenLanguageSelect and
- * CloseLanguageSelect (src/engine/sys/iwram_data.cpp): a LanguageSelect
+ * CloseLanguageSelect (engine/src/engine/sys/iwram_data.cpp): a LanguageSelect
  * (below). */
 namespace Game
 {
@@ -81,7 +81,7 @@ class LanguageSelect;
 } // namespace Game
 extern Game::Ui::LanguageSelect *gLanguageSelect;
 
-/* The six language names (src/game/ui/data/language_names.cpp) and the four
+/* The six language names (engine/src/game/ui/data/language_names.cpp) and the four
  * palettes InitLanguageSelectGraphics copies (language_select_palettes.cpp,
  * level_tilesets_jungle_snow_underwater.cpp). */
 extern const u8 *const gLanguageNames[6];
@@ -91,7 +91,7 @@ extern const u16 gLanguageSelectPalette2[16];
 extern const u16 gLanguageSelectPalette3[16];
 
 /* The company logo actor (InitLogoActor): its animation record
- * (src/game/ui/data/title_screen_gfx.cpp, an anim_table_record) and the two VRAM
+ * (engine/src/game/ui/data/title_screen_gfx.cpp, an anim_table_record) and the two VRAM
  * tile blocks DrawLogoActor
  * double-buffers its frames in (IWRAM, games/xs/sym_iwram.txt). */
 extern const struct anim_table_record gLogoActorAnim; /* actor_anim.h */
@@ -100,54 +100,54 @@ extern s32 gLogoActorTileBuffer;  /* the block on screen, 0 or 1 */
 extern void *gLogoActorLastFrame; /* the frame last unpacked */
 
 /* The animation family RunCompanyLogos loads the logo actor's palette
- * from, and gLogoActorAnim its frames (src/game/vehicles/polar/data/polar_anim_family.cpp). */
+ * from, and gLogoActorAnim its frames (engine/src/game/vehicles/polar/data/polar_anim_family.cpp). */
 extern const u16 gPolarCategoryPalette[0x200];
 
-/* The logo pieces' seed tables (src/game/ui/data/credits_title_logos.cpp,
+/* The logo pieces' seed tables (engine/src/game/ui/data/credits_title_logos.cpp,
  * vv_logo.cpp), NULL-terminated. */
 extern const struct slot_seed gTitleLogoPieceSeeds[10];
 extern const struct slot_seed gVvLogoPieceSeeds[21];
 
 /* The {x, y} offsets of the eight OAM pieces DrawTitleLogoPieces draws
- * around each of its two slots (src/game/ui/data/title_screen_gfx.cpp). */
+ * around each of its two slots (engine/src/game/ui/data/title_screen_gfx.cpp). */
 extern const s32 gTitleArrowPieceOffsets[8][2];
 
-/* The title screen's graphics (src/game/ui/data/title_screen_gfx.cpp): the menu
+/* The title screen's graphics (engine/src/game/ui/data/title_screen_gfx.cpp): the menu
  * palettes InitTitleScreen DMAs to OBJ palettes 13-15, the BG2 package
  * LoadTitleScreenBg loads and the four OBJ packages LoadTitleScreenObjTiles
- * loads (gTitleObjPackages, src/engine/sys/iwram_data.cpp). */
+ * loads (gTitleObjPackages, engine/src/engine/sys/iwram_data.cpp). */
 extern const u16 gTitleMenuPalette[16];
 extern const u16 gTitleMenuSelectedPalette[16];
 extern const u16 gTitleMenuBlinkPalette[16];
 extern const struct bg_package gTitleScreenBg;
 extern const void *gTitleObjPackages[4];
-/* The four packages gTitleObjPackages points at (src/game/ui/data/title_screen_gfx.cpp). */
+/* The four packages gTitleObjPackages points at (engine/src/game/ui/data/title_screen_gfx.cpp). */
 extern const struct bg_package gTitleCrashObj;
 extern const struct bg_package gTitleArrow2Obj;
 extern const struct bg_package gTitleArrow1Obj;
 extern const struct bg_package gTitleBandicootObj;
 
-/* The company logos' graphics (src/game/ui/data/vv_logo.cpp,
+/* The company logos' graphics (engine/src/game/ui/data/vv_logo.cpp,
  * universal_vv_logo_motions.cpp). */
 extern const struct bg_package gVvLogoEmblemObj;
 extern const struct bg_package gVvLogoLettersObj;
 extern const struct bg_package gVvLogoUrlObj;
 extern const struct bg_package gUniversalLogoBg;
 
-/* The credits (src/game/ui/data/credits_text.cpp, credits_title_logos.cpp). */
+/* The credits (engine/src/game/ui/data/credits_text.cpp, credits_title_logos.cpp). */
 extern const u8 gCreditsText[];
 extern const u8 gCreditsEmptyText[4];
 extern const struct bg_package gCreditsLogos[5];
 
-/* src/game/ui/credits.cpp: the C name of a Credits method
+/* engine/src/game/ui/credits.cpp: the C name of a Credits method
  * (cxx_symbols.txt), which the game loop calls it by, so it keeps C
  * linkage. */
 extern "C" void RunCredits(void);
 
-/* src/game/ui/language_select.cpp (as above) */
+/* engine/src/game/ui/language_select.cpp (as above) */
 extern "C" s32 RunLanguageSelect(void);
 
-/* src/game/ui/language_select_setup.cpp (as above) */
+/* engine/src/game/ui/language_select_setup.cpp (as above) */
 extern "C" void CloseLanguageSelect(void);
 extern "C" void OpenLanguageSelect(void);
 
@@ -204,7 +204,7 @@ LAYOUT_ASSERT(frontend_hpp, sizeof(Starfield) == 0x14);
 } // namespace Game
 
 /* The credits stream's opcodes (gCreditsText, credits_text.cpp, its text
- * generated from data/credits.json and text/crashxs.pot, docs/text.md;
+ * generated from games/xs/data/credits.json and games/xs/text/crashxs.pot, docs/text.md;
  * #843, docs/flags/text.md). */
 #define CREDITS_OP_PICTURE 1 // the next byte is a logo's index
 #define CREDITS_OP_SMALL 2   // the text that follows in gSmallFont
@@ -272,7 +272,7 @@ LAYOUT_ASSERT(frontend_hpp, sizeof(Credits) == 0x98);
 
 /* The continue prompt ("Continue? Yes/No" over the Uka Uka background,
  * 0x24 bytes). Its constructor, InitGraphics and Loop are in
- * src/game/ui/continue_prompt*.cpp (part 10d); its other methods start
+ * engine/src/game/ui/continue_prompt*.cpp (part 10d); its other methods start
  * credits.cpp. */
 class ContinuePrompt
 {

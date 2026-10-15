@@ -2,7 +2,7 @@
 
 `affineMode` is attr0 bits 8-9 of a GBA OAM entry, in the shadow entry
 (`union oam_shadow_entry`'s `attr0`) and in `struct oam_attrs`, the entry
-the draw code builds (include/engine/gfx/gfx.h). It is a hardware field: bit 8 turns
+the draw code builds (engine/include/engine/gfx/gfx.h). It is a hardware field: bit 8 turns
 on rotation/scaling, and bit 9 is "double size" with it and "OBJ disable"
 without it. The names follow the hardware's meaning and sit next to the
 structs in gfx.h.

@@ -15,7 +15,7 @@ using Engine::Sys::VramDmaQueue;
 using Game::Entities::ActorSelf;
 using Game::Vehicles::Polar::PolarAkuAku;
 
-/* Aku Aku (#664 part 11d, include/game/vehicles/vehicle.hpp), ROM 0x0802D204-0x0802D59C,
+/* Aku Aku (#664 part 11d, engine/include/game/vehicles/vehicle.hpp), ROM 0x0802D204-0x0802D59C,
  * between polar_objects.cpp and polar_course_objects.cpp: PolarAkuAku's
  * Refresh, Update and Move, its masks and its constructor, and
  * GetPolarMaskLevel. The mask level is the level's

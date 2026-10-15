@@ -1,10 +1,10 @@
 #ifndef __GFX_H__
 #define __GFX_H__
 
-/* The gfx subsystem (src/engine/gfx/): the OAM shadow buffer, the OBJ VRAM and
+/* The gfx subsystem (engine/src/engine/gfx/): the OAM shadow buffer, the OBJ VRAM and
  * palette caches, the entity (class Entity, entity.hpp), brightness fades,
  * DISPCNT helpers, BG packages and the sprite frame cache. The C linkage
- * functions src/engine/gfx/ defines, with the prototype of their definition, and
+ * functions engine/src/engine/gfx/ defines, with the prototype of their definition, and
  * the globals and tables its files use (docs/headers.md); the
  * classes' methods are declared in their C++ headers (sprite_obj.hpp,
  * entity.hpp). HudPart's methods
@@ -211,30 +211,30 @@ struct sprite_frame_cache_node {
     void *vramAddr;                       // 0x0C
 };
 
-/* src/engine/gfx/bitmap_screen.cpp */
+/* engine/src/engine/gfx/bitmap_screen.cpp */
 extern void ShowBitmapScreen(void *asset, void *palette);
 
-/* src/engine/gfx/fade.cpp, fade_to_black.cpp: the classes BrightnessFade and
+/* engine/src/engine/gfx/fade.cpp, fade_to_black.cpp: the classes BrightnessFade and
  * PaletteFade (fade.hpp) */
 
-/* src/game/entities/entity.cpp: the world-to-screen helpers between Entity's methods */
+/* engine/src/game/entities/entity.cpp: the world-to-screen helpers between Entity's methods */
 extern void WorldToScreen(void *unused, s32 x, s32 y, s32 *outX, s32 *outY);
 extern void WorldPosToScreen(s32 *pos, s32 *outX, s32 *outY);
 extern void nullsub_12(void);
 
-/* src/engine/gfx/sprite_frame.cpp (the OBJ tile allocator, the OAM queue, the
+/* engine/src/engine/gfx/sprite_frame.cpp (the OBJ tile allocator, the OAM queue, the
  * frame cache and the category sprite sheet: obj_tile_allocator.hpp,
  * sprite_oam_queue.hpp, sprite_frame_cache.hpp, category_sprite_sheet.hpp) */
 extern void SetupSpriteFrameOam(u8 *frame, u32 attr01, u32 attr2, s32 priority);
 extern u32 GetSpriteShapeSizeBits(u8 *frame);
 
-/* The menus' sky background (src/game/ui/data/menu_sky_bg.cpp): the language
+/* The menus' sky background (engine/src/game/ui/data/menu_sky_bg.cpp): the language
  * select, level select, power dialog and save menu load it on BG0. Its
  * type is graphics_package.hpp's. */
 struct bg_package;
 extern const struct bg_package gMenuSkyBg;
 
-/* The master sprite bank table (src/engine/gfx/data/sprite_banks_00_09.cpp,
+/* The master sprite bank table (engine/src/engine/gfx/data/sprite_banks_00_09.cpp,
  * sprite_bank.h): its palettes seed the palette cache. */
 extern const struct sprite_bank_table gSpriteBankTable;
 
@@ -251,7 +251,7 @@ class PaletteCycles;
 extern Engine::Gfx::PaletteCycles *gPaletteCycles;
 #endif
 
-/* src/engine/sys/iwram_data.cpp */
+/* engine/src/engine/sys/iwram_data.cpp */
 /* The ARM sprite frame routines' hooks (iwram.h). The frame cache's
  * lookup (SpriteFrameCache::Lookup), called through the pointer by
  * SpriteFrameCache::LoadTiles, and the RLE frame unpacker. */
@@ -259,8 +259,8 @@ extern s32 (*gLookupSpriteFrameCacheFunc)(u8 *frame);
 extern void (*gUnpackRleSpriteFrameFunc)(u16 *dst, struct rle_frame *frame);
 
 /* The OBJ shape/size index as width and height in pixels: as bytes for
- * DrawSpritePieces/DrawAffineSpritePieces (src/engine/gfx/data/obj_piece_sizes.cpp),
- * as s32s for FitScaledSprite/DrawScaledSprite (src/game/ui/data/level_select_anims.cpp). */
+ * DrawSpritePieces/DrawAffineSpritePieces (engine/src/engine/gfx/data/obj_piece_sizes.cpp),
+ * as s32s for FitScaledSprite/DrawScaledSprite (engine/src/game/ui/data/level_select_anims.cpp). */
 extern const u8 gObjPieceHeights[12];
 extern const u8 gObjPieceWidths[12];
 extern const s32 gObjSizeHeights[12];

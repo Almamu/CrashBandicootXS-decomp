@@ -4,8 +4,8 @@
 /* Two things share this header (docs/headers.md):
  *
  * - the entity's flags (`union EntityFlags`), class Entity's
- *   (include/game/entities/entity.hpp);
- * - the actor subsystem (src/engine/actor/): every function it defines, and the
+ *   (engine/include/game/entities/entity.hpp);
+ * - the actor subsystem (engine/src/engine/actor/): every function it defines, and the
  *   globals and data tables its files use. The prototypes are copied from
  *   the definitions. A .c file that needs a different local declaration
  *   for codegen keeps it as an asm-label alias with a `codegen:` comment.
@@ -98,7 +98,7 @@ struct actor_spawn {
     u8 kind;      // 0x00 - the normal kind
     u8 altKind;   // 0x01 - in time trial mode
     u8 bonusKind; // 0x02 - when the bonus kinds are on (`useBonus`, `alt`)
-    // 0x03 - not padding: the spawn tables (src/.../data/) hold 0 in most
+    // 0x03 - not padding: the spawn tables (engine/src/.../data/) hold 0 in most
     //        records and 1, 3, 17, 33, 53, 108, 125, 138, 155, 157, 161
     //        or 191 in others; nothing reads it
     u8 unk_03;
@@ -134,12 +134,12 @@ struct actor_spawn_table {
     struct actor_spawn_entry entries[0]; // 0x08
 };
 
-/* A whole spawn table as the ROM stores it (src/.../data/): `n` spawns, then 4
+/* A whole spawn table as the ROM stores it (engine/src/.../data/): `n` spawns, then 4
  * bytes that no spawn reads (zero in three of the seven tables). */
 #define ACTOR_SPAWN_TABLE(n) \
     struct { s32 length; s32 count; struct actor_spawn_entry entries[n]; u8 end[4]; }
 
-/* The actor zone (src/engine/actor/): the 3D actor object (ActorSelf),
+/* The actor zone (engine/src/engine/actor/): the 3D actor object (ActorSelf),
  * its animation, spawning, category frame and backgrounds. */
 
 /* ActorSelf's own tag (actor_self.hpp): an incomplete struct to C, the
@@ -156,14 +156,14 @@ class ActorSelf;
 struct ActorSelf;
 #endif
 
-/* src/engine/actor/actor_bg.cpp (the rest is class ActorBg, actor_bg.hpp) */
+/* engine/src/engine/actor/actor_bg.cpp (the rest is class ActorBg, actor_bg.hpp) */
 extern void ActorCategoryEndStub(void);
 
-/* src/engine/actor/bg_picture.cpp */
+/* engine/src/engine/actor/bg_picture.cpp */
 extern void LoadBgPicture(const u8 *pic);
 extern void FillBgPictureMap(const u8 *nib, const u16 *map, s32 cols, s32 rows);
 
-/* src/engine/gfx/cell_anim.cpp (the rest is class CellAnim, cell_anim.hpp) */
+/* engine/src/engine/gfx/cell_anim.cpp (the rest is class CellAnim, cell_anim.hpp) */
 extern void ActorCategoryAttemptEndStub(void);
 
 /* The actor zone's globals (games/xs/sym_iwram.txt). */
@@ -183,7 +183,7 @@ extern s32 gActorFocalLength;
  * position, as ActorSelf::Draw's INT_TO_Q12(gActorFocalLength) / depth. */
 #define ACTOR_PROJECTION INT_TO_Q12(ACTOR_FOCAL_LENGTH)
 
-/* src/engine/sys/iwram_data.cpp */
+/* engine/src/engine/sys/iwram_data.cpp */
 extern void (*gDrawMirroredTilemapFunc)(u8 *pal, s32 lowBlock, s32 w, s32 h);
 #ifdef __cplusplus
 extern void (*gHeapSortActorsByKeyFunc)(s32 n, Game::Entities::ActorSelf **list);

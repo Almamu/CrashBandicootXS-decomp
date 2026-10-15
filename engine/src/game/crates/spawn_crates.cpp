@@ -9,9 +9,9 @@ extern "C" {
 
 using Game::Crates::Crate;
 
-/* The crate spawners (#664, include/game/level/spawners.hpp), ROM
+/* The crate spawners (#664, engine/include/game/level/spawners.hpp), ROM
  * 0x08021A4C-0x08021D80: gEntitySpawnFuncs' crate slots, Crate's static
- * Spawn* members since #915 (include/game/crates/crate.hpp; SpawnTimeCrate3 is
+ * Spawn* members since #915 (engine/include/game/crates/crate.hpp; SpawnTimeCrate3 is
  * Crate::SpawnTime3, ...). Built with old_agbcp. */
 
 /* Plain `CreateCrate` entity-constructor trampoline (docs/rom_map.md;

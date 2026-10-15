@@ -1,5 +1,5 @@
 /* The save block's statistics, GameProgress's methods (#766,
- * include/game/level/game_progress.hpp): GetLives (GetProgressLives), the relic, gem
+ * engine/include/game/level/game_progress.hpp): GetLives (GetProgressLives), the relic, gem
  * and crystal counts, and GetCompletionPercent. Split from the end of
  * menus/power_dialog_draw.cpp and the start of gfx/graphics.cpp (#767);
  * both were old_agbcc, as this file is. */

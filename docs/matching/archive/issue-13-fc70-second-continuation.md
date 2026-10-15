@@ -16,7 +16,7 @@ matches both.
 
 ## Matched (2 of 4 remaining functions)
 
-- **`DrawCrate`** (`src/crates/crate_draw.c`, new file - it sits
+- **`DrawCrate`** (`engine/src/crates/crate_draw.c`, new file - it sits
   between the still-raw `CreateCrate` and `UpdateCrate`, so it can't
   join either neighbor's file) - unless `self`'s own `+0x4d` state byte
   has bit 7 set or its low 7 bits are already nonzero, resets
@@ -47,7 +47,7 @@ matches both.
     without that, this compiler reused r4 in place for the `self[0x38]
     != 0` check just above it, corrupting the address this block
     reads/writes).
-- **`IsCrateInsideRect`** (`src/game/crates/crate.c`, prepended ahead of the
+- **`IsCrateInsideRect`** (`engine/src/game/crates/crate.c`, prepended ahead of the
   already-matched `ResolvePlayerCollisions` run - it's immediately ROM-adjacent, so
   it joins that file rather than getting its own) - an AABB-overlap
   test between `self`'s own table-driven half-width/half-height box

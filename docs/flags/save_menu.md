@@ -1,13 +1,13 @@
 # `SaveMenu::state` and the blink bit (#843)
 
-The save menu (`class SaveMenu`, include/game/ui/save_menu.hpp) has two fields
+The save menu (`class SaveMenu`, engine/include/game/ui/save_menu.hpp) has two fields
 named here.
 
 ## `state` (+0x0C)
 
 `state` is the screen the menu shows. SaveMenu::Input and SaveMenu::Draw
 each switch on it, after a `(u32)state <= SAVE_MENU_STATE_UNK10` bound
-check. The names are `SAVE_MENU_STATE_*` in include/save.h.
+check. The names are `SAVE_MENU_STATE_*` in engine/include/save.h.
 SaveMenu::Run takes the first state as an argument.
 
 | Value | Name | Input | Draw | Entered from |

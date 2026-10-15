@@ -5,9 +5,9 @@
 
 /* An axis-aligned box: position and size, in pixels or fixed-point
  * world units depending on the caller. SetAabbPos/SetAabbSize
- * (src/engine/util/aabb_setters.cpp) fill one, AabbOverlaps/AabbOverlapsInclusiveX
- * (src/engine/util/aabb.cpp) test two for overlap, and the text renderer
- * (DrawWrappedText/DrawWrappedTextInBox, include/engine/text/text.h) uses one as the
+ * (engine/src/engine/util/aabb_setters.cpp) fill one, AabbOverlaps/AabbOverlapsInclusiveX
+ * (engine/src/engine/util/aabb.cpp) test two for overlap, and the text renderer
+ * (DrawWrappedText/DrawWrappedTextInBox, engine/include/engine/text/text.h) uses one as the
  * text rectangle. GetSpriteHitbox and the other sprite box getters
  * return one, and the collision passes take it by value.
  *

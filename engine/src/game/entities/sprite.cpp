@@ -16,7 +16,7 @@ using Game::Entities::Sprite;
 using Game::Level::BgLayer;
 using Game::Level::EntitySpawner;
 
-/* The first of Sprite's methods (#664, include/game/entities/sprite_obj.hpp). An
+/* The first of Sprite's methods (#664, engine/include/game/entities/sprite_obj.hpp). An
  * old_agbcp object (OLD_AGBCC_OBJS); the sprite renderer before them is
  * gfx/sprite_renderer.cpp. */
 
@@ -210,7 +210,7 @@ static inline Sprite *SpawnPickupEffect(s32 kind, s32 x, s32 y)
  * position, semi-transparent and out of contact.
  *
  * Written with Entity's accessors (IsTouched, IsContactEnabled,
- * SetTouched, MarkGone; include/game/entities/entity.hpp). #662 round 6: the inlined
+ * SetTouched, MarkGone; engine/include/game/entities/entity.hpp). #662 round 6: the inlined
  * u8 returns give the ROM's `lsl #24` and the shared 1 of the two tests
  * and the gone flag, and MarkGone's own bitmap write loads its 1 fresh;
  * the open-coded tests and ENTITY_SET_GONE_BIT needed a pinned 1 (rounds

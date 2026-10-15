@@ -6,9 +6,9 @@ much closer.
 
 | Function | File | Before | Now | Status |
 |---|---|---|---|---|
-| `HandleLinkSerial` (#4) | `src/engine/link/link_handshake.c` | 6 | match (old_agbcc) | Real C |
-| `ReceiveSaveTransferChunk` (#5) | `src/engine/save/save_transfer.c` | 97 (4 bytes long) | 14 (same size, both compilers) | Draft updated |
-| `ResetLinkSessionState` (#4) | `src/engine/link/link_handshake.c` | 136 | 136 | Not attempted |
+| `HandleLinkSerial` (#4) | `engine/src/engine/link/link_handshake.c` | 6 | match (old_agbcc) | Real C |
+| `ReceiveSaveTransferChunk` (#5) | `engine/src/engine/save/save_transfer.c` | 97 (4 bytes long) | 14 (same size, both compilers) | Draft updated |
+| `ResetLinkSessionState` (#4) | `engine/src/engine/link/link_handshake.c` | 136 | 136 | Not attempted |
 
 ## `HandleLinkSerial`: closed
 

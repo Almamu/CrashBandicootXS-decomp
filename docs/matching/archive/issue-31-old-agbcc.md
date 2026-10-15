@@ -50,7 +50,7 @@ Three functions keep their previous form:
 
 ## Shared header
 
-`include/text_popup.h` holds the shared types:
+`engine/include/text_popup.h` holds the shared types:
 
 - `struct popup_part`, the CreateMovingSprite part. Its layout matches
   cortex.c's `struct gfx_part`: `flipX` is bit 4 of +0x28,

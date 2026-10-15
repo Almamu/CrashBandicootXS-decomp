@@ -23,7 +23,7 @@ using Game::Ui::LevelSelectEntry;
 using Game::Ui::LevelSelectPageBg;
 using Game::Ui::ZoomBg;
 
-/* GitHub issue #26: 0x0801B85C-0x0801CEE0 (include/game/ui/level_select.hpp).
+/* GitHub issue #26: 0x0801B85C-0x0801CEE0 (engine/include/game/ui/level_select.hpp).
  * LevelSelect: the paged level-select screen. LevelSelect::Run is the whole
  * modal screen: it builds the menu, runs it (Loop) and returns the chosen
  * level through `*level`. Five levels per page (`level / 5`, `level % 5`;

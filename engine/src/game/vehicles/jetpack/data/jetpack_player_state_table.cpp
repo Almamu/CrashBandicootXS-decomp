@@ -3,7 +3,7 @@
 using Game::Vehicles::Jetpack::JetpackPlayer;
 
 /*
- * ROM 0x0817C1C0-0x0817C200. Linked in ROM order between data/data.s
+ * ROM 0x0817C1C0-0x0817C200. Linked in ROM order between games/xs/data/data.s
  * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 

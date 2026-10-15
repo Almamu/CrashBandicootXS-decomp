@@ -1,7 +1,7 @@
 # The hit events: what a touched object sends (#843)
 
 A touched object sends its own `kind` (Entity::kind) as the event to the
-player's event method (include/constants/events.h), so the `EVENT_HIT_*`
+player's event method (engine/include/constants/events.h), so the `EVENT_HIT_*`
 values are also the kinds of the hazards. Hits 1-10 take a mask away or
 kill the player; each controller picks the death animation.
 

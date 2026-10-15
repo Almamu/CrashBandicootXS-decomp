@@ -91,7 +91,7 @@ flat one:
   (`gBgStreamerVtable`/`gBgLayerBaseVtable`) for notifying a parent
   object of size/position changes, following the exact
   `self + *(s16 *)(mgr + N)`/`*(void **)(mgr + N + 4)` idiom
-  `src/actor/actor_anim.c`'s `UpdatePolarCheckpointText` already established;
+  `engine/src/actor/actor_anim.c`'s `UpdatePolarCheckpointText` already established;
   `GetBgStreamerHeight`/`GetBgStreamerWidth`/`SetBgStreamerSizeVec`/`SetBgStreamerSize` are plain
   position accessors; `ClampBgLayerScrollStep` clamps to `[-0x10, 0x10]`;
   `ClampBgLayerScrollMax` clamps a position pair against an upper-bound pair;
@@ -220,7 +220,7 @@ Confirmed via a full clean `rm -rf build && make NON_MATCHING=1 report`
 crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
 compare` (`crashbandicootxs.gba: La suma coincide`).
 `asm/code_3_2_17_24810.s` is now fully retired - all 25 functions moved
-to the new `src/game/ui/cutscene_player.c`, and `ldscript.txt`'s entry for it
+to the new `engine/src/game/ui/cutscene_player.c`, and `ldscript.txt`'s entry for it
 now points there directly.
 
 ## Cross-references

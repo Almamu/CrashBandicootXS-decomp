@@ -47,7 +47,7 @@ using Game::Vehicles::Jetpack::JetpackShot;
 using Game::Vehicles::Jetpack::JetpackTimeCrate;
 using Game::Vehicles::Polar::Yeti;
 
-/* The jetpack levels' spawners (#664 part 11e, include/game/vehicles/vehicle.hpp), ROM
+/* The jetpack levels' spawners (#664 part 11e, engine/include/game/vehicles/vehicle.hpp), ROM
  * 0x0802E0A4-0x0802E740, between yeti.cpp and jetpack_player_update.cpp:
  * the level's spawn dispatcher `CreateJetpackActor` (a 31-case `switch`
  * over the spawn "kind", indexing the per-kind record table
@@ -59,7 +59,7 @@ using Game::Vehicles::Polar::Yeti;
  * CreateJetpackPlayer of JetpackPlayer (SpawnActor, CreateActor, Create),
  * each small spawner of the class it builds (`JetpackShot::Spawn` & co.).
  * It starts with the yeti's `Yeti::StateStop` (YetiStateStop,
- * include/game/vehicles/polar/yeti.hpp), which stays here across the flag boundary with
+ * engine/include/game/vehicles/polar/yeti.hpp), which stays here across the flag boundary with
  * yeti.cpp.
  *
  * Built with old_agbcp (as the C was with old_agbcc). */

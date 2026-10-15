@@ -6,7 +6,7 @@
 
 /*
  * The sprite-bank animation system: gSpriteBankTable and the tables it
- * points at (src/.../data/sprite_banks_*.c, docs/data_map.md). An animated
+ * points at (engine/src/.../data/sprite_banks_*.c, docs/data_map.md). An animated
  * part's +0x20 field points at one struct sprite_bank; +0x2D is the
  * animation index into its `anims`, +0x30 the step within that animation.
  *
@@ -72,9 +72,9 @@ struct sprite_frame {
 /*
  * Each frame's tile offset, SPRITE_TILES_BANKnn_FRAMEkkk, and each bank's
  * range of the pool, SPRITE_TILES_BANKnn(_SIZE), are generated from
- * graphics/sprites/bankNN_<name>/ by tools/sprite_frames.py, in
+ * games/xs/graphics/sprites/bankNN_<name>/ by tools/sprite_frames.py, in
  * sprites/sprite_frames.h (built under build/, included by
- * src/.../data/sprite_banks_*.cpp and sprite_tiles.cpp).
+ * engine/src/.../data/sprite_banks_*.cpp and sprite_tiles.cpp).
  */
 
 struct sprite_frame_1box {

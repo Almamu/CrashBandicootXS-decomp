@@ -1,7 +1,7 @@
 # strag4 retry: issue #18's last function (`StartActionCtrlTornadoSpin`)
 
 The strag2 retry (`docs/matching/archive/strag2-naked-retry.md`) left
-`StartActionCtrlTornadoSpin` (`src/player/action_ctrl_hang.c`, 400 bytes) NAKED. Its
+`StartActionCtrlTornadoSpin` (`engine/src/player/action_ctrl_hang.c`, 400 bytes) NAKED. Its
 C draft was 2 halfwords off under both compilers.
 
 **1 of 1 closed**, under old_agbcc (`action_ctrl_hang.o` was already on

@@ -25,7 +25,7 @@ using Engine::Text::Font;
 using Game::Ui::Starfield;
 using Game::Ui::TitleScreen;
 
-/* The title screen (TitleScreen, #664 part 10c-2, include/game/ui/frontend.hpp):
+/* The title screen (TitleScreen, #664 part 10c-2, engine/include/game/ui/frontend.hpp):
  * its constructor, graphics loaders and logo pieces' update and draw,
  * then the cheat input, the run loop, the menu and the destructor. The
  * first half was title_screen_init.cpp until #771.
@@ -389,7 +389,7 @@ void TitleScreen::DrawLogoPieces()
 /* Middle part of GitHub issue #65's chunk (0x08035D1C-0x080361B0): the
  * title screen's other methods (TitleScreen: the cheat input, the run
  * loop, the menu, the destructor), C++ since #664 part 10c-2
- * (include/game/ui/frontend.hpp). Split off title_screen_init.cpp at
+ * (engine/include/game/ui/frontend.hpp). Split off title_screen_init.cpp at
  * `TitleScreenCheatInput` in the issues #64/#65 second NAKED retry, and
  * merged back into one file in #771 once both halves had the same flags.
  * The four company-logo methods that follow it in the ROM are at the head
@@ -608,7 +608,7 @@ void TitleScreen::Draw()
 
 /* CheatInput's hash step on its own. */
 /* UNUSED - no caller anywhere in the ROM (no Thumb `bl` to it and no
- * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
+ * pointer to it in baserom.gba, nor any reference in asm/ or engine/src/). */
 void TitleScreen::HashCheatInput(u32 val)
 {
     HashInput(val);
@@ -623,7 +623,7 @@ void TitleScreen::HashCheatInput(u32 val)
  * hand-kept byte offsets with a `MATCH_CONST` and three `MATCH_USE`s for
  * the allocation. */
 /* UNUSED - no caller anywhere in the ROM (no Thumb `bl` to it and no
- * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
+ * pointer to it in baserom.gba, nor any reference in asm/ or engine/src/). */
 void TitleScreen::ResetLogoPieces()
 {
     s32 i;

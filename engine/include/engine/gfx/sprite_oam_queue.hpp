@@ -1,7 +1,7 @@
 #ifndef GUARD_SPRITE_OAM_QUEUE_HPP
 #define GUARD_SPRITE_OAM_QUEUE_HPP
 
-/* The overflow OAM queue (src/engine/gfx/sprite_frame.cpp, #915): the 3D stages
+/* The overflow OAM queue (engine/src/engine/gfx/sprite_frame.cpp, #915): the 3D stages
  * and the company logos queue their sprites' OAM entries and affine
  * scales here during a frame, and Flush appends them to the OAM shadow
  * buffer (OamBuffer, sprite_obj.hpp).

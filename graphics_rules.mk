@@ -5,18 +5,19 @@
 # games/n2/graphics.mk for N-Tranced.
 #
 # All rules below take a source under GRAPHICS_DIR (the game's: XS's
-# graphics/, N-Tranced's games/n2/graphics/) and produce the
+# games/xs/graphics/, N-Tranced's games/n2/graphics/) and produce the
 # corresponding built file under $(GRAPHICS_BUILDDIR), mirroring the
 # subdirectory layout, so GRAPHICS_DIR only ever holds editable sources.
 # A source the game's directory doesn't have is XS's (gfx_src): a graphic
-# both games have is only in graphics/ (docs/n_tranced.md, "Graphics").
+# both games have is only in games/xs/graphics/ (docs/n_tranced.md, "Graphics").
 # Every asset ends up as C initializer bytes (tools/bin2c.py) that a
 # data table's definition #includes (docs/data.md, "Resources");
-# data/data.s incbins no graphics.
-GRAPHICS_DIR ?= graphics
-gfx_src = $(firstword $(wildcard $(GRAPHICS_DIR)/$(1)) graphics/$(1))
+# games/xs/data/data.s incbins no graphics.
+XS_GRAPHICS_DIR := games/xs/graphics
+GRAPHICS_DIR ?= $(XS_GRAPHICS_DIR)
+gfx_src = $(firstword $(wildcard $(GRAPHICS_DIR)/$(1)) $(XS_GRAPHICS_DIR)/$(1))
 # gfx_manifest.py on the game's graphics (XS's is its default)
-GFX_MANIFEST := python3 tools/gfx_manifest.py$(if $(filter-out graphics,$(GRAPHICS_DIR)), --graphics-dir $(GRAPHICS_DIR))
+GFX_MANIFEST := python3 tools/gfx_manifest.py$(if $(filter-out $(XS_GRAPHICS_DIR),$(GRAPHICS_DIR)), --graphics-dir $(GRAPHICS_DIR))
 
 # The lists that follow the game's manifest.json (docs/graphics.md, "The
 # manifest"): the tile sheets and BG packages with their bpp, the 16-colour
@@ -31,7 +32,7 @@ include $(GRAPHICS_MANIFEST_MK)
 # Palettes -> raw GBA .gbapal. Read as gbagfx reads them, plus the ROM's
 # stray bit-15 entries, which tools/jasc_pal.py keeps in the red value's
 # lowest bit (docs/graphics.md, "Palettes"). A standalone palette is JASC
-# .pal text (the OBJ palettes, graphics/sprites/palettes/); a palette that
+# .pal text (the OBJ palettes, games/xs/graphics/sprites/palettes/); a palette that
 # belongs to one picture is that picture's PNG palette, which must have
 # exactly the colours its manifest entry gives: 256, or 16 for the pictures
 # in PALETTE_COLORS_16 (graphics_manifest.mk; png-to-gba --colors fails
@@ -42,18 +43,18 @@ $(GRAPHICS_BUILDDIR)/%.gbapal: $(GRAPHICS_DIR)/%.pal tools/jasc_pal.py
 $(GRAPHICS_BUILDDIR)/%.gbapal: $(GRAPHICS_DIR)/%.png tools/jasc_pal.py
 	@mkdir -p $(dir $@)
 	python3 tools/jasc_pal.py png-to-gba $< $@ --colors $(if $(filter $*,$(PALETTE_COLORS_16)),16,256)
-ifneq ($(GRAPHICS_DIR),graphics)
+ifneq ($(GRAPHICS_DIR),$(XS_GRAPHICS_DIR))
 # XS's, for what the game's directory doesn't have
-$(GRAPHICS_BUILDDIR)/%.gbapal: graphics/%.pal tools/jasc_pal.py
+$(GRAPHICS_BUILDDIR)/%.gbapal: $(XS_GRAPHICS_DIR)/%.pal tools/jasc_pal.py
 	@mkdir -p $(dir $@)
 	python3 tools/jasc_pal.py to-gba $< $@
-$(GRAPHICS_BUILDDIR)/%.gbapal: graphics/%.png tools/jasc_pal.py
+$(GRAPHICS_BUILDDIR)/%.gbapal: $(XS_GRAPHICS_DIR)/%.png tools/jasc_pal.py
 	@mkdir -p $(dir $@)
 	python3 tools/jasc_pal.py png-to-gba $< $@ --colors $(if $(filter $*,$(PALETTE_COLORS_16)),16,256)
 endif
 
 # The framed OBJ sprite sheets of the actor categories (the polar and
-# jetpack families' graphics/vehicles/<family>/sprite_sheet/, and any new
+# jetpack families' games/xs/graphics/vehicles/<family>/sprite_sheet/, and any new
 # one a category names, docs/levels.md "Category sprite sheets"): each
 # subdirectory is one
 # distinct entity (one animation's worth of frame data - see
@@ -88,7 +89,7 @@ $(GRAPHICS_BUILDDIR)/$(1).bin: $(foreach e,$(FRAMED_ENTITIES_$(1)),$(GRAPHICS_BU
 endef
 
 # The byte offset of every frame in a sheet (FRAMED_<NAME>_<ENTITY>_<NN>),
-# for the animation tables' pool_offset table_B arrays (data/levels/anim_tables/,
+# for the animation tables' pool_offset table_B arrays (games/xs/data/levels/anim_tables/,
 # which levels.mk generates into polar_anim_family.cpp and jetpack_anim_family.cpp,
 # and a new one into actor_categories.cpp).
 define FRAMED_HEADER_RULE
@@ -168,7 +169,7 @@ $(foreach a,$(CELL_ANIMS),$(eval $(call CELL_ANIM_RULE,$(a),$(CELL_ANIM_FRAMES_$
 # grit's external tileset, -fx, so the map indices are the ROM's), the
 # picture PNG gives the palette and, reduced against that tile set, the map.
 # grit doesn't only read the -fx tile set, it also writes it back when it
-# exits. Pointing -fx at graphics/ rewrote a source PNG while the tile
+# exits. Pointing -fx at games/xs/graphics/ rewrote a source PNG while the tile
 # set's rule could be reading it, so a parallel clean build sometimes
 # failed with "grit: can't read '..._tiles.png'". The map rule therefore
 # works on a private copy under build/.
@@ -221,14 +222,14 @@ endef
 $(foreach p,$(PALETTE_CYCLES),$(eval $(call PALETTE_CYCLE_RULE,$(p))))
 
 # The struct bg_package pictures (docs/graphics.md "Menu and title
-# pictures"): the menu backgrounds (graphics/menus/), the title screen's
-# logo and OBJ sprites (graphics/title/), the Universal logo
-# (graphics/logos/) and the level-select platform (graphics/level_select/).
+# pictures"): the menu backgrounds (games/xs/graphics/menus/), the title screen's
+# logo and OBJ sprites (games/xs/graphics/title/), the Universal logo
+# (games/xs/graphics/logos/) and the level-select platform (games/xs/graphics/level_select/).
 # The tile set and map of
 # each are rebuilt from one PNG of the whole picture. grit reduces the
 # picture to tiles + map, and tools/bg_map.py first-use puts the tiles in
 # the ROM's order (order of first use; grit starts with a forced blank
-# tile). gbagfx compresses, and src/game/ui/data/menu_graphics.cpp holds the
+# tile). gbagfx compresses, and engine/src/game/ui/data/menu_graphics.cpp holds the
 # results. Each package's palette is its PNG's palette. The packages
 # (BG_PACKAGES) and their bpp (BG_PACKAGE_BPP_<package>) are the manifest's
 # bg_package entries (graphics_manifest.mk).
@@ -256,7 +257,7 @@ $(foreach p,$(BG_PACKAGES),$(eval $(call BG_PACKAGE_RULE,$(p))))
 # tiles .inc per bank, generates the frames' piece arrays (a pieces .inc
 # per bank) and sprite_frames.h with each frame's tile offset. One run for
 # all banks, since a bank's offset depends on every earlier bank's size.
-SPRITE_FRAMES := python3 tools/sprite_frames.py$(if $(filter-out graphics,$(GRAPHICS_DIR)), --graphics-dir $(GRAPHICS_DIR))
+SPRITE_FRAMES := python3 tools/sprite_frames.py$(if $(filter-out $(XS_GRAPHICS_DIR),$(GRAPHICS_DIR)), --graphics-dir $(GRAPHICS_DIR))
 SPRITE_BANK_DIRS := $(sort $(wildcard $(GRAPHICS_DIR)/sprites/bank[0-9][0-9]_*))
 SPRITE_FRAME_SOURCES := $(foreach d,$(SPRITE_BANK_DIRS),$(d)/bank.json $(wildcard $(d)/f*.png))
 SPRITE_FRAMES_DIR := $(GRAPHICS_BUILDDIR)/sprites

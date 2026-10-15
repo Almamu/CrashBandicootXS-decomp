@@ -11,7 +11,7 @@ using Game::Crates::CollisionQueue;
 using Game::Crates::Crate;
 using Game::Entities::Sprite;
 
-/* The player's constructor (Player, include/game/crash/player.hpp; InitPlayer).
+/* The player's constructor (Player, engine/include/game/crash/player.hpp; InitPlayer).
  * g++ constructs the ground sprite (InitGroundSprite), stores the vtable
  * pointer and constructs the collision queue (ResetCollisionQueue, which
  * empties it); the body creates Aku Aku (`child`, sprite bank 0xCC), resets
@@ -40,10 +40,10 @@ Player::Player(u16 id, u16 px, u16 py, u16 unused)
     y = INT_TO_Q8(py);
 }
 
-/* The player's accessors (Player, include/game/crash/player.hpp; part 8). They were
+/* The player's accessors (Player, engine/include/game/crash/player.hpp; part 8). They were
  * plain functions with C linkage on `struct player` (part 3) until the
  * player became a class; cxx_symbols.txt maps them to their C names. The
- * four Ctrl methods the ROM puts after them start src/game/entities/ctrl.cpp. */
+ * four Ctrl methods the ROM puts after them start engine/src/game/entities/ctrl.cpp. */
 
 /* `collisionQueue` (+0x108) address getter. */
 CollisionQueue *Player::GetCollisionQueue()
@@ -92,7 +92,7 @@ void Player::SetRampX(s32 a, s32 b, s32 c)
  * gAttackKindBreakLimited flags, and UpdatePlayer counts down.
  *
  * UNUSED - DecrementPlayerCountdown through StorePlayerListEntry below have
- * no caller anywhere in the ROM (no `bl` in src/, no Thumb pointer to them
+ * no caller anywhere in the ROM (no `bl` in engine/src/, no Thumb pointer to them
  * in baserom.gba); the code that needs these fields reads them directly. */
 void Player::DecrementCountdown()
 {

@@ -11,7 +11,7 @@ using Engine::Gfx::VvLogoLetters;
 using Engine::Gfx::VvLogoUrl;
 
 /*
- * ROM 0x0817D6C0-0x0817D7A4. Linked in ROM order between data/data.s
+ * ROM 0x0817D6C0-0x0817D7A4. Linked in ROM order between games/xs/data/data.s
  * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 

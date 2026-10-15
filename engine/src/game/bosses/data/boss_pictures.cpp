@@ -9,7 +9,7 @@ extern "C" {
 using Game::Bosses::Hovercraft;
 
 /*
- * ROM 0x08167AD4-0x0816AA20. Linked in ROM order between data/data.s
+ * ROM 0x08167AD4-0x0816AA20. Linked in ROM order between games/xs/data/data.s
  * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
@@ -22,8 +22,8 @@ using Game::Bosses::Hovercraft;
  * must stay back to back.
  *
  * The frames and their tile counts are built from
- * graphics/vehicles/jetpack/airship/frameN.png and
- * graphics/bosses/hovercraft.png by grit and
+ * games/xs/graphics/vehicles/jetpack/airship/frameN.png and
+ * games/xs/graphics/bosses/hovercraft.png by grit and
  * tools/boss_pictures.py. The game converts the 4bpp tiles to 8bpp VRAM
  * tiles of BG palette 1 (the picture is drawn on an affine BG, which
  * only takes 8bpp tiles), and lays them out by the maps with
@@ -37,7 +37,7 @@ using Game::Bosses::Hovercraft;
 
 using Game::Vehicles::Jetpack::Airship;
 
-/* N. Gin's airship (Airship::palette, include/game/vehicles/jetpack/airship.hpp): its palette,
+/* N. Gin's airship (Airship::palette, engine/include/game/vehicles/jetpack/airship.hpp): its palette,
  * 16 colours that LoadAirshipGraphics (airship_graphics.cpp) DMAs to BG
  * palette 1 (the rest is zero). */
 const u16 Airship::palette[256] = {
@@ -62,7 +62,7 @@ const struct airship_picture Airship::picture = {
 #include "vehicles/jetpack/airship.inc"
 };
 
-/* N. Gin's hovercraft (Hovercraft::palette, include/game/bosses/hovercraft.hpp): its
+/* N. Gin's hovercraft (Hovercraft::palette, engine/include/game/bosses/hovercraft.hpp): its
  * palette. LoadHovercraftGraphics (hovercraft.cpp) DMAs the first 16 colours
  * to BG palette 1 and UpdateHovercraftHitFlash restores them from here; the
  * other 240 entries are the 0x03E0 filler colour. */
@@ -121,7 +121,7 @@ const u8 gDpadDirectionTable[16] = {
 
 /* The sine table: 256 steps of a full turn, scaled by 0x100. Read by
  * about twenty actor and game-loop functions (the pickups' `phase`,
- * include/game/objects/pickups.hpp, indexes it). */
+ * engine/include/game/objects/pickups.hpp, indexes it). */
 const s16 gSineTable[256] = {
     0, 6, 12, 18, 25, 31, 37, 43, 49, 56, 62, 68, 74, 80, 86, 92,
     97, 103, 109, 115, 120, 126, 131, 136, 142, 147, 152, 157, 162, 167, 171, 176,

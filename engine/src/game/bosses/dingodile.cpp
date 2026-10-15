@@ -35,7 +35,7 @@ using Game::Objects::Pickups;
  * #769 it started with the end of the Neo Cortex fight's controllers
  * (cortex.cpp since).
  *
- * The small boss controllers of include/game/bosses/boss_ctrl.hpp, in ROM order:
+ * The small boss controllers of engine/include/game/bosses/boss_ctrl.hpp, in ROM order:
  * Dingodile (DingodileCtrl), his shield (DingodileShieldCtrl), rocket and
  * stalactite (DingodileProjectileCtrl) and shark (DingodileSharkCtrl).
  *
@@ -52,7 +52,7 @@ using Game::Objects::Pickups;
  * stalactite of anims 8/9 (SpawnStalactite) that hurts him if it lands
  * on him, and a bank-4 shark (SpawnShark) that crosses the level.
  *
- * UNUSED - no `bl`/`.4byte` reference in asm/, data/ or src/, and no
+ * UNUSED - no `bl`/`.4byte` reference in asm/, games/xs/data/ or engine/src/, and no
  * Thumb pointer anywhere in the ROM: DingodileCtrl::GetHits. Matched
  * anyway. */
 
@@ -72,7 +72,7 @@ static inline s32 LevelBottom(void)
  * halfword, then shifted back down. */
 #define LayerWidthPlus(n) (((gLevelLayers->layer0->widthPx << 16) + ((n) << 16)) >> 16)
 
-/* The player's HandleEvent (Player, include/game/crash/player.hpp). */
+/* The player's HandleEvent (Player, engine/include/game/crash/player.hpp). */
 static inline void HitPlayer(MovingSprite *by)
 {
     gPlayer->HandleEvent(0, by->kind, 0);

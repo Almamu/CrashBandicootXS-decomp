@@ -22,11 +22,11 @@ using Game::Ui::Slideshow;
 /* GitHub issue #39: 0x08024810-0x08024960 (game_loop) - the start of
  * the remainder of the UpdateGameFrame-MainLoop cluster after the
  * sound-channel-handle family (slideshow.cpp/slideshow_display.cpp); the
- * background streamer (src/game/level/bg_streamer.cpp) and BgLayerBase
- * (src/game/level/bg_layer_base.cpp) follow it (#770).
+ * background streamer (engine/src/game/level/bg_streamer.cpp) and BgLayerBase
+ * (engine/src/game/level/bg_layer_base.cpp) follow it (#770).
  *
  * `InitSlideshow`/`RunCutscenePlayer`/`DestroyCutscenePlayer`/`InitCutscenePlayer`
- * are the cutscene player (class CutscenePlayer, include/game/ui/cutscene.hpp)
+ * are the cutscene player (class CutscenePlayer, engine/include/game/ui/cutscene.hpp)
  * that slideshow.cpp/slideshow_display.cpp also drive: `ResetSlideshow`
  * sets the VRAM-bank toggle to 1, and `InitCutscenePlayer` also clears
  * `pages`/`font`. `RunCutscenePlayer` is `RunSlideshow`'s (slideshow.cpp)
@@ -44,7 +44,7 @@ using Game::Ui::Slideshow;
  * Built with old_agbcp (the Makefile's OLD_AGBCC_OBJS) - see
  * docs/matching/archive/game-loop-old-agbcc.md. */
 
-/* InitSlideshow, Slideshow's constructor (include/game/ui/cutscene.hpp): Reset. */
+/* InitSlideshow, Slideshow's constructor (engine/include/game/ui/cutscene.hpp): Reset. */
 Slideshow::Slideshow()
 {
     Reset();

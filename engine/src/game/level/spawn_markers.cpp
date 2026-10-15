@@ -37,7 +37,7 @@ using Game::Level::LevelState;
 
 /* The player positions and start markers (entity types 0x01-0x05), the
  * entity spawner's constructor and destructor calls and InitLevelState
- * (#664, include/game/level/spawners.hpp), ROM 0x08022188-0x08022354; split from
+ * (#664, engine/include/game/level/spawners.hpp), ROM 0x08022188-0x08022354; split from
  * spawn_pickups.cpp (#770). Built with old_agbcp. */
 
 /* Entity type 0x05: does nothing. Types 0x01/0x03 (SpawnPlayerPosition,
@@ -84,7 +84,7 @@ void SpawnPlayerPosition(u32 id, u16 x, u16 y, u16 param)
     gPlayer->y = INT_TO_Q8(y);
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the spawn
+/* UNUSED - no caller anywhere in the ROM (checked engine/src/, asm/ and the spawn
  * table). The spawners in this stretch of ROM run in descending type order
  * (Wumpa::Spawn 0x06, SpawnHoverPlayerPosition 0x05 ... SpawnPlayerPosition
  * 0x01), so this empty stub sits where type 0x00's spawner would; the
@@ -116,11 +116,11 @@ void EntitySpawner::Create()
  * VRAM cursor, the key input, the entity flags and the palette cycles -
  * clears the display control and the level state's unused flags.
  *
- * It is LevelState's constructor (include/game/level/level_state.hpp). The globals
+ * It is LevelState's constructor (engine/include/game/level/level_state.hpp). The globals
  * keep their C types (the C files use them), so the new objects of the
  * C++ classes are stored through their C views (the fonts are `Font *`s
  * to C++, text.h). The audio context is `new AudioContext` (its own
- * operator new, IwramAlloc: include/engine/audio/audio.hpp). */
+ * operator new, IwramAlloc: engine/include/engine/audio/audio.hpp). */
 LevelState::LevelState()
 {
     AudioContext **audio = &gAudioContext;

@@ -22,7 +22,7 @@ using Game::Vehicles::Polar::PolarPlayer;
  * teardown and the exit status, ROM 0x0802A5AC-0x0802A69C; split from
  * actor_spawn.cpp (#770).
  *
- * The category vtable (include/engine/actor/actor_anim.h's 13-slot
+ * The category vtable (engine/include/engine/actor/actor_anim.h's 13-slot
  * `struct category_vtable`, set by ActorCategory::Select) is a struct of
  * plain function pointers and two values, not a C++ vtable (#765). C++
  * since #664 part 11b (docs/cplusplus.md). */

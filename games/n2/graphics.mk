@@ -1,7 +1,7 @@
 # N-Tranced's graphics (#1115, docs/n_tranced.md "Graphics"), from
 # games/n2/graphics/manifest.json with graphics_rules.mk, the rules XS's
 # graphics.mk uses: a source is games/n2/graphics/<path>, or XS's
-# graphics/<path> for a graphic both games have (the continue prompt's).
+# games/xs/graphics/<path> for a graphic both games have (the continue prompt's).
 # Included by games/n2/game.mk.
 
 GRAPHICS_DIR      := $(N2_DIR)/graphics

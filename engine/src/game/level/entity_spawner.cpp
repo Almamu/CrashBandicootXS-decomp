@@ -16,7 +16,7 @@ using Game::Level::EntitySpawner;
 using Game::Objects::ExtraLife;
 using Game::Objects::Wumpa;
 
-/* EntitySpawner (#664, include/game/level/spawners.hpp): the dropped extra life
+/* EntitySpawner (#664, engine/include/game/level/spawners.hpp): the dropped extra life
  * (drop_extra_life.cpp until #771), the effect parts, the dropped wumpa
  * and the spawn table. Built with old_agbcp - see
  * docs/matching/archive/game-loop-old-agbcc.md. */

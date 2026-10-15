@@ -8,7 +8,7 @@
  * that defines its first non-inline virtual method (its key method),
  * and games/xs/ldscript.txt places it at its ROM address (docs/cplusplus.md,
  * "Emitting the vtables"). Ctrl's own, gCtrlVtable, is emitted in
- * src/engine/sys/bios_util.cpp, which has its key method, Update (UpdateCtrl).
+ * engine/src/engine/sys/bios_util.cpp, which has its key method, Update (UpdateCtrl).
  * cxx_symbols.txt maps the mangled vtable, method, constructor and
  * destructor names onto their C names.
  *
@@ -30,7 +30,7 @@ namespace Entities
 
 class MovingSprite;
 
-/* The controllers' base class (src/game/entities/ctrl.cpp), 0x10 bytes
+/* The controllers' base class (engine/src/game/entities/ctrl.cpp), 0x10 bytes
  * (checked below, like every class here against the ROM's size).
  * g++ 2.x puts the vtable pointer after the fields of the first class
  * that has virtual methods, which is why it sits at +0x0C. Each virtual
@@ -38,7 +38,7 @@ class MovingSprite;
  * (slot 0 is the empty RTTI slot: the game was built with -fno-rtti).
  * Slot 1, Update (UpdateCtrl), is an empty function in system/bios_util.cpp.
  * SetMode, StartTargetMotionY, SetTargetMotionY and SetAnimSet start
- * src/game/entities/ctrl.cpp, as the rest. */
+ * engine/src/game/entities/ctrl.cpp, as the rest. */
 class Ctrl
 {
 public:
@@ -66,7 +66,7 @@ public:
 
 LAYOUT_ASSERT(ctrl_hpp, sizeof(Ctrl) == 0x10);
 
-/* The effect controller (src/game/entities/effect_ctrl.cpp, gEffectCtrlVtable):
+/* The effect controller (engine/src/game/entities/effect_ctrl.cpp, gEffectCtrlVtable):
  * a spawned effect part's controller. SpawnEffectPart (entity_spawner.cpp)
  * creates one per part, `new EffectCtrl` (InitEffectCtrl(OperatorNew(0x10))
  * in its C). */
@@ -91,7 +91,7 @@ namespace Bosses
 {
 
 /* The Tiny boss's stomped hop pad's controller
- * (src/game/bosses/tiny.cpp, gStompedHopPadVtable): `state` 0 plays
+ * (engine/src/game/bosses/tiny.cpp, gStompedHopPadVtable): `state` 0 plays
  * animation 8, 1 sinks the pad, 2 is done. */
 /* Its `state` (#843, docs/flags/boss_ctrl.md). */
 #define STOMPED_HOP_PAD_STATE_START 0 // TINY_STATE_STOMP_PAD swapped it in: animation 8, then SINK
@@ -109,7 +109,7 @@ LAYOUT_ASSERT(ctrl_hpp, sizeof(StompedHopPadCtrl) == 0x10);
 
 /* A controller that marks its sprite object gone once the animation has
  * played through (gOneShotAnimCtrlVtable). Its Update is in
- * src/game/bosses/tiny.cpp, with its constructor and destructor. */
+ * engine/src/game/bosses/tiny.cpp, with its constructor and destructor. */
 class OneShotAnimCtrl : public Game::Entities::Ctrl
 {
 public:

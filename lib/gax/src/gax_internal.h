@@ -448,11 +448,11 @@ extern const u32 gGaxArmResampleStoreEndTest[];
 extern const u32 gGaxArmResampleMixStep[];
 extern const u32 gGaxArmResampleMixEndTest[];
 
-/* data/data.s: the handler layout GAX2_init and GAX2_estimate use when the
+/* games/xs/data/data.s: the handler layout GAX2_init and GAX2_estimate use when the
  * song header names none. */
 extern struct GaxHandlerLayout gGaxDefaultSong;
 
-/* src/engine/sys/iwram_data.cpp: the halt screen's font, Huffman-compressed
+/* engine/src/engine/sys/iwram_data.cpp: the halt screen's font, Huffman-compressed
  * (GaxFatalError decompresses it with GaxHuffUnComp). */
 extern u32 gGaxHaltFont[70];
 

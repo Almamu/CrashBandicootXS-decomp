@@ -56,7 +56,7 @@ using Game::Level::LevelState;
 /* The room loop: LevelProgress::PlayRoom, the level-start dispatcher,
  * RunRoom, the room's lifecycle state machine it runs, and the
  * per-frame refresh UpdateRoomFrame and SetupRoomBlend RunRoom calls
- * (include/game/level/level_state.hpp). Built with old_agbcp (Makefile
+ * (engine/include/game/level/level_state.hpp). Built with old_agbcp (Makefile
  * OLD_AGBCC_OBJS) - see docs/matching/archive/game-loop-old-agbcc.md.
  * RunRoom and UpdateRoomFrame/SetupRoomBlend were run_room.cpp and
  * room_frame.cpp until #771. */

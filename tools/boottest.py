@@ -526,7 +526,7 @@ def run_screens(rom, keys, frames, timeout, prefix, every=CHECKPOINT_EVERY, scre
                         os.path.join(pc, "tools", "mgba_screens.c"), os.path.join(pc, "src", "sha1.c"),
                         os.path.join(pc, "src", "png.c"), "-I", os.path.join(prefix, "include"),
                         "-I", os.path.join(pc, "include"), "-I", os.path.join(pc, "src"),
-                        "-I", os.path.join(here, "..", "include"), "-L", lib, "-lmgba",
+                        "-I", os.path.join(here, "..", "engine", "include"), "-L", lib, "-lmgba",
                         f"-Wl,-rpath,{lib}"], check=True)
         with open(os.path.join(work, "keys.txt"), "w") as f:
             for frame, k in read_keys(keys):

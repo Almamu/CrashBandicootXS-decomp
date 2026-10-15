@@ -12,7 +12,7 @@ extern "C" {
 using Game::Crash::Player;
 using Game::Crates::Crate;
 
-/* Player::HasRoomForAnim (include/game/crash/player.hpp; PlayerHasRoomForAnim): the
+/* Player::HasRoomForAnim (engine/include/game/crash/player.hpp; PlayerHasRoomForAnim): the
  * action controller's states ask it before an animation with a taller box
  * (a stand-up from the crawl, the crouch's jump). */
 

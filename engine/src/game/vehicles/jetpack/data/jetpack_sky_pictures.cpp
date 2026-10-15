@@ -6,13 +6,13 @@ extern "C" {
 
 /*
  * ROM 0x08151AC4-0x0815A050: categories 4-6's BG1 pictures and
- * spawn tables. Linked in ROM order between data/data.s sections by
+ * spawn tables. Linked in ROM order between games/xs/data/data.s sections by
  * games/xs/ldscript.txt - see docs/data.md ("Category backgrounds").
  */
 
 /* Category 4's BG1 picture (ActorCategory::descriptors[4].bgPicture,
  * loaded by LoadBgPicture in bg_picture.cpp): 38x16 map, 237 tiles. Built from
- * graphics/vehicles/jetpack/skies/blimp_bonanza.png (palette and map) and
+ * games/xs/graphics/vehicles/jetpack/skies/blimp_bonanza.png (palette and map) and
  * 151ac4_picture_tiles.png (the tile set, grit's -fx external tileset). */
 struct jetpack_sky_pictures {
     struct bg_picture_header header;
@@ -41,14 +41,14 @@ extern const struct jetpack_sky_pictures gCategory4BgPicture = {
 };
 
 /* Category 4's spawn list (ActorCategory::descriptors[4].spawnTable),
- * generated from its data/levels/spawns/ file (`levels.py spawns`,
+ * generated from its games/xs/data/levels/spawns/ file (`levels.py spawns`,
  * docs/levels.md "Actor categories"). */
 #include "spawns/gCategory4SpawnTable.inc"
 
 /* The BG1 picture shared by categories 5 and 6
  * (ActorCategory::descriptors[5..6].bgPicture, loaded by LoadBgPicture
  * in bg_picture.cpp): 38x16 map, 374 tiles. Built from
- * graphics/vehicles/jetpack/skies/no_fly_zone.png (palette and map) and
+ * games/xs/graphics/vehicles/jetpack/skies/no_fly_zone.png (palette and map) and
  * 155260_picture_tiles.png (the tile set, grit's -fx external tileset). */
 struct bg_picture_155260 {
     struct bg_picture_header header;
@@ -77,11 +77,11 @@ extern const struct bg_picture_155260 gCategory5BgPicture = {
 };
 
 /* Category 5's spawn list (ActorCategory::descriptors[5].spawnTable),
- * generated from its data/levels/spawns/ file (`levels.py spawns`,
+ * generated from its games/xs/data/levels/spawns/ file (`levels.py spawns`,
  * docs/levels.md "Actor categories"). */
 #include "spawns/gCategory5SpawnTable.inc"
 
 /* Category 6's spawn list (ActorCategory::descriptors[6].spawnTable),
- * generated from its data/levels/spawns/ file (`levels.py spawns`,
+ * generated from its games/xs/data/levels/spawns/ file (`levels.py spawns`,
  * docs/levels.md "Actor categories"). */
 #include "spawns/gCategory6SpawnTable.inc"

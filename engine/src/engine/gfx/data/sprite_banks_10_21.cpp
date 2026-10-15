@@ -6,25 +6,25 @@ extern "C" {
 
 /*
  * ROM 0x084b0ae0-0x084b414c: sprite banks 10-21 of the sprite-bank
- * animation system (gSpriteBankTable, include/engine/gfx/sprite_bank.h). Linked in
- * ROM order between data/data.s sections by games/xs/ldscript.txt - see
+ * animation system (gSpriteBankTable, engine/include/engine/gfx/sprite_bank.h). Linked in
+ * ROM order between games/xs/data/data.s sections by games/xs/ldscript.txt - see
  * docs/data.md and docs/data_map.md ("gSpriteBankTable").
  *
  * Extracted once from baserom.gba by tools/sprite_banks.py; this file is
  * the source now. Per bank: the animations (a frame-index sequence each),
  * the frame pointer array, the frames (header plus the boxes/anchor of
  * their layout type), then every frame's piece positions and piece bytes.
- * The pieces and the frames' tiles come from graphics/sprites/bankNN_<name>/
+ * The pieces and the frames' tiles come from games/xs/graphics/sprites/bankNN_<name>/
  * (a PNG per frame and bank.json, see docs/graphics.md "Sprite banks"):
  * tools/sprite_frames.py generates the piece arrays (sprites/bankNN_pieces.inc),
  * and sprites/sprite_frames.h declares the frames and gives each one's
- * offset in the sprite tile pool (src/engine/gfx/data/sprite_tiles.cpp),
+ * offset in the sprite tile pool (engine/src/engine/gfx/data/sprite_tiles.cpp),
  * SPRITE_TILES_BANKnn_FRAMEkkk. A frame's struct type has to match its
  * "layout" in bank.json.
  */
 
 /* ---------------------------------------------------------------------- */
-/* Bank 10: 2 animations, 20 frames, graphics/sprites/bank10_venus_flytrap/. */
+/* Bank 10: 2 animations, 20 frames, games/xs/graphics/sprites/bank10_venus_flytrap/. */
 
 extern const u16 gSpriteBank10Anim00Seq[9];
 extern const u16 gSpriteBank10Anim01Seq[11];
@@ -159,11 +159,11 @@ const struct sprite_frame_1box gSpriteBank10Frame019 = {
     { { -7, -17, 29, 35 } },
 };
 
-/* The piece arrays, from graphics/sprites/bank10_venus_flytrap/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank10_venus_flytrap/bank.json. */
 #include "sprites/bank10_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 11: 2 animations, 25 frames, graphics/sprites/bank11_vulture/. */
+/* Bank 11: 2 animations, 25 frames, games/xs/graphics/sprites/bank11_vulture/. */
 
 extern const u16 gSpriteBank11Anim00Seq[11];
 extern const u16 gSpriteBank11Anim01Seq[14];
@@ -323,11 +323,11 @@ const struct sprite_frame_1box gSpriteBank11Frame024 = {
     { { -31, -8, 48, 19 } },
 };
 
-/* The piece arrays, from graphics/sprites/bank11_vulture/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank11_vulture/bank.json. */
 #include "sprites/bank11_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 12: 7 animations, 57 frames, graphics/sprites/bank12_blowgun_tribesman/. */
+/* Bank 12: 7 animations, 57 frames, games/xs/graphics/sprites/bank12_blowgun_tribesman/. */
 
 extern const u16 gSpriteBank12Anim00Seq[17];
 extern const u16 gSpriteBank12Anim01Seq[5];
@@ -708,11 +708,11 @@ const struct sprite_frame_1box gSpriteBank12Frame056 = {
     { { -4, -2, 6, 4 } },
 };
 
-/* The piece arrays, from graphics/sprites/bank12_blowgun_tribesman/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank12_blowgun_tribesman/bank.json. */
 #include "sprites/bank12_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 13: 2 animations, 19 frames, graphics/sprites/bank13_lizard/. */
+/* Bank 13: 2 animations, 19 frames, games/xs/graphics/sprites/bank13_lizard/. */
 
 extern const u16 gSpriteBank13Anim00Seq[10];
 extern const u16 gSpriteBank13Anim01Seq[9];
@@ -842,11 +842,11 @@ const struct sprite_frame_1box gSpriteBank13Frame018 = {
     { { -19, -7, 30, 12 } },
 };
 
-/* The piece arrays, from graphics/sprites/bank13_lizard/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank13_lizard/bank.json. */
 #include "sprites/bank13_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 14: 2 animations, 23 frames, graphics/sprites/bank14_patrolling_jungle_enemy/. */
+/* Bank 14: 2 animations, 23 frames, games/xs/graphics/sprites/bank14_patrolling_jungle_enemy/. */
 
 extern const u16 gSpriteBank14Anim00Seq[12];
 extern const u16 gSpriteBank14Anim01Seq[11];
@@ -996,11 +996,11 @@ const struct sprite_frame_2box gSpriteBank14Frame022 = {
     { { -12, 4, 22, 16 }, { -19, -13, 40, 13 } },
 };
 
-/* The piece arrays, from graphics/sprites/bank14_patrolling_jungle_enemy/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank14_patrolling_jungle_enemy/bank.json. */
 #include "sprites/bank14_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 15: 5 animations, 58 frames, graphics/sprites/bank15_penguin/. */
+/* Bank 15: 5 animations, 58 frames, games/xs/graphics/sprites/bank15_penguin/. */
 
 extern const u16 gSpriteBank15Anim00Seq[15];
 extern const u16 gSpriteBank15Anim01Seq[4];
@@ -1362,11 +1362,11 @@ const struct sprite_frame_1box gSpriteBank15Frame057 = {
     { { -7, -14, 14, 28 } },
 };
 
-/* The piece arrays, from graphics/sprites/bank15_penguin/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank15_penguin/bank.json. */
 #include "sprites/bank15_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 16: 2 animations, 24 frames, graphics/sprites/bank16_polar_bear/. */
+/* Bank 16: 2 animations, 24 frames, games/xs/graphics/sprites/bank16_polar_bear/. */
 
 extern const u16 gSpriteBank16Anim00Seq[12];
 extern const u16 gSpriteBank16Anim01Seq[12];
@@ -1521,11 +1521,11 @@ const struct sprite_frame_1box gSpriteBank16Frame023 = {
     { { -32, -11, 55, 22 } },
 };
 
-/* The piece arrays, from graphics/sprites/bank16_polar_bear/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank16_polar_bear/bank.json. */
 #include "sprites/bank16_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 17: 1 animation, 15 frames, graphics/sprites/bank17_seal/. */
+/* Bank 17: 1 animation, 15 frames, games/xs/graphics/sprites/bank17_seal/. */
 
 extern const u16 gSpriteBank17Anim00Seq[15];
 
@@ -1623,11 +1623,11 @@ const struct sprite_frame_1box gSpriteBank17Frame014 = {
     { { -10, -4, 29, 13 } },
 };
 
-/* The piece arrays, from graphics/sprites/bank17_seal/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank17_seal/bank.json. */
 #include "sprites/bank17_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 18: 2 animations, 14 frames, graphics/sprites/bank18_wooden_crusher/. */
+/* Bank 18: 2 animations, 14 frames, games/xs/graphics/sprites/bank18_wooden_crusher/. */
 
 extern const u16 gSpriteBank18Anim00Seq[9];
 extern const u16 gSpriteBank18Anim01Seq[5];
@@ -1732,11 +1732,11 @@ const struct sprite_frame_1box gSpriteBank18Frame013 = {
     { { -11, -68, 23, 113 } },
 };
 
-/* The piece arrays, from graphics/sprites/bank18_wooden_crusher/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank18_wooden_crusher/bank.json. */
 #include "sprites/bank18_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 19: 2 animations, 35 frames, graphics/sprites/bank19_frog/. */
+/* Bank 19: 2 animations, 35 frames, games/xs/graphics/sprites/bank19_frog/. */
 
 extern const u16 gSpriteBank19Anim00Seq[14];
 extern const u16 gSpriteBank19Anim01Seq[21];
@@ -1947,11 +1947,11 @@ const struct sprite_frame_1box gSpriteBank19Frame034 = {
     { { -14, -11, 28, 13 } },
 };
 
-/* The piece arrays, from graphics/sprites/bank19_frog/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank19_frog/bank.json. */
 #include "sprites/bank19_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 20: 2 animations, 32 frames, graphics/sprites/bank20_patrolling_sewer_enemy/. */
+/* Bank 20: 2 animations, 32 frames, games/xs/graphics/sprites/bank20_patrolling_sewer_enemy/. */
 
 extern const u16 gSpriteBank20Anim00Seq[16];
 extern const u16 gSpriteBank20Anim01Seq[16];
@@ -2146,11 +2146,11 @@ const struct sprite_frame_1box gSpriteBank20Frame031 = {
     { { -12, -8, 24, 17 } },
 };
 
-/* The piece arrays, from graphics/sprites/bank20_patrolling_sewer_enemy/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank20_patrolling_sewer_enemy/bank.json. */
 #include "sprites/bank20_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 21: 2 animations, 15 frames, graphics/sprites/bank21_rat/. */
+/* Bank 21: 2 animations, 15 frames, games/xs/graphics/sprites/bank21_rat/. */
 
 extern const u16 gSpriteBank21Anim00Seq[8];
 extern const u16 gSpriteBank21Anim01Seq[7];
@@ -2260,5 +2260,5 @@ const struct sprite_frame_1box gSpriteBank21Frame014 = {
     { { -15, -3, 24, 12 } },
 };
 
-/* The piece arrays, from graphics/sprites/bank21_rat/bank.json. */
+/* The piece arrays, from games/xs/graphics/sprites/bank21_rat/bank.json. */
 #include "sprites/bank21_pieces.inc"

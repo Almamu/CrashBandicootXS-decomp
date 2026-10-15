@@ -11,9 +11,9 @@ extern "C" {
 
 using Game::Crates::Crate;
 
-/* Crate::Create (#664, include/game/crates/crate.hpp): CreateCrate, the constructor
+/* Crate::Create (#664, engine/include/game/crates/crate.hpp): CreateCrate, the constructor
  * the level spawners call with each crate kind
- * (src/game/crates/spawn_crates.cpp). */
+ * (engine/src/game/crates/spawn_crates.cpp). */
 
 /* The room's entity parameter records (struct level_entity_list). */
 #define PLACEMENT_LEVEL (gEntityFlags->list)
@@ -236,7 +236,7 @@ Crate *Crate::Create(u16 id, u16 x, u16 y, u16 slot, u8 type)
     return self;
 }
 
-/* Crate::Draw (#664, include/game/crates/crate.hpp). */
+/* Crate::Draw (#664, engine/include/game/crates/crate.hpp). */
 
 /* An idle crate (not busy, state 0) restarts its animation's first step
  * (the clamp is ClampFrame's); then the sprite is drawn, and once the

@@ -9,7 +9,7 @@ extern "C" {
 
 using Game::Level::LevelEntityFlags;
 
-/* The room's entity flags (LevelEntityFlags, include/game/level/entity_flags.hpp;
+/* The room's entity flags (LevelEntityFlags, engine/include/game/level/entity_flags.hpp;
  * gEntityFlags): the "gone" and "activated" bitmaps by entity id, and the
  * crate count of a room's entity list. C++ since the #664 cleanup, built
  * with old_agbcp (current agbcc was the C's); the methods keep their C
@@ -76,7 +76,7 @@ s32 LevelEntityFlags::CountCrateEntities(const struct level_entity_list *list)
  * checkpoint: "Set" writes the committed set and "Mark" only the live
  * copy (like MarkEntityGone's bits0Copy write).
  *
- * UNUSED - no caller anywhere in the ROM (checked src/ and asm/). Sets
+ * UNUSED - no caller anywhere in the ROM (checked engine/src/ and asm/). Sets
  * bit `n` of `bits0` (word `n / 32`, the same idiom as `SetBitmapBit` in
  * entity_bitmap.cpp). */
 void LevelEntityFlags::SetGone(s32 n)
@@ -139,7 +139,7 @@ void LevelEntityFlags::MarkActivated(s32 n)
     bits1Copy[n / 32] |= 1 << (n % 32);
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked src/ and asm/). Stores
+/* UNUSED - no caller anywhere in the ROM (checked engine/src/ and asm/). Stores
  * the Q8 `val` as pixels in `pos` (`self+4`), as SpawnRoomEntities does. */
 void LevelEntityFlags::SetPos(s32 val)
 {

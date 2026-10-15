@@ -12,8 +12,8 @@ using Game::Entities::TouchableList;
 using Game::Objects::Platform;
 using Game::Objects::PlatformMover;
 
-/* Platform::Create (#664, include/game/objects/platform.hpp), ROM 0x0801A878-0x0801AB34:
- * CreatePlatform, the level spawners' constructor (src/game/level/). */
+/* Platform::Create (#664, engine/include/game/objects/platform.hpp), ROM 0x0801A878-0x0801AB34:
+ * CreatePlatform, the level spawners' constructor (engine/src/game/level/). */
 
 /* The constructor, inlined into `new Platform` here; platform.cpp has its
  * out-of-line copy (InitPlatform). */
@@ -26,7 +26,7 @@ inline Platform::Platform()
  * type is the record's, or forced by the spawn kind; a moving one (type
  * 1) gets a PlatformMover over the record's distances, and types 5, 6 and
  * 7 one of their own kind (the Neo Cortex fight's type 6 the fight's own,
- * CortexBossPlatformMover, src/game/bosses/cortex.cpp). The bonus platform (3) takes its exit
+ * CortexBossPlatformMover, engine/src/game/bosses/cortex.cpp). The bonus platform (3) takes its exit
  * facing from the record. The platform goes into the touchable list, with
  * animation `kind` of sprite bank 0x1D4. */
 Platform *Platform::Create(u16 id, u16 x, u16 y, u16 index, s32 kind)

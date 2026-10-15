@@ -24,7 +24,7 @@ using Game::Vehicles::Polar::PolarPlayer;
 using Game::Vehicles::Polar::Yeti;
 
 /* PolarPlayer's states and the methods the other polar actors call on
- * it (#664 part 11c, include/game/vehicles/vehicle.hpp), ROM 0x0802BC68-0x0802C270,
+ * it (#664 part 11c, engine/include/game/vehicles/vehicle.hpp), ROM 0x0802BC68-0x0802C270,
  * between polar_player.cpp (old_agbcp) and polar_pickups.cpp. Its
  * destructor is the class's key method, so g++ emits gPolarPlayerVtable
  * here. The actions and the state dispatch were polar_player_actions.cpp

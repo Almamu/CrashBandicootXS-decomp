@@ -24,7 +24,7 @@ using Game::Level::LevelLayers;
  *     at a fixed `pos->y>>3` tile row, clamping the start index up to
  *     0 if it computes to exactly -1 and the end index down by one if
  *     it lands exactly on `tiles->widthTiles` (the tile cache's
- *     width in tiles, TileCache in include/game/level/bg_layer.hpp), calling
+ *     width in tiles, TileCache in engine/include/game/level/bg_layer.hpp), calling
  *     `tiles->GetSolidTerrainHeights(tileX, tileY, submode,
  *     &scratch)` (matched, `tile_cache.cpp`) per tile until a hit or the
  *     range is exhausted. On a hit, accumulates into `*outValue` using

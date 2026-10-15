@@ -6,7 +6,7 @@ extern "C" {
 
 /*
  * ROM 0x0803B8B0-0x080B2120: BG0 cell animation A (categories 0-2) and
- * category 0's spawnTable. Linked in ROM order between data/data.s
+ * category 0's spawnTable. Linked in ROM order between games/xs/data/data.s
  * sections by games/xs/ldscript.txt - see docs/data.md ("Category backgrounds").
  */
 
@@ -14,7 +14,7 @@ extern "C" {
  * (cellAnimSize = its size, 0x75B94), played by InitCellAnim/
  * UploadCellAnimFrame (cell_anim.cpp): 19x13 cells, 60 frames. These are type-0
  * categories, so each frame carries its cells' palette banks after the
- * tiles. Built from graphics/vehicles/polar/ice_wall.png, all 60
+ * tiles. Built from games/xs/graphics/vehicles/polar/ice_wall.png, all 60
  * frames stacked top to bottom (tools/grit_bg.py interleaves grit's tiles
  * and banks per frame). */
 struct polar_cell_anim {
@@ -39,6 +39,6 @@ extern const struct polar_cell_anim gCategoryFamily0CellAnim = {
 };
 
 /* Category 0's spawn list (ActorCategory::descriptors[0].spawnTable),
- * generated from its data/levels/spawns/ file (`levels.py spawns`,
+ * generated from its games/xs/data/levels/spawns/ file (`levels.py spawns`,
  * docs/levels.md "Actor categories"). */
 #include "spawns/gCategory0SpawnTable.inc"

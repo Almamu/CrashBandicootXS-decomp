@@ -15,7 +15,7 @@ using Engine::Sys::FrameLimiter;
 using Engine::Sys::Irq;
 
 /* The Shin'en GAX2 wrapper layer (the engine itself is lib/gax, see
- * docs/audio.md): class AudioContext (include/engine/audio/audio.hpp), the music and
+ * docs/audio.md): class AudioContext (engine/include/engine/audio/audio.hpp), the music and
  * sound-effect front end `*gAudioContext` is (docs/rom_map.md's "Found
  * the origin point" section). */
 
@@ -147,7 +147,7 @@ void AudioContext::PlaySfx(u32 id, u32 volumeParam)
  * `gRoomFrameCount` passes `activeSfx.deadline`, fades the channel
  * out over several ticks before promoting the queued `pendingSfx`
  * record into `activeSfx` (a 12-byte struct copy - see
- * include/engine/audio/audio.hpp) and triggering it via `GAX_fx_ex`. */
+ * engine/include/engine/audio/audio.hpp) and triggering it via `GAX_fx_ex`. */
 void AudioContext::TickAmbientSfx()
 {
     if (activeSfx.id == SFX_NONE) {
@@ -437,7 +437,7 @@ AudioContext::AudioContext()
 }
 
 /* Disables the GBA's V-Count interrupt - a counterpart to
- * `Irq::DisableVBlankHandler` (VBlank) in src/engine/sys/irq.cpp. `this` is unused;
+ * `Irq::DisableVBlankHandler` (VBlank) in engine/src/engine/sys/irq.cpp. `this` is unused;
  * LevelState's destructor calls it on gAudioContext. */
 void AudioContext::DisableVCountIrq()
 {

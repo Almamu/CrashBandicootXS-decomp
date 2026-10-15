@@ -3,7 +3,7 @@
 
 /* The action controller as C++ (#664, docs/cplusplus.md): the player's
  * controller on foot (room kind 0; PlayRoom creates it). Its code is in
- * src/game/crash/action_ctrl*.cpp (Reset at the start of
+ * engine/src/game/crash/action_ctrl*.cpp (Reset at the start of
  * action_ctrl_event.cpp, where the ROM puts it). cxx_symbols.txt maps
  * every method declared here to its C name, for the vtable and state
  * table data.
@@ -79,12 +79,12 @@ public:
                          //        slam needs R released first (Update clears it then)
 
     /* The state methods, indexed by `state` (gActionCtrlStateTable,
-     * src/game/crash/data/action_ctrl_state_table.cpp, which names each state). */
+     * engine/src/game/crash/data/action_ctrl_state_table.cpp, which names each state). */
     typedef void (ActionCtrl::*StateFunc)();
     static const StateFunc stateFuncs[ACTION_STATE_COUNT];
 
     /* gActionCtrlVtable's slots; slots 5-8, 11 and 12 are Ctrl's.
-     * HandleEvent is in src/game/crash/action_ctrl_event.cpp. */
+     * HandleEvent is in engine/src/game/crash/action_ctrl_event.cpp. */
     ActionCtrl();                                                            // InitActionCtrl
     virtual void Update(Game::Entities::MovingSprite *unused);               // 1
     virtual void HandleEvent(s32 from, s32 event, s32 arg);                  // 2
@@ -172,10 +172,10 @@ public:
         this->frames = frames;
     }
 
-    /* src/game/crash/action_ctrl_event.cpp */
+    /* engine/src/game/crash/action_ctrl_event.cpp */
     void Reset();
 
-    /* src/game/crash/action_ctrl.cpp */
+    /* engine/src/game/crash/action_ctrl.cpp */
     void StateNop6();
     void StateTurboRun();
     void StateNop2();
@@ -197,7 +197,7 @@ public:
     void QueueMotionX(s32 entry);
     u8 GetPrevState();
 
-    /* src/game/crash/action_ctrl_moves.cpp */
+    /* engine/src/game/crash/action_ctrl_moves.cpp */
     void StateLeftGround();
     void StateDying();
     void StateWarpIn();
@@ -210,19 +210,19 @@ public:
     void DoSuperBodySlamShockwave();
     void StartTornadoSpin(s32 turnState, s32 endState);
 
-    /* src/game/crash/action_ctrl_states.cpp */
+    /* engine/src/game/crash/action_ctrl_states.cpp */
     void ApplyMotion();
     void StateIdle();
 
-    /* src/game/crash/action_ctrl_land.cpp */
+    /* engine/src/game/crash/action_ctrl_land.cpp */
     void StateCrawlStandUp();
     void StateBodySlamLand();
     void StateLand();
 
-    /* src/game/crash/action_ctrl_states.cpp */
+    /* engine/src/game/crash/action_ctrl_states.cpp */
     u8 CheckLeftGround();
 
-    /* src/game/crash/action_ctrl_moves.cpp */
+    /* engine/src/game/crash/action_ctrl_moves.cpp */
     void StartTornadoFall();
     void EndSpin(u8 mode, s32 flags);
     void SteerSpin(u8 mode);
@@ -239,11 +239,11 @@ public:
     void StateCrawlStop();
     void StateBodySlamStart();
 
-    /* src/game/crash/action_ctrl_states.cpp */
+    /* engine/src/game/crash/action_ctrl_states.cpp */
     void StateRun();
     void StateJump();
 
-    /* src/game/crash/action_ctrl_states.cpp */
+    /* engine/src/game/crash/action_ctrl_states.cpp */
     void StateAirborne();
     void StateFlipBodySlamStart();
     void StateSlide();
@@ -256,11 +256,11 @@ public:
     void StateCrawlStart();
     void StateCrawl();
 
-    /* src/game/crash/action_ctrl_update.cpp */
+    /* engine/src/game/crash/action_ctrl_update.cpp */
     u8 TryDoubleJump();
     void HandleAirInput();
 
-    /* src/game/crash/action_ctrl_event.cpp */
+    /* engine/src/game/crash/action_ctrl_event.cpp */
     void KillPlayer(s32 anim);
     void UpdateSkidAnim();
     s32 UpdateFacing();

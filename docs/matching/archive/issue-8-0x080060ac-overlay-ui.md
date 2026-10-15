@@ -3,20 +3,20 @@
 The tail end of the composite pause/options screen's `asm/code_3_1_10.s`
 region, continuing directly from GitHub issue #7's `PauseMenuCursorDown`/
 `PauseMenuCursorUp` (`src/game/ui/pause_menu_widgets.o`) up to the pre-existing
-parked `DrawPowerDialog` guard (`src/game/ui/power_dialog_draw.c`) that already
+parked `DrawPowerDialog` guard (`engine/src/game/ui/power_dialog_draw.c`) that already
 marks this file's end. 3 of the 9 functions matched, 4 parked
 (`NON_MATCHING`, semantics understood), 2 left completely untouched.
 
 ## Matched (3)
 
-- **`FormatDecimal`** (`src/game/ui/pause_menu_widgets.c`) - decimal `itoa`:
+- **`FormatDecimal`** (`engine/src/game/ui/pause_menu_widgets.c`) - decimal `itoa`:
   writes `value`'s digits (unsigned, most significant first) into
   `dest`, NUL-terminated, returning the digit count. Builds digits
   least-significant-first into a small stack buffer via the existing
   `__modsi3`/`__divsi3` div/mod primitives
   (`lib/libgcc/lib1funcs.s`), then reverses them into `dest`. Shared
   by every settings-row/results-widget number label already matched in
-  `src/game/ui/pause_menu_pages_init.c`/`pause_menu_widgets.c` (both already call
+  `engine/src/game/ui/pause_menu_pages_init.c`/`pause_menu_widgets.c` (both already call
   it as an `extern`).
 
   The interesting gotcha: this compiler always copies argument
@@ -37,18 +37,18 @@ marks this file's end. 3 of the 9 functions matched, 4 parked
   r7 unprompted, which is what happens here once `value`'s copy is
   deferred.
 
-- **`FormatVolumePercent`** (`src/game/ui/pause_menu_widgets.c`) - formats a
+- **`FormatVolumePercent`** (`engine/src/game/ui/pause_menu_widgets.c`) - formats a
   `" <NN%>"`-shaped scratch string (space, `<`, decimal digits of
   `arg1 * 5` via `FormatDecimal` above, `%`, `>`, NUL) into `out`. Its
   first parameter is read by nothing in the ROM - a genuinely unused
   argument (confirmed: the very first real instruction overwrites r0
   before ever reading it).
 
-- **`CommitPauseMenuFrame`** (`src/game/ui/pause_menu_pages_draw.c`) - the composite
+- **`CommitPauseMenuFrame`** (`engine/src/game/ui/pause_menu_pages_draw.c`) - the composite
   screen's own top-level object's "apply display registers" step:
   flushes VRAM DMA, clears `PLTT`, and writes `field_c8`/`field_cc`/
   `field_d0` to `REG_BLDCNT`/`REG_BLDY`/`REG_DISPCNT` - the same shape
-  `src/game/ui/power_dialog_draw.c`'s already-matched `CommitPowerDialogFrame` uses for a
+  `engine/src/game/ui/power_dialog_draw.c`'s already-matched `CommitPowerDialogFrame` uses for a
   *different*, smaller per-widget object (`struct power_dialog`),
   confirming this is a second, larger "self" object still not fully
   reconciled (built by the still-raw `RunPauseMenu`/`InitPauseMenu`,
@@ -73,9 +73,9 @@ marks this file's end. 3 of the 9 functions matched, 4 parked
 ## Parked (`NON_MATCHING`, 4)
 
 All four hit the same class of gcc-2.9 register-allocation difficulty
-already documented at length for `DrawPowerDialog` (`src/game/ui/
+already documented at length for `DrawPowerDialog` (`engine/src/game/ui/
 power_dialog_draw.c`) and `InitPausePowersPage`/`InitPauseGemsPage`/`InitPauseRelicsPage`/`InitPauseTimeTrialPage`
-(`src/game/ui/pause_menu_pages_init.c`, GitHub issue #7): every load, store,
+(`engine/src/game/ui/pause_menu_pages_init.c`, GitHub issue #7): every load, store,
 branch, and call is semantically confirmed, but the loop/self pointer
 and the icon-manager position-store's scratch registers never land
 exactly where the ROM's own allocator puts them, no matter how the
@@ -85,7 +85,7 @@ per-call-site register-pin macro work already invested in `DrawPowerDialog`
 of it.
 
 - **`DrawPauseTimeTrialPage`**, **`DrawPauseCrystalsPage`**, **`DrawPauseMenuPageTitle`**
-  (`src/game/ui/pause_menu_pages_draw.c`, real bytes wrapped `.if
+  (`engine/src/game/ui/pause_menu_pages_draw.c`, real bytes wrapped `.if
   NON_MATCHING == 0` in `asm/code_3_1_10_14.s`) - three icon-manager
   centered-label draws, each the companion "draw a number/label
   centered on an icon widget" step for one of GitHub issue #7's
@@ -111,10 +111,10 @@ of it.
     object from the other two (only `field_24`, a plain `s32` category
     index, is touched here).
 
-- **`PowerDialogLoop`** (`src/menus/power_dialog_loop.c`, real bytes
+- **`PowerDialogLoop`** (`engine/src/menus/power_dialog_loop.c`, real bytes
   wrapped `.if NON_MATCHING == 0` in `asm/code_3_1_10_13.s`) - the
   settings-row confirm-cursor stepper on the small per-widget object
-  `src/game/ui/power_dialog_draw.c` already names `struct power_dialog`
+  `engine/src/game/ui/power_dialog_draw.c` already names `struct power_dialog`
   (redeclared locally here per this project's minimal-local-type
   convention for a type already anchored in another translation unit).
   Steps `field_24`'s low 5 bits down to 0 one at a time (redrawing/
@@ -143,12 +143,12 @@ of it.
 
 `asm/code_3_1_10_11.s` (originally `FormatDecimal` through the
 pre-existing parked `DrawPowerDialog` guard) split into:
-`src/game/ui/pause_menu_widgets.c` (`FormatDecimal`/`FormatVolumePercent`, matched),
+`engine/src/game/ui/pause_menu_widgets.c` (`FormatDecimal`/`FormatVolumePercent`, matched),
 the new raw `asm/code_3_1_10_14.s` (`DrawPauseTimeTrialPage`/`DrawPauseCrystalsPage`/
-`DrawPauseMenuPageTitle`'s real bytes, wrapped), `src/game/ui/pause_menu_pages_draw.c`
-(their `NON_MATCHING` C reconstructions), `src/game/ui/pause_menu_pages_draw.c`
+`DrawPauseMenuPageTitle`'s real bytes, wrapped), `engine/src/game/ui/pause_menu_pages_draw.c`
+(their `NON_MATCHING` C reconstructions), `engine/src/game/ui/pause_menu_pages_draw.c`
 (`CommitPauseMenuFrame`, matched), the new raw `asm/code_3_1_10_12.s`
-(`ShowPowerDialog`/`InitPowerDialog`, left untouched), `src/game/ui/
+(`ShowPowerDialog`/`InitPowerDialog`, left untouched), `engine/src/game/ui/
 power_dialog_loop.c` (`PowerDialogLoop`'s `NON_MATCHING` C reconstruction),
 the new raw `asm/code_3_1_10_13.s` (its real bytes, wrapped), and
 finally the trimmed `asm/code_3_1_10_11.s` (just the original file's
@@ -200,10 +200,10 @@ A follow-up pass tackled this issue's final two "left completely
 untouched" functions, `ShowPowerDialog`/`InitPowerDialog` (previously raw in
 `asm/code_3_1_10_12.s`).
 
-- **`InitPowerDialog`** (`src/game/ui/power_dialog.c`) - the two-string
+- **`InitPowerDialog`** (`engine/src/game/ui/power_dialog.c`) - the two-string
   dialog/message-box object constructor docs/rom_map.md's "Correction"
   section already traced: builds a small `struct power_dialog`
-  (the same object `src/game/ui/power_dialog_draw.c`/`power_dialog_loop.c`
+  (the same object `engine/src/game/ui/power_dialog_draw.c`/`power_dialog_loop.c`
   already name, allocated by the caller at exactly its own `0x2c`-byte
   size) plus one `struct settings_icon_actor`-shaped background icon
   owned via `field_18`, built the same way `pause_menu_pages_init.c`'s icon
@@ -233,7 +233,7 @@ untouched" functions, `ShowPowerDialog`/`InitPowerDialog` (previously raw in
   diffing it directly against the ROM's own disassembly, not by trusting
   the isolated `.s` output a second time.
 
-- **`ShowPowerDialog`** (`src/game/ui/power_dialog.c`) - the higher-
+- **`ShowPowerDialog`** (`engine/src/game/ui/power_dialog.c`) - the higher-
   level dialog spawner docs/rom_map.md already traced (palette/DISPCNT
   reset, re-init the two icon managers, reset the VRAM upload cursor,
   fire each manager's `record->slots[6]` trampoline, allocate and build
@@ -262,10 +262,10 @@ this pass** - one function's worth of register-allocation work remains.
 ## File structure (second pass)
 
 `asm/code_3_1_10_12.s` (previously holding both `ShowPowerDialog` and
-`InitPowerDialog` raw) is gone - split into the new `src/game/ui/
+`InitPowerDialog` raw) is gone - split into the new `engine/src/game/ui/
 power_dialog.c` (`ShowPowerDialog`'s `NON_MATCHING` C reconstruction),
 the new `asm/code_3_1_10_15.s` (`ShowPowerDialog`'s real bytes, wrapped),
-and the new `src/game/ui/power_dialog.c` (`InitPowerDialog`, matched,
+and the new `engine/src/game/ui/power_dialog.c` (`InitPowerDialog`, matched,
 unconditional). `ldscript.txt` updated to link them in that order
 (`pause_menu_pages_draw.o`, `power_dialog.o`, `code_3_1_10_15.o`,
 `power_dialog.o`, `power_dialog_loop.o`, ...), keeping every
@@ -279,9 +279,9 @@ crashbandicootxs.map && make compare` (`La suma coincide`).
 ## Third pass: the remaining parked quartet + `ShowPowerDialog` matched via NAKED transcription
 
 Closed out this issue's last 4 parked functions (`DrawPauseTimeTrialPage`,
-`DrawPauseCrystalsPage`, `DrawPauseMenuPageTitle` in `src/game/ui/pause_menu_pages_draw.c`,
-`PowerDialogLoop` in `src/menus/power_dialog_loop.c`) plus `ShowPowerDialog`
-(`src/game/ui/power_dialog.c`), the second pass's remaining parked
+`DrawPauseCrystalsPage`, `DrawPauseMenuPageTitle` in `engine/src/game/ui/pause_menu_pages_draw.c`,
+`PowerDialogLoop` in `engine/src/menus/power_dialog_loop.c`) plus `ShowPowerDialog`
+(`engine/src/game/ui/power_dialog.c`), the second pass's remaining parked
 function - all 5 now byte-exact matched, confirmed by a full clean
 `make compare` (`La suma coincide`).
 

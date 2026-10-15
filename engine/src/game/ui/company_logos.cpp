@@ -39,7 +39,7 @@ using Game::Ui::Starfield;
 
 /* Tail of GitHub issue #65's chunk (0x080361B0-0x08037110). The
  * company-logo screen's methods (CompanyLogos, #664 part 10b,
- * include/game/ui/frontend.hpp): Run, the VV logo's graphics and pieces (the
+ * engine/include/game/ui/frontend.hpp): Run, the VV logo's graphics and pieces (the
  * first four, at the end of title_screen.cpp until #770), the VV logo
  * draw and the Universal logo BG (this file was split off
  * `title_screen.cpp` at `DrawVvLogoPieces`), then the logo actor's

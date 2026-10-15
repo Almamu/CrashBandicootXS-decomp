@@ -1,7 +1,7 @@
 # `LinkCrateToActiveBucket` converted from `NON_MATCHING` to real matched C
 
-`LinkCrateToActiveBucket` (now `src/crates/crate_grid_link.c`, previously an
-`#if NON_MATCHING` block inside `src/game/entities/part_list.c`) had been
+`LinkCrateToActiveBucket` (now `engine/src/crates/crate_grid_link.c`, previously an
+`#if NON_MATCHING` block inside `engine/src/game/entities/part_list.c`) had been
 parked as "extremely close" since an earlier pass - see `docs/matching.md`,
 "Parked, not matched: `LinkCrateToActiveBucket`". It's now genuinely matched as real
 decompiled C.
@@ -146,7 +146,7 @@ scratch copy of the function, assembled with `arm-none-eabi-as -mcpu=arm7tdmi
 `objcopy -O binary --only-section=.text` + `cmp`) directly against the
 ROM's own raw bytes (assembled from the pre-integration
 `asm/code_3_2_13_9150.s`) - identical. Then, after integrating into
-`src/crates/crate_grid_link.c` and updating `ldscript.txt`/
+`engine/src/crates/crate_grid_link.c` and updating `ldscript.txt`/
 `tools/report_units.py`, a full clean `rm -rf build && make
 NON_MATCHING=1 report` followed by `objdiff-cli report generate`
 (100.0%), then a full clean `rm -rf build crashbandicootxs.elf
@@ -156,9 +156,9 @@ crashbandicootxs.gba crashbandicootxs.map && make compare` -
 ## File/link-order change
 
 `LinkCrateToActiveBucket` moves from an `#if NON_MATCHING` block inside
-`src/game/entities/part_list.c` (whose real bytes, while parked, lived in
+`engine/src/game/entities/part_list.c` (whose real bytes, while parked, lived in
 the standalone `asm/code_3_2_13_9150.s`, guarded by `.if NON_MATCHING ==
-0`) into its own new `src/crates/crate_grid_link.c` - its real ROM
+0`) into its own new `engine/src/crates/crate_grid_link.c` - its real ROM
 address isn't adjacent to `part_list.c`'s own matched functions
 (`DrawPartList`-`InitPartList`), sitting instead between the NAKED
 `UnlinkCrateFromGrid` (`crate_grid_unlink.c`) and `UpdateCrateList` (`crate_list_update.c`),

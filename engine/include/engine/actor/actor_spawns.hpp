@@ -1,7 +1,7 @@
 #ifndef GUARD_ACTOR_SPAWNS_HPP
 #define GUARD_ACTOR_SPAWNS_HPP
 
-/* The actor category's spawn table (src/engine/actor/actor_spawn.cpp, #915): the
+/* The actor category's spawn table (engine/src/engine/actor/actor_spawn.cpp, #915): the
  * category's spawn records (struct actor_spawn_table, actor.h), ordered
  * by depth, and how far the category has spawned them. ActorCategory::Select
  * sets the table up and spawns what is in view; ActorCategory::RunFrame

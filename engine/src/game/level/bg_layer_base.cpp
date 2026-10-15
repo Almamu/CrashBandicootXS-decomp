@@ -10,9 +10,9 @@ using Game::Level::BgStreamer;
 
 /* Built with old_agbcp - see docs/matching/archive/game-loop-old-agbcc.md. */
 
-/* BgLayerBase (include/game/level/bg_layer.hpp), ROM 0x08024D74-0x08024F24: its
+/* BgLayerBase (engine/include/game/level/bg_layer.hpp), ROM 0x08024D74-0x08024F24: its
  * destructor, constructor, scroll clamps and the Q8 scale/accumulate step
- * (in src/game/ui/cutscene_player.cpp until #770; the destructor is the
+ * (in engine/src/game/ui/cutscene_player.cpp until #770; the destructor is the
  * key method, so g++ emits gBgLayerBaseVtable here), then its other
  * methods. The collision tile cache's lookups that follow in the ROM are
  * in tile_cache.cpp (here until #770). */

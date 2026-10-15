@@ -2,10 +2,10 @@
 #define GUARD_PLAYER_HPP
 
 /* The player as C++ (#664, docs/cplusplus.md, part 8): the class behind
- * gPlayerVtable, whose code is src/game/crash/player_*.cpp. It has no C view
+ * gPlayerVtable, whose code is engine/src/game/crash/player_*.cpp. It has no C view
  * (the C `struct player` went with its last C reader, #754).
  * cxx_symbols.txt maps the methods to the C names. The controllers' record
- * types and tables (src/.../data defines them) and the player's IWRAM data are
+ * types and tables (engine/src/.../data defines them) and the player's IWRAM data are
  * here too.
  *
  * No `#pragma interface`: g++ emits the vtable in player_collide.cpp (see
@@ -46,11 +46,11 @@ struct level_anim {
 };
 
 /* The attack kind of each action controller state (QueueCratePlayerCollision,
- * src/game/crates/data/crate_tables.cpp). */
+ * engine/src/game/crates/data/crate_tables.cpp). */
 extern const s32 gActionCtrlStateAttackKinds[ACTION_STATE_COUNT];
 
 /* The swim controller's animations: one row of 13 tilt levels per mode
- * (src/game/crash/data/swim_speeds.cpp, action_ctrl_state_table.cpp), and the
+ * (engine/src/game/crash/data/swim_speeds.cpp, action_ctrl_state_table.cpp), and the
  * stroke speeds. */
 extern const struct level_anim gSwimCtrlModeLevelAnims[8][13];
 extern const struct level_anim *const gSwimCtrlModeAnimRows[8];
@@ -60,7 +60,7 @@ extern const struct speed_table gSwimCtrlTurnSpeeds;
  * gLastSpriteVelY is the moving sprites'). Nothing reads it. */
 extern s32 gLastPlayerVelY;
 
-/* Aku Aku's orbit frame counters (DrawPlayer, src/engine/sys/iwram_data.cpp). */
+/* Aku Aku's orbit frame counters (DrawPlayer, engine/src/engine/sys/iwram_data.cpp). */
 extern s32 gAkuAkuInvincibleFrame;
 extern s32 gAkuAkuFollowFrame;
 
@@ -116,13 +116,13 @@ extern s32 gAkuAkuFollowFrame;
 #define PLAYER_ICE_STOP_DECEL               Q8_FRAC(0, 8)
 
 /* The player controller's and the input controller's motion records
- * (src/game/crash/data/motion_records.cpp; `struct speed_ramp`, objects.h). */
+ * (engine/src/game/crash/data/motion_records.cpp; `struct speed_ramp`, objects.h). */
 extern const struct speed_ramp gSwimCtrlMotionRecords[31];
 extern const struct speed_ramp gInputCtrlMotionRecords[9];
 
 /* The entry sets PlayRoom gives the action, player and input controllers
- * through SetCtrlAnimSet (src/game/crash/data/action_swim_motion_sets.cpp,
- * src/game/crash/data/input_ctrl_motion_set.cpp). */
+ * through SetCtrlAnimSet (engine/src/game/crash/data/action_swim_motion_sets.cpp,
+ * engine/src/game/crash/data/input_ctrl_motion_set.cpp). */
 extern const struct entry_set gActionCtrlMotionSet;
 extern const struct entry_set gSwimCtrlMotionSet;
 extern const struct entry_set gInputCtrlMotionSet;
@@ -234,7 +234,7 @@ public:
     void StopFalling();              // StopPlayerFalling (UNUSED)
     u8 TouchesBox(struct aabb *box); // PlayerTouchesBox
 
-    /* The accessors (src/game/crash/player.cpp; their C names, cxx_symbols.txt,
+    /* The accessors (engine/src/game/crash/player.cpp; their C names, cxx_symbols.txt,
      * are GetPlayerCollisionQueue, ClearPlayerDead, ...). Most are
      * UNUSED (see there). */
     Game::Crates::CollisionQueue *GetCollisionQueue();

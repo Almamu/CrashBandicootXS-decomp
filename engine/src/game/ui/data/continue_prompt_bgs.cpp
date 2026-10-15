@@ -13,7 +13,7 @@ using Engine::Gfx::ContinuePromptUkaUkaBg;
 /*
  * ROM 0x0817C594-0x0817C5D0: the fade overlay's three BG packages,
  * loaded by InitContinuePrompt (continue_prompt.cpp) into its BG0/BG2/BG1 buffers.
- * Linked in ROM order between data/data.s sections by games/xs/ldscript.txt - see
+ * Linked in ROM order between games/xs/data/data.s sections by games/xs/ldscript.txt - see
  * docs/data.md.
  */
 

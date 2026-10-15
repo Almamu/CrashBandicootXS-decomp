@@ -19,7 +19,7 @@ using Game::Entities::Sprite;
 using Game::Entities::TouchableList;
 using Game::Objects::ExtraLife;
 
-/* The extra life (#664, include/game/objects/pickups.hpp). An old_agbcp object
+/* The extra life (#664, engine/include/game/objects/pickups.hpp). An old_agbcp object
  * (OLD_AGBCC_OBJS). The wumpa's CheckPickup, which the ROM puts right
  * after it, starts wumpa_update.cpp. */
 

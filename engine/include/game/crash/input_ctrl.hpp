@@ -2,7 +2,7 @@
 #define GUARD_INPUT_CTRL_HPP
 
 /* The input controller as C++ (#664, docs/cplusplus.md):
- * src/game/crash/input_ctrl.cpp and input_ctrl_queue.cpp.
+ * engine/src/game/crash/input_ctrl.cpp and input_ctrl_queue.cpp.
  *
  * No `#pragma interface`: g++ emits its vtable, gInputCtrlVtable, in
  * input_ctrl.cpp (see ctrl.hpp).
@@ -54,7 +54,7 @@ public:
     s32 timer; // 0x24 - how long left has been held, and the cooldown after
 
     /* The state methods, indexed by `state` (gInputCtrlStateFuncs,
-     * src/game/crash/data/swim_input_ctrl_state_tables.cpp): INPUT_CTRL_STATE_*. */
+     * engine/src/game/crash/data/swim_input_ctrl_state_tables.cpp): INPUT_CTRL_STATE_*. */
     typedef void (InputCtrl::*StateFunc)();
     static const StateFunc stateFuncs[4];
 

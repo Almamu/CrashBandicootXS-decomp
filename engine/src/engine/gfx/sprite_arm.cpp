@@ -14,7 +14,7 @@ using Game::Entities::ActorSelf;
  * IWRAM 0x0300024C-0x030007CC (stored in ROM at 0x087E5830): the ARM
  * graphics routines of the IWRAM image crt0 copies to 0x03000000 at boot.
  * The Thumb code calls them through the function pointers in
- * src/engine/sys/iwram_data.cpp (gUnpackNibbleTilesFunc,
+ * engine/src/engine/sys/iwram_data.cpp (gUnpackNibbleTilesFunc,
  * gDrawMirroredTilemapFunc, gHeapSortActorsByKeyFunc,
  * gUnpackRleSpriteFrameFunc and gLookupSpriteFrameCacheFunc).
  *

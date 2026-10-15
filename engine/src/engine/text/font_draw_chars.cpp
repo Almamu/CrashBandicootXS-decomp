@@ -2,7 +2,7 @@
 
 using Engine::Text::Font;
 
-/* GitHub issue #46: Font's DrawChars (include/engine/text/font.hpp), between
+/* GitHub issue #46: Font's DrawChars (engine/include/engine/text/font.hpp), between
  * font_glyph.cpp and font_draw_text.cpp in the ROM. */
 
 /* Draws `count` characters from `str`, one PutChar (virtual) each. */

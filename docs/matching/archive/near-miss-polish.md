@@ -5,9 +5,9 @@ within a few instructions of the ROM. Three of them now match as real C:
 
 | Function | File | Compiler | Was | Technique |
 |---|---|---|---|---|
-| `PlaySfx` (`sub_8001854`) | `src/engine/audio/audio.c` | agbcc | raw asm, 4 halfwords | unpin `self`, then one empty `asm("" : : "r"(&gSfxVoiceToggle))` |
-| `ValidateSaveData` | `src/engine/save/save_data.c` | agbcc | NAKED, 6 halfwords | one empty `asm("" : : "r"(flags))` |
-| `LevelSelectLoop` | `src/game/ui/level_select.c` | old_agbcc | NAKED, 1 instruction | statement expression plus an empty `asm("" : "+r"(k.all))` |
+| `PlaySfx` (`sub_8001854`) | `engine/src/engine/audio/audio.c` | agbcc | raw asm, 4 halfwords | unpin `self`, then one empty `asm("" : : "r"(&gSfxVoiceToggle))` |
+| `ValidateSaveData` | `engine/src/engine/save/save_data.c` | agbcc | NAKED, 6 halfwords | one empty `asm("" : : "r"(flags))` |
+| `LevelSelectLoop` | `engine/src/game/ui/level_select.c` | old_agbcc | NAKED, 1 instruction | statement expression plus an empty `asm("" : "+r"(k.all))` |
 
 `asm/code_3_1_10.s`, which held only `PlaySfx`, has been deleted along
 with its `ldscript.txt` line.

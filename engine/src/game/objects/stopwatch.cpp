@@ -14,7 +14,7 @@ extern "C" {
 using Game::Entities::Sprite;
 using Game::Objects::Stopwatch;
 
-/* The stopwatch, the time trial's pickup (#664, include/game/objects/pickups.hpp).
+/* The stopwatch, the time trial's pickup (#664, engine/include/game/objects/pickups.hpp).
  * g++ emits gStopwatchVtable here. The action controller's Reset, which
  * the ROM puts after it, starts action_ctrl_event.cpp. */
 

@@ -66,10 +66,10 @@ function at the very end:
 
 ## Matched (24 functions, full clean `make compare` passing)
 
-`src/game/crates/spawn_crates.c` (`SpawnNitroSwitchCrate`-`SpawnCheckpointCrate`, 6
+`engine/src/game/crates/spawn_crates.c` (`SpawnNitroSwitchCrate`-`SpawnCheckpointCrate`, 6
 fns): the `CreateCrate` trampoline family, types `1`-`7`.
 
-`src/game/objects/spawn_pickups.c` (`SpawnBodySlamPower`-`InitLevelState`,
+`engine/src/game/objects/spawn_pickups.c` (`SpawnBodySlamPower`-`InitLevelState`,
 18 fns): the `gSpriteBankTable` spawner family, `SpawnCrateGemMarker`,
 `SpawnWumpa`, both `nullsub`s, the `SpawnStartMarker` trampolines, the
 `gPlayer` position writers, the descriptor pair, and
@@ -152,7 +152,7 @@ fns): the `CreateCrate` trampoline family, types `1`-`7`.
 
 ## Parked (`NON_MATCHING`) - 1 function
 
-- **`SpawnBasicCrate`** (`src/game/crates/spawn_crates.c`, real bytes
+- **`SpawnBasicCrate`** (`engine/src/game/crates/spawn_crates.c`, real bytes
   in `asm/code_3_2_17_21d04.s`) - every field/mask/branch is confirmed
   correct and the bit-test/mask-write tail matches the ROM
   byte-for-byte, but the middle "resolve the per-record flags byte"
@@ -178,7 +178,7 @@ correct against the ROM; the residual 4-byte CSE gap documented above
 never responded to further plain-C restructuring, so it was converted
 to `NAKED` and its ROM disassembly transcribed instruction-for-
 instruction - the same escape hatch this project already established
-for `MakeLinkHandshakeId`/`ResetLinkSessionState` (`src/engine/link/link_handshake.c`, see
+for `MakeLinkHandshakeId`/`ResetLinkSessionState` (`engine/src/engine/link/link_handshake.c`, see
 `docs/matching/archive/issue-4-sio-settings-sync.md`'s "The general strategy
 for the rest" section).
 
@@ -222,7 +222,7 @@ coincide`.
 
 This doesn't yet extend to `SpawnStartMarker`'s own copy of this same
 `gEntityFlags -> *rec -> {+8, +0xc}` resolution shape
-(`src/game/level/spawn_start_marker.c`, issue #30) - that function's
+(`engine/src/game/level/spawn_start_marker.c`, issue #30) - that function's
 residual is a different register-choice/mask-derivation gap (`byte` in
 r0, a `movs r0,#1`/`subs r0,#0x12` mask derivation rather than a
 negative-immediate one), not the copy-elimination gap closed here -

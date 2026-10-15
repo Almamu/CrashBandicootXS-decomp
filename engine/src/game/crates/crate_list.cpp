@@ -10,7 +10,7 @@ using Game::Crates::CrateList;
 using Game::Entities::MovingSprite;
 
 /* The crate list's slots and grid nodes (#664, part 7f;
- * include/game/crates/crate_list.hpp). An old_agbcp object (OLD_AGBCC_OBJS). */
+ * engine/include/game/crates/crate_list.hpp). An old_agbcp object (OLD_AGBCC_OBJS). */
 
 /* PartList::CollideWithObject's twin (part_list_collide.cpp), for Collide:
  * when `part` touches the box (ClassifySpriteContact), its HandleEvent

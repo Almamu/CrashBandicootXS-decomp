@@ -30,7 +30,7 @@ using Game::Vehicles::Polar::PolarPlayer;
 using Game::Vehicles::Polar::Yeti;
 
 /* The polar player's virtual methods, the hazards' hits and six of its
- * states (#664 part 11c, include/game/vehicles/vehicle.hpp), ROM
+ * states (#664 part 11c, engine/include/game/vehicles/vehicle.hpp), ROM
  * 0x0802B364-0x0802BC68, between polar_actor_factory.cpp and
  * polar_player_states.cpp. The player rides the polar bear: the d-pad
  * steers, A jumps and B dashes, and the bear's speed is the cell

@@ -6,7 +6,7 @@ A room's collision image is therefore exactly as large as its BG0 picture
 Each cell value (terrain type, flag nibble and open bits,
 docs/flags/terrain.md) has its own colour.
 
-The colours are the legend in data/levels/collision_legend.json (drawn in
+The colours are the legend in games/xs/data/levels/collision_legend.json (drawn in
 docs/levels.md, "Collision layers"). An image is read back by colour, not by
 palette index, so an editor that reorders or extends the palette, or saves
 the image as true colour, doesn't change the cells. A colour that isn't in
@@ -31,7 +31,7 @@ import struct
 import sys
 from pathlib import Path
 
-LEGEND_JSON = Path(__file__).resolve().parent.parent / "data/levels/collision_legend.json"
+LEGEND_JSON = Path(__file__).resolve().parent.parent / "games/xs/data/levels/collision_legend.json"
 
 # A cell's size in pixels, each way: one 8x8 tile, as in the BG layers.
 CELL_PX = 8

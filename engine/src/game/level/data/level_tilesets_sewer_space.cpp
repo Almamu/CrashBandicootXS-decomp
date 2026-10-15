@@ -4,8 +4,8 @@ extern "C" {
 
 /*
  * ROM 0x08270F08-0x082B91D0: level BG tile sets 4 and 5, the same
- * tag-0x00 raw 8bpp tile sets as src/game/level/data/level_tilesets_jungle_snow_underwater.cpp (see
- * there). Linked in ROM order between data/data.s sections by
+ * tag-0x00 raw 8bpp tile sets as engine/src/game/level/data/level_tilesets_jungle_snow_underwater.cpp (see
+ * there). Linked in ROM order between games/xs/data/data.s sections by
  * games/xs/ldscript.txt - see docs/data.md.
  */
 

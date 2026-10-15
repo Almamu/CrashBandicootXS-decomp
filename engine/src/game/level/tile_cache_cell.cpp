@@ -10,12 +10,12 @@ extern "C" {
 using Game::Level::TileCache;
 
 /* The collision tile cache's cell lookup and source (TileCache,
- * include/game/level/bg_layer.hpp), ROM 0x080254C0-0x08025554; the rest of the class
+ * engine/include/game/level/bg_layer.hpp), ROM 0x080254C0-0x08025554; the rest of the class
  * is in tile_cache.cpp, built with old_agbcp (this file is agbcp). This
  * file was collision_map.cpp until #770, which split its bitmap helpers
  * into entity_bitmap.cpp. */
 
-/* TileCache::GetCell (include/game/level/bg_layer.hpp). Same lookup as
+/* TileCache::GetCell (engine/include/game/level/bg_layer.hpp). Same lookup as
  * `GetTerrainHeights`/`GetTerrainType`, but returns the raw
  * decoded halfword unfiltered - no bounds check, no output params. */
 u16 TileCache::GetCell(s32 x, s32 y)

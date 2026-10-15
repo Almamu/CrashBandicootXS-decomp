@@ -6,7 +6,7 @@ using Game::Entities::MovingSprite;
 
 /* GitHub issue #22, ROM 0x08017ECC-0x08017FE8 - non-adjacent to
  * airship_fireball.c since UpdateMegaMix (mega_mix_update.cpp) sits between
- * them. MegaMixCtrl (include/game/bosses/boss_ctrl.hpp) looks motion records up like
+ * them. MegaMixCtrl (engine/include/game/bosses/boss_ctrl.hpp) looks motion records up like
  * Ctrl's ...FromSet methods (ctrl.cpp): `animSet->entries[index]` is an
  * {X, Y} pair of indexes, here into gMegaMixMotionRecords. `part->mirror`
  * bit 4/bit 5 negate the record's `start`/`target` like Ctrl's

@@ -18,7 +18,7 @@ using Game::Entities::MovingSprite;
 using Game::Level::BgLayer;
 
 /* CrateList::Collide and CollideWithPlayer (#664, part 7f;
- * include/game/crates/crate_list.hpp), PartList's Collide and CollideWithPlayer
+ * engine/include/game/crates/crate_list.hpp), PartList's Collide and CollideWithPlayer
  * (part_list_collide.cpp) for the grid. An old_agbcp object (OLD_AGBCC_OBJS).
  * The three take the sprites as MovingSprites, as PartList's do (they
  * call HandleEvent, slot 13); the crate list holds crates, which have no
@@ -41,7 +41,7 @@ static inline void CollidePart(CrateList *list, MovingSprite *part, struct aabb 
 /* PartList::Collide's counterpart: the sprites on screen in the camera's
  * column and the two to its right, then column 255, collide with `other`
  * (the player, or another object) against `box`. A sprite in both is
- * tested twice. UNUSED - no caller anywhere in the ROM (no call in src/,
+ * tested twice. UNUSED - no caller anywhere in the ROM (no call in engine/src/,
  * no pointer to 0x08009528 in the ROM): the crates collide with the
  * player through CollidePlayer (below), and
  * CollideWithPlayer and CollideWithObject have no other caller. */
@@ -138,7 +138,7 @@ void CrateList::CollideWithPlayer(struct aabb box, MovingSprite *part)
 }
 
 /* The player's pass over the crate grid (#664, part 7f;
- * include/game/crates/crate_list.hpp). */
+ * engine/include/game/crates/crate_list.hpp). */
 
 /* For the crates in the grid buckets from the camera's column to
  * CRATE_GRID_SPAN right of it

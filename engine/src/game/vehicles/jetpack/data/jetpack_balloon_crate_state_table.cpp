@@ -4,7 +4,7 @@ using Game::Vehicles::Jetpack::JetpackBalloonCrate;
 
 /*
  * ROM 0x0817C42C-0x0817C444, split from airship_state_table.cpp (#664 part
- * 11f). Linked in ROM order between data/data.s sections by games/xs/ldscript.txt
+ * 11f). Linked in ROM order between games/xs/data/data.s sections by games/xs/ldscript.txt
  * - see docs/data.md.
  */
 

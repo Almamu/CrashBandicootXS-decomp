@@ -4,7 +4,7 @@ extern "C" {
 }
 
 /*
- * ROM 0x0816B98C-0x0816BB6C. Linked in ROM order between data/data.s
+ * ROM 0x0816B98C-0x0816BB6C. Linked in ROM order between games/xs/data/data.s
  * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 

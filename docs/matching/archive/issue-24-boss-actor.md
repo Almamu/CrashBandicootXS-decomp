@@ -1,7 +1,7 @@
 # Issue #24: 0x0801967C-0x0801A794, graphics - actor-part controller classes and a boss state machine
 
 All 25 functions of the former `asm/code_3_2_17_188d0_1967c.s` now live
-in the new `src/game/bosses/dingodile.c` (named by address, like
+in the new `engine/src/game/bosses/dingodile.c` (named by address, like
 `input_ctrl.c`). **23 are real C; `SpawnDingodileShark` and `UpdateDingodileShield`
 are NAKED transcriptions** with complete C reconstructions kept under
 `#if NON_MATCHING`. Issue #24 stays open for those two.

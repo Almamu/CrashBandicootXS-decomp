@@ -397,7 +397,7 @@ def main():
     out.append("")
     out.extend(w.defs)
     out.append("")
-    out.append("/* gGaxDefaultSong (data/data.s on the GBA). */")
+    out.append("/* gGaxDefaultSong (games/xs/data/data.s on the GBA). */")
     out.append("static union %s sDefaultSong = { .s = { %d, { %s } } };" % (view, count, ", ".join(entries)))
     out.append("extern struct GaxHandlerLayout gGaxDefaultSong __attribute__((alias(\"sDefaultSong\")));")
     out.append("")

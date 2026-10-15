@@ -2,18 +2,18 @@
 #define GUARD_CUTSCENE_HPP
 
 /* The cutscene player as C++ (#664 cleanup, docs/cplusplus.md): the
- * slideshow (src/game/ui/slideshow.cpp, slideshow_display.cpp) and the
- * cutscene player built on it (src/game/ui/cutscene_player.cpp).
+ * slideshow (engine/src/game/ui/slideshow.cpp, slideshow_display.cpp) and the
+ * cutscene player built on it (engine/src/game/ui/cutscene_player.cpp).
  * PlayCutscene (level_cutscene.cpp) constructs a CutscenePlayer in place
  * in a stack aggregate (where the ROM calls the constructor, after the
  * display setup). Neither class has a vtable, and neither has a C view
  * (the C `struct cutscene_player` went in #754).
  *
- * The cutscenes themselves are data (src/game/ui/data/cutscenes.cpp,
- * cutscene_slides.cpp, generated from data/cutscenes.json): the slide and
+ * The cutscenes themselves are data (engine/src/game/ui/data/cutscenes.cpp,
+ * cutscene_slides.cpp, generated from games/xs/data/cutscenes.json): the slide and
  * page tables below, CUTSCENE_COUNT long (constants/cutscenes.h). The
- * cutscene text is C (src/game/ui/data/cutscene_text_*.cpp, generated
- * from text/) and includes nothing.
+ * cutscene text is C (engine/src/game/ui/data/cutscene_text_*.cpp, generated
+ * from games/xs/text/) and includes nothing.
  *
  * `#pragma interface`: no class here has a vtable, so there is none to
  * emit; the pragma keeps g++ from emitting out-of-line copies of inline
@@ -56,13 +56,13 @@ struct cutscene_page {
 };
 
 /* The cutscenes, one {slides, count} header each
- * (src/game/ui/data/cutscenes.cpp). */
+ * (engine/src/game/ui/data/cutscenes.cpp). */
 extern const struct cutscene_slides gCutscenes[CUTSCENE_COUNT];
 
 /* Every cutscene's pages, per language (gLanguage), each indexed like
- * gCutscenes. Defined in src/engine/sys/iwram_data.cpp. */
+ * gCutscenes. Defined in engine/src/engine/sys/iwram_data.cpp. */
 extern const struct cutscene_page *const *gCutsceneTexts[6];
-/* The tables gCutsceneTexts points at (src/game/ui/data/cutscenes.cpp). */
+/* The tables gCutsceneTexts points at (engine/src/game/ui/data/cutscenes.cpp). */
 extern const struct cutscene_page *const gCutsceneTextEnglish[CUTSCENE_COUNT];
 extern const struct cutscene_page *const gCutsceneTextFrench[CUTSCENE_COUNT];
 extern const struct cutscene_page *const gCutsceneTextGerman[CUTSCENE_COUNT];
@@ -75,7 +75,7 @@ extern const struct cutscene_page *const gCutsceneTextDutch[CUTSCENE_COUNT];
  * Mode 4 frame) to the VRAM bank it streamed the picture into. */
 extern u32 gSlideshowDispcnt;
 
-/* src/game/ui/slideshow_display.cpp, with C linkage (its C name). */
+/* engine/src/game/ui/slideshow_display.cpp, with C linkage (its C name). */
 extern "C" void SetSlideshowDispcnt(u32 value);
 
 namespace Engine
@@ -121,7 +121,7 @@ class CutscenePlayer : public Slideshow
 {
 public:
     const struct cutscene_page *pages; // 0x10 - one per slide
-    Engine::Text::Font *font;          // 0x14 (include/engine/text/font.hpp)
+    Engine::Text::Font *font;          // 0x14 (engine/include/engine/text/font.hpp)
     struct aabb box;                   // 0x18 - the text rectangle
 
     CutscenePlayer();  // InitCutscenePlayer

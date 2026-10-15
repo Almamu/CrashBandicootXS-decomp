@@ -23,7 +23,7 @@ the surrounding `crate_reset.c`-`slot_crate.c` file family issues
 
 ## Matched - 24 functions (+1 unlabeled)
 
-`src/crates/slot_crate.c` (new file): `DecrementSlotCrateStage`-`GetCrateTrialKind`,
+`engine/src/crates/slot_crate.c` (new file): `DecrementSlotCrateStage`-`GetCrateTrialKind`,
 covering:
 
 - A 3-way bit-field family packed into `self+0x48`: bits 6-7 (get
@@ -58,7 +58,7 @@ covering:
 
 ## Follow-up: `ResolveCollisionCandidates` - now matched (NAKED transcription)
 
-`ResolveCollisionCandidates` (`src/game/crates/collision_queue.c`) - the chunk's last and
+`ResolveCollisionCandidates` (`engine/src/game/crates/collision_queue.c`) - the chunk's last and
 largest function (488 bytes), and the one `ResolvePlayerCollisions`
 (crate.c) already calls by name - was originally parked here
 under `NON_MATCHING`. A later pass in the same session that closed
@@ -112,7 +112,7 @@ zero-fill gap before `AddCollisionCandidate` (the assembler's default `nop`
 fill pattern otherwise mismatches the ROM's zero halfword there - see
 `matching_decomp_alignment_fix`). Verified via isolated
 `arm-none-eabi-as` assembly against the ROM's raw bytes first, then
-folded into `src/game/crates/collision_queue.c`/`.o` and confirmed with a full
+folded into `engine/src/game/crates/collision_queue.c`/`.o` and confirmed with a full
 clean `make compare` (`crashbandicootxs.gba: La suma coincide`). The
 old `asm/code_3_2_17_e560_10b6c.s` fragment (which held only this one
 function) is removed entirely, `ldscript.txt`'s now-redundant
@@ -122,7 +122,7 @@ function) is removed entirely, `ldscript.txt`'s now-redundant
 
 ## Follow-up: GitHub issue #9's `ResetPlayer` - now matched
 
-`ResetPlayer` (`src/game/crash/player_reset.c`) was previously parked
+`ResetPlayer` (`engine/src/game/crash/player_reset.c`) was previously parked
 (see this same repo's `issue-9-0x08007634-actor.md` for its original
 write-up) on exactly the same shape of gap `ResolveCollisionCandidates` above hit -
 the ROM building several field addresses as a running pointer

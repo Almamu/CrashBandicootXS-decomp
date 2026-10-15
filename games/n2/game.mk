@@ -5,10 +5,10 @@
 # and per-object flags, as for XS), and the rest of the ROM incbin'd from
 # the original, which must be in the project root as baserom_n2.gba.
 #
-# The sources are XS's (src/), shared, with N-Tranced's own on top (#1109,
+# The sources are XS's (engine/src/), shared, with N-Tranced's own on top (#1109,
 # docs/n_tranced.md, "Sharing sources"): games/n2/src/<path>, when it
-# exists, replaces src/<path> in this build, and games/n2/include/ comes
-# before include/.
+# exists, replaces engine/src/<path> in this build, and games/n2/include/ comes
+# before engine/include/.
 
 CPPFLAGS += -D GAME_N2=1
 ASFLAGS += --defsym GAME_N2=1
@@ -26,8 +26,8 @@ N2_SRC   := $(N2_DIR)/src
 CPPFLAGS := -iquote $(N2_DIR)/include $(CPPFLAGS)
 
 # compile.mk's directories, under build/ntranced/
-C_SUBDIR          := src
-C_BUILDDIR        := $(OBJ_DIR)/$(C_SUBDIR)
+C_SUBDIR          := engine/src
+C_BUILDDIR        := $(OBJ_DIR)/src
 LIB_SUBDIR        := lib
 LIB_BUILDDIR      := $(OBJ_DIR)/lib
 ASM_SUBDIR        := asm
@@ -41,8 +41,8 @@ DATA_ASM_BUILDDIR := $(OBJ_DIR)/data
 GENERATED_INCLUDE_DIR := $(OBJ_DIR)/include
 CPPFLAGS += -iquote $(GENERATED_INCLUDE_DIR)
 
-# The sources (games/n2/objects.txt's third column), each as its src/ path:
-# games/n2/src/<path> builds the same object as src/<path> would
+# The sources (games/n2/objects.txt's third column), each as its engine/src/ path:
+# games/n2/src/<path> builds the same object as engine/src/<path> would
 SHARED_SRCS := $(patsubst $(N2_SRC)/%,$(C_SUBDIR)/%,$(shell sed -e 's/\#.*//' $(N2_DIR)/objects.txt | awk 'NF { print $$3 }'))
 # and N2_TRY_SRCS, sources tools/nt_compare/n2_objects.py builds as if
 # they were in objects.txt (the same compiler and flags), unlinked
@@ -98,7 +98,7 @@ N2_AGBCP_NO_BUGFIX_OBJS := $(C_BUILDDIR)/engine/gfx/fade.o $(C_BUILDDIR)/engine/
 N2_AGBCP_NO_BUGFIX_OBJS += $(N2_TRY_AGBCP)
 NEW_COMPILER_OBJS := $(C_BUILDDIR)/engine/sys/vram_dma_queue.o $(N2_AGBCP_NO_BUGFIX_OBJS)
 
-# N-Tranced's copy of a source, games/n2/src/<path>.cpp, over src/<path>.cpp:
+# N-Tranced's copy of a source, games/n2/src/<path>.cpp, over engine/src/<path>.cpp:
 # the same object, so compile.mk's per-object flags apply to it too. Before
 # compile.mk's rule, which make would otherwise pick (the first pattern
 # rule whose source exists).

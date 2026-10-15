@@ -2,7 +2,7 @@
 #define GUARD_BOSS_CTRL_HPP
 
 /* The boss controllers as C++ (#664, docs/cplusplus.md): BossCtrl and
- * the bosses' controllers built on it (src/game/bosses/).
+ * the bosses' controllers built on it (engine/src/game/bosses/).
  *
  * No `#pragma interface`: g++ emits their vtables, each in its key-method
  * object (see ctrl.hpp); cxx_symbols.txt maps their mangled names onto
@@ -26,7 +26,7 @@ namespace Game
 namespace Bosses
 {
 
-/* The boss controller (gBossCtrlVtable, src/game/bosses/boss_ctrl.cpp):
+/* The boss controller (gBossCtrlVtable, engine/src/game/bosses/boss_ctrl.cpp):
  * the base class of the bosses'
  * controllers (Mega Mix, Tiny, Neo Cortex's fight, Dingodile and his
  * shield and rocket/stalactite). Its event handler keeps the event's msg
@@ -52,8 +52,8 @@ public:
 LAYOUT_ASSERT(boss_ctrl_hpp, sizeof(BossCtrl) == 0x1C);
 
 /* The Mega Mix boss's controller (gMegaMixCtrlVtable;
- * src/game/bosses/mega_mix.cpp, and its Update,
- * UpdateMegaMix, in src/game/bosses/mega_mix_update.cpp). Its motion records
+ * engine/src/game/bosses/mega_mix.cpp, and its Update,
+ * UpdateMegaMix, in engine/src/game/bosses/mega_mix_update.cpp). Its motion records
  * are gMegaMixMotionRecords, not gCtrlMotionRecords. */
 /* MegaMixCtrl's `state` (#843, docs/flags/boss_ctrl.md): Reset starts it
  * running; it stops while the player is dead. */
@@ -82,7 +82,7 @@ public:
 
 LAYOUT_ASSERT(boss_ctrl_hpp, sizeof(MegaMixCtrl) == 0x24);
 
-/* The Tiny boss's controller (gTinyVtable; src/game/bosses/tiny.cpp).
+/* The Tiny boss's controller (gTinyVtable; engine/src/game/bosses/tiny.cpp).
  * Tiny hops his part along parabolic arcs between gTouchableList's
  * anchors (the hop pads), stomping them: Update steps the hop and the
  * state machine, SetState enters a state. `counter` is the round (1-3,
@@ -141,7 +141,7 @@ public:
 LAYOUT_ASSERT(boss_ctrl_hpp, sizeof(TinyCtrl) == 0x4C);
 
 /* The Neo Cortex fight's controller (gCortexBossVtable;
- * src/game/bosses/cortex.cpp). `counter` is the round. It spawns the
+ * engine/src/game/bosses/cortex.cpp). `counter` is the round. It spawns the
  * cannon and the target (crosshair) parts. spawn_bosses.cpp creates it in
  * a 0x24-byte block. */
 
@@ -172,7 +172,7 @@ public:
 LAYOUT_ASSERT(boss_ctrl_hpp, sizeof(CortexBossCtrl) == 0x24);
 
 /* The Neo Cortex fight's cannon (gCortexCannonVtable; 0x10 bytes,
- * src/game/bosses/cortex.cpp): hides its part in state 0. */
+ * engine/src/game/bosses/cortex.cpp): hides its part in state 0. */
 /* CortexCannonCtrl's `state`: only 0, nothing sets another. */
 #define CORTEX_CANNON_STATE_IDLE 0 // contact with the player off
 class CortexCannonCtrl : public Game::Entities::Ctrl
@@ -188,7 +188,7 @@ LAYOUT_ASSERT(boss_ctrl_hpp, sizeof(CortexCannonCtrl) == 0x10);
 
 /* The Neo Cortex fight's target, the crosshair that hops between the
  * player and the platforms (gCortexTargetVtable, 0x40 bytes;
- * src/game/bosses/cortex.cpp). */
+ * engine/src/game/bosses/cortex.cpp). */
 
 /* CortexTargetCtrl's `state` (#843, docs/flags/boss_ctrl.md). The hops
  * (ENTER, HOP, HOP_OFF) and ANIM go on to `nextState`. */
@@ -232,7 +232,7 @@ public:
 
 LAYOUT_ASSERT(boss_ctrl_hpp, sizeof(CortexTargetCtrl) == 0x40);
 
-/* The target's shot (gCortexShotVtable, 0x18 bytes; src/game/bosses/cortex.cpp):
+/* The target's shot (gCortexShotVtable, 0x18 bytes; engine/src/game/bosses/cortex.cpp):
  * a slow one (kind 0) hurts the player, a fast one (1) also shrinks the
  * Neo Cortex gems it hits (CortexBossGemCtrl) and tells the boss. */
 /* FireShot's `kind` (#843, docs/flags/boss_ctrl.md). */
@@ -252,7 +252,7 @@ public:
 LAYOUT_ASSERT(boss_ctrl_hpp, sizeof(CortexShotCtrl) == 0x18);
 
 /* A gem of the Neo Cortex fight (gCortexBossGemVtable, 0x14 bytes;
- * src/game/bosses/cortex.cpp, SpawnCortexBossGem): once a fast shot hits it
+ * engine/src/game/bosses/cortex.cpp, SpawnCortexBossGem): once a fast shot hits it
  * (the part's `kind` 1), it plays its shrink animation and goes. */
 /* CortexBossGemCtrl's `state`. */
 #define CORTEX_BOSS_GEM_STATE_WAIT 0   // until a fast shot hits it (the part's `kind`)
@@ -269,7 +269,7 @@ public:
 
 LAYOUT_ASSERT(boss_ctrl_hpp, sizeof(CortexBossGemCtrl) == 0x14);
 
-/* gUnusedOneShotAnimCtrlVtable's class (src/game/bosses/tiny.cpp): does what
+/* gUnusedOneShotAnimCtrlVtable's class (engine/src/game/bosses/tiny.cpp): does what
  * OneShotAnimCtrl does. Its constructor has no caller (UNUSED). */
 class UnusedOneShotAnimCtrl : public Game::Entities::Ctrl
 {
@@ -281,7 +281,7 @@ public:
 
 LAYOUT_ASSERT(boss_ctrl_hpp, sizeof(UnusedOneShotAnimCtrl) == 0x10);
 
-/* Dingodile (gDingodileVtable, src/game/bosses/dingodile.cpp and
+/* Dingodile (gDingodileVtable, engine/src/game/bosses/dingodile.cpp and
  * dingodile_create.cpp): he walks the level, stopping at the approach
  * tables' x positions to fire a rocket, turns round at the level's ends
  * and hides behind his shield (`shield`). `counter` is the hits he has

@@ -31,7 +31,7 @@
  * Copies that are still spelled out, each with a comment saying why:
  * entity.cpp's MarkEntityGone itself and
  * crate_break.cpp (other asm/pins or wrapper). The C++ classes
- * use Entity::MarkGone (include/game/entities/entity.hpp), the same code with the
+ * use Entity::MarkGone (engine/include/game/entities/entity.hpp), the same code with the
  * bitmap indexed. */
 
 /* An entity id that has no bit in the bitmaps (actor.h's `id`). */

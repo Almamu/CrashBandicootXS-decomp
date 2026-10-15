@@ -1,11 +1,11 @@
 #ifndef __LEVEL_H__
 #define __LEVEL_H__
 
-/* The level subsystem (src/game/level/): the level state and its accessors,
+/* The level subsystem (engine/src/game/level/): the level state and its accessors,
  * the level layers and BG scroll layers, rooms and their entities, the
  * entity spawners, the camera, terrain and collision maps, and the game
- * frame. Every function src/game/level/ defines, with the prototype of its
- * definition (the BG layers are C++ classes, include/game/level/bg_layer.hpp), and
+ * frame. Every function engine/src/game/level/ defines, with the prototype of its
+ * definition (the BG layers are C++ classes, engine/include/game/level/bg_layer.hpp), and
  * the globals and tables the level files use
  * (docs/headers.md). OperatorNew and the other new/delete operators
  * (operator_new.cpp) are in memory.h. A .c file that needs a different local
@@ -59,38 +59,38 @@ struct terrain_type {
 #define TERRAIN_FLAG_OPEN_DOWN 4  // TERRAIN_MODE_DOWN
 #define TERRAIN_FLAG_OPEN_UP 8    // TERRAIN_MODE_UP
 
-/* The entity flags (`gEntityFlags`) are LevelEntityFlags, include/entity_flags.hpp. */
+/* The entity flags (`gEntityFlags`) are LevelEntityFlags, engine/include/entity_flags.hpp. */
 
-/* src/game/level/pooled_bg_layer.cpp (the BG layers' methods are BgLayer's and
- * PooledBgLayer's, include/game/level/bg_layer.hpp) */
+/* engine/src/game/level/pooled_bg_layer.cpp (the BG layers' methods are BgLayer's and
+ * PooledBgLayer's, engine/include/game/level/bg_layer.hpp) */
 extern void nullsub_26(void);
 
-/* src/game/level/level_layers.cpp (LevelLayers' methods: bg_layer.hpp) */
+/* engine/src/game/level/level_layers.cpp (LevelLayers' methods: bg_layer.hpp) */
 extern s32 sub_8026A14(void);
 
-/* src/game/level/level_state.cpp (LevelState's methods: level_state.hpp) */
+/* engine/src/game/level/level_state.cpp (LevelState's methods: level_state.hpp) */
 extern void nullsub_24(void);
 
-/* src/game/level/room.cpp */
+/* engine/src/game/level/room.cpp */
 extern void ResetObjBuffers(void);
 
-/* src/game/bosses/spawn_bosses.cpp */
+/* engine/src/game/bosses/spawn_bosses.cpp */
 extern void SpawnRoomExit(u32 id, u16 x, u16 y, u16 param);
 
-/* src/game/objects/spawn_gems.cpp: the gems and the crystal are static members
- * of Pickups (include/game/objects/pickups.hpp, #915) */
+/* engine/src/game/objects/spawn_gems.cpp: the gems and the crystal are static members
+ * of Pickups (engine/include/game/objects/pickups.hpp, #915) */
 
-/* src/game/objects/spawn_objects.cpp (the decorations', the platforms', the
+/* engine/src/game/objects/spawn_objects.cpp (the decorations', the platforms', the
  * launch pad's and the seal spawner's slots are static members of
  * Pickups and of the classes they create, #915) */
 extern void SpawnNoEntity(void);
 
-/* src/game/objects/spawn_pickups.cpp (the powers and the blue gem are static
+/* engine/src/game/objects/spawn_pickups.cpp (the powers and the blue gem are static
  * members of Pickups, #915) */
 extern void SpawnCrateGemMarker(u32 id, u16 x, u16 y, u16 param);
 extern void *CreateTouchableSprite(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16 cw, u16 ch);
 
-/* src/game/level/spawn_markers.cpp */
+/* engine/src/game/level/spawn_markers.cpp */
 extern void SpawnHoverPlayerPosition(void);
 extern void SpawnHoverStartMarker(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnUnderwaterPlayerPosition(u32 id, u16 x, u16 y, u16 param);
@@ -98,10 +98,10 @@ extern void SpawnUnderwaterStartMarker(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnPlayerPosition(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnStartMarkerStub(void);
 
-/* src/game/level/spawn_start_marker.cpp */
+/* engine/src/game/level/spawn_start_marker.cpp */
 extern void SpawnStartMarker(u32 id, u16 x, u16 y, u16 param);
 
-/* src/game/level/terrain.cpp (the terrain probes are LevelLayers' methods:
+/* engine/src/game/level/terrain.cpp (the terrain probes are LevelLayers' methods:
  * bg_layer.hpp) */
 extern s32 sub_8026C8C(void);
 
@@ -141,7 +141,7 @@ extern struct level_state *gGameFrameLevelState;
 extern Game::Entities::PartList *gUpdateOnlyPartList;
 #endif
 
-/* The enemies' anim maps (src/game/enemies/data/enemy_anim_maps.cpp), stored in their
+/* The enemies' anim maps (engine/src/game/enemies/data/enemy_anim_maps.cpp), stored in their
  * controllers by the spawners */
 extern const s32 gBlowgunTribesmanAnimMap[8];
 extern const s32 gCrusherAnimMap[8];
@@ -165,28 +165,28 @@ extern const s32 gVultureAnimMap[8];
  * spawner below takes the same four, as `id, x, y, param`). */
 typedef void (*entity_spawn_fn)(u32 id, u16 x, u16 y, u16 param);
 
-/* The entity spawners, indexed by entity type (src/game/level/data/entity_spawn_funcs.cpp);
+/* The entity spawners, indexed by entity type (engine/src/game/level/data/entity_spawn_funcs.cpp);
  * the few with other parameters are cast. */
 extern const entity_spawn_fn gEntitySpawnFuncs[ENTITY_COUNT];
 
-/* src/engine/sys/iwram_data.cpp */
+/* engine/src/engine/sys/iwram_data.cpp */
 #ifdef __cplusplus
 extern Game::Level::LevelLayers *gLevelLayersSingleton;
 #endif
 
-/* The terrain height tables (src/game/level/data/terrain_types.cpp, top-level asm) */
+/* The terrain height tables (engine/src/game/level/data/terrain_types.cpp, top-level asm) */
 extern u8 gTerrainHeights0[];
 extern u8 gTerrainHeights1[];
 extern u8 gTerrainHeights2[];
 extern u8 gTerrainHeights3[];
 
-/* src/game/level/data/terrain_types.cpp */
+/* engine/src/game/level/data/terrain_types.cpp */
 extern const struct terrain_type gTerrainTypes[51];
 
-/* The level table (src/game/level/data/level_table.cpp, level_data.h). */
+/* The level table (engine/src/game/level/data/level_table.cpp, level_data.h). */
 extern const struct level_info gLevelTable[LEVEL_COUNT];
 
-/* The level themes' music cues (src/game/level/data/level_table.cpp, generated from
+/* The level themes' music cues (engine/src/game/level/data/level_table.cpp, generated from
  * levels.json's "themes"; their colour cycles' lists are declared by the
  * generated theme_palette_cycles.h) */
 extern const u8 gThemeMusicCues[THEME_COUNT];

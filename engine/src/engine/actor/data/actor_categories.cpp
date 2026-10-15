@@ -22,8 +22,8 @@ using Game::Vehicles::Jetpack::Airship;
 
 /*
  * ROM 0x08175558-0x08175760: the actor category descriptors and the
- * per-type category vtables (include/engine/actor/actor_anim.h, docs/graphics.md "An
- * actor \"vtable\" system"). Linked in ROM order between data/data.s
+ * per-type category vtables (engine/include/engine/actor/actor_anim.h, docs/graphics.md "An
+ * actor \"vtable\" system"). Linked in ROM order between games/xs/data/data.s
  * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
@@ -47,7 +47,7 @@ extern const u16 gHovercraftCategoryPalette[];
 
 /* The three per-type category vtables, `ActorCategory::vtable =
  * &ActorCategory::vtables[type]` in ActorCategory::Select
- * (actor_category_select.cpp): include/engine/actor/actor_anim.h names the slots;
+ * (actor_category_select.cpp): engine/include/engine/actor/actor_anim.h names the slots;
  * the two numbers are the spawn and skip distances. */
 const struct category_vtable ActorCategory::vtables[CATEGORY_TYPE_COUNT] = {
     /* CATEGORY_TYPE_POLAR */ {

@@ -3,10 +3,10 @@
 
 /* Part 7h of the C++ conversion (#664, docs/cplusplus.md): the pickups.
  *
- *   ExtraLife  0x54  gExtraLifeVtable (14 slots) src/game/objects/extra_life.cpp
- *   Wumpa      0x54  gWumpaVtable     (14 slots) src/game/objects/wumpa.cpp,
+ *   ExtraLife  0x54  gExtraLifeVtable (14 slots) engine/src/game/objects/extra_life.cpp
+ *   Wumpa      0x54  gWumpaVtable     (14 slots) engine/src/game/objects/wumpa.cpp,
  *                                                wumpa_update.cpp
- *   Stopwatch  0x40  gStopwatchVtable (13 slots) src/game/objects/stopwatch.cpp
+ *   Stopwatch  0x40  gStopwatchVtable (13 slots) engine/src/game/objects/stopwatch.cpp
  *
  * The sizes are the ROM's: CreateExtraLife and CreateWumpa allocate 0x54
  * bytes, CreateStopwatch 0x40. The extra life and the wumpa have the same
@@ -15,7 +15,7 @@
  * destructor DestroySpriteObj.
  *
  * cxx_symbols.txt maps the methods to their C names. Their spawners
- * (src/game/level/, include/game/level/spawners.hpp) are C++ since part 9.
+ * (engine/src/game/level/, engine/include/game/level/spawners.hpp) are C++ since part 9.
  *
  * No `#pragma interface`: g++ emits the vtables in extra_life.cpp,
  * wumpa.cpp and stopwatch.cpp (see ctrl.hpp).
@@ -35,7 +35,7 @@ extern "C" {
 }
 
 /* The x offset scale of each hop mode (1-3) of UpdateExtraLifeHop and
- * UpdateWumpaHop (src/game/crates/data/crate_tables.cpp), a struct:
+ * UpdateWumpaHop (engine/src/game/crates/data/crate_tables.cpp), a struct:
  * ExtraLife::UpdateHop and Wumpa::UpdateHop copy the table onto the
  * stack in one go. */
 struct three_words {

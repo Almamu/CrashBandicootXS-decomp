@@ -1,4 +1,4 @@
-/* The key input, KeyInput (include/engine/sys/key_input.hpp): GetDpadDirection,
+/* The key input, KeyInput (engine/include/engine/sys/key_input.hpp): GetDpadDirection,
  * Update (UpdateKeys) and the constructor (ClearKeys). Split from irq.cpp
  * (#767), same flags (old_agbcc). The methods use gKeys; `this` (gInput
  * at every call site) is unused, as the C's `input` argument was. */

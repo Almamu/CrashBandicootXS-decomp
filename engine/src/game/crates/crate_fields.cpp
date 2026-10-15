@@ -13,7 +13,7 @@ using Game::Crates::Crate;
 using Game::Level::EntitySpawner;
 
 /* The Aku Aku and life crates, and the crate's stack walks and player
- * collision (#664, include/game/crates/crate.hpp). */
+ * collision (#664, engine/include/game/crates/crate.hpp). */
 
 /* The Aku Aku crate: unless the player is passing through (the
  * `collides` flag clear), it gains a mask (EVENT_MASK_GAIN) with its
@@ -121,7 +121,7 @@ s32 Crate::CollideWithPlayer(u32 idx, s32 testX, s32 testY)
     return 0;
 }
 
-/* The crate's accessors (#664, include/game/crates/crate.hpp): the slot crate's
+/* The crate's accessors (#664, engine/include/game/crates/crate.hpp): the slot crate's
  * word, then the plain fields. */
 
 /* The slot crate's stage (`slotState` bits 6-7). */

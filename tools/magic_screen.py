@@ -2,8 +2,8 @@
 """`tools/magic_numbers.py --screen`: the literals that may come from the
 screen size (#979).
 
-Scans the game code and its data tables (src/, src/.../data/ included, and
-include/; comments and strings blanked) for the literals a 240x160
+Scans the game code and its data tables (engine/src/, engine/src/.../data/ included, and
+engine/include/; comments and strings blanked) for the literals a 240x160
 screen leaves behind, and puts each one under a kind:
 
   size      240 / 160 (`0xF0` / `0xA0`): the screen's width and height
@@ -29,7 +29,7 @@ screen leaves behind, and puts each one under a kind:
   scanline  227 / 228 (`0xE3` / `0xE4`) and 68 on a VCOUNT line
   layout    a fixed position in a 2D layout (LAYOUTS: a SetPos/Move
             call, an icon or text box placement, a position table in
-            src/.../data): an argument that adds a literal to nothing but
+            engine/src/.../data): an argument that adds a literal to nothing but
             measured sizes and counters, so it is measured from the
             screen's (0,0) instead of from an anchor (the art's origin
             DISPLAY_ART_X/Y, or an edge: DISPLAY_RIGHT/BOTTOM)
@@ -37,7 +37,7 @@ screen leaves behind, and puts each one under a kind:
 and then classifies it with CLASSES, a hand-made table of (category,
 file, line pattern, reason), first match wins:
 
-  screen      derived from the screen size: spell it with include/screen.h
+  screen      derived from the screen size: spell it with engine/include/screen.h
   hardware    fixed by the GBA (a register's field width, the 32x32 BG
               screen block, the Mode 3/4 frame), the platform layer's
               job; spelled through a gba/ macro where the code masks
@@ -145,14 +145,14 @@ ANCHORED = re.compile(r"\bDISPLAY_\w+\s*[-+]\s*$|\bDISPLAY_(?:RIGHT|BOTTOM)\(\s*
 # position call (LAYOUT_CALLS: the call's name and which of its arguments
 # are the x and y, None for all), a local row or column initialized to a
 # literal (LAYOUT_LOCAL) or a sprite's Q8 position set to one
-# (LAYOUT_Q8), and on a `{ x, y }` line of a position table in src/.../data
+# (LAYOUT_Q8), and on a `{ x, y }` line of a position table in engine/src/.../data
 # (LAYOUT_TABLES), each such argument is a position. One that adds a
 # literal to nothing but measured sizes, counters and slide offsets
 # (LAYOUT_FREE: `0x87`, `0xa0 - w`, `item * 10 + 0x80`) is measured from
 # the screen's (0,0): a layout site. One with a DISPLAY_ name or another
 # position in it (`x`, `pos.x`, `gPauseGemIconPos[0].x`, `label1`) is
 # anchored, or relative to something that is.
-UI = re.compile(r"src/(game/ui|engine/save|engine/text)/|src/game/level/game_progress\.")
+UI = re.compile(r"engine/src/(game/ui|engine/save|engine/text)/|engine/src/game/level/game_progress\.")
 LAYOUT_CALLS = {
     "SetPos": None,
     "Move": None,
@@ -166,11 +166,11 @@ LAYOUT_CALLS = {
 LAYOUT_CALL = re.compile(r"\b(" + "|".join(LAYOUT_CALLS) + r")\(")
 LAYOUT_LOCAL = re.compile(r"^\s*(?:screen_\w+ |s32 |u32 )?([xy]) = ([^;]*);")
 LAYOUT_Q8 = re.compile(r"(?:->|\.)[xy] = (INT_TO_Q8\(-?(?:0x[0-9a-fA-F]+|\d+)\)|0x[0-9a-fA-F]+00);")
-LAYOUT_TABLES = re.compile(r"src/(?:[a-z_]+/)+data/(level_select_layout|menu_tables|hud_font_tables)\.cpp")
+LAYOUT_TABLES = re.compile(r"engine/src/(?:[a-z_]+/)+data/(level_select_layout|menu_tables|hud_font_tables)\.cpp")
 LAYOUT_PAIR = re.compile(r"\{ *(-?\d+), *(-?\d+) *\}")
 # The logo pieces' motions (struct delta_record, frontend.hpp): a hold,
 # then the piece's x and y on the logo art.
-LAYOUT_MOTIONS = re.compile(r"src/(?:[a-z_]+/)+data/(universal_vv_logo_motions|title_screen_gfx)\.cpp")
+LAYOUT_MOTIONS = re.compile(r"engine/src/(?:[a-z_]+/)+data/(universal_vv_logo_motions|title_screen_gfx)\.cpp")
 LAYOUT_MOTION = re.compile(r"^\s*\{ *\d+, *(\d+), *(\d+), ")
 LAYOUT_FREE = {
     "w",
@@ -262,13 +262,13 @@ def layout_sites(rel, line):
 # the site's source line (comments blanked). First match wins.
 CLASSES = [
     # --- coincidences that a broader rule below would take -------------
-    ("coincidence", r"src/game/ui/level_select_pages\.cpp", r"GetScroll", "the page-turn progress (0x100 = a page)"),
-    ("coincidence", r"src/game/ui/level_select_entry\.cpp", r"phase", "a bob phase (a byte)"),
-    ("coincidence", r"src/game/entities/ground_sprite_collide\.cpp", r".", "a collision probe step"),
+    ("coincidence", r"engine/src/game/ui/level_select_pages\.cpp", r"GetScroll", "the page-turn progress (0x100 = a page)"),
+    ("coincidence", r"engine/src/game/ui/level_select_entry\.cpp", r"phase", "a bob phase (a byte)"),
+    ("coincidence", r"engine/src/game/entities/ground_sprite_collide\.cpp", r".", "a collision probe step"),
     ("coincidence", r".", r"COS_Q8\(.*\* 80", "an orbit radius"),
     # --- hardware: the GBA's own formats and sizes --------------------
     ("hardware", r"platform/gba/include/gba/defines\.h", r"DISPLAY_(WIDTH|HEIGHT)", "the screen size itself (gba/defines.h)"),
-    ("hardware", r"include/screen\.h", r"DISPLAY_ART_", "the fixed 240x160 art's size (screen.h)"),
+    ("hardware", r"engine/include/screen\.h", r"DISPLAY_ART_", "the fixed 240x160 art's size (screen.h)"),
     ("hardware", r"platform/gba/include/gba/", r".", "a GBA register offset or field value"),
     ("hardware", r"platform/pc/src/irq\.c", r"VBLANK_LINE", "the GBA display's VBlank line, which the pc platform's frame loop plays"),
     ("coincidence", r"platform/pc/src/sha1\.c", r".", "SHA-1's 80 rounds"),
@@ -285,57 +285,57 @@ CLASSES = [
         r"\b(?:s?[xy]|screen[XY])\s*&\s*0x1?ff\b",
         "OAM attribute width (9-bit X, 8-bit Y): spell with OAM_X()/OAM_Y()",
     ),
-    ("hardware", r"include/game/entities/sprite_obj\.hpp", r"table\[0x80\]", "the OAM entry count: spell with OAM_ENTRY_COUNT"),
-    ("hardware", r"src/engine/gfx/fade\.cpp", r"0x1FF", "the 512 palette entries (BG + OBJ)"),
+    ("hardware", r"engine/include/game/entities/sprite_obj\.hpp", r"table\[0x80\]", "the OAM entry count: spell with OAM_ENTRY_COUNT"),
+    ("hardware", r"engine/src/engine/gfx/fade\.cpp", r"0x1FF", "the 512 palette entries (BG + OBJ)"),
     (
         "hardware",
-        r"src/game/level/bg_streamer\.cpp|src/engine/gfx/cell_anim\.cpp",
+        r"engine/src/game/level/bg_streamer\.cpp|engine/src/engine/gfx/cell_anim\.cpp",
         r"0x1f",
         "a 32-entry BG screen-block row or column",
     ),
-    ("hardware", r"src/game/ui/slideshow\.cpp", r"VRAM \+ 0xA000", "Mode 4's second frame (VRAM + 0xA000)"),
-    ("hardware", r"src/game/ui/level_select_cursor\.cpp", r"OBJ_VRAM0 \+", "an OBJ VRAM offset"),
-    ("hardware", r"src/game/ui/starfield\.cpp", r"\| 0xF000", "a BG map entry's palette bank (15)"),
-    ("hardware", r"src/engine/gfx/sprite_arm\.cpp", r"0xF0", "a palette nibble"),
-    # --- the data tables (src/.../data) -----------------------------------
+    ("hardware", r"engine/src/game/ui/slideshow\.cpp", r"VRAM \+ 0xA000", "Mode 4's second frame (VRAM + 0xA000)"),
+    ("hardware", r"engine/src/game/ui/level_select_cursor\.cpp", r"OBJ_VRAM0 \+", "an OBJ VRAM offset"),
+    ("hardware", r"engine/src/game/ui/starfield\.cpp", r"\| 0xF000", "a BG map entry's palette bank (15)"),
+    ("hardware", r"engine/src/engine/gfx/sprite_arm\.cpp", r"0xF0", "a palette nibble"),
+    # --- the data tables (engine/src/.../data) -----------------------------------
     (
         "hardware",
-        r"src/(?:[a-z_]+/)+data/(universal_vv_logo_motions|credits_title_logos)\.cpp",
+        r"engine/src/(?:[a-z_]+/)+data/(universal_vv_logo_motions|credits_title_logos)\.cpp",
         r"bg_package|\{ 0x1e, 0x8,",
         "a picture's own size in tiles (fixed art, like DISPLAY_ART_WIDTH)",
     ),
     (
         "screen",
-        r"src/(?:[a-z_]+/)+data/(universal_vv_logo_motions|title_screen_gfx)\.cpp",
+        r"engine/src/(?:[a-z_]+/)+data/(universal_vv_logo_motions|title_screen_gfx)\.cpp",
         r"^\s*\{ \d+, \d+, \d+, ",
         "a logo piece's position on the 240x160 logo art (DISPLAY_ART_X/Y)",
     ),
-    ("coincidence", r"src/game/bosses/data/boss_motion_tables\.cpp", r".", "a position in the boss arena (Dingodile's stops, Q8)"),
-    ("coincidence", r"src/(?:[a-z_]+/)+data/", r"^\s*(0x[0-9A-F]{4}, ){4}", "a colour (BGR555)"),
-    ("coincidence", r"src/(?:[a-z_]+/)+data/(polar|jetpack)_anim_family", r"\{ -?\d+, -?\d+, -?\d+, \d+, \d+, \d+ \}", "a hit box (offset and size)"),
-    ("coincidence", r"src/(?:[a-z_]+/)+data/", r"(JETPACK|POLAR)_KIND_", "a 3D course's spawn record (offset, angle, distance)"),
-    ("coincidence", r"src/game/bosses/data/boss_pictures\.cpp", r".", "the sine table"),
-    ("coincidence", r"src/game/vehicles/polar/data/polar_cell_anim\.cpp", r"tiles\[", "a picture's frame in tiles"),
-    ("coincidence", r"src/game/crash/data/motion_records\.cpp", r".", "a motion record's speeds"),
-    ("coincidence", r"src/(?:[a-z_]+/)+data/(hovercraft|airship)_attacks", r".", "a boss's attack parameters (frames, counts)"),
-    ("coincidence", r"src/game/ui/data/vv_logo\.cpp", r".", "a logo piece's first hold (frames)"),
-    ("coincidence", r"src/(?:[a-z_]+/)+data/sprite_banks_", r".", "sprite bank data (frame numbers, boxes, palettes)"),
-    ("coincidence", r"src/game/ui/data/cutscene_slides\.cpp", r".", "a slide's duration (frames)"),
+    ("coincidence", r"engine/src/game/bosses/data/boss_motion_tables\.cpp", r".", "a position in the boss arena (Dingodile's stops, Q8)"),
+    ("coincidence", r"engine/src/(?:[a-z_]+/)+data/", r"^\s*(0x[0-9A-F]{4}, ){4}", "a colour (BGR555)"),
+    ("coincidence", r"engine/src/(?:[a-z_]+/)+data/(polar|jetpack)_anim_family", r"\{ -?\d+, -?\d+, -?\d+, \d+, \d+, \d+ \}", "a hit box (offset and size)"),
+    ("coincidence", r"engine/src/(?:[a-z_]+/)+data/", r"(JETPACK|POLAR)_KIND_", "a 3D course's spawn record (offset, angle, distance)"),
+    ("coincidence", r"engine/src/game/bosses/data/boss_pictures\.cpp", r".", "the sine table"),
+    ("coincidence", r"engine/src/game/vehicles/polar/data/polar_cell_anim\.cpp", r"tiles\[", "a picture's frame in tiles"),
+    ("coincidence", r"engine/src/game/crash/data/motion_records\.cpp", r".", "a motion record's speeds"),
+    ("coincidence", r"engine/src/(?:[a-z_]+/)+data/(hovercraft|airship)_attacks", r".", "a boss's attack parameters (frames, counts)"),
+    ("coincidence", r"engine/src/game/ui/data/vv_logo\.cpp", r".", "a logo piece's first hold (frames)"),
+    ("coincidence", r"engine/src/(?:[a-z_]+/)+data/sprite_banks_", r".", "sprite bank data (frame numbers, boxes, palettes)"),
+    ("coincidence", r"engine/src/game/ui/data/cutscene_slides\.cpp", r".", "a slide's duration (frames)"),
     # --- screen: derived from the screen size -------------------------
-    ("screen", r"src/game/level/camera\.cpp", r"INT_TO_Q8\((120|80)\)", "the camera's target at the screen centre"),
-    ("screen", r"src/game/level/camera\.cpp", r"0x2800|0x27FF|0x1AA[A9]", "the camera's look-ahead, a sixth of the screen"),
-    ("screen", r"src/game/level/bg_layer_base\.cpp", r"-= 0x(f0|a0)", "a BG's scroll limit (CAMERA_MAX_X/Y)"),
-    ("screen", r"src/engine/actor/actor_bg\.cpp", r"0xFFFF[16]000", "the 3D BG's scroll limit (CAMERA_MAX_X/Y in Q8)"),
-    ("screen", r"src/game/level/bg_layer\.cpp", r"0x(ef|EF|9f|9F)\) / 8", "the tile rows and columns the screen spans"),
+    ("screen", r"engine/src/game/level/camera\.cpp", r"INT_TO_Q8\((120|80)\)", "the camera's target at the screen centre"),
+    ("screen", r"engine/src/game/level/camera\.cpp", r"0x2800|0x27FF|0x1AA[A9]", "the camera's look-ahead, a sixth of the screen"),
+    ("screen", r"engine/src/game/level/bg_layer_base\.cpp", r"-= 0x(f0|a0)", "a BG's scroll limit (CAMERA_MAX_X/Y)"),
+    ("screen", r"engine/src/engine/actor/actor_bg\.cpp", r"0xFFFF[16]000", "the 3D BG's scroll limit (CAMERA_MAX_X/Y in Q8)"),
+    ("screen", r"engine/src/game/level/bg_layer\.cpp", r"0x(ef|EF|9f|9F)\) / 8", "the tile rows and columns the screen spans"),
     (
         "screen",
-        r"src/game/(crates|entities|objects)/",
+        r"engine/src/game/(crates|entities|objects)/",
         r"INT_TO_Q8\((240|160|0xf0|0xa0)\)",
         "the visible area as a Q8 rectangle (culling)",
     ),
     (
         "screen",
-        r"src/game/crates/crate_list_update\.cpp|src/game/entities/(part_list_collide|entity)\.cpp",
+        r"engine/src/game/crates/crate_list_update\.cpp|engine/src/game/entities/(part_list_collide|entity)\.cpp",
         r"0x1b800|0x11800|INT_TO_Q8\((440|280)\)",
         "the activation window: the screen plus a 100x60 margin",
     ),
@@ -346,27 +346,27 @@ CLASSES = [
         "an on-screen test against the last row or column",
     ),
     ("screen", r".", r"MeasureText|penX|\(u32\)\(240 - w\)|\(0xf0 - w\)", "text centred on the screen"),
-    ("screen", r"src/game/ui/credits\.cpp", r"y \+ 0xa0", "a popup's start, just below the screen"),
-    ("screen", r"src/game/ui/starfield\.cpp", r"0x4B00", "a 240x160 4bpp frame (buffer and DMA size)"),
-    ("screen", r"src/game/ui/starfield\.cpp", r"0x1d|0x13", "the screen in tiles (the BG0 map's last column and row)"),
+    ("screen", r"engine/src/game/ui/credits\.cpp", r"y \+ 0xa0", "a popup's start, just below the screen"),
+    ("screen", r"engine/src/game/ui/starfield\.cpp", r"0x4B00", "a 240x160 4bpp frame (buffer and DMA size)"),
+    ("screen", r"engine/src/game/ui/starfield\.cpp", r"0x1d|0x13", "the screen in tiles (the BG0 map's last column and row)"),
     (
         "screen",
-        r"src/game/ui/starfield\.cpp",
+        r"engine/src/game/ui/starfield\.cpp",
         r"0x7800|0x5000|0xEFFF|0x9FFF",
         "the screen centre and size in Q8 (the stars' box)",
     ),
     (
         "screen",
-        r"src/game/ui/company_logos\.cpp",
+        r"engine/src/game/ui/company_logos\.cpp",
         r"0x7800|0x5000|\* (120|80)\)",
         "the screen centre (the logos' zoom and fly-in)",
     ),
-    ("screen", r"src/engine/gfx/bitmap_screen\.cpp", r".", "the affine picture's centre (BG2X/BG2Y)"),
-    ("screen", r"src/game/ui/power_dialog\.cpp", r"<< 7", "the screen centre in Q8 ((240, 160) << 7)"),
-    ("screen", r"src/game/vehicles/actor_destructors\.cpp", r"x = 120", "the screen's centre column"),
+    ("screen", r"engine/src/engine/gfx/bitmap_screen\.cpp", r".", "the affine picture's centre (BG2X/BG2Y)"),
+    ("screen", r"engine/src/game/ui/power_dialog\.cpp", r"<< 7", "the screen centre in Q8 ((240, 160) << 7)"),
+    ("screen", r"engine/src/game/vehicles/actor_destructors\.cpp", r"x = 120", "the screen's centre column"),
     (
         "screen",
-        r"src/game/ui/level_select_cursor\.cpp|src/game/ui/level_select_pages\.cpp|src/game/ui/zoom_bg\.cpp",
+        r"engine/src/game/ui/level_select_cursor\.cpp|engine/src/game/ui/level_select_pages\.cpp|engine/src/game/ui/zoom_bg\.cpp",
         r"0x78",
         "the screen's centre column (the level select's zoom)",
     ),
@@ -381,13 +381,13 @@ CLASSES = [
     ),
     (
         "coincidence",
-        r"src/game/bosses/(cortex|hovercraft)\.cpp|src/game/vehicles/jetpack/jetpack_player_update\.cpp",
+        r"engine/src/game/bosses/(cortex|hovercraft)\.cpp|engine/src/game/vehicles/jetpack/jetpack_player_update\.cpp",
         r"\by\b|CLAMP_M",
         "a position in the boss arena or the jetpack course",
     ),
     (
         "coincidence",
-        r"src/game/vehicles/jetpack/airship\.cpp",
+        r"engine/src/game/vehicles/jetpack/airship\.cpp",
         r"screen[XY] [<>]",
         "the airship's projected position, bounded in the arena (Steer's edge push)",
     ),
@@ -413,13 +413,13 @@ CLASSES = [(c, re.compile(p), re.compile(l), r) for c, p, l, r in CLASSES]
 LAYOUT_CLASSES = [
     (
         "screen",
-        r"src/game/ui/hud|src/game/ui/data/hud_font_tables\.cpp",
+        r"engine/src/game/ui/hud|engine/src/game/ui/data/hud_font_tables\.cpp",
         r".",
         "a HUD position: anchor to the screen's edges or centre (DISPLAY_RIGHT/BOTTOM, DISPLAY_CENTER_X)",
     ),
     (
         "screen",
-        r"src/(?:[a-z_]+/)+data/(universal_vv_logo_motions|title_screen_gfx)\.cpp",
+        r"engine/src/(?:[a-z_]+/)+data/(universal_vv_logo_motions|title_screen_gfx)\.cpp",
         r".",
         "a logo piece's position on the 240x160 logo art (DISPLAY_ART_X/Y)",
     ),
@@ -600,7 +600,7 @@ def run(args):
             print(f"{s.file}:{s.line}: {s.kind} {s.literal}: not classified\n    {s.source}")
         if new:
             print(
-                f"{len(new)} screen-size literal(s) with no rule: spell them with include/screen.h, "
+                f"{len(new)} screen-size literal(s) with no rule: spell them with engine/include/screen.h, "
                 "or add a CLASSES rule (tools/magic_screen.py) saying why they stay (docs/screen.md)",
                 file=sys.stderr,
             )

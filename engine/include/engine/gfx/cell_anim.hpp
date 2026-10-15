@@ -1,7 +1,7 @@
 #ifndef GUARD_CELL_ANIM_HPP
 #define GUARD_CELL_ANIM_HPP
 
-/* The 3D stages' BG0 cell animation (src/engine/gfx/cell_anim.cpp, #915): the
+/* The 3D stages' BG0 cell animation (engine/src/engine/gfx/cell_anim.cpp, #915): the
  * category's cell record (a `struct cell_anim_header`, actor_anim.h)
  * played frame by frame as the course goes by. Its course distance is the
  * depth every actor is placed and drawn against.

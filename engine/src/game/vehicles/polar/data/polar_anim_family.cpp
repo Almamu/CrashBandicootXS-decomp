@@ -10,14 +10,14 @@ extern "C" {
  * ROM 0x08178F80-0x0817A6B8: the data of actor categories 0-2 (the family
  * whose frames are the gPolarSpriteSheet sheet): their OBJ palette,
  * the 41-record animation table gCategoryFamily0AnimTable
- * (include/engine/actor/actor_anim.h) and the keyframe (table_A) and frame (table_B)
- * arrays its records point at. Linked in ROM order between data/data.s
+ * (engine/include/engine/actor/actor_anim.h) and the keyframe (table_A) and frame (table_B)
+ * arrays its records point at. Linked in ROM order between games/xs/data/data.s
  * sections by games/xs/ldscript.txt - see docs/data.md, "Category families".
  *
  * Record 0's table_B points at compressed frames of set A
  * (polar_rle_sprites.cpp), the others' at frames of the framed sheet
- * graphics/vehicles/polar/sprite_sheet/ (byte offsets into its decompressed
- * data). All but the palette is data/levels/anim_tables/polar.json, which
+ * games/xs/graphics/vehicles/polar/sprite_sheet/ (byte offsets into its decompressed
+ * data). All but the palette is games/xs/data/levels/anim_tables/polar.json, which
  * tools/levels.py generates with the offsets the build generates, so
  * edited frames move them along. The arrays are cut at the next array a
  * record points at; nothing but the records references them.
@@ -56,5 +56,5 @@ const u16 gPolarCategoryPalette[0x200] = {
 };
 
 /* The keyframes, the frames and the animation table,
- * data/levels/anim_tables/polar.json (docs/levels.md, "Animation tables"). */
+ * games/xs/data/levels/anim_tables/polar.json (docs/levels.md, "Animation tables"). */
 #include "anim_tables/polar.inc"

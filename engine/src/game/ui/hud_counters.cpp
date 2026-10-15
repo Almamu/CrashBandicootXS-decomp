@@ -19,7 +19,7 @@ using Game::Vehicles::Jetpack::Airship;
 
 /* The HUD's stat widgets, the callees of Hud::Update (hud.cpp): UpdateBoss,
  * UpdateClock, UpdateLives, UpdateCrates, UpdateWumpa and
- * UpdatePercentCounters (include/game/ui/hud.hpp). The first three were
+ * UpdatePercentCounters (engine/include/game/ui/hud.hpp). The first three were
  * hud_boss_clock.cpp and hud_lives.cpp until #771. */
 
 /* Icon-indicator widget (lives display) - see
@@ -116,7 +116,7 @@ void Hud::UpdateClock()
     parts[21].Draw(0, 0);
 }
 
-/* Hud::UpdateLives (UpdateHudLives, #664 cleanup, include/game/ui/hud.hpp): the
+/* Hud::UpdateLives (UpdateHudLives, #664 cleanup, engine/include/game/ui/hud.hpp): the
  * lives counter, two digits (parts 0 and 1; a single-digit count hides
  * the second) and the icon (part 2), redrawn every frame while the
  * counter is on screen.

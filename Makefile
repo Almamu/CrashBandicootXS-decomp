@@ -32,7 +32,7 @@ PLATFORM_DIR := platform/$(PLATFORM)
 # The libraries' public headers (lib/*/include, and the platform's own,
 # platform/gba/lib/*/include) are on the -I path, so game code includes
 # them as <gax.h>, <agb_eeprom.h>, <agb_syscall.h>.
-CPPFLAGS := -I tools/agbcc/include -iquote include -I $(PLATFORM_DIR)/include \
+CPPFLAGS := -I tools/agbcc/include -iquote engine/include -I $(PLATFORM_DIR)/include \
 	$(patsubst %,-I %,$(wildcard lib/*/include $(PLATFORM_DIR)/lib/*/include)) -nostdinc -undef
 ASFLAGS  := -mcpu=arm7tdmi -mthumb-interwork
 # The GBA has no memory protection, so the ELF's RWX LOAD segment is
@@ -87,15 +87,16 @@ endif
 ROM      := crashbandicootxs.gba
 ELF      := $(ROM:.gba=.elf)
 MAP      := $(ROM:.gba=.map)
-LDSCRIPT := games/xs/ldscript.txt
+XS_DIR   := games/xs
+LDSCRIPT := $(XS_DIR)/ldscript.txt
 
-C_SUBDIR = src
+C_SUBDIR = engine/src
 ASM_SUBDIR = asm
-DATA_ASM_SUBDIR = data
+DATA_ASM_SUBDIR = $(XS_DIR)/data
 
-C_BUILDDIR = $(OBJ_DIR)/$(C_SUBDIR)
+C_BUILDDIR = $(OBJ_DIR)/src
 ASM_BUILDDIR = $(OBJ_DIR)/$(ASM_SUBDIR)
-DATA_ASM_BUILDDIR = $(OBJ_DIR)/$(DATA_ASM_SUBDIR)
+DATA_ASM_BUILDDIR = $(OBJ_DIR)/data
 SOUND_BUILDDIR = $(OBJ_DIR)/sound
 GRAPHICS_BUILDDIR = $(OBJ_DIR)/graphics
 
@@ -106,15 +107,15 @@ C_ASMS := $(patsubst $(C_SUBDIR)/%.c,$(C_BUILDDIR)/%.s,$(C_SRCS))
 C_OBJS := $(patsubst $(C_SUBDIR)/%.c,$(C_BUILDDIR)/%.o,$(C_SRCS))
 
 # The game objects written as C++ (#664, docs/cplusplus.md): every .cpp
-# under src/, at any depth (src/engine/<ns>/, src/game/<ns>/,
-# src/game/vehicles/polar/, the data/ subdirectories; docs/file_layout.md),
+# under engine/src/, at any depth (engine/src/engine/<ns>/, engine/src/game/<ns>/,
+# engine/src/game/vehicles/polar/, the data/ subdirectories; docs/file_layout.md),
 # built by agbcp/old_agbcp (see "C++ objects" below).
 CXX_SRCS := $(shell find $(C_SUBDIR) -name '*.cpp' | sort)
 CXX_ASMS := $(patsubst $(C_SUBDIR)/%.cpp,$(C_BUILDDIR)/%.s,$(CXX_SRCS))
 CXX_OBJS := $(patsubst $(C_SUBDIR)/%.cpp,$(C_BUILDDIR)/%.o,$(CXX_SRCS))
 
 # The ROM data tables: the .cpp files of the data/ subdirectories, next to
-# the code that uses them (src/<area>/<namespace>/data/, docs/file_layout.md).
+# the code that uses them (engine/src/<area>/<namespace>/data/, docs/file_layout.md).
 # Each table's name is unique: $(call data_obj,NAME) is the object of
 # NAME.cpp, wherever it is.
 DATA_SRCS := $(foreach f,$(CXX_SRCS),$(if $(findstring /data/,$(f)),$(f)))
@@ -178,20 +179,20 @@ DEPS := $(C_OBJS:.o=.d) $(CXX_OBJS:.o=.d) $(LIB_C_OBJS:.o=.d) $(LIBGCC2_OBJS:.o=
 GENERATED_INCLUDE_DIR := build/include
 CPPFLAGS += -iquote $(GENERATED_INCLUDE_DIR)
 
-include graphics.mk
-include levels.mk
-include text.mk
-include cutscenes.mk
+include $(XS_DIR)/graphics.mk
+include $(XS_DIR)/levels.mk
+include $(XS_DIR)/text.mk
+include $(XS_DIR)/cutscenes.mk
 
-# A new song's settings are its sound/songs/<key>.json (docs/audio.md,
+# A new song's settings are its games/xs/sound/songs/<key>.json (docs/audio.md,
 # "Adding a song").
-SOUND_SONGS := $(wildcard sound/songs/*.xm) $(wildcard sound/songs/*.json)
-SOUND_SAMPLES := $(wildcard sound/samples/*.wav)
-# New instruments (docs/audio.md, "New instruments"): sound/instruments/
-# <name>.json, each with a WAV under sound/, for the songs and for the
+SOUND_SONGS := $(wildcard $(XS_DIR)/sound/songs/*.xm) $(wildcard $(XS_DIR)/sound/songs/*.json)
+SOUND_SAMPLES := $(wildcard $(XS_DIR)/sound/samples/*.wav)
+# New instruments (docs/audio.md, "New instruments"): games/xs/sound/instruments/
+# <name>.json, each with a WAV under games/xs/sound/, for the songs and for the
 # sound effects sfx_table.json names.
-SOUND_INSTRUMENTS := $(wildcard sound/instruments/*.json) $(SOUND_SAMPLES) $(wildcard sound/sfx_samples/*.wav)
-SOUND_SFX_SOURCES := sound/gax_sfx_manifest.json sound/sfx_table.json $(SOUND_INSTRUMENTS)
+SOUND_INSTRUMENTS := $(wildcard $(XS_DIR)/sound/instruments/*.json) $(SOUND_SAMPLES) $(wildcard $(XS_DIR)/sound/sfx_samples/*.wav)
+SOUND_SFX_SOURCES := $(XS_DIR)/sound/gax_sfx_manifest.json $(XS_DIR)/sound/sfx_table.json $(SOUND_INSTRUMENTS)
 SOUND_BUILT := $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_audio_data.s \
 	$(SOUND_BUILDDIR)/gax_default_layout.bin $(SOUND_BUILDDIR)/gax_default_layout.s \
 	$(SOUND_BUILDDIR)/gax_sfx_data.bin $(SOUND_BUILDDIR)/gax_sfx_data.s $(SOUND_BUILDDIR)/sfx_table.bin
@@ -203,7 +204,7 @@ ifeq ($(PLATFORM),gba)
 all: $(ROM)
 
 compare: $(ROM)
-	sha1sum -c games/xs/checksum.sha1
+	sha1sum -c $(XS_DIR)/checksum.sha1
 endif
 
 # The ROM shiftability check (#967, docs/shifting.md): links the ROM again
@@ -226,7 +227,7 @@ mod:
 	python3 tools/apply_mod.py $(MOD) $(MOD_TREE)
 	$(MAKE) -C $(MOD_TREE)
 
-# Every incbin and include in data/*.s (the sound blocks) needs the
+# Every incbin and include in games/xs/data/*.s (the sound blocks) needs the
 # corresponding built file to exist first. Each GAX2 block is a .bin and
 # the .s that data.s includes: its bytes, with the pointers as
 # relocations. The graphics and the level assets are C arrays in
@@ -237,14 +238,14 @@ $(DATA_ASM_OBJS): $(SOUND_BUILT)
 # handler type, at an offset the set's layout gives), so it depends on
 # the set's sources too. The same run writes the default song's layout
 # struct (gGaxDefaultSong) and the song offsets the song table
-# (src/engine/audio/data/song_table.cpp) is written with.
+# (engine/src/engine/audio/data/song_table.cpp) is written with.
 $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_audio_data.s $(SOUND_BUILDDIR)/gax_default_layout.bin \
-		$(SOUND_BUILDDIR)/gax_default_layout.s $(SOUND_BUILDDIR)/gax_songs.h &: sound/gax_manifest.json $(SOUND_SONGS) $(SOUND_INSTRUMENTS) $(SOUND_SFX_SOURCES) tools/gax_audio.py
+		$(SOUND_BUILDDIR)/gax_default_layout.s $(SOUND_BUILDDIR)/gax_songs.h &: $(XS_DIR)/sound/gax_manifest.json $(SOUND_SONGS) $(SOUND_INSTRUMENTS) $(SOUND_SFX_SOURCES) tools/gax_audio.py
 	python3 tools/gax_audio.py $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_default_layout.bin $(SOUND_BUILDDIR)/gax_songs.h
 
 # gSongTable itself, in song id order (the manifest's song_table), which
 # song_table.cpp #includes.
-$(SOUND_BUILDDIR)/song_table.inc: sound/gax_manifest.json tools/gax_audio.py
+$(SOUND_BUILDDIR)/song_table.inc: $(XS_DIR)/sound/gax_manifest.json tools/gax_audio.py
 	python3 tools/gax_audio.py --table $@
 
 $(C_BUILDDIR)/engine/audio/data/song_table.o: CPPFLAGS += -iquote $(SOUND_BUILDDIR)
@@ -263,11 +264,11 @@ $(SOUND_BUILDDIR)/sfx_table.bin: $(SOUND_SFX_SOURCES) tools/sfx_table.py tools/g
 # wait for the music block.
 GENERATED_HEADERS += $(GENERATED_INCLUDE_DIR)/constants/songs.h $(GENERATED_INCLUDE_DIR)/constants/sfx.h
 
-$(GENERATED_INCLUDE_DIR)/constants/songs.h: sound/gax_manifest.json sound/music.json tools/gax_audio.py
+$(GENERATED_INCLUDE_DIR)/constants/songs.h: $(XS_DIR)/sound/gax_manifest.json $(XS_DIR)/sound/music.json tools/gax_audio.py
 	@mkdir -p $(dir $@)
 	python3 tools/gax_audio.py --constants $@
 
-$(GENERATED_INCLUDE_DIR)/constants/sfx.h: sound/sfx_table.json tools/sfx_table.py
+$(GENERATED_INCLUDE_DIR)/constants/sfx.h: $(XS_DIR)/sound/sfx_table.json tools/sfx_table.py
 	@mkdir -p $(dir $@)
 	python3 tools/sfx_table.py --constants $@
 
@@ -283,7 +284,7 @@ tidy:
 	rm -r build/*
 
 #### Screen-size compile check (#979) ####
-# `make screen-check` compiles every game object (src/, and of the
+# `make screen-check` compiles every game object (engine/src/, and of the
 # data tables those that spell a DISPLAY_ name or a logo fly-in's
 # _FLY_IN: the layouts' position tables, the logo pieces' motions and
 # their seeds) with another screen size, SCREEN_CHECK_WIDTH x
@@ -320,7 +321,7 @@ screen-check-objs: $(filter-out $(DATA_OBJS),$(C_OBJS) $(CXX_OBJS)) $(SCREEN_CHE
 # anything else) and applies games/xs/expected/corrections.txt per slice. Run
 # under `NON_MATCHING=1` so parked functions are included as their
 # (possibly imperfect) C reconstruction rather than omitted or silently
-# swapped for raw asm. The data units (data/data.s) need the repo-built
+# swapped for raw asm. The data units (games/xs/data/data.s) need the repo-built
 # sound blocks it incbins, but not data.o itself (that needs baserom.gba).
 # itoa_arm's unit is an assembly object (asm/itoa_arm.s, #662).
 

@@ -74,7 +74,7 @@ the two halves.
 `sub_8039E50` keeps its own `.thumb_func`/`.global` label pair purely
 so its ROM address still carries its name for anyone disassembling the
 object (it is never itself called from anywhere in the ROM - checked
-every `asm/*.s`/`expected/*.s`/`src/*` file for a `bl sub_8039E50`/
+every `asm/*.s`/`expected/*.s`/`engine/src/*` file for a `bl sub_8039E50`/
 `.4byte sub_8039E50` reference, none exists), not as a second callable
 C function - matching this project's established NAKED-fused-pair
 policy.

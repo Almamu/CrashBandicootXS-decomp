@@ -13,7 +13,7 @@ using Game::Objects::Platform;
 /* 0x08020E84-0x08021280 (GitHub issue #31): four of the entity spawners
  * of gEntitySpawnFuncs (entity types 0x51-0x54; docs/rom_map.md called
  * them "trigger effect type N" functions) - the same family as
- * SpawnCrystal-SpawnYellowGem (src/game/objects/spawn_gems.cpp).
+ * SpawnCrystal-SpawnYellowGem (engine/src/game/objects/spawn_gems.cpp).
  *
  * Each one tests one "collected" bit of the level progress record
  * (gLevelState + 2). If it is set, it spawns the gem platform
@@ -30,9 +30,9 @@ using Game::Objects::Platform;
  *   Platform::SpawnGemGreen (SpawnGreenGemPlatform)   4    0xA GEM_GREEN          6
  *   Platform::SpawnGemBlue (SpawnBlueGemPlatform)     8    0x9 GEM_BLUE           8
  *
- * They are Platform's static members since #915 (include/game/objects/platform.hpp).
+ * They are Platform's static members since #915 (engine/include/game/objects/platform.hpp).
  *
- * C++ since #664 part 9 (include/game/level/spawners.hpp), built with old_agbcp
+ * C++ since #664 part 9 (engine/include/game/level/spawners.hpp), built with old_agbcp
  * (Makefile OLD_AGBCC_OBJS): the ROM materializes the bit mask before
  * loading the byte it is ANDed with, old_agbcc's tell. Under it all four
  * were plain C with no pins, and are plain C++ now; they had been

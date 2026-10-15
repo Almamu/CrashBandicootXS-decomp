@@ -4,7 +4,7 @@
 `AimJetpackPlane`..`AirshipFireballStateSpiralIn`: all 25 of issue #57's range and the first
 two of issue #58's range (`AirshipFireballStateOrbit`/`AirshipFireballStateSpiralIn`, the only raw
 functions #58 had left). **All 27 are now real C** in
-`src/vehicle/jetpack_plane.c`, with no NAKED or `NON_MATCHING`
+`engine/src/vehicle/jetpack_plane.c`, with no NAKED or `NON_MATCHING`
 functions. The raw `.s` file is deleted and a clean `make compare`
 passes.
 
@@ -18,7 +18,7 @@ therefore stays off `OLD_AGBCC_OBJS`, like its neighbors.
 The functions are the methods of three small gcc 2.x C++ classes built
 on the shared per-instance "self" object (issues #54-#62). This pass
 gives that object a real struct, `struct actor_self` in the new
-`include/actor_self.h`: `anims` +0x00, `animTime` +0x08, `animIndex`
+`engine/include/actor_self.h`: `anims` +0x00, `animTime` +0x08, `animIndex`
 +0x0C, `animTimer`/`animDone` +0x10/+0x12, `x`/`y`/`z` +0x1C-0x24,
 `state` +0x28, `depth` +0x34, `stateTime` +0x44 and `vtable` +0x50.
 Each class embeds it as `base` and declares its own fields from +0x54

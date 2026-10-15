@@ -2,7 +2,7 @@
 #define __BG_SCROLL_LAYER_H__
 
 /* The BGnCNT shadow of the level's BG layers (BgLayer's `cnt`,
- * include/game/level/bg_layer.hpp). The layers are C++ classes with no C view: this
+ * engine/include/game/level/bg_layer.hpp). The layers are C++ classes with no C view: this
  * header's `struct bg_scroll_layer` went with its last reader (#754). See
  * docs/matching/archive/issue-42-bg-scroll-layer.md. */
 

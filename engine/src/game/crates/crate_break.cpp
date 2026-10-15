@@ -25,7 +25,7 @@ using Game::Level::EntitySpawner;
 using Game::Level::LevelEntityFlags;
 using Game::Objects::Wumpa;
 
-/* The crate's hits, breaks and explosions (#664, include/game/crates/crate.hpp,
+/* The crate's hits, breaks and explosions (#664, engine/include/game/crates/crate.hpp,
  * part 7g): the player's hit on a crate (QueuePlayerCollision, resolved
  * later by ApplyCollision), what each kind of crate does when it breaks
  * or is set off, the explosions' blasts and the falls of the crates above

@@ -1,7 +1,7 @@
 #ifndef GUARD_SYSTEM_H
 #define GUARD_SYSTEM_H
 
-/* The system subsystem (src/engine/sys/): boot, the main loop, VBlank wait
+/* The system subsystem (engine/src/engine/sys/): boot, the main loop, VBlank wait
  * and frame limit, key polling, tagged-asset loading and the UI text
  * lookup. The interrupt table is in irq.h and the heap in memory.h; this
  * header includes both.
@@ -16,13 +16,13 @@
 #include "engine/sys/memory.h"
 #include "constants/levels.h"
 
-/* src/engine/sys/iwram_data.cpp */
+/* engine/src/engine/sys/iwram_data.cpp */
 extern u32 gVBlankCounter;
 /* The language picked at boot (0-5), set by MainLoop. */
 extern s32 gLanguage;
-/* One UI string table per language (src/game/ui/data/ui_text.cpp). */
+/* One UI string table per language (engine/src/game/ui/data/ui_text.cpp). */
 extern const u8 *const *gUiTextTables[6];
-/* The tables gUiTextTables points at (src/game/ui/data/ui_text.cpp). */
+/* The tables gUiTextTables points at (engine/src/game/ui/data/ui_text.cpp). */
 extern const u8 *const gUiTextEnglish[UI_TEXT_COUNT];
 extern const u8 *const gUiTextFrench[UI_TEXT_COUNT];
 extern const u8 *const gUiTextGerman[UI_TEXT_COUNT];
@@ -31,10 +31,10 @@ extern const u8 *const gUiTextItalian[UI_TEXT_COUNT];
 extern const u8 *const gUiTextDutch[UI_TEXT_COUNT];
 
 /* Held d-pad bits (right/left/down/up as bits 3-0) -> direction 0-8
- * (src/game/bosses/data/boss_pictures.cpp). */
+ * (engine/src/game/bosses/data/boss_pictures.cpp). */
 extern const u8 gDpadDirectionTable[16];
 
-/* src/engine/gfx/asset.cpp */
+/* engine/src/engine/gfx/asset.cpp */
 /* A tagged asset's type: bits 4-7 of its header word, the GBA BIOS's
  * compression type (#843, docs/flags/asset.md). */
 #define ASSET_TYPE_RAW 0     // uncompressed: LoadTaggedAsset DMAs it
@@ -44,20 +44,20 @@ extern const u8 gDpadDirectionTable[16];
 extern void LoadTaggedAsset(const void *asset, void *dest);
 extern void LoadBackgroundTileAndPalette(const void *asset);
 
-/* src/engine/sys/bios_util.cpp */
+/* engine/src/engine/sys/bios_util.cpp */
 extern s32 DivMod(s32 number, s32 denom, s32 *remainderOut);
 extern void *MemCopy32(void *dst, const void *src, u32 byteCount);
 
-/* src/engine/sys/input.cpp */
+/* engine/src/engine/sys/input.cpp */
 extern s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask);
 
-/* src/engine/sys/key_input.cpp: KeyInput's constructor (ClearKeys),
+/* engine/src/engine/sys/key_input.cpp: KeyInput's constructor (ClearKeys),
  * UpdateKeys and GetDpadDirection are its methods (key_input.hpp). */
 
-/* src/engine/sys/main.cpp */
+/* engine/src/engine/sys/main.cpp */
 extern s32 AgbMain(void);
 
-/* src/game/level/main_loop.cpp. GetUiText returns UI string `index` in the
+/* engine/src/game/level/main_loop.cpp. GetUiText returns UI string `index` in the
  * current language (docs/casts/text.md). */
 extern s32 MainLoop(void);
 extern const u8 *GetUiText(s32 index);

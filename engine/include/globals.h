@@ -5,7 +5,7 @@
  * "Who owns a symbol", rule 3): the games/xs/sym_iwram.txt singletons the game
  * builds at boot or per level (the audio context, the input object, the
  * OAM shadow buffer, the palette cache, ...), the key state and frame
- * counter of src/engine/sys/iwram_data.cpp, and the sine table.
+ * counter of engine/src/engine/sys/iwram_data.cpp, and the sine table.
  *
  * Each global has the type of its definition or, for the linker-script
  * symbols, the type of the object stored there. A .c file that needs a
@@ -55,7 +55,7 @@ union key_state {
     u32 all;
 };
 
-/* src/engine/sys/iwram_data.cpp */
+/* engine/src/engine/sys/iwram_data.cpp */
 extern union key_state gKeys;
 extern u32 gRoomFrameCount;
 /* The circular actor list's root (ActorSelf's prev/next, actor_self.hpp).
@@ -186,7 +186,7 @@ class Player;
 extern Game::Crash::Player *gPlayer;
 #endif
 
-/* src/game/bosses/data/boss_pictures.cpp: a full turn in 256 steps, scaled by 0x100. */
+/* engine/src/game/bosses/data/boss_pictures.cpp: a full turn in 256 steps, scaled by 0x100. */
 extern const s16 gSineTable[256];
 
 #endif /* GUARD_GLOBALS_H */

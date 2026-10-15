@@ -6,7 +6,7 @@ extern "C" {
 
 /*
  * ROM 0x0847e318-0x08485d00: sprite banks 7-25 of the sprite-bank
- * animation system (gSpriteBankTable, include/engine/gfx/sprite_bank.h). Linked in
+ * animation system (gSpriteBankTable, engine/include/engine/gfx/sprite_bank.h). Linked in
  * ROM order between the incbin'd data by games/n2/ldscript.txt - see
  * docs/data.md and docs/data_map.md ("gSpriteBankTable").
  *

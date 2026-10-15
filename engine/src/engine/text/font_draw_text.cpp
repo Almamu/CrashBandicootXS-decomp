@@ -3,7 +3,7 @@
 using Engine::Text::Font;
 
 /* GitHub issue #46: Font's whole-string draw and fixed-count measure
- * (include/engine/text/font.hpp). Built with old_agbcp, which MeasureChars needs. */
+ * (engine/include/engine/text/font.hpp). Built with old_agbcp, which MeasureChars needs. */
 
 /* Draws a NUL-terminated string: PutChar's per-character logic in a loop,
  * newline and space handled in place, every other character drawn

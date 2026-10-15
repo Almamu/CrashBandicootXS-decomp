@@ -7,7 +7,7 @@ extern "C" {
 
 /*
  * ROM 0x0816B92C-0x0816B93C: two entry sets. Linked in ROM order between
- * data/data.s sections by games/xs/ldscript.txt - see docs/data.md.
+ * games/xs/data/data.s sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* Their entries, in motion_records.cpp. */

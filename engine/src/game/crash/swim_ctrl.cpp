@@ -22,7 +22,7 @@ using Game::Entities::MovingSprite;
 
 /* GitHub issues #19 (its last raw function, CheckSwimCtrlTurn) and #20
  * (0x08016128-0x08017524): the swim controller, SwimCtrl
- * (include/game/crash/swim_ctrl.hpp, gSwimCtrlVtable; #664, docs/cplusplus.md).
+ * (engine/include/game/crash/swim_ctrl.hpp, gSwimCtrlVtable; #664, docs/cplusplus.md).
  * It drives the diving Crash of the room-kind-1 (underwater) rooms:
  * sprite bank 1 is Crash with an air tank and flippers, `tilt` is his swim
  * direction (0 up, 6 level, 12 down) and ApplySwimDrift blows the bank-40
@@ -50,7 +50,7 @@ using Game::Entities::MovingSprite;
  * SetDriftNowX/SetDriftX and ApplyLevel/ApplyTilt are each inlined at
  * some call sites and also emitted out of line.
  *
- * UNUSED - no reference in asm/, src/ or data/ and no Thumb pointer in the
+ * UNUSED - no reference in asm/, engine/src/ or games/xs/data/ and no Thumb pointer in the
  * ROM: ApplyMotion, StartMotionYFromSet, StartMotionXFromSet,
  * GetDriftStep, ApplyTilt, StartSwim, ClearUnk14, SetMotionYPending,
  * SetMotionXPending. Matched anyway. */
@@ -683,7 +683,7 @@ void SwimCtrl::SetMotionXPending()
 
 /* The accessors of the queued X/Y motion entries (`motionX`/`motionY`)
  * and their "pending" flags (the start of input_ctrl.cpp until #768).
- * UNUSED - no `bl`/`.4byte` reference in src/, and no Thumb pointer
+ * UNUSED - no `bl`/`.4byte` reference in engine/src/, and no Thumb pointer
  * anywhere in the ROM. */
 void SwimCtrl::ClearMotionYPending()
 {

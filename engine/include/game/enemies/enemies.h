@@ -1,8 +1,8 @@
 #ifndef GUARD_ENEMIES_H
 #define GUARD_ENEMIES_H
 
-/* The enemies subsystem (src/game/enemies/): the enemy controller that steers
- * an enemy's sprite part (a MovingSprite, include/game/entities/sprite_obj.hpp), its
+/* The enemies subsystem (engine/src/game/enemies/): the enemy controller that steers
+ * an enemy's sprite part (a MovingSprite, engine/include/game/entities/sprite_obj.hpp), its
  * motion/attack updaters, the "knocked" controller HitEnemy launches, and
  * the periodic spawner.
  *
@@ -12,7 +12,7 @@
  * (docs/headers.md).
  *
  * The subsystem is C++ (#664): the classes are EnemyCtrl, KnockedEnemyCtrl
- * and PeriodicSpawner in include/game/enemies/enemy_ctrl.hpp, and the enemy spawners
+ * and PeriodicSpawner in engine/include/game/enemies/enemy_ctrl.hpp, and the enemy spawners
  * (spawn_enemies.cpp) are C++ too. */
 
 #include "core.h"
@@ -22,7 +22,7 @@
 struct entry_set;
 
 /* The motion entry set ResetEnemyCtrl gives every controller
- * (`manager`, src/game/crates/data/crate_tables.cpp). */
+ * (`manager`, engine/src/game/crates/data/crate_tables.cpp). */
 extern const struct entry_set gEnemyCtrlMotionSet;
 
 /* The part position UpdateEnemyCtrl's state 9 records the first time it
@@ -33,7 +33,7 @@ extern s32 gHomingEnemyXSaved;
 extern s32 gHomingEnemyY;
 extern s32 gHomingEnemyYSaved;
 
-/* src/game/enemies/enemy_ctrl.cpp: GetSfxVolumeAt (C linkage). The methods
+/* engine/src/game/enemies/enemy_ctrl.cpp: GetSfxVolumeAt (C linkage). The methods
  * have no C caller left and no C name here (cxx_symbols.txt has them). */
 extern s32 GetSfxVolumeAt(s32 x, s32 y);
 

@@ -2,8 +2,8 @@
 #define GUARD_PLATFORM_HPP
 
 /* The platforms as C++ (#664, docs/cplusplus.md, part 7d): the classes
- * behind gPlatformVtable and gPlatformMoverVtable (src/game/objects/platform*.cpp),
- * and the Neo Cortex fight's mover subclass (part 7i, src/game/bosses/cortex.cpp).
+ * behind gPlatformVtable and gPlatformMoverVtable (engine/src/game/objects/platform*.cpp),
+ * and the Neo Cortex fight's mover subclass (part 7i, engine/src/game/bosses/cortex.cpp).
  *
  * No `#pragma interface`: g++ emits the vtables, PlatformMover's in
  * platform_mover.cpp, Platform's in platform_contact.cpp and
@@ -151,7 +151,7 @@ namespace Bosses
 {
 
 /* The Neo Cortex fight's platforms' controller
- * (gCortexBossPlatformMoverVtable; src/game/bosses/cortex.cpp): a still type-6
+ * (gCortexBossPlatformMoverVtable; engine/src/game/bosses/cortex.cpp): a still type-6
  * PlatformMover whose Update runs the platform's animation to frame 0x1A,
  * or to frame 10 while the target has set the platform's `kind` (its
  * state 5, CortexTargetCtrl::SetPlatformsKind). */

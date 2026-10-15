@@ -13,7 +13,7 @@ takes an `Irq *` changes too), but not their code. cxx_symbols.txt maps
 the old names, so the link then fails on the new ones.
 
 Run `snapshot` on a build of the tree before the change (it copies the
-.s files g++ wrote for src/, build/crashbandicootxs/src/**/*.s), make the
+.s files g++ wrote for engine/src/, build/crashbandicootxs/src/**/*.s), make the
 change, build again (`make` stops at the link, after every object is
 compiled), then `apply`. It compares each .s file with its snapshot line
 by line: the lines must be the same except for symbol names, and each old

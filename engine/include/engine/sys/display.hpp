@@ -1,7 +1,7 @@
 #ifndef GUARD_DISPLAY_HPP
 #define GUARD_DISPLAY_HPP
 
-/* The display registers' shadows (src/engine/sys/display.cpp, #915): REG_DISPCNT
+/* The display registers' shadows (engine/src/engine/sys/display.cpp, #915): REG_DISPCNT
  * as `dispcnt`, which the Show/Hide helpers edit a bit at a time and
  * CommitDispcnt writes, and the blend registers as `blendRegs`, which
  * SetupRoomBlend builds and CommitBlendRegs writes. The title screen, the

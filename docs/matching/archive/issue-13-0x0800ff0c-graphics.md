@@ -17,7 +17,7 @@ This pass closes it.
 Two entire files exist purely to call `CreateCrate` with a fixed
 constant `type` (the 5th, stack-passed argument) and nothing else:
 
-- `src/game/crates/spawn_crates.c` (GitHub issue #33) - `type`
+- `engine/src/game/crates/spawn_crates.c` (GitHub issue #33) - `type`
   `0` through `7`. `type == 0`'s caller (`SpawnBasicCrate`) does extra
   post-processing: it re-derives the same `gEntityFlags -> *P ->
   {+8 array, +0xc base}` placement-record lookup `CreateCrate` itself
@@ -27,7 +27,7 @@ constant `type` (the 5th, stack-passed argument) and nothing else:
   the bits `CreateCrate`'s own common tail had just cleared.
   `SpawnNitroSwitchCrate` picks `type` `7` or `6` depending on
   `IsSwitchPressed(gLevelState)`.
-- `src/game/objects/spawn_objects.c` (GitHub issue #31) - `type`
+- `engine/src/game/objects/spawn_objects.c` (GitHub issue #31) - `type`
   `0x12` down to `7` (overlapping `spawn_crates.c` at `7`
   through a second, independent trampoline `SpawnIronCrate`).
 
@@ -140,7 +140,7 @@ byte, and folds three placement-record `+1` flag bits
 `type == 5`'s post-tail call to `SolidifyOutlineCrate(self)` is a direct,
 concrete link between this constructor family and the issue #12
 physics/collision cluster: `SolidifyOutlineCrate` is matched as `NAKED` in
-`src/game/crates/crate_break.c` (issue #12 Phase 2). This confirms `type 5`
+`engine/src/game/crates/crate_break.c` (issue #12 Phase 2). This confirms `type 5`
 spawns an entity that immediately participates in that cluster's own
 collision-response state machine.
 

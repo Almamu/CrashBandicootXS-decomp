@@ -3,16 +3,16 @@
 
 /* The in-game HUD as C++ (#664 cleanup): class Hud, gHud (globals.h
  * declares it as a `Hud *` to C++), built by `new Hud` in
- * src/game/level/game_frame.cpp and deleted there (`delete
+ * engine/src/game/level/game_frame.cpp and deleted there (`delete
  * gHud`). It has no vtable. Its 35 parts are HudParts
  * (part_list.hpp), allocated with `new HudPart[35]` by the constructor
  * and freed with `delete[]` by the destructor.
  *
- *   src/game/ui/hud_init.cpp      constructor, ConfigureParts
- *   src/game/ui/hud.cpp           Update
- *   src/game/ui/hud_counters.cpp  UpdateBoss, UpdateClock, UpdateLives,
+ *   engine/src/game/ui/hud_init.cpp      constructor, ConfigureParts
+ *   engine/src/game/ui/hud.cpp           Update
+ *   engine/src/game/ui/hud_counters.cpp  UpdateBoss, UpdateClock, UpdateLives,
  *                             UpdateCrates, UpdateWumpa, UpdatePercentCounters
- *   src/game/ui/hud_slide.cpp     the slides, the crate total, destructor
+ *   engine/src/game/ui/hud_slide.cpp     the slides, the crate total, destructor
  *
  * Update (UpdateHud) is the per-frame dispatcher; its widgets are
  * UpdateLives, UpdateClock, UpdateWumpa, UpdateCrates, UpdateBoss and
@@ -34,12 +34,12 @@ extern "C" {
 }
 
 /* The vertical offset HudPart::Draw adds to every part, set by the
- * counters while they slide (src/engine/sys/iwram_data.cpp): -40 to 0, from
+ * counters while they slide (engine/src/engine/sys/iwram_data.cpp): -40 to 0, from
  * above the top row into place. */
 extern screen_dy_t gHudSlideOffset;
 
 /* Each of the 35 parts' starting animation and position
- * (src/game/ui/data/hud_font_tables.cpp). */
+ * (engine/src/game/ui/data/hud_font_tables.cpp). */
 extern const u32 gHudPartAnims[35];
 extern const struct vec2 gHudPartPositions[35];
 

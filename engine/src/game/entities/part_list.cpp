@@ -10,9 +10,9 @@ extern "C" {
 using Game::Entities::PartList;
 using Game::Entities::Sprite;
 
-/* The part list's own methods (#664, part 7c; include/game/entities/part_list.hpp).
+/* The part list's own methods (#664, part 7c; engine/include/game/entities/part_list.hpp).
  * The crate list's constructor, which the ROM puts right after them,
- * starts src/game/crates/crate_list_update.cpp. */
+ * starts engine/src/game/crates/crate_list_update.cpp. */
 
 /* Draws every part on screen. */
 void PartList::Draw()

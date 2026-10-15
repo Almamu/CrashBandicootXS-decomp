@@ -1,9 +1,9 @@
 # Retrying issues #58 and #61's NAKED functions
 
 Issue #58 (`0x08030334`-`0x08031784`, the boss-weapon cluster, one
-function per file, now `src/game/bosses/airship*.c`) and issue #61
+function per file, now `engine/src/game/bosses/airship*.c`) and issue #61
 (`0x08032890`-`0x08033804`, the `gHovercraft` singleton system in
-`src/game/bosses/hovercraft.c`) had 19 functions parked as NAKED. The
+`engine/src/game/bosses/hovercraft.c`) had 19 functions parked as NAKED. The
 first passes ([issue-58-0x08030574-actor.md](issue-58-0x08030574-actor.md),
 [issue-60-61-gap-31a6c-part2.md](issue-60-61-gap-31a6c-part2.md))
 blamed most of them on "many live high registers" or on a size gap

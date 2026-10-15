@@ -9,7 +9,7 @@ using Engine::Util::FindLineCrossingXMajor;
 using Engine::Util::FindLineCrossingYMajor;
 using Game::Crates::Crate;
 
-/* The general line stepper and Crate::Reset (#664, include/game/crates/crate.hpp). */
+/* The general line stepper and Crate::Reset (#664, engine/include/game/crates/crate.hpp). */
 
 /* A Bresenham line from (pos, count) to (a, b), from the end with the
  * lower count: returns `count` at the step where `pos` passes `limit`, or

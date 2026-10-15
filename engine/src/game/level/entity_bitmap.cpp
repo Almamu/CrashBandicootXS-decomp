@@ -11,7 +11,7 @@ using Game::Level::Bitmap;
  * set, clear, clear all and the constructor-like InitBitmap. Nothing
  * calls them; LevelEntityFlags::SetGone (entity_flags.cpp) uses the same
  * bit idiom. In collision_map.cpp (now tile_cache_cell.cpp) until #770.
- * They are class Bitmap's methods (include/game/level/entity_flags.hpp, #762) under
+ * They are class Bitmap's methods (engine/include/game/level/entity_flags.hpp, #762) under
  * their C names (cxx_symbols.txt); all UNUSED. */
 
 /* Sets bit `n % 32` of word `n / 32` of `bits` (the signed division is

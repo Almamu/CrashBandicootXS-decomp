@@ -2,7 +2,7 @@
 #define GUARD_SWIM_CTRL_HPP
 
 /* The swim controller as C++ (#664, docs/cplusplus.md):
- * src/game/crash/swim_ctrl.cpp, swim_ctrl_drift.cpp and swim_ctrl_stroke.cpp.
+ * engine/src/game/crash/swim_ctrl.cpp, swim_ctrl_drift.cpp and swim_ctrl_stroke.cpp.
  *
  * No `#pragma interface`: g++ emits its vtable, gSwimCtrlVtable, in
  * swim_ctrl.cpp (see ctrl.hpp).
@@ -48,7 +48,7 @@
 #define SWIM_STROKE_SPEED Q8(2.75)
 #define SWIM_SPIN_SPEED   Q8(3.75)
 
-/* gSwimCtrlMotionRecords' tuned values (src/game/crash/data/motion_records.cpp,
+/* gSwimCtrlMotionRecords' tuned values (engine/src/game/crash/data/motion_records.cpp,
  * Q8): SwimCtrl::ApplyMotion, which reads them, is UNUSED, so they are
  * the records' design, not what the diver does.
  * - SWIM_RAMP_STEP: the records' usual step, 8/256 px a frame per frame,
@@ -75,7 +75,7 @@ namespace Crash
  * (underwater) rooms, where play_room.cpp creates it (`new SwimCtrl`,
  * InitSwimCtrl(OperatorNew(0x30)) in its C). See swim_ctrl.cpp for the
  * states. Reset and Restart (ResetSwimCtrl, RestartSwimCtrl) start
- * src/game/crash/swim_ctrl_stroke.cpp, right after the action controller's
+ * engine/src/game/crash/swim_ctrl_stroke.cpp, right after the action controller's
  * code in the ROM. */
 class SwimCtrl : public Game::Entities::Ctrl
 {
@@ -102,7 +102,7 @@ public:
     u8 motionYPending; // 0x2D - motionY is queued
 
     /* The state methods, indexed by `state` (gSwimCtrlStateFuncs,
-     * src/game/crash/data/swim_input_ctrl_state_tables.cpp): 0 StateIdle, 1 StateSwim,
+     * engine/src/game/crash/data/swim_input_ctrl_state_tables.cpp): 0 StateIdle, 1 StateSwim,
      * 2 StateStroke, 3 StateSpin, 4 StateTurn, 5 StateStop,
      * 6 StateSwimStart, 7 StateDead. */
     typedef void (SwimCtrl::*StateFunc)();

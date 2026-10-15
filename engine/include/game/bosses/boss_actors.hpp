@@ -3,12 +3,12 @@
 
 /* The 3D bosses' actors as C++ (#664, docs/cplusplus.md): the airship's
  * fireball and the hovercraft's weapons, all HpActors (actor_self.hpp).
- * Part 11a declares their destructors (src/game/vehicles/actor_destructors.cpp). The
- * airship's fireball is complete since part 11i (src/vehicle/jetpack/airship*.cpp,
+ * Part 11a declares their destructors (engine/src/game/vehicles/actor_destructors.cpp). The
+ * airship's fireball is complete since part 11i (engine/src/vehicle/jetpack/airship*.cpp,
  * with the airship itself), its two flight states since part 11f
  * (then in jetpack_plane.cpp, at the start of airship_fireball.cpp since
  * #769); the hovercraft's weapons since part
- * 11h (src/game/bosses/hovercraft*.cpp, with the hovercraft itself).
+ * 11h (engine/src/game/bosses/hovercraft*.cpp, with the hovercraft itself).
  * They have no C views. cxx_symbols.txt maps the C++ names to the C
  * ones.
  *
@@ -35,7 +35,7 @@ namespace Jetpack
 {
 
 /* The airship's fireball (gAirshipFireballVtable,
- * src/game/vehicles/jetpack/airship_fireball.cpp): it flies around the
+ * engine/src/game/vehicles/jetpack/airship_fireball.cpp): it flies around the
  * point it was spawned at (StateOrbit), then spirals in on it
  * (StateSpiralIn); the ROM has those two flight states first, right
  * after jetpack_cannonball.cpp. */
@@ -104,9 +104,9 @@ namespace Game
 namespace Bosses
 {
 
-/* The hovercraft's weapons (#664 part 11h, src/game/bosses/hovercraft*.cpp).
+/* The hovercraft's weapons (#664 part 11h, engine/src/game/bosses/hovercraft*.cpp).
  * The hovercraft itself is the all-static class Hovercraft
- * (include/game/bosses/hovercraft.hpp, #772). Its weapons follow it around
+ * (engine/include/game/bosses/hovercraft.hpp, #772). Its weapons follow it around
  * (Hovercraft::GetX/GetY/GetZ plus an offset) and count down its parts
  * (Hovercraft::LosePart) as they are shot down. */
 

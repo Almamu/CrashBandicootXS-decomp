@@ -1,6 +1,6 @@
 # Issue #42: 0x08025FC8-0x08026418, game_loop - the BG-scroll layer's methods
 
-All of `asm/code_3_2_17_25fc8.s` is now `src/game/level/bg_layer.c`:
+All of `asm/code_3_2_17_25fc8.s` is now `engine/src/game/level/bg_layer.c`:
 26 functions, all byte-exact plain C. Nothing parked, nothing left raw, no
 inline asm.
 
@@ -35,7 +35,7 @@ haven't tested it; it's out of scope here.
 
 ## The object
 
-`include/game/level/bg_scroll_layer.h` (new) gives the layer a struct:
+`engine/include/game/level/bg_scroll_layer.h` (new) gives the layer a struct:
 `struct bg_scroll_layer` (0x5C bytes, constructor `InitBgLayer`) and
 `struct pooled_bg_layer` (0x60 bytes, adds the tile-slot pool at `+0x5C`,
 constructor `InitPooledBgLayer`). It also has the method table, whose entries are

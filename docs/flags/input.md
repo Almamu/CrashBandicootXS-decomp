@@ -21,11 +21,11 @@ The `(u16)(gKeys.all & B_BUTTON)` casts are part of the matching spelling
 
 ## The D-pad as one direction, `KEY_DIR_*`
 
-KeyInput::GetDpadDirection (src/engine/sys/key_input.cpp) turns the held
+KeyInput::GetDpadDirection (engine/src/engine/sys/key_input.cpp) turns the held
 D-pad bits into an index (`KEY_DIR_INDEX_UP` 1, `_DOWN` 2, `_LEFT` 4,
 `_RIGHT` 8) and looks it up in gDpadDirectionTable. The result is one
 direction; with opposite buttons held, down beats up and right beats
-left. The names are in include/key_input.hpp.
+left. The names are in engine/include/key_input.hpp.
 
 | Value | Name | Used as |
 |---|---|---|

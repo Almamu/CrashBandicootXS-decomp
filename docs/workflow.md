@@ -47,7 +47,7 @@ incomplete pass and should be finished before moving on.
    and inline-asm anchors are fair game (the build zero-fills the end
    of each object's `.text`, so trailing padding needs nothing; see
    [matching_techniques.md](./matching_techniques.md) for the
-   established techniques, and `include/match.h` for the macros that
+   established techniques, and `engine/include/match.h` for the macros that
    spell the asm idioms and register pins; `tools/match_idioms.py
    --check` flags a hand-spelled one). If a genuine gap resists every technique
    tried, park it under the `NON_MATCHING` build toggle instead of
@@ -84,7 +84,7 @@ incomplete pass and should be finished before moving on.
    address isn't adjacent to an existing matched file's functions needs
    its own new `.c` file instead (see `GetAnimFrameBaseOffset`'s entry
    in matching.md for a worked example). A new file still goes under
-   whichever `src/<subsystem>/` directory matches what the function
+   whichever `engine/src/<subsystem>/` directory matches what the function
    actually *does*, and is named after what it holds
    (`<subject>[_<role>].c`, never a number or a ROM address) - that split
    is orthogonal to the ROM-contiguity one above (see
@@ -133,13 +133,13 @@ incomplete pass and should be finished before moving on.
    - **Declarations go in headers, not in the `.c` file** (#574,
      [docs/headers.md](./headers.md)). Include the header that
      declares what the function calls or reads, and declare the
-     function itself in its subsystem's header (`include/<subsystem>.h`;
-     `include/globals.h` for a global three or more subsystems use;
+     function itself in its subsystem's header (`engine/include/<subsystem>.h`;
+     `engine/include/globals.h` for a global three or more subsystems use;
      `lib/gax/src/gax_internal.h` for GAX internals), with its
      definition's prototype. Don't add `extern`s to the `.c` file. The
      two exceptions that stay local are `_call_via_rN` (each call site
      declares the shape it calls with) and references from one
-     `src/*/data/` table to another. If the file only matches with another
+     `engine/src/*/data/` table to another. If the file only matches with another
      type for a symbol, keep an asm-label alias with a comment, and add
      it to [docs/headers.md's "Codegen exceptions"](./headers.md#codegen-exceptions) table:
      `/* codegen: ... docs/headers.md */ extern s32 RandRange_s32(s32 max) asm("RandRange");`.

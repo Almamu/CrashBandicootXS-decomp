@@ -57,7 +57,7 @@ separate data measure: see "Data progress" further down.
 ## One unit per matched file, not one merged blob
 
 `make report` (via `tools/report_units.py`) builds **one objdiff unit per
-matched `src/*.c` or `lib/*/src/*.c` file**, each tagged with a category
+matched `engine/src/*.c` or `lib/*/src/*.c` file**, each tagged with a category
 (`graphics`/`util`/`system`/..., and one per library: `gax`, `agb_eeprom`,
 `libgcc` - see [libraries.md](./libraries.md)), plus one untagged unit per
 still-fully-raw stretch of ROM - not
@@ -160,7 +160,7 @@ be there.
 
 ## Categorizing the still-raw majority of the ROM
 
-Beyond `graphics`/`util`/`system` (mirroring `src/`'s layout, tagging
+Beyond `graphics`/`util`/`system` (mirroring `engine/src/`'s layout, tagging
 actually-matched files), `tools/report_units.py`'s `UNITS` list also
 tags several **still-fully-raw** stretches with a category - `game_loop`,
 `actor`, `graphics_loading`, `audio` (the Shin'en GAX2 engine), `hud`,
@@ -171,7 +171,7 @@ truth") has, over many rounds of direct function reads, reached high
 confidence on where most of these regions actually start and end -
 confirmed landmark addresses, individually-read functions, or a
 dominant connected component - enough to be worth a progress
-bucket even at 0% matched, the same way an unmatched `src/*.c` file
+bucket even at 0% matched, the same way an unmatched `engine/src/*.c` file
 would show 0% under its own category rather than not appearing at all.
 
 Two categories `rom_map.md` also identified - **`menu_ui`** and **`fx`** -
@@ -265,14 +265,14 @@ still starts at `0x03000000` and overlaps `iwram`; ld allows that for a
 NOLOAD section). The image holds, in order:
 
 - `platform/gba/asm/intr_main.s`: `IntrMain`, hand-written ARM - `HANDWRITTEN`.
-- `src/engine/util/string_arm.cpp`, `asm/itoa_arm.s` and
-  `src/engine/gfx/sprite_arm.cpp`: compiled ARM C++, except `itoa_arm`, which
+- `engine/src/engine/util/string_arm.cpp`, `asm/itoa_arm.s` and
+  `engine/src/engine/gfx/sprite_arm.cpp`: compiled ARM C++, except `itoa_arm`, which
   is assembly (not gcc's code, see above; its own report unit). The C++ is built with `tools/agbcc/bin/agbcp_arm_patched` (the `ARM_OBJS` in
   the Makefile: `-O2 -fomit-frame-pointer -mthumb-interwork` plus the
   patch's options each object needs; agbcp_arm_patched is notyourav/agbcc's ARM C++ compiler
   with `tools/agbcc_patches/agbcc_arm_prologue_return.patch`, built by
   `tools/build_agbccpp.sh`). Their `.text` goes into `iwram`.
-- `src/engine/sys/iwram_data.cpp`: the initialised globals from `0x030007CC`,
+- `engine/src/engine/sys/iwram_data.cpp`: the initialised globals from `0x030007CC`,
   its `.data`.
 
 **Code units.** The report can't slice these from `games/xs/expected/code_3.s`:
@@ -289,7 +289,7 @@ functions count toward the code totals like any other.
 
 **Data unit.** `iwram_data.cpp`'s `.data` is the last data unit
 (`IWRAM_DATA` in the script, at ROM `IWRAM_LMA + 0x7CC`, target bytes
-from the ROM like any `src/*/data` table). The image's code bytes are not
+from the ROM like any `engine/src/*/data` table). The image's code bytes are not
 data any more, so `total_data` dropped by `0x7CC`.
 
 ## Byte-exact functions must score exactly 100%
@@ -376,7 +376,7 @@ since both patterns will likely recur:
   `base_combined.o` *entirely* on the assumption the whole file predated
   `code_3.s`. There's no such thing as "this file is legacy" in general -
   only "this function's frozen source is legacy.s or code_3.s" - which is
-  why the base side has no exclusions at all now; every `src/*.c` object
+  why the base side has no exclusions at all now; every `engine/src/*.c` object
   goes in, and pairing is purely by symbol name against whichever frozen
   source actually has that name.
 - **A genuinely unreachable function was hiding as a raw byte blob**:
@@ -386,7 +386,7 @@ since both patterns will likely recur:
   caller anywhere in the matched source: two near-identical
   `mem_i/ewram_heap_pointer`-chasing loops, most likely an
   identical-code-folding artifact from agbcc's optimizer rather than
-  anything reachable from a real call site. `src/engine/sys/memory.cpp` already
+  anything reachable from a real call site. `engine/src/engine/sys/memory.cpp` already
   had this embedded as a raw `.byte` blob (`// this is ugly AF`) from
   whoever matched `mem_collect` originally, precisely because leaving it
   out breaks the ROM's byte layout - it's now written as real, labelled
@@ -408,18 +408,18 @@ never change any code measure.
 
 **What counts as matched data.** This is the usual definition for GBA
 decomps. A byte of ROM data is *matched* when the build produces it from a
-source in the repo: a PNG/`.pal`/`.bin` under `graphics/` compressed by
-gbagfx, the GAX2 audio rebuilt from `sound/` by `tools/gax_audio.py`, the
-sfx table built from `sound/sfx_table.json`, a C table in `src/*/data/`
+source in the repo: a PNG/`.pal`/`.bin` under `games/xs/graphics/` compressed by
+gbagfx, the GAX2 audio rebuilt from `games/xs/sound/` by `tools/gax_audio.py`, the
+sfx table built from `games/xs/sound/sfx_table.json`, a C table in `engine/src/*/data/`
 (see [data.md](./data.md)), and so on. It is *unmatched*
-while `data/data.s` still copies it with `.incbin "baserom.gba", ...`.
+while `games/xs/data/data.s` still copies it with `.incbin "baserom.gba", ...`.
 Both kinds come out byte-identical in the ROM, and `make compare` checks
 that, so matching bytes can't be the test. The source is what decides.
 
 **Scope.** Everything after the code, from `0x0803B8B0` to the end of the
 ROM (`0x08800000`), is linked from the `/* Data */` block of
-`games/xs/ldscript.txt`: the sections of `data/data.s` (one label per blob and one
-`.incbin` per label) interleaved with the `.rodata` of the `src/*/data/*.c`
+`games/xs/ldscript.txt`: the sections of `games/xs/data/data.s` (one label per blob and one
+`.incbin` per label) interleaved with the `.rodata` of the `engine/src/*/data/*.c`
 tables, in ROM order, then the IWRAM image (`0x087E55E4`-`0x087E5FCC`,
 see "The IWRAM image": only its initialised data, `0x087E5DB0` on, is
 data; the rest is code). The last 106,548 bytes, from `0x087E5FCC` on
@@ -432,7 +432,7 @@ really starts there. Smaller all-`0x00` runs inside still-baserom blobs
 (151 runs of 256+ bytes, 64,716 bytes in total, the largest 2,664 bytes,
 nearly all inside the big `gLanguageSelectPalette3`/`gSpriteBankTable`
 blobs) still count as data: they sit inside real data, and there are no
-other `0xFF` runs. Apart from `src/*/data/`, no C file puts data in the
+other `0xFF` runs. Apart from `engine/src/*/data/`, no C file puts data in the
 ROM: agbcc emits no `.rodata`/`.data` for the code files, and
 `games/xs/ldscript.txt` only places their `.text`, discarding everything else.
 Jump tables and literal pools inside code are counted as code.
@@ -441,7 +441,7 @@ Jump tables and literal pools inside code are counted as code.
 
 1. It walks the `/* Data */` block of `games/xs/ldscript.txt` (`data_layout()`)
    and turns each piece into blobs (label, address, size, source): a
-   `data/data.s` section into one blob per label, a `src/*/data/*.o` object
+   `games/xs/data/data.s` section into one blob per label, a `src/*/data/*.o` object
    into one blob per global object symbol in its `.rodata` (a blob runs to
    the next symbol, read with `objdump` from the object `make report` has
    just built). Addresses are computed by adding blob sizes from
@@ -452,11 +452,11 @@ Jump tables and literal pools inside code are counted as code.
    also catches a C table of the wrong size. So does a `data.s` section
    the linker script doesn't place, or a C object that would start
    misaligned. The one gap allowed is the linker's zero fill in front of
-   an aligned `src/*/data` object when a `src/*/data` blob comes before it
+   an aligned `engine/src/*/data` object when a `engine/src/*/data` blob comes before it
    (the word alignment after an LZ77 stream, data.md "LZ77 stream
    padding"): it counts toward that blob.
 2. It groups adjacent blobs into units: each run of blobs built from the
-   same asset directory (`data_sound_XXXXXXXX`), each `src/*/data` file
+   same asset directory (`data_sound_XXXXXXXX`), each `engine/src/*/data` file
    (`data_src_data_<file>_XXXXXXXX`), each `lib/*/data` file and each run
    of baserom blobs (`data_raw_XXXXXXXX`). That currently comes to 140
    units.
@@ -464,7 +464,7 @@ Jump tables and literal pools inside code are counted as code.
    global, `.type %object`, `.size`d symbol in `.rodata`, its bytes taken
    from `baserom.gba`. A built unit also gets a **base** object with the
    same symbols, whose bytes come from the same `.incbin` of the built file
-   that `data/data.s` uses. A `src/*/data` table's bytes only exist after
+   that `games/xs/data/data.s` uses. A `engine/src/*/data` table's bytes only exist after
    linking (its pointers are relocations) and `make report` doesn't link,
    so its base takes the ROM's bytes too: `make compare` is what proves
    the C produces them. A baserom unit gets **no base**, like the
@@ -484,9 +484,9 @@ blobs. A built unit whose bytes really differ from the ROM (a broken asset
 in a PR) drops to 0%. objdiff compares the actual bytes, so that shows up.
 
 **Moving a blob from baserom to built** needs nothing in the report
-script. Replace its `.incbin "baserom.gba", ...` in `data/data.s` with the
+script. Replace its `.incbin "baserom.gba", ...` in `games/xs/data/data.s` with the
 built file, keeping the label, and the next `make report` counts it. The
-same goes for a table moved into `src/*/data/` (the steps are in
+same goes for a table moved into `engine/src/*/data/` (the steps are in
 [data.md](./data.md)): once `games/xs/ldscript.txt` places the object, the report
 picks it up.
 
@@ -494,15 +494,15 @@ picks it up.
 sound files, though not on `data.o`, which would need `baserom.gba`. Target
 objects need `baserom.gba`. Without it (fork-PR CI), baserom units are
 zero-filled to the right size and built units use their own bytes as the
-target (a `src/*/data` unit is zero-filled on both sides). That keeps the
+target (a `engine/src/*/data` unit is zero-filled on both sides). That keeps the
 totals correct but doesn't verify the assets, which
 only matters for fork PRs: `main`'s run has the ROM, and `make compare`
 checks every byte anyway.
 
-As of the first `src/*/data` conversion: 1,650,143 of 8,038,172 bytes
-matched (20.53%). That is the two LZ77 blobs in `graphics/unknown/`, the
+As of the first `engine/src/*/data` conversion: 1,650,143 of 8,038,172 bytes
+matched (20.53%). That is the two LZ77 blobs in `games/xs/graphics/unknown/`, the
 intro and tileset1 graphics, the GAX2 audio data, the sfx table, and
-9,716 bytes of pointer tables in `src/*/data/` (up from 1,640,427, 20.41%).
+9,716 bytes of pointer tables in `engine/src/*/data/` (up from 1,640,427, 20.41%).
 [`docs/data_map.md`](./data_map.md) triages the remaining raw blobs and
 suggests an order for converting them.
 

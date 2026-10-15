@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scans the matched C sources (src/**/*.c and lib/**/*.c) for raw
+"""Scans the matched C sources (engine/src/**/*.c and lib/**/*.c) for raw
 pointer-arithmetic field access and raw hardware addresses, the sites
 docs/workflow.md step 7 turns into named struct fields and REG_* macros.
 
@@ -19,13 +19,13 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SRC_DIR = ROOT / "src"
+SRC_DIR = ROOT / "engine" / "src"
 # The third-party/SDK libraries (docs/libraries.md): matched C too.
 LIB_DIR = ROOT / "lib"
 
 
 def c_sources():
-    """Every C source under src/ and lib/."""
+    """Every C source under engine/src/ and lib/."""
     return sorted(SRC_DIR.rglob("*.c")) + sorted(LIB_DIR.rglob("*.c"))
 
 
@@ -251,9 +251,11 @@ def scan_file_cleanup_sites(path):
 
 
 def subsystem_of(rel_path):
-    """src/engine|game/<ns>/... -> engine|game/<ns>; src/<subsystem>/... ->
+    """engine/src/engine|game/<ns>/... -> engine|game/<ns>; engine/src/<subsystem>/... ->
     <subsystem>; lib/<name>/... -> lib/<name>."""
     parts = Path(rel_path).parts
+    if parts[:2] == ("engine", "src"):
+        parts = parts[1:]
     if len(parts) >= 4 and parts[0] == "src" and parts[1] in ("engine", "game"):
         return f"{parts[1]}/{parts[2]}"
     if len(parts) >= 3 and parts[0] == "src":
@@ -264,7 +266,7 @@ def subsystem_of(rel_path):
 
 
 def scan_cleanup_candidates():
-    """Scans already-matched src/**/*.c and lib/**/*.c for the raw
+    """Scans already-matched engine/src/**/*.c and lib/**/*.c for the raw
     pointer-arithmetic offsets and raw hardware addresses that
     docs/workflow.md step 7 says should become named struct fields /
     REG_* macros (the kinds above). Also counts register-pin/inline-asm

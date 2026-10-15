@@ -1,5 +1,5 @@
-# The rooms' level data (docs/levels.md): data/levels/ holds the editable
-# sources, one folder per room, data/levels/<level>/<slot>/ (room.json, each
+# The rooms' level data (docs/levels.md): games/xs/data/levels/ holds the editable
+# sources, one folder per room, games/xs/data/levels/<level>/<slot>/ (room.json, each
 # BG layer as its whole picture, bg0-3.png, and the collision layer as an
 # image, collision.png), listed by levels.json's "rooms"; tools/levels.py
 # builds them back:
@@ -10,22 +10,22 @@
 #   LZ77-packed by gbagfx, as C initializer bytes (tools/bin2c.py);
 # - the C definitions of the two room-data regions (each room's palette
 #   read from its layer pictures, which must all carry the same one), which
-#   src/game/level/data/level_rooms_*.cpp #include, and of their rooms' assets, which
-#   src/game/level/data/level_assets.cpp #includes. The level data that isn't
+#   engine/src/game/level/data/level_rooms_*.cpp #include, and of their rooms' assets, which
+#   engine/src/game/level/data/level_assets.cpp #includes. The level data that isn't
 #   the ROM's goes with them, in place (docs/levels.md, "Adding a room"):
 #   the rooms in no region of levels.json and the tile sets only they use
 #   after the last region's rooms, their assets after the ROM's.
 LEVELS_BUILDDIR := $(OBJ_DIR)/data/levels
 LEVEL_ROOMS := $(shell python3 tools/levels.py rooms)
 LEVEL_PACKED_ROOMS := $(shell python3 tools/levels.py rooms --packed)
-LEVEL_ROOM_JSONS := $(foreach room,$(LEVEL_ROOMS),data/levels/$(room)/room.json)
+LEVEL_ROOM_JSONS := $(foreach room,$(LEVEL_ROOMS),$(XS_DIR)/data/levels/$(room)/room.json)
 # The rooms' layer pictures, which also carry each room's palette.
-LEVEL_BG_PNGS := $(foreach room,$(LEVEL_ROOMS),$(wildcard data/levels/$(room)/bg?.png))
+LEVEL_BG_PNGS := $(foreach room,$(LEVEL_ROOMS),$(wildcard $(XS_DIR)/data/levels/$(room)/bg?.png))
 LEVEL_REGIONS := level_rooms_main_bonus level_rooms_bosses_gem_paths
 
-LEVEL_TOOLS := tools/levels.py tools/collision_bmp.py data/levels/collision_legend.json
+LEVEL_TOOLS := tools/levels.py tools/collision_bmp.py $(XS_DIR)/data/levels/collision_legend.json
 # A room's BG layers (bg0-3) and their cells.
-level_bg_layers = $(patsubst data/levels/$(1)/%.png,%,$(wildcard data/levels/$(1)/bg?.png))
+level_bg_layers = $(patsubst $(XS_DIR)/data/levels/$(1)/%.png,%,$(wildcard $(XS_DIR)/data/levels/$(1)/bg?.png))
 level_bg_maps = $(foreach l,$(call level_bg_layers,$(1)),$(LEVELS_BUILDDIR)/$(1)/$(l).map.bin)
 
 # The BG tile sets (docs/levels.md, "Tile sets"): one per symbol the rooms'
@@ -37,7 +37,7 @@ level_bg_maps = $(foreach l,$(call level_bg_layers,$(1)),$(LEVELS_BUILDDIR)/$(1)
 # the outputs depend on the stamp with an empty recipe, so an unchanged map
 # doesn't rebuild its room. It also lists the new tile sets
 # (LEVEL_NEW_TILESETS_8BPP, _4BPP), which no room of the ROM uses.
-$(LEVELS_BUILDDIR)/tilesets.mk: data/levels/levels.json $(LEVEL_ROOM_JSONS) $(wildcard data/levels/tileset_order.json) \
+$(LEVELS_BUILDDIR)/tilesets.mk: $(XS_DIR)/data/levels/levels.json $(LEVEL_ROOM_JSONS) $(wildcard $(XS_DIR)/data/levels/tileset_order.json) \
 		tools/levels.py
 	python3 tools/levels.py tilesets-mk $@ --build $(LEVELS_BUILDDIR)
 include $(LEVELS_BUILDDIR)/tilesets.mk
@@ -45,7 +45,7 @@ include $(LEVELS_BUILDDIR)/tilesets.mk
 $(LEVELS_BUILDDIR)/tilesets/%.bin.inc: $(LEVELS_BUILDDIR)/tilesets/%.bin tools/bin2c.py
 	python3 tools/bin2c.py $< $@
 
-# The ROM's tile sets, defined by hand in src/game/level/data/ (the BG0 ones raw 8bpp
+# The ROM's tile sets, defined by hand in engine/src/game/level/data/ (the BG0 ones raw 8bpp
 # tagged assets, sized by tilesets/<set>.h; the BG1-3 ones LZ77 4bpp).
 LEVEL_TILESET_DEFS = $(foreach t,$(1),$(LEVELS_BUILDDIR)/tilesets/$(t).bin.inc $(LEVELS_BUILDDIR)/tilesets/$(t).h)
 $(C_BUILDDIR)/game/level/data/level_tilesets_jungle_snow_underwater.o: $(call LEVEL_TILESET_DEFS,gJungleBg0Tiles gSnowBg0Tiles gUnderwaterBg0Tiles)
@@ -56,10 +56,10 @@ $(foreach o,level_tilesets_jungle_snow_underwater level_tilesets_sewer_space lev
 	$(eval $(call data_obj,$(o)): CPPFLAGS += -iquote $(LEVELS_BUILDDIR)))
 
 define LEVEL_ASSET_RULE
-$(LEVELS_BUILDDIR)/$(1)/asset.bin: data/levels/$(1)/room.json $(call level_bg_maps,$(1)) \
-		$$(wildcard data/levels/$(1)/collision.png) $(LEVEL_TOOLS)
+$(LEVELS_BUILDDIR)/$(1)/asset.bin: $(XS_DIR)/data/levels/$(1)/room.json $(call level_bg_maps,$(1)) \
+		$$(wildcard $(XS_DIR)/data/levels/$(1)/collision.png) $(LEVEL_TOOLS)
 	@mkdir -p $$(dir $$@)
-	python3 tools/levels.py asset data/levels/$(1) $$@ --build $(LEVELS_BUILDDIR)
+	python3 tools/levels.py asset $(XS_DIR)/data/levels/$(1) $$@ --build $(LEVELS_BUILDDIR)
 endef
 $(foreach room,$(LEVEL_ROOMS),$(eval $(call LEVEL_ASSET_RULE,$(room))))
 
@@ -77,17 +77,17 @@ $(LEVELS_BUILDDIR)/%/asset.bin.inc: $(LEVELS_BUILDDIR)/%/asset.bin tools/bin2c.p
 # asset.layout.json `levels.py asset` writes next to each asset.bin.
 # The last region also defines the new rooms and the new tile sets (a BG0
 # one sized by its built tiles).
-$(LEVELS_BUILDDIR)/level_rooms_%.inc: data/levels/levels.json $(LEVEL_ROOM_JSONS) $(LEVEL_BG_PNGS) \
+$(LEVELS_BUILDDIR)/level_rooms_%.inc: $(XS_DIR)/data/levels/levels.json $(LEVEL_ROOM_JSONS) $(LEVEL_BG_PNGS) \
 		$(foreach room,$(LEVEL_ROOMS),$(LEVELS_BUILDDIR)/$(room)/asset.bin) \
 		$(foreach t,$(LEVEL_NEW_TILESETS_8BPP),$(LEVELS_BUILDDIR)/tilesets/$(t).bin) \
-		data/levels/entity_types.json $(LEVEL_TOOLS)
+		$(XS_DIR)/data/levels/entity_types.json $(LEVEL_TOOLS)
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py c level_rooms_$* $@ --build $(LEVELS_BUILDDIR)
 
 level_asset_incs = $(foreach room,$(filter-out $(LEVEL_PACKED_ROOMS),$(1)),$(LEVELS_BUILDDIR)/$(room)/asset.bin.inc) \
 	$(foreach room,$(filter $(LEVEL_PACKED_ROOMS),$(1)),$(LEVELS_BUILDDIR)/$(room)/asset.bin.lz.inc)
 
-$(LEVELS_BUILDDIR)/level_assets.inc: data/levels/levels.json $(LEVEL_ROOM_JSONS) tools/levels.py
+$(LEVELS_BUILDDIR)/level_assets.inc: $(XS_DIR)/data/levels/levels.json $(LEVEL_ROOM_JSONS) tools/levels.py
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py assets $@
 
@@ -104,7 +104,7 @@ $(C_BUILDDIR)/game/level/data/level_assets.o: CPPFLAGS += -iquote $(LEVELS_BUILD
 # asset the definitions above name as static members. Written only if it
 # changed, behind a stamp, like the constants headers below.
 GENERATED_HEADERS += $(GENERATED_INCLUDE_DIR)/rooms.hpp
-$(GENERATED_INCLUDE_DIR)/rooms.hpp.stamp: data/levels/levels.json $(LEVEL_ROOM_JSONS) tools/levels.py
+$(GENERATED_INCLUDE_DIR)/rooms.hpp.stamp: $(XS_DIR)/data/levels/levels.json $(LEVEL_ROOM_JSONS) tools/levels.py
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py classes $(GENERATED_INCLUDE_DIR)/rooms.hpp
 	@touch $@
@@ -112,35 +112,35 @@ $(GENERATED_INCLUDE_DIR)/rooms.hpp: $(GENERATED_INCLUDE_DIR)/rooms.hpp.stamp
 	@test -f $@ || python3 tools/levels.py classes $@
 
 # The animation tables (docs/levels.md, "Animation tables"):
-# data/levels/anim_tables/<name>.json, a type's records (one per actor
+# games/xs/data/levels/anim_tables/<name>.json, a type's records (one per actor
 # kind) and the keyframes and frames they point at. `levels.py anim-table
 # NAME` writes the ROM's table NAME, which its family's C file #includes
 # after the palettes; `levels.py categories` the ones only a category
 # names. Its frames are named by the sprite sheet's frame folders (a
 # framed_sheet of the manifest, FRAMED_SHEETS) and the player frames' PNG,
 # which it checks them against.
-ANIM_TABLE_DEPS := $(wildcard data/levels/anim_tables/*.json) include/constants/actor_kinds.h tools/levels.py \
-	tools/framed_gfx.py graphics/manifest.json tools/gfx_manifest.py $(foreach s,$(FRAMED_SHEETS),graphics/$(s)/sheet.json \
-	$(wildcard graphics/$(s)/*/*.png)) graphics/vehicles/polar/player.png graphics/vehicles/jetpack/player.png
+ANIM_TABLE_DEPS := $(wildcard $(XS_DIR)/data/levels/anim_tables/*.json) engine/include/constants/actor_kinds.h tools/levels.py \
+	tools/framed_gfx.py $(XS_DIR)/graphics/manifest.json tools/gfx_manifest.py $(foreach s,$(FRAMED_SHEETS),$(XS_DIR)/graphics/$(s)/sheet.json \
+	$(wildcard $(XS_DIR)/graphics/$(s)/*/*.png)) $(XS_DIR)/graphics/vehicles/polar/player.png $(XS_DIR)/graphics/vehicles/jetpack/player.png
 
 # The actor categories (docs/levels.md, "Actor categories"): levels.json's
-# "categories" and their spawn lists, data/levels/spawns/*.json (whose kinds
+# "categories" and their spawn lists, games/xs/data/levels/spawns/*.json (whose kinds
 # are named by constants/actor_kinds.h). `levels.py categories` writes
 # ActorCategory::descriptors (and the spawn lists that aren't the ROM's),
-# which src/engine/actor/data/actor_categories.cpp #includes; `levels.py
+# which engine/src/engine/actor/data/actor_categories.cpp #includes; `levels.py
 # spawns SYMBOL` the ROM's spawn list SYMBOL, which its C file #includes
 # where the ROM has it (nothing if no category has it); `levels.py constants
 # categories` the CATEGORY_* constants.
-CATEGORY_DEPS := data/levels/levels.json $(wildcard data/levels/spawns/*.json) include/constants/actor_kinds.h \
+CATEGORY_DEPS := $(XS_DIR)/data/levels/levels.json $(wildcard $(XS_DIR)/data/levels/spawns/*.json) engine/include/constants/actor_kinds.h \
 	tools/levels.py
 # A category may name its own graphics (docs/levels.md, "Category
-# graphics"): new ones (graphics/manifest.json entries with no ROM address)
+# graphics"): new ones (games/xs/graphics/manifest.json entries with no ROM address)
 # are defined in actor_categories.inc, whose generator reads their PNGs'
 # sizes and their palettes; their built .inc files
 # (CATEGORY_GRAPHICS_NEW_INCS, graphics_manifest.mk) are #included there.
 # So are its own animation table and the frame offsets of its sheet
 # ("Category sprite sheets").
-$(LEVELS_BUILDDIR)/actor_categories.inc: $(CATEGORY_DEPS) graphics/manifest.json $(CATEGORY_GRAPHICS_NEW) \
+$(LEVELS_BUILDDIR)/actor_categories.inc: $(CATEGORY_DEPS) $(XS_DIR)/graphics/manifest.json $(CATEGORY_GRAPHICS_NEW) \
 	tools/gfx_manifest.py tools/jasc_pal.py $(ANIM_TABLE_DEPS)
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py categories $@
@@ -169,7 +169,7 @@ $(foreach f,polar jetpack,$(eval $(C_BUILDDIR)/game/vehicles/$(f)/data/$(f)_anim
 	CPPFLAGS += -iquote $(LEVELS_BUILDDIR)))
 
 # The level table (docs/levels.md, "The level table"), which
-# src/game/level/data/level_table.cpp #includes: gLevelTable and
+# engine/src/game/level/data/level_table.cpp #includes: gLevelTable and
 # gLevelRoomLists (`levels.py table levels`), and the room records and the
 # arrays of the rooms each level plays (`levels.py table records`), from
 # levels.json's "levels" and "table" and the rooms' room.json ("record").
@@ -177,9 +177,9 @@ $(foreach f,polar jetpack,$(eval $(C_BUILDDIR)/game/vehicles/$(f)/data/$(f)_anim
 # level_table.inc also has the level themes' tables (docs/levels.md,
 # "Themes"): the colour cycles' lists and gThemeMusicCues, from levels.json's
 # "themes" and "palette_cycles"; a theme's song is one of the songs of
-# sound/gax_manifest.json, its picture one of graphics/manifest.json's.
-THEME_DEPS := data/levels/levels.json sound/gax_manifest.json graphics/manifest.json tools/levels.py
-LEVEL_TABLE_DEPS := data/levels/levels.json $(LEVEL_ROOM_JSONS) $(CATEGORY_DEPS) tools/levels.py
+# games/xs/sound/gax_manifest.json, its picture one of games/xs/graphics/manifest.json's.
+THEME_DEPS := $(XS_DIR)/data/levels/levels.json $(XS_DIR)/sound/gax_manifest.json $(XS_DIR)/graphics/manifest.json tools/levels.py
+LEVEL_TABLE_DEPS := $(XS_DIR)/data/levels/levels.json $(LEVEL_ROOM_JSONS) $(CATEGORY_DEPS) tools/levels.py
 $(LEVELS_BUILDDIR)/level_table.inc: $(LEVEL_TABLE_DEPS) $(THEME_DEPS)
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py table levels $@
@@ -192,7 +192,7 @@ $(C_BUILDDIR)/game/level/data/level_table.o: CPPFLAGS += -iquote $(LEVELS_BUILDD
 
 # The level select's pictures, one per theme (gLevelSelectPictures,
 # `levels.py table pictures`), which
-# src/game/ui/data/level_select_picture_table.cpp #includes.
+# engine/src/game/ui/data/level_select_picture_table.cpp #includes.
 $(LEVELS_BUILDDIR)/level_select_pictures.inc: $(THEME_DEPS)
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py table pictures $@
@@ -216,8 +216,8 @@ $(GENERATED_INCLUDE_DIR)/theme_palette_cycles.h: $(GENERATED_INCLUDE_DIR)/theme_
 # bosses the level's rooms place and the types of the stages it plays.
 # Written only if it changed, behind a stamp.
 GENERATED_HEADERS += $(GENERATED_INCLUDE_DIR)/level_bosses.h
-$(GENERATED_INCLUDE_DIR)/level_bosses.h.stamp: data/levels/levels.json $(LEVEL_ROOM_JSONS) $(CATEGORY_DEPS) \
-	data/levels/entity_types.json tools/levels.py
+$(GENERATED_INCLUDE_DIR)/level_bosses.h.stamp: $(XS_DIR)/data/levels/levels.json $(LEVEL_ROOM_JSONS) $(CATEGORY_DEPS) \
+	$(XS_DIR)/data/levels/entity_types.json tools/levels.py
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py bosses $(GENERATED_INCLUDE_DIR)/level_bosses.h
 	@touch $@
@@ -227,10 +227,10 @@ $(GENERATED_INCLUDE_DIR)/level_bosses.h: $(GENERATED_INCLUDE_DIR)/level_bosses.h
 # The BG palette cycle frames ActorPaletteCycle::Update DMAs
 # (category_palette_cycles.h, `levels.py category-cycles`, docs/levels.md
 # "Category graphics"): the ROM's, or each polar category's own "palette_cycle"
-# (a palette_cycle of graphics/manifest.json). Written only if it changed,
+# (a palette_cycle of games/xs/graphics/manifest.json). Written only if it changed,
 # behind a stamp.
 GENERATED_HEADERS += $(GENERATED_INCLUDE_DIR)/category_palette_cycles.h
-$(GENERATED_INCLUDE_DIR)/category_palette_cycles.h.stamp: $(CATEGORY_DEPS) graphics/manifest.json \
+$(GENERATED_INCLUDE_DIR)/category_palette_cycles.h.stamp: $(CATEGORY_DEPS) $(XS_DIR)/graphics/manifest.json \
 	$(CATEGORY_GRAPHICS_NEW) tools/gfx_manifest.py tools/jasc_pal.py
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py category-cycles $(GENERATED_INCLUDE_DIR)/category_palette_cycles.h
@@ -242,12 +242,12 @@ $(GENERATED_INCLUDE_DIR)/category_palette_cycles.h: $(GENERATED_INCLUDE_DIR)/cat
 # docs/levels.md "Boss levels"): LevelState::UpdateGameFrame's cases on the
 # cleared level (the powers, cutscenes, the step on to mega-mix and the
 # credits), from levels.json's "on_clear" (its cutscenes are
-# data/cutscenes.json's, by index or constant); it warns about a numbered boss
+# games/xs/data/cutscenes.json's, by index or constant); it warns about a numbered boss
 # level that nothing marks cleared, which reads its rooms. Written only if it
 # changed, behind a stamp.
 GENERATED_HEADERS += $(GENERATED_INCLUDE_DIR)/level_on_clear.h
-$(GENERATED_INCLUDE_DIR)/level_on_clear.h.stamp: data/levels/levels.json $(LEVEL_ROOM_JSONS) $(CATEGORY_DEPS) \
-	data/levels/entity_types.json data/cutscenes.json tools/levels.py
+$(GENERATED_INCLUDE_DIR)/level_on_clear.h.stamp: $(XS_DIR)/data/levels/levels.json $(LEVEL_ROOM_JSONS) $(CATEGORY_DEPS) \
+	$(XS_DIR)/data/levels/entity_types.json $(XS_DIR)/data/cutscenes.json tools/levels.py
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py on-clear $(GENERATED_INCLUDE_DIR)/level_on_clear.h
 	@touch $@
@@ -260,8 +260,8 @@ $(GENERATED_INCLUDE_DIR)/level_on_clear.h: $(GENERATED_INCLUDE_DIR)/level_on_cle
 # the levels; it checks that bank 51 has a number icon for every numbered
 # level. Written only if it changed, behind a stamp.
 GENERATED_HEADERS += $(GENERATED_INCLUDE_DIR)/level_select_worlds.h
-$(GENERATED_INCLUDE_DIR)/level_select_worlds.h.stamp: data/levels/levels.json $(LEVEL_ROOM_JSONS) \
-	graphics/sprites/bank51_level_select_icons/bank.json tools/levels.py
+$(GENERATED_INCLUDE_DIR)/level_select_worlds.h.stamp: $(XS_DIR)/data/levels/levels.json $(LEVEL_ROOM_JSONS) \
+	$(XS_DIR)/graphics/sprites/bank51_level_select_icons/bank.json tools/levels.py
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py worlds $(GENERATED_INCLUDE_DIR)/level_select_worlds.h
 	@touch $@
@@ -269,7 +269,7 @@ $(GENERATED_INCLUDE_DIR)/level_select_worlds.h: $(GENERATED_INCLUDE_DIR)/level_s
 	@test -f $@ || python3 tools/levels.py worlds $@
 
 # The constants headers named in the level data (#655): the entity types
-# (data/levels/entity_types.json), the crate kinds (crate_kinds.json) and
+# (games/xs/data/levels/entity_types.json), the crate kinds (crate_kinds.json) and
 # the level ids (levels.json's "levels" list).
 # They are generated into build/include (GENERATED_INCLUDE_DIR), which is
 # on every object's include path. graphics.mk adds graphics.hpp and the
@@ -279,11 +279,11 @@ GENERATED_HEADERS += $(GENERATED_INCLUDE_DIR)/constants/entities.h $(GENERATED_I
 	$(GENERATED_INCLUDE_DIR)/constants/levels.h $(GENERATED_INCLUDE_DIR)/constants/themes.h \
 	$(GENERATED_INCLUDE_DIR)/constants/save.h $(GENERATED_INCLUDE_DIR)/constants/categories.h
 
-$(GENERATED_INCLUDE_DIR)/constants/entities.h: data/levels/entity_types.json tools/levels.py
+$(GENERATED_INCLUDE_DIR)/constants/entities.h: $(XS_DIR)/data/levels/entity_types.json tools/levels.py
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py constants entities $@
 
-$(GENERATED_INCLUDE_DIR)/constants/crates.h: data/levels/crate_kinds.json tools/levels.py
+$(GENERATED_INCLUDE_DIR)/constants/crates.h: $(XS_DIR)/data/levels/crate_kinds.json tools/levels.py
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py constants crates $@
 
@@ -291,7 +291,7 @@ $(GENERATED_INCLUDE_DIR)/constants/crates.h: data/levels/crate_kinds.json tools/
 # counts the gem-path gems the rooms place), and the theme ids. Each is
 # written only if it changed, behind a stamp, so an edit that keeps it (an
 # entity in a room.json, a level's times) doesn't rebuild every object.
-$(GENERATED_INCLUDE_DIR)/constants/levels.h.stamp: data/levels/levels.json $(LEVEL_ROOM_JSONS) tools/levels.py
+$(GENERATED_INCLUDE_DIR)/constants/levels.h.stamp: $(XS_DIR)/data/levels/levels.json $(LEVEL_ROOM_JSONS) tools/levels.py
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py constants levels $(GENERATED_INCLUDE_DIR)/constants/levels.h
 	@touch $@
@@ -306,7 +306,7 @@ $(GENERATED_INCLUDE_DIR)/constants/themes.h: $(GENERATED_INCLUDE_DIR)/constants/
 	@test -f $@ || python3 tools/levels.py constants themes $@
 
 # The actor category ids (CATEGORY_*, CATEGORY_COUNT), from levels.json's
-# "categories"; the types and exit statuses are include/constants/category_types.h.
+# "categories"; the types and exit statuses are engine/include/constants/category_types.h.
 $(GENERATED_INCLUDE_DIR)/constants/categories.h.stamp: $(CATEGORY_DEPS)
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py constants categories $(GENERATED_INCLUDE_DIR)/constants/categories.h
@@ -318,7 +318,7 @@ $(GENERATED_INCLUDE_DIR)/constants/categories.h: $(GENERATED_INCLUDE_DIR)/consta
 # version and checksum seed, from a CRC-32 of the levels and the rooms'
 # room.json (docs/levels.md, "The save"). Written only if it changed, behind
 # a stamp: an edit that keeps them rebuilds nothing.
-$(GENERATED_INCLUDE_DIR)/constants/save.h.stamp: data/levels/levels.json $(LEVEL_ROOM_JSONS) tools/levels.py
+$(GENERATED_INCLUDE_DIR)/constants/save.h.stamp: $(XS_DIR)/data/levels/levels.json $(LEVEL_ROOM_JSONS) tools/levels.py
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py constants save $(GENERATED_INCLUDE_DIR)/constants/save.h
 	@touch $@

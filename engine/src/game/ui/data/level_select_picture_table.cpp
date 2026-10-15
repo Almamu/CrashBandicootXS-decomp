@@ -6,7 +6,7 @@ extern "C" {
 }
 
 /*
- * ROM 0x0816C5A0-0x0816C5F0. Linked in ROM order between data/data.s
+ * ROM 0x0816C5A0-0x0816C5F0. Linked in ROM order between games/xs/data/data.s
  * sections by games/xs/ldscript.txt - see docs/data.md.
  *
  * gLevelSelectPictures: per level theme, up to the last one with a

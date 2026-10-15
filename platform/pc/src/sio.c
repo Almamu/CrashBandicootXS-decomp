@@ -3,9 +3,9 @@
  * "The link").
  *
  * The game's one use of the port is the save menu's "load link game"
- * (SaveMenu::LinkExchange, src/game/ui/save_menu_draw.cpp), which puts it
+ * (SaveMenu::LinkExchange, engine/src/game/ui/save_menu_draw.cpp), which puts it
  * in multi-player mode and waits in LinkSession::Update
- * (src/engine/link/link_session.cpp) for SIOCNT's SD terminal (bit 3,
+ * (engine/src/engine/link/link_session.cpp) for SIOCNT's SD terminal (bit 3,
  * every console ready). With no cable both of the GBA's terminals are
  * pulled high, so it reads SI high (bit 2: a child) and SD high, and its
  * multi-player id 0 with no error; a child's start bit is read only and

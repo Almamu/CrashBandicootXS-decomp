@@ -9,7 +9,7 @@ extern "C" {
 }
 
 /* Entity type 0x00, the player start of the normal rooms (#664,
- * include/game/level/spawners.hpp). Two halves:
+ * engine/include/game/level/spawners.hpp). Two halves:
  *
  * 1. If the level state says to spawn at the start (GetSpawnAtStart),
  *    the player faces the way bit 1 of the entity's parameter flags

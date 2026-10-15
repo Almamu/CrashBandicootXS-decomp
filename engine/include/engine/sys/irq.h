@@ -1,7 +1,7 @@
 #ifndef __IRQ_H__
 #define __IRQ_H__
 
-/* The interrupt table's types (src/engine/sys/irq.cpp). The table, the VBlank
+/* The interrupt table's types (engine/src/engine/sys/irq.cpp). The table, the VBlank
  * callbacks and their functions are class Irq's (irq.hpp); IntrMain
  * (platform/gba/asm/intr_main.s) dispatches each IRQ through Irq::table (gIntrTable). */
 

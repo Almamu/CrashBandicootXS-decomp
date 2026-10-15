@@ -1,10 +1,10 @@
 #ifndef __IWRAM_H__
 #define __IWRAM_H__
 
-/* The ARM routines of the IWRAM image (src/engine/gfx/sprite_arm.cpp,
- * src/engine/util/string_arm.cpp), with the prototypes of their definitions
+/* The ARM routines of the IWRAM image (engine/src/engine/gfx/sprite_arm.cpp,
+ * engine/src/engine/util/string_arm.cpp), with the prototypes of their definitions
  * (docs/headers.md). The Thumb code doesn't call them directly: it
- * goes through the hooks in src/engine/sys/iwram_data.cpp, declared with their
+ * goes through the hooks in engine/src/engine/sys/iwram_data.cpp, declared with their
  * users (gfx.h, actor.h, vehicle.hpp). */
 
 #include "core.h"
@@ -19,7 +19,7 @@ struct rle_frame {
     u16 data[0];
 };
 
-/* src/engine/util/string_arm.cpp (UNUSED, see the file comment) */
+/* engine/src/engine/util/string_arm.cpp (UNUSED, see the file comment) */
 extern s32 strlen_arm(u8 *s);
 extern void strcpy_arm(u8 *dst, u8 *src);
 extern void strncpy_arm(u8 *dst, u8 *src, s32 n);
@@ -28,7 +28,7 @@ extern void strcat_arm(u8 *dst, u8 *src);
 /* asm/itoa_arm.s (UNUSED, see string_arm.cpp's file comment) */
 extern s32 itoa_arm(s32 value, u8 *buf, s32 base);
 
-/* src/engine/gfx/sprite_arm.cpp */
+/* engine/src/engine/gfx/sprite_arm.cpp */
 extern void UnpackNibbleTiles(u16 *src, s32 lowBlock);
 extern void DrawMirroredTilemap(u8 *pal, s32 lowBlock, s32 w, s32 h);
 /* The list is ActorSelf's (actor_self.hpp), as actor.h's

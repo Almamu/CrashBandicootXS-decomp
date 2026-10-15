@@ -12,7 +12,7 @@ using Game::Vehicles::Jetpack::Airship;
 using Game::Vehicles::Jetpack::JetpackShot;
 
 /* The jetpack player's shot, JetpackShot (#664 part 11e,
- * include/game/vehicles/vehicle.hpp). See
+ * engine/include/game/vehicles/vehicle.hpp). See
  * docs/matching/archive/issue-56-0x0802f0dc-actor.md. */
 
 /* Slot 2: flies by its speed (falling a little) into the screen, and is

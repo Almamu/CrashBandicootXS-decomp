@@ -14,7 +14,7 @@ using Game::Entities::ActorSelf;
 using Game::Entities::HpActor;
 using Game::Vehicles::Jetpack::JetpackBomber;
 
-/* The jetpack bomber (#664 part 11f, include/game/vehicles/vehicle.hpp), ROM
+/* The jetpack bomber (#664 part 11f, engine/include/game/vehicles/vehicle.hpp), ROM
  * 0x0802FF08-0x08030298, between jetpack_plane.cpp and
  * jetpack_cannonball.cpp: JetpackBomber (gJetpackBomberVtable), 2 hit
  * points; its record's kind (4-9) picks its first state, whose movers

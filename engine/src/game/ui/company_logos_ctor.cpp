@@ -16,7 +16,7 @@ using Game::Ui::CompanyLogos;
 using Game::Ui::LogoActor;
 
 /* The last of the company-logo screen's methods (CompanyLogos, #664 part
- * 10b, include/game/ui/frontend.hpp: LoadAssetBuffered, the constructor and the
+ * 10b, engine/include/game/ui/frontend.hpp: LoadAssetBuffered, the constructor and the
  * destructor) and the logo actor's destructor, LogoActor's key method:
  * g++ emits gLogoActorVtable here. ROM 0x08037110-0x080371B4; the rest
  * of both classes is in company_logos.cpp. Split from the head of
@@ -24,7 +24,7 @@ using Game::Ui::LogoActor;
  * -fno-implement-inlines (the Makefile's NO_IMPLEMENT_INLINES_OBJS), so
  * that g++ emits none of LogoActor's inline methods here. */
 
-/* Loads a "tagged" asset (see LoadTaggedAsset, src/engine/gfx/asset.cpp)
+/* Loads a "tagged" asset (see LoadTaggedAsset, engine/src/engine/gfx/asset.cpp)
  * into a freshly allocated buffer, then DMAs it to `dest`. A method of
  * the logo screen (LoadVvLogoGraphics's), which it doesn't use. */
 void CompanyLogos::LoadAssetBuffered(const void *asset, void *dest)

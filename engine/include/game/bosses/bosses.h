@@ -1,7 +1,7 @@
 #ifndef GUARD_BOSSES_H
 #define GUARD_BOSSES_H
 
-/* The bosses (src/game/bosses/): the airship and hovercraft boss fights of
+/* The bosses (engine/src/game/bosses/): the airship and hovercraft boss fights of
  * the jetpack levels, and the Tiny, Dingodile, Cortex and Mega Mix
  * boss objects. Every function they define is declared here, including
  * those that the file layout put in actor or vehicle files for ROM order
@@ -10,7 +10,7 @@
  * data tables.
  *
  * Declarations here are the functions' real prototypes, copied from
- * their definitions; the methods of the C++ files (include/game/bosses/boss_ctrl.hpp)
+ * their definitions; the methods of the C++ files (engine/include/game/bosses/boss_ctrl.hpp)
  * take `void *`. Some take a file-local view of their object, declared
  * here only by tag. A .c file that needs a different local declaration
  * for codegen keeps it as an asm-label alias with a `codegen:` comment
@@ -21,7 +21,7 @@
 #include "game/entities/objects.h"
 
 /* The airship's attack parameters, one per kind and level
- * (gAirshipAttacks, src/game/vehicles/jetpack/data/airship_attacks.cpp). SpawnAirship points
+ * (gAirshipAttacks, engine/src/game/vehicles/jetpack/data/airship_attacks.cpp). SpawnAirship points
  * gAirshipAttack at one. AirshipStateFireballs fires a fireball every
  * `fireballDelay` frames, resting `fireballBurstDelay` frames after each
  * `fireballBurst`-th; AirshipStateCannon does the same with cannonballs
@@ -47,7 +47,7 @@ struct spawn_timing {
 };
 
 /* The hovercraft's attack parameters, one per kind and level
- * (Hovercraft::attacks, src/game/bosses/data/hovercraft_attacks.cpp). SpawnHovercraft
+ * (Hovercraft::attacks, engine/src/game/bosses/data/hovercraft_attacks.cpp). SpawnHovercraft
  * points gHovercraftAttack at one, and GetHovercraftAttack returns it. */
 struct hovercraft_attack {
     s32 hp;                        // 0x00 - copied to gHovercraftHp, which nothing reads
@@ -60,8 +60,8 @@ struct hovercraft_attack {
 struct anim_box;
 struct entry_set;
 
-/* src/game/bosses/tiny.cpp and cortex.cpp: methods of TinyCtrl, CortexBossCtrl,
- * CortexTargetCtrl and CortexShotCtrl (include/game/bosses/boss_ctrl.hpp) under their
+/* engine/src/game/bosses/tiny.cpp and cortex.cpp: methods of TinyCtrl, CortexBossCtrl,
+ * CortexTargetCtrl and CortexShotCtrl (engine/include/game/bosses/boss_ctrl.hpp) under their
  * C names (cxx_symbols.txt). SpawnCortexBossGem (cortex.cpp; spawn_gems.cpp
  * calls it) has C linkage. */
 /* Its `kind` (CortexBossGemCtrl::kind; #843, docs/flags/boss_ctrl.md):
@@ -74,19 +74,19 @@ extern void SpawnCortexBossGem(u32 id, u16 x, u16 y, u16 param, s32 kind);
 
 /* The bosses' globals (games/xs/sym_iwram.txt): the airship's and the
  * hovercraft's variables are Airship's and Hovercraft's static members
- * (include/game/vehicles/jetpack/airship.hpp, include/game/bosses/hovercraft.hpp; #772). */
+ * (engine/include/game/vehicles/jetpack/airship.hpp, engine/include/game/bosses/hovercraft.hpp; #772). */
 
-/* src/game/bosses/data/boss_pictures.cpp: the two boss pictures, a {cols, rows}
+/* engine/src/game/bosses/data/boss_pictures.cpp: the two boss pictures, a {cols, rows}
  * head, then the frames (docs/data.md "Boss pictures"). Each picture's struct is sized by its generated picture
  * header (build/.../vehicles/jetpack/airship.h, bosses/hovercraft.h), so it is only complete in the
  * data file; the code reads the head through BOSS_PICTURE_SIZE, and finds
  * the frames from the palette (gAirshipPalette + 0x204). The airship's
  * tables (gAirshipPalette, gAirshipPicture, gAirshipAttacks,
  * gAirshipBox, gAirshipHitFlashPalettes, gAirshipKeyframes) are
- * Airship's static data members (include/game/vehicles/jetpack/airship.hpp), and the
+ * Airship's static data members (engine/include/game/vehicles/jetpack/airship.hpp), and the
  * hovercraft's (gHovercraftPalette, gHovercraftPicture, gHovercraftAttacks,
  * gHovercraftBox, gHovercraftKeyframes) Hovercraft's
- * (include/game/bosses/hovercraft.hpp). */
+ * (engine/include/game/bosses/hovercraft.hpp). */
 struct boss_picture_size {
     s16 cols;
     s16 rows;
@@ -95,7 +95,7 @@ struct airship_picture;    /* 4 frames */
 struct hovercraft_picture; /* 1 frame */
 #define BOSS_PICTURE_SIZE(picture) ((const struct boss_picture_size *)&(picture))
 
-/* src/game/bosses/data/boss_motion_tables.cpp */
+/* engine/src/game/bosses/data/boss_motion_tables.cpp */
 extern const u8 gCortexTargetBlinkStartTimes[3];
 extern const u8 gCortexTargetBlinkStopTimes[3];
 extern const u8 gCortexTargetChaseSteps[3];
@@ -142,14 +142,14 @@ extern const u8 gTinyRoundAnchors[3];
 #define DINGODILE_STALACTITE_UNK_START  Q8_FRAC(2, 88)
 #define DINGODILE_STALACTITE_UNK_STEP   Q8_FRAC(0, 10)
 
-/* src/engine/sys/iwram_data.cpp */
+/* engine/src/engine/sys/iwram_data.cpp */
 extern u16 *gFlashBgPalette;
 extern u16 *gFlashObjPalette;
 
-/* src/game/crash/data/swim_input_ctrl_state_tables.cpp */
+/* engine/src/game/crash/data/swim_input_ctrl_state_tables.cpp */
 extern const struct entry_set gMegaMixMotionSet;
 
-/* The {a, b} motion record index pairs (src/game/bosses/data/dingodile_motion_entries.cpp):
+/* The {a, b} motion record index pairs (engine/src/game/bosses/data/dingodile_motion_entries.cpp):
  * CreateDingodile and friends index gDingodileMotionRecords with entries
  * 0-3; 4-7 are gPlatformMoverMotionSet's (objects.h). */
 extern const u32 gDingodileMotionEntries[8][2];

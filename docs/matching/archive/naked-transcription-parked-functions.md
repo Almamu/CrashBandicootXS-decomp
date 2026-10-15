@@ -1,7 +1,7 @@
 # Six parked functions converted to NAKED transcription (byte-correct, not decompiled C)
 
 Six previously-`NON_MATCHING` functions, spread across what were then
-`src/engine/util/`, `src/graphics/`, and `src/system/`, all shared the same shape: fully
+`engine/src/engine/util/`, `engine/src/graphics/`, and `engine/src/system/`, all shared the same shape: fully
 understood semantics (a real, working C reconstruction already existed
 for each, checked into git history under `#if NON_MATCHING`), blocked
 purely on this project's well-documented gcc-2.9 "last mile"
@@ -11,7 +11,7 @@ canonicalization, and argument-spill ordering - that no amount of
 respelling, reordering, or register-pinning the C source could close.
 Each was converted to a byte-verified NAKED asm transcription instead,
 the established pattern for this class of gap (see
-`src/engine/link/link_handshake.c`'s `MakeLinkHandshakeId`/`ResetLinkSessionState` and
+`engine/src/engine/link/link_handshake.c`'s `MakeLinkHandshakeId`/`ResetLinkSessionState` and
 `lib/libgcc/lib1funcs.s`'s `__div0` for the earliest examples).
 
 **Tracking note**: byte-exact NAKED asm is not treated as "matched" in
@@ -19,15 +19,15 @@ this project's `tools/report_units.py`/`docs/status/*.md` tracking -
 only real decompiled C counts, even when the NAKED transcription is
 provably byte-correct against the ROM. All six functions below (and
 their siblings converted the same pass - `PlayAmbientSfx` in
-`src/engine/audio/audio.c`, and the eight
-`src/game/ui/save_menu_draw.c`/`save_menu_ui.c` functions) are
+`engine/src/engine/audio/audio.c`, and the eight
+`engine/src/game/ui/save_menu_draw.c`/`save_menu_ui.c` functions) are
 tracked as **parked**, not matched, in those files. The functions
 themselves are still real, working, byte-verified code - only the
 progress-tracking classification differs from an ordinary match.
 
 ## Parked - byte-correct NAKED transcriptions
 
-- **`FindSubstring`** (`src/engine/util/printf.cpp`) - a case-insensitive
+- **`FindSubstring`** (`engine/src/engine/util/printf.cpp`) - a case-insensitive
   `strstr`. The C reconstruction's only gap was one branch shape inside
   the "normalize a char to lowercase" logic: the ROM routes the
   *untaken* branch of the range check through a redundant copy-into-r0
@@ -39,7 +39,7 @@ progress-tracking classification differs from an ordinary match.
   [naked-sub_8000cbc-matched.md](./naked-sub_8000cbc-matched.md); this
   entry is left as-is since it's a frozen historical record of why the
   function was originally parked (see `docs/matching.md`).
-- **`DrawWrappedText`** (`src/engine/text/wrapped_text.c`) - a word-wrap text
+- **`DrawWrappedText`** (`engine/src/engine/text/wrapped_text.c`) - a word-wrap text
   renderer. The C reconstruction matched instruction-for-instruction
   except ~8 bytes from two non-semantic codegen details: agbcc always
   spills stack-homed incoming arguments before any register-pinned move
@@ -48,7 +48,7 @@ progress-tracking classification differs from an ordinary match.
   has a redundant two-instruction "correct-sense compare, branch on
   true, fall to an unconditional far branch" pair (likely a Thumb
   conditional-branch-range artifact from the ROM's original build).
-- **`WaitForKeyPress`** (`src/engine/sys/input.cpp`) - polls input until a
+- **`WaitForKeyPress`** (`engine/src/engine/sys/input.cpp`) - polls input until a
   button match or a poll-count timeout. The C reconstruction matched
   everywhere except one 4-byte residual: the count-limited loop's
   `if (keys & 1)` bit-test compiled with the opposite branch sense from
@@ -59,7 +59,7 @@ progress-tracking classification differs from an ordinary match.
   see [naked-sub_80010e0-matched.md](./naked-sub_80010e0-matched.md);
   this entry is left as-is since it's a frozen historical record of why
   the function was originally parked (see `docs/matching.md`).
-- **`FadePaletteToBlack`** (`src/engine/gfx/fade_to_black.cpp`) - the
+- **`FadePaletteToBlack`** (`engine/src/engine/gfx/fade_to_black.cpp`) - the
   fade-to-black palette DMA loop. The ROM caches the blended-buffer
   address in a register across the loop while recomputing the other two
   DMA fields fresh every iteration; this compiler's loop-invariant
@@ -69,7 +69,7 @@ progress-tracking classification differs from an ordinary match.
   [naked-sub_80014a4-matched.md](./naked-sub_80014a4-matched.md); this
   entry is left as-is since it's a frozen historical record of why the
   function was originally parked (see `docs/matching.md`).
-- **`SetDispcntMode`** (`src/engine/sys/display.cpp`) - sets a
+- **`SetDispcntMode`** (`engine/src/engine/sys/display.cpp`) - sets a
   packed shadow byte's low 3 bits. This compiler always recognizes `-8`
   as reachable from the already-loaded `7` mask via a single `SUB` and
   folds the ROM's fresh `movs r1,#8; rsbs r1,r1,#0` pair into that
@@ -78,7 +78,7 @@ progress-tracking classification differs from an ordinary match.
   [naked-SetDispcntMode-matched.md](./naked-sub_8001524-matched.md); this
   entry is left as-is since it's a frozen historical record of why the
   function was originally parked (see `docs/matching.md`).
-- **`CommitBlendRegs`** (`src/engine/util/aabb.cpp`) - commits a blend-
+- **`CommitBlendRegs`** (`engine/src/engine/util/aabb.cpp`) - commits a blend-
   register shadow. The ROM writes a word then does a separate `adds
   r2,#4` on the same register before the second store; this compiler
   always fuses that store-then-increment-same-register pair into a
@@ -110,9 +110,9 @@ real ROM address as a label.
 Full clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` passes (`La suma coincide`) with
 all six converted at once, alongside `PlayAmbientSfx`
-(`src/engine/audio/audio.c` - see
+(`engine/src/engine/audio/audio.c` - see
 `docs/matching/archive/issue-3-overlay-ui-audio-wrapper.md`) and the eight
-`src/game/ui/save_menu_draw.c`/`save_menu_ui.c` functions (see
+`engine/src/game/ui/save_menu_draw.c`/`save_menu_ui.c` functions (see
 `docs/matching/archive/issue-6-0x08003f30-overlay-ui.md`) converted the same
 way in the same pass. `make NON_MATCHING=1 report` also still succeeds
 - none of these six had a `NON_MATCHING`-only reconstruction left

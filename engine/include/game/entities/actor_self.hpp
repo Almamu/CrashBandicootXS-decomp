@@ -3,8 +3,8 @@
 
 /* The 3D actors' base classes as C++ (#664, docs/cplusplus.md):
  *
- *   AnimPart   0x1C  none          src/game/entities/anim_part.cpp
- *   ActorSelf  0x54  gActorVtable  src/game/entities/actor_self.cpp
+ *   AnimPart   0x1C  none          engine/src/game/entities/anim_part.cpp
+ *   ActorSelf  0x54  gActorVtable  engine/src/game/entities/actor_self.cpp
  *   HpActor    0x58  none (no ROM table: every subclass has its own)
  *
  * `AnimPart` is the animation state, with no virtual methods: the
@@ -17,7 +17,7 @@
  * in frontend.hpp). They have no C view (the C `struct actor_self` went
  * with its last C reader, #754); the plain records they use (struct
  * anim_frame_record, struct anim_box) are actor_anim.h's, which the
- * src/.../data tables define.
+ * engine/src/.../data tables define.
  *
  * The actors live in IWRAM's heap (mem_alloc's MEM_HEAP_IWRAM flag),
  * which is AnimPart's own operator new and delete: the ROM's destructors
@@ -383,7 +383,7 @@ inline HpActor *ActorSelf::AsHpActor()
 } // namespace Entities
 } // namespace Game
 
-/* src/engine/actor/actor_category_frame.cpp: the first actor other than `self`
+/* engine/src/engine/actor/actor_category_frame.cpp: the first actor other than `self`
  * a shot hits (JetpackShot::Update). C linkage, C++ callers only. */
 extern "C" Game::Entities::HpActor *FindShotTarget(Game::Entities::ActorSelf *self);
 

@@ -26,7 +26,7 @@ using Game::Vehicles::Polar::PolarTimeCrate;
 using Game::Vehicles::Polar::Yeti;
 
 /* The polar crate kinds' updates, PolarCrate's constructor and the kinds'
- * out-of-line constructors (#664 part 11d, include/game/vehicles/vehicle.hpp), ROM
+ * out-of-line constructors (#664 part 11d, engine/include/game/vehicles/vehicle.hpp), ROM
  * 0x0802CA60-0x0802CC9C, between polar_nitro.cpp and polar_objects.cpp.
  * Each kind breaks (PolarCrate::Break) when the player touches it, then
  * hands the rest to PolarCrate::Update (polar_crate.cpp), which also
@@ -78,7 +78,7 @@ void PolarTimeCrate::Update()
 }
 
 /* Explodes, as each nitro DetonateNearby sets off. UNUSED: no caller
- * anywhere in the ROM (checked every src/ file and every word-aligned
+ * anywhere in the ROM (checked every engine/src/ file and every word-aligned
  * Thumb pointer in baserom.gba). */
 void PolarNitroCrate::Detonate()
 {

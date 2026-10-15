@@ -18,7 +18,7 @@ using Engine::Sys::Irq;
  * as the Timer3 IRQ handler, enables it, and arms Timer3 with a fixed
  * reload/control word. Always ends with IME re-enabled. `this` is never
  * read - the ROM genuinely ignores it here, same as `FrameLimiter::WaitForVBlank` in
- * src/engine/sys/irq.cpp. */
+ * engine/src/engine/sys/irq.cpp. */
 s32 LinkSession::Start(u32 flags)
 {
     u8 arm3 = (u8)flags;

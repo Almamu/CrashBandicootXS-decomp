@@ -31,7 +31,7 @@ using Game::Entities::AnimPart;
  * hovercraft_fireball.cpp and hovercraft_state.cpp: a bare AnimPart
  * (anim) and variables stepped through the plain function table
  * stateFuncs, the airship's twin (airship*.cpp). Since #772 an all-static
- * class (include/game/bosses/hovercraft.hpp); its members keep their C names
+ * class (engine/include/game/bosses/hovercraft.hpp); its members keep their C names
  * (gHovercraftX, CreateHovercraft, ...) through cxx_symbols.txt. See
  * docs/matching/archive/issue-59-0x08031784-actor.md and
  * docs/matching/archive/issue-60-61-gap-31a6c-part2.md. */
@@ -575,7 +575,7 @@ void Hovercraft::Destroy(void)
     delete anim;
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked every src/ file, the
+/* UNUSED - no caller anywhere in the ROM (checked every engine/src/ file, the
  * category vtables and every word-aligned Thumb pointer in baserom.gba).
  * Empty. With sub_80337FC and nullsub_35 it trails DestroyHovercraft the
  * way nullsub_30 trails DestroyAirship; no table slot names them, so all

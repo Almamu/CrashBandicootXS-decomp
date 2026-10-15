@@ -50,14 +50,14 @@ only the tail continuation `..._ac28.s` remains.
 ## Matched (25 of 25 functions)
 
 - **`JetpackReloadPlayerTiles`/`PolarReloadPlayerTiles`/`JetpackReachCourseEnd`/`PolarReachCourseEnd`**
-  (`src/game/entities/actor_self.c`) - four trivial forwarders, the same
+  (`engine/src/game/entities/actor_self.c`) - four trivial forwarders, the same
   shape as `GivePolarPlayerLife` in `polar_player_actions.c`: each ignores its own
   argument and calls a different function with the player pointer
   (`gActorList`), discarding the return value.
-- **`IsTouchingPlayer`** (`src/game/entities/actor_self.c`) - passes its own
+- **`IsTouchingPlayer`** (`engine/src/game/entities/actor_self.c`) - passes its own
   `self` argument through to `_call_via_r1`, alongside a function pointer
   read from `gActorCategoryVtable`'s own `+0x24` field.
-- **`InitActorPart`** (`src/game/entities/actor_self.c`) - the constructor.
+- **`InitActorPart`** (`engine/src/game/entities/actor_self.c`) - the constructor.
   Matching it byte-exact needed several of this project's established
   idioms stacked together: `part`/`b`/`c` pinned to `r4`/`r5`/`r6` and
   `self` left as a *plain* local (letting the allocator land it in `r7`
@@ -73,7 +73,7 @@ only the tail continuation `..._ac28.s` remains.
   final list-insertion re-ordered to store `self` into the head node's
   `+0x4c` *before* reading its `+0x48` (matching the ROM's literal
   instruction order, not just its final result).
-- **`UpdateActor`** (`src/game/entities/actor_self.c`) - the movement-
+- **`UpdateActor`** (`engine/src/game/entities/actor_self.c`) - the movement-
   threshold recompute/frame-advance pair, sharing `InitActorPart`'s
   `ABS32`/`r2`-running-value idiom. Two additional gaps: the trampoline-
   fire call's `self + offset` argument had to be computed into its own
@@ -83,23 +83,23 @@ only the tail continuation `..._ac28.s` remains.
   `table` (not the more natural `table` first) plus the resulting
   `table + idx*0xc` address pinned to `r1` to reproduce the ROM's
   register choice for the shared record pointer.
-- **`UpdateActorDepth`** (`src/game/entities/actor_self.c`) - the same
+- **`UpdateActorDepth`** (`engine/src/game/entities/actor_self.c`) - the same
   movement-threshold recompute as `UpdateActor`, with no trampoline-
   fire/frame-advance tail.
-- **`GetActorRecordIndex`** (`src/game/entities/actor_self.c`) - trivial getter:
+- **`GetActorRecordIndex`** (`engine/src/game/entities/actor_self.c`) - trivial getter:
   the first byte of `self`'s part-table pointer.
-- **`SetActorState`** (`src/game/entities/actor_self.c`) - the state/table-
+- **`SetActorState`** (`engine/src/game/entities/actor_self.c`) - the state/table-
   index/anim-frame reset idiom already documented for the boss
   cluster's `DamageAirshipFireball`/`AirshipStateFall`.
-- **`GetActorZ`/`GetActorY`/`GetActorX`** (`src/game/entities/actor_self.c`)
+- **`GetActorZ`/`GetActorY`/`GetActorX`** (`engine/src/game/entities/actor_self.c`)
   - trivial `self+0x24`/`0x20`/`0x1c` getters.
-- **`IsActorVisible`** (`src/game/entities/actor_self.c`) - trivial `self+0x2c`
+- **`IsActorVisible`** (`engine/src/game/entities/actor_self.c`) - trivial `self+0x2c`
   byte getter.
-- **`DestroyActor`** (`src/game/entities/actor_self.c`) - teardown: marks
+- **`DestroyActor`** (`engine/src/game/entities/actor_self.c`) - teardown: marks
   `self` "dead", unlinks it from the circular list (the same shape as
   `DestroyPolarPlayer`'s unlink sequence in `polar_player_actions.c`), and frees it
   when requested.
-- **`IsSpawnCollected`/`MarkSpawnCollected`/`ClearCollectedSpawns`** (`src/game/entities/actor_self.c`)
+- **`IsSpawnCollected`/`MarkSpawnCollected`/`ClearCollectedSpawns`** (`engine/src/game/entities/actor_self.c`)
   - the fixed 15-slot `gCollectedSpawns`/`gCollectedSpawnCount` registry's
   search/append/clear trio. Both search loops needed the counter/array-
   pointer pinned to `r2`/`r1` (`IsSpawnCollected`) or `self` pinned to `r3`
@@ -109,13 +109,13 @@ only the tail continuation `..._ac28.s` remains.
   *other* functions preceded it in the same translation unit, discovered
   only after the full link shifted these two functions by 4 bytes (see
   "A note on isolated-compile confidence" below).
-- **`RestoreActorPaletteCycle`/`SaveActorPaletteCycle`** (`src/game/entities/actor_self.c`) - the
+- **`RestoreActorPaletteCycle`/`SaveActorPaletteCycle`** (`engine/src/game/entities/actor_self.c`) - the
   palette-cycle cursor/bound save/restore pair.
-- **`SetActorPaletteCycle`/`EnableActorPaletteCycle`** (`src/game/entities/actor_self.c`) - the
+- **`SetActorPaletteCycle`/`EnableActorPaletteCycle`** (`engine/src/game/entities/actor_self.c`) - the
   palette-cycle cluster's remaining seed/arm-disarm pair, non-adjacent to
   `actor_part52.c` since `UpdateActorPaletteCycle`'s own object (`actor_part53.o`)
-  sat between them (all seven files are now `src/game/entities/actor_self.c`).
-- **`DrawActor`** (`src/game/entities/actor_self.c`) - the OAM
+  sat between them (all seven files are now `engine/src/game/entities/actor_self.c`).
+- **`DrawActor`** (`engine/src/game/entities/actor_self.c`) - the OAM
   draw/scale routine: computes an OBJ scale factor and on-screen X/Y
   from `self`'s movement-threshold metric, culls off-screen, and calls
   `SetupSpriteFrameOam`. Closed a later session's remaining gap: the
@@ -138,7 +138,7 @@ only the tail continuation `..._ac28.s` remains.
   writing out by hand (same technique as `DivMod`'s r2-across-SWI
   save/restore, see docs/matching.md), reloading right before its one
   remaining use to match the ROM's late `ldr r2, [sp]` placement.
-- **`GetActorWorldBox`** (`src/game/entities/actor_self.c`) - a 12-byte
+- **`GetActorWorldBox`** (`engine/src/game/entities/actor_self.c`) - a 12-byte
   little-vector velocity integrator (the position block `InitActorPart`
   copies from `part+0x14..0x20`, see above). The residual gap was
   instruction *scheduling*: this compiler's own list scheduler always
@@ -161,7 +161,7 @@ only the tail continuation `..._ac28.s` remains.
   documented for `GetCompletionPercent`/`DrawWrappedTextInBox` in docs/matching.md. No
   caller of this function has been matched yet to confirm whether the
   return value is actually used.
-- **`UpdateActorPaletteCycle`** (`src/game/entities/actor_self.c`) - the palette-cycle
+- **`UpdateActorPaletteCycle`** (`engine/src/game/entities/actor_self.c`) - the palette-cycle
   cursor-advance DMA step. Two gaps: the cursor-advance tail (no C
   phrasing tried - plain if/else-if/else, `goto`-linearized with an
   explicit `result` copy, cached-address locals, register-pinned address

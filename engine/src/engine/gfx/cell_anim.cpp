@@ -287,7 +287,7 @@ void CellAnim::SetSpeed(s32 value)
  * and the two swap registers (the `r8`/`ip` roles of the 0x7c0 offset
  * and `h` follow from that). Matches under both compilers. */
 /* UNUSED - no caller anywhere in the ROM (no Thumb `bl` to it and no
- * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
+ * pointer to it in baserom.gba, nor any reference in asm/ or engine/src/). */
 void CellAnim::FillTilemap(s32 screen, s32 w, s32 h)
 {
     u16 *base = (u16 *)(BG_SCREEN_ADDR(28) + 0x400);

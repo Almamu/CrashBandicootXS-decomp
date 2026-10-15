@@ -19,7 +19,7 @@ using Game::Entities::ActorSelf;
 using Game::Entities::HpActor;
 using Game::Vehicles::Jetpack::JetpackPlayer;
 
-/* The hovercraft's launcher (#664 part 11h, include/game/bosses/boss_actors.hpp): the
+/* The hovercraft's launcher (#664 part 11h, engine/include/game/bosses/boss_actors.hpp): the
  * cannon's sibling, an HpActor on the hovercraft that launches planes,
  * bombers and balloons once the hovercraft has lost two parts. See
  * docs/matching/archive/issue-62-0x08033804-actor.md and

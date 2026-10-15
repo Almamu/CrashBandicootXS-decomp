@@ -9,11 +9,11 @@ extern "C" {
 using Game::Bosses::Hovercraft;
 
 /*
- * ROM 0x0817C460-0x0817C4C8. Linked in ROM order between data/data.s
+ * ROM 0x0817C460-0x0817C4C8. Linked in ROM order between games/xs/data/data.s
  * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
-/* Hovercraft::attacks (include/game/bosses/hovercraft.hpp): the hovercraft's attack
+/* Hovercraft::attacks (engine/include/game/bosses/hovercraft.hpp): the hovercraft's attack
  * parameters (struct hovercraft_attack, bosses.h). SpawnHovercraft picks
  * one by gHovercraftLevel. */
 const struct hovercraft_attack Hovercraft::attacks[2] = {

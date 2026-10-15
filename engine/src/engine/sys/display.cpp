@@ -89,7 +89,7 @@ void Display::ShowObj()
 
 /* DISPCNT bit 6 clear (DISPCNT's own top mode bit). */
 /* UNUSED - no caller anywhere in the ROM (no Thumb `bl` to it and no
- * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
+ * pointer to it in baserom.gba, nor any reference in asm/ or engine/src/). */
 void Display::SetObjMapping2D()
 {
     dispcnt.bits.objMap1D = 0;

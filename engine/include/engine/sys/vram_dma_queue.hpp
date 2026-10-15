@@ -1,7 +1,7 @@
 #ifndef GUARD_VRAM_DMA_QUEUE_HPP
 #define GUARD_VRAM_DMA_QUEUE_HPP
 
-/* The VRAM DMA queue (src/engine/sys/vram_dma_queue.cpp, #915): the transfers to
+/* The VRAM DMA queue (engine/src/engine/sys/vram_dma_queue.cpp, #915): the transfers to
  * VRAM and palette RAM queued during a frame (sprite frames, palette
  * flashes, BG tiles), which the frame loops run with Flush once the
  * frame is drawn, usually right after the VBlank wait.

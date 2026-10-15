@@ -13,7 +13,7 @@ extern "C" {
 using Game::Enemies::KnockedEnemyCtrl;
 using Game::Entities::MovingSprite;
 
-/* KnockedEnemyCtrl, the knocked enemy's controller (include/game/enemies/enemy_ctrl.hpp),
+/* KnockedEnemyCtrl, the knocked enemy's controller (engine/include/game/enemies/enemy_ctrl.hpp),
  * ROM 0x0800CB64-0x0800CBF4. g++ emits gKnockedEnemyCtrlVtable here. An
  * old_agbcp object (OLD_AGBCC_OBJS). */
 

@@ -33,8 +33,8 @@ and relocations stay byte-identical. Otherwise it is reverted.
 
 ## The tool: `tools/simplify_scan.py`
 
-The tool parses every `src/**/*.cpp` (not `lib/`, which is original
-source, and not the C files in `src/*/data/`) and finds seven kinds of
+The tool parses every `engine/src/**/*.cpp` (not `lib/`, which is original
+source, and not the C files in `engine/src/*/data/`) and finds seven kinds of
 candidate:
 
 | kind | what |
@@ -58,7 +58,7 @@ accepted redundant copies, the pins and the codegen views) all have such
 a comment, so the tool leaves them alone.
 
 ```
-tools/simplify_scan.py [PATH...]                  # inventory per kind and directory (default: src/)
+tools/simplify_scan.py [PATH...]                  # inventory per kind and directory (default: engine/src/)
 tools/simplify_scan.py --list [PATH...]           # every candidate, one per line
 tools/simplify_scan.py --try [-j N] [--kinds K] [--log TSV] FILE.cpp|DIR...
 tools/simplify_scan.py --try --annotate FILE.cpp|DIR...
@@ -137,7 +137,7 @@ long cast-laden expression.
 
 ## Before and after
 
-`tools/simplify_scan.py` over `src/`. Before is the inventory on
+`tools/simplify_scan.py` over `engine/src/`. Before is the inventory on
 276c358c, when the pass started. After is main with #938-#941,
 #943-#946 and #947-#950 applied.
 

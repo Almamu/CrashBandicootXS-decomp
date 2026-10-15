@@ -5,7 +5,7 @@ using Game::Crash::ActionCtrl;
 /*
  * ROM 0x0816BF20-0x0816C090: the player's per-action dispatch table and
  * the per-mode animation-row table that follows it. Linked in ROM order
- * between data/data.s sections by games/xs/ldscript.txt - see docs/data.md.
+ * between games/xs/data/data.s sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* The action controller's state methods, one per player action, indexed

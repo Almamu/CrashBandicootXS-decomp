@@ -19,7 +19,7 @@ using Game::Ui::Slideshow;
 /* GitHub issue #38: 0x08024590-0x08024783 (game_loop), the sound-channel-
  * handle helper family - see docs/matching/archive/issue-38-medal-results-tally.md
  * and docs/matching/archive/issue-38-sound-channel-family.md. All four functions
- * are Slideshow's methods (include/game/ui/cutscene.hpp; C++ since the #664
+ * are Slideshow's methods (engine/include/game/ui/cutscene.hpp; C++ since the #664
  * cleanup), built with old_agbcp as the C was with old_agbcc - see
  * docs/matching/archive/game-loop-old-agbcc.md. */
 
@@ -56,7 +56,7 @@ void Slideshow::BeginSlide(s32 idx)
  * cue if needed (`rearmSfx`/`sfx`), then advances to the next
  * "still active" item via `SkipSlides`.
  *
- * UNUSED - no caller anywhere in the ROM (checked src/, asm/ and every
+ * UNUSED - no caller anywhere in the ROM (checked engine/src/, asm/ and every
  * Thumb `bl` and aligned word of baserom.gba for its address). It plays
  * a slide list without text; the cutscenes use RunCutscenePlayer
  * (cutscene_player.cpp), the same loop with the text pages added. */

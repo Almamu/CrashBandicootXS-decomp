@@ -324,7 +324,7 @@ s32 LevelState::GetMaskAssistDeaths()
     return maskAssistDeaths;
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked src/ and asm/). Getter
+/* UNUSED - no caller anywhere in the ROM (checked engine/src/ and asm/). Getter
  * of `unusedAssistDeaths` (SetUnusedAssistDeaths). */
 s32 LevelState::GetUnusedAssistDeaths()
 {
@@ -336,7 +336,7 @@ void LevelState::AddPendingSwitchCrates(s32 delta)
     pendingSwitchCrates += delta;
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked src/ and asm/), nor is
+/* UNUSED - no caller anywhere in the ROM (checked engine/src/ and asm/), nor is
  * TestUnusedFlags: ORs `mask` into `unusedFlags`, which InitLevelState zeroes and
  * nothing else touches. */
 void LevelState::SetUnusedFlags(s32 mask)
@@ -344,7 +344,7 @@ void LevelState::SetUnusedFlags(s32 mask)
     unusedFlags |= mask;
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked src/ and asm/). Whether
+/* UNUSED - no caller anywhere in the ROM (checked engine/src/ and asm/). Whether
  * any bit of `mask` is set in `unusedFlags`. */
 s32 LevelState::TestUnusedFlags(s32 mask)
 {
@@ -352,7 +352,7 @@ s32 LevelState::TestUnusedFlags(s32 mask)
     return (u32)(-x | x) >> 31;
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the
+/* UNUSED - no caller anywhere in the ROM (checked engine/src/, asm/ and the
  * data tables for ClearPowers). Clears all four power bits (`flags`
  * bits 4-7) that GiveTurboRun/GiveSuperBodySlam/GiveTornadoSpin/
  * GiveDoubleJump set. */
@@ -986,7 +986,7 @@ void LevelState::PlayBootCutscene()
     PlayCutscene(CUTSCENE_LEGAL_NOTICE);
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked src/, asm/, games/xs/expected/
+/* UNUSED - no caller anywhere in the ROM (checked engine/src/, asm/, games/xs/expected/
  * and every word-aligned Thumb pointer in baserom.gba). Empty; keeps the
  * nullsub_N name (docs/naming.md): no call, table slot or neighbour
  * shows what it stood for. */

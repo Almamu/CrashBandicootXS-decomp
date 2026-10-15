@@ -19,7 +19,7 @@ using Game::Crash::Player;
 using Game::Entities::MovingSprite;
 using Game::Level::EntitySpawner;
 
-/* ActionCtrl's CheckLeftGround (include/game/crash/action_ctrl.hpp; #664,
+/* ActionCtrl's CheckLeftGround (engine/include/game/crash/action_ctrl.hpp; #664,
  * docs/cplusplus.md). Built by old_agbcp (the Makefile's OLD_AGBCC_OBJS):
  * the C, built by agbcc, pinned 3 registers to old_agbcc's code. */
 
@@ -42,7 +42,7 @@ u8 ActionCtrl::CheckLeftGround()
     return 0;
 }
 
-/* ActionCtrl's ApplyMotion and its idle state (include/game/crash/action_ctrl.hpp;
+/* ActionCtrl's ApplyMotion and its idle state (engine/include/game/crash/action_ctrl.hpp;
  * #664, docs/cplusplus.md). Built by old_agbcp (the Makefile's
  * OLD_AGBCC_OBJS), like the old_agbcc C it replaces. */
 
@@ -227,7 +227,7 @@ other:
     UpdateFacing();
 }
 
-/* ActionCtrl's run and jump states (include/game/crash/action_ctrl.hpp; #664,
+/* ActionCtrl's run and jump states (engine/include/game/crash/action_ctrl.hpp; #664,
  * docs/cplusplus.md). Built by old_agbcp (the Makefile's OLD_AGBCC_OBJS),
  * like the old_agbcc C it replaces. */
 
@@ -418,7 +418,7 @@ void ActionCtrl::StateJump()
 }
 
 /* ActionCtrl's state methods in the air, spinning, sliding, crouching and
- * crawling (include/game/crash/action_ctrl.hpp; #664, docs/cplusplus.md). Built by
+ * crawling (engine/include/game/crash/action_ctrl.hpp; #664, docs/cplusplus.md). Built by
  * old_agbcp (the Makefile's OLD_AGBCC_OBJS), like the old_agbcc C it
  * replaces. */
 

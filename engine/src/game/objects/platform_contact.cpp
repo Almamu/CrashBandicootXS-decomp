@@ -4,7 +4,7 @@
 using Game::Crash::Player;
 using Game::Objects::Platform;
 
-/* Platform::CheckPlayerContact (#664, include/game/objects/platform.hpp), ROM
+/* Platform::CheckPlayerContact (#664, engine/include/game/objects/platform.hpp), ROM
  * 0x0801AB34-0x0801AB98: CheckPlatformContact, gPlatformVtable's slot 1. */
 
 /* Unless it is a flip platform that has tipped over (PLATFORM_TYPE_FLIP

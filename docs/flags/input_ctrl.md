@@ -1,13 +1,13 @@
 # InputCtrl: `state` and `dirState` (#843)
 
-InputCtrl (include/game/crash/input_ctrl.hpp) is the player's controller in the hover
+InputCtrl (engine/include/game/crash/input_ctrl.hpp) is the player's controller in the hover
 room (`ROOM_KIND_HOVER`, `PLAYER_CTRL_MODE_INPUT`). The names sit next to
 the class.
 
 ## `state` (`INPUT_CTRL_STATE_*`)
 
 `state` is Ctrl's (+0x08) and indexes `stateFuncs`
-(gInputCtrlStateFuncs, src/game/crash/data/swim_input_ctrl_state_tables.cpp). Update calls the
+(gInputCtrlStateFuncs, engine/src/game/crash/data/swim_input_ctrl_state_tables.cpp). Update calls the
 state's method every frame, after the D-pad steering, which it skips when
 the player is dead.
 

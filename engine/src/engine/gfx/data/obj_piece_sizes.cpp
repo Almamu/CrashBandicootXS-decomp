@@ -6,12 +6,12 @@ extern "C" {
 }
 
 /*
- * ROM 0x0816B2E0-0x0816B304. Linked in ROM order between data/data.s
+ * ROM 0x0816B2E0-0x0816B304. Linked in ROM order between games/xs/data/data.s
  * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* The OBJ shape/size index of a sprite piece (the low nibble of its piece
- * byte, include/engine/gfx/sprite_bank.h) as width and height in pixels: square
+ * byte, engine/include/engine/gfx/sprite_bank.h) as width and height in pixels: square
  * 8-64, horizontal 16x8-64x32, vertical 8x16-32x64. Read by DrawSpritePieces
  * and DrawAffineSpritePieces (sprite_renderer.cpp). */
 const u8 gObjPieceWidths[12] = {
@@ -23,6 +23,6 @@ const u8 gObjPieceHeights[12] = {
 };
 
 /* The box and the point used when a sprite frame has none (the layout
- * types without one, include/engine/gfx/sprite_bank.h): all zero. */
+ * types without one, engine/include/engine/gfx/sprite_bank.h): all zero. */
 const struct hitbox_quad gEmptySpriteBox = { 0 };
 const struct sprite_point gEmptySpritePoint = { 0 };

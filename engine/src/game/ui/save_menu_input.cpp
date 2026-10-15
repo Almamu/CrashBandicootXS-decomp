@@ -28,7 +28,7 @@ using Game::Level::LevelState;
 using Game::Ui::SaveMenu;
 
 /* SaveMenu's run loop, constructor, destructor and input handlers
- * (include/game/ui/save_menu.hpp, #664's final cleanup), with the static Run
+ * (engine/include/game/ui/save_menu.hpp, #664's final cleanup), with the static Run
  * (#915); the save transfer's three accessors that started the file
  * are at the end of save_transfer_state.cpp since #767. The C needed
  * nine register pins in the constructor and destructor and the
@@ -38,7 +38,7 @@ using Game::Ui::SaveMenu;
  * under both compilers. */
 
 /* gKeys is a plain u32 elsewhere (e.g.
- * src/game/ui/save_menu_draw.cpp's LinkExchange) but this call site reads
+ * engine/src/game/ui/save_menu_draw.cpp's LinkExchange) but this call site reads
  * only its upper 16 bits (the "newly pressed" half of a held/pressed
  * input pair) - matching the ROM's own `ldrh r1,[r0,#2]` (a runtime
  * +2 byte offset on the reloaded base address) requires a real field

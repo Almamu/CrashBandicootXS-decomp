@@ -1,13 +1,13 @@
 # `ZoomBg::state` and `LevelSelectCursor::state`: the level select (#843)
 
-The level-select screen (include/game/ui/level_select.hpp) has two small state
+The level-select screen (engine/include/game/ui/level_select.hpp) has two small state
 machines, each an `s32 state` that the class's `Update` switches on. The
 names sit next to each class: `ZOOM_BG_STATE_*` and
 `LEVEL_SELECT_CURSOR_STATE_*`.
 
 ## ZoomBg (+0x0C)
 
-BG2, the zooming level picture (src/game/ui/zoom_bg.cpp). Update zooms it in
+BG2, the zooming level picture (engine/src/game/ui/zoom_bg.cpp). Update zooms it in
 or out by 8 per frame between `scale` 8 (smallest) and 0x100 (1:1).
 
 | Value | Name | Meaning | Entered by |
@@ -27,7 +27,7 @@ These GNU case ranges keep the ROM's values.
 
 ## LevelSelectCursor (+0x30)
 
-The cursor (src/game/ui/level_select_cursor.cpp). States 0-3 are the idle
+The cursor (engine/src/game/ui/level_select_cursor.cpp). States 0-3 are the idle
 animation cycle, drawn by the sprite part; 4 and 5 are the affine zoom,
 drawn by hand into the OAM shadow buffer (Draw's `GROW ... SHRINK`).
 

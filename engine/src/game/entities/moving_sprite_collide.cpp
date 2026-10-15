@@ -9,7 +9,7 @@ using Game::Entities::Ctrl;
 using Game::Entities::MovingSprite;
 
 /* MovingSprite's events, contact test and accessors (#664,
- * include/game/entities/sprite_obj.hpp). */
+ * engine/include/game/entities/sprite_obj.hpp). */
 
 /* An event goes to the controller. */
 void MovingSprite::HandleEvent(s32 from, s32 event, s32 arg)

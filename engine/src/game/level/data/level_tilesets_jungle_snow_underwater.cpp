@@ -7,7 +7,7 @@ extern "C" {
 /*
  * ROM 0x0817E78C-0x0824B638: the first 0x20 bytes of the old
  * gLanguageSelectPalette3 blob, then level BG tile sets 1-3. Linked in ROM
- * order between data/data.s sections by games/xs/ldscript.txt - see docs/data.md
+ * order between games/xs/data/data.s sections by games/xs/ldscript.txt - see docs/data.md
  * and docs/data_map.md ("gLanguageSelectPalette3").
  */
 

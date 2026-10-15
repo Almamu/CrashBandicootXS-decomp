@@ -1,4 +1,4 @@
-/* The polar crate kinds' constructors, for include/game/vehicles/vehicle.hpp, with no
+/* The polar crate kinds' constructors, for engine/include/game/vehicles/vehicle.hpp, with no
  * include guard: vehicle.hpp includes them as inline functions
  * (POLAR_CRATE_CTOR `inline`), which PolarPlayer::CreateActor (polar_actor_factory.cpp)
  * expands; polar_crates.cpp includes them at its end with

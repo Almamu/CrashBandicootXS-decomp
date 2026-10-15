@@ -11,10 +11,10 @@ extern "C" {
 using Game::Level::LevelState;
 
 /* The game's top-level loop (called once from `AgbMain`, see
- * src/engine/sys/main.cpp): sets up the central per-level state object
+ * engine/src/engine/sys/main.cpp): sets up the central per-level state object
  * (`gLevelState`, see docs/rom_map.md's "hud"/"game_loop"
  * investigations for what its fields mean), the boot language menu
- * (`OpenLanguageSelect`/`RunLanguageSelect`/`CloseLanguageSelect`, src/engine/audio/
+ * (`OpenLanguageSelect`/`RunLanguageSelect`/`CloseLanguageSelect`, engine/src/engine/audio/
  * language_select*.c), then runs `UpdateGameFrame` forever, freeing
  * scratch memory before and after each frame. Never actually returns -
  * the `s32` return type only exists to match `AgbMain`'s
@@ -37,7 +37,7 @@ s32 MainLoop(void)
 }
 
 /* UI string `index` in the current language: `gUiTextTables` holds one
- * string table per language (src/game/ui/data/ui_text.cpp), and
+ * string table per language (engine/src/game/ui/data/ui_text.cpp), and
  * `gLanguage` (0-5, set above from the language selector
  * `RunLanguageSelect`'s return) picks one. */
 const u8 *GetUiText(s32 index)

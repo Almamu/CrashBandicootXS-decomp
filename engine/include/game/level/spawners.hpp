@@ -3,7 +3,7 @@
 
 /* The level's spawners as C++ (#664, docs/cplusplus.md, part 9).
  *
- * The entity spawner (EntitySpawner::instance, src/game/level/entity_spawner.cpp): the
+ * The entity spawner (EntitySpawner::instance, engine/src/game/level/entity_spawner.cpp): the
  * table of spawn functions by entity type (gEntitySpawnFuncs), and the
  * methods that spawn the effect parts and the dropped pickups. Their
  * callers all pass EntitySpawner::Get(), the `this` the C called `pool` or

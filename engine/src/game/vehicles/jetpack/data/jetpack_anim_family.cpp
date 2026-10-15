@@ -12,14 +12,14 @@ extern "C" {
  * UpdateYeti actor, then the data of actor categories 3-6 (the family
  * whose frames are the gJetpackSpriteSheet sheet): their two OBJ
  * palettes, the 47-record animation table gCategoryFamily1AnimTable
- * (include/engine/actor/actor_anim.h) and its keyframe (table_A) and frame (table_B)
- * arrays. Linked in ROM order between data/data.s sections by
+ * (engine/include/engine/actor/actor_anim.h) and its keyframe (table_A) and frame (table_B)
+ * arrays. Linked in ROM order between games/xs/data/data.s sections by
  * games/xs/ldscript.txt - see docs/data.md, "Category families".
  *
  * Record 0's table_B points at compressed frames of set C
  * (jetpack_rle_sprites.cpp), the others' at frames of the framed sheet
- * graphics/vehicles/jetpack/sprite_sheet/. The table and its arrays are
- * data/levels/anim_tables/jetpack.json, which tools/levels.py generates
+ * games/xs/graphics/vehicles/jetpack/sprite_sheet/. The table and its arrays are
+ * games/xs/data/levels/anim_tables/jetpack.json, which tools/levels.py generates
  * with the offsets the build generates.
  */
 
@@ -29,7 +29,7 @@ extern "C" {
 using Engine::Gfx::JetpackPlayerFrameSet;
 using Game::Vehicles::Polar::Yeti;
 
-/* Yeti::palette (include/game/vehicles/polar/yeti.hpp): the 16-colour gradient
+/* Yeti::palette (engine/include/game/vehicles/polar/yeti.hpp): the 16-colour gradient
  * Yeti::UpdatePalette (yeti_update.cpp) DMAs to OBJ
  * palette 15, or fades towards. */
 const u16 Yeti::palette[16] = {
@@ -98,5 +98,5 @@ extern const u16 gHovercraftCategoryPalette[0x200] = {
 };
 
 /* The keyframes, the frames and the animation table,
- * data/levels/anim_tables/jetpack.json (docs/levels.md, "Animation tables"). */
+ * games/xs/data/levels/anim_tables/jetpack.json (docs/levels.md, "Animation tables"). */
 #include "anim_tables/jetpack.inc"

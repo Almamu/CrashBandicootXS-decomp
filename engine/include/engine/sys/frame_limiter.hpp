@@ -1,7 +1,7 @@
 #ifndef GUARD_FRAME_LIMITER_HPP
 #define GUARD_FRAME_LIMITER_HPP
 
-/* The VBlank wait and its frame limit (src/engine/sys/irq.cpp, before
+/* The VBlank wait and its frame limit (engine/src/engine/sys/irq.cpp, before
  * VBlankHandler, #915): every frame loop waits for the next VBlank here,
  * and with the limit on the wait stretches to `interval` VBlanks a frame.
  * Nothing in the ROM turns the limit on.

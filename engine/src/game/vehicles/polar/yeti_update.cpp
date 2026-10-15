@@ -37,7 +37,7 @@ using Game::Vehicles::Polar::Yeti;
 
 /* One of two confirmed slots (index 3, dispatched via
  * `stateFuncs[state]`) of the type-0
- * `category_vtable` (`ActorCategory::vtables[0]`, `include/engine/actor/actor_anim.h`)
+ * `category_vtable` (`ActorCategory::vtables[0]`, `engine/include/engine/actor/actor_anim.h`)
  * - `UpdateGameFrame`'s own direct top-level callee for this object, per
  * docs/rom_map.md's "Two new type-0 vtable slots confirmed" section.
  *
@@ -64,7 +64,7 @@ using Game::Vehicles::Polar::Yeti;
  * with the player's `+0x1c`/`0x20`/`0x24` position (all `>>8`) added
  * into all three of `x`/`y`/`z`. The second record is then run through
  * `MemCopy32` - a real, byte-verified `memcpy(box, box, 0xc)`
- * self-copy (`MemCopy32`'s own definition, `src/engine/sys/bios_util.cpp`,
+ * self-copy (`MemCopy32`'s own definition, `engine/src/engine/sys/bios_util.cpp`,
  * confirmed a plain `memcpy`-style `CpuSet` wrapper) - a genuine no-op
  * kept byte-faithful since a shared "copy src into a working buffer,
  * then test" helper is being called here with a buffer that already

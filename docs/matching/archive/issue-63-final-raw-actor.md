@@ -42,7 +42,7 @@ BLDCNT/BLDALPHA mirror re-applied every frame to drive a flicker/pulse
 effect, and a hookup to the shared text icon manager
 (`gSmallFont`) and tile cache (`gPaletteCache`).
 
-## `InitContinuePrompt` (`src/menus/continue_prompt_init.c`) - matched, real C
+## `InitContinuePrompt` (`engine/src/menus/continue_prompt_init.c`) - matched, real C
 
 The constructor half: allocates and initializes the three BG scratch
 buffers (`OperatorNew`/`InitBgSetup`), loads their graphics packages,
@@ -117,13 +117,13 @@ this one function, so it was deleted outright, with its `ldscript.txt`
 line dropped (the still-matched `src/menus/continue_prompt_init.o` now
 supplies the real bytes at that link position on its own).
 
-## `InitContinuePromptGraphics` (`src/game/ui/continue_prompt.c`) - parked, NON_MATCHING
+## `InitContinuePromptGraphics` (`engine/src/game/ui/continue_prompt.c`) - parked, NON_MATCHING
 
 The other setup half, called from `InitContinuePrompt`: flushes/double-flushes
 the shared VRAM upload cursor (`gObjVramCursor`, `struct
 vram_upload_cursor`), hooks `self->icons` up to the global text icon
 manager (`gSmallFont`, `struct bitmap_font` - already fully
-described in `include/engine/text/bitmap_font.h`), fires its 7th (index 6) OAM
+described in `engine/include/engine/text/bitmap_font.h`), fires its 7th (index 6) OAM
 trampoline slot via `_call_via_r1` (the same `icon_slot` shape
 `CollideWumpa`/`wumpa.c` already established), clears
 `icons->field_118` and re-derives the cursor's limit from
@@ -171,7 +171,7 @@ otherwise. Parked (`NON_MATCHING`); raw bytes live in
 `asm/code_3_2_20_28568_c99c_31784_33ef4_3487c.s` under the same
 `.if NON_MATCHING == 0` guard pattern.
 
-## `ContinuePromptLoop` (`src/game/ui/continue_prompt.c`) - NAKED, parked
+## `ContinuePromptLoop` (`engine/src/game/ui/continue_prompt.c`) - NAKED, parked
 
 The fade overlay's per-frame driver (caller not yet identified in this
 pass - a per-frame "run this overlay" hook somewhere in `game_loop`,
@@ -185,7 +185,7 @@ gated on `self+0x20`'s one-shot flag already being set) or R alone (bit
 7, gated on it being clear) plays a "step" cue
 (`PlaySfx(..., 0x46, 0x100)`) and flips that flag - the same
 `gKeys`/`PlaySfx` input-dispatch shape already established
-in `src/game/ui/language_select.c`'s `LanguageSelectInput`. Every two inner
+in `engine/src/game/ui/language_select.c`'s `LanguageSelectInput`. Every two inner
 iterations, a 0-15 ping-pong counter (the low 5 bits of `self+0x12`,
 which is the same byte as `self->blend.b.bldalphaLo`'s partner within
 the `dispcnt`/`blend` layout above) gets folded back into `self+0x10`'s

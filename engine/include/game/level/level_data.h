@@ -8,14 +8,14 @@
 #include "constants/entity_params.h"
 
 /*
- * The rooms' level data (docs/levels.md), as src/.../data/level_rooms_*.c
+ * The rooms' level data (docs/levels.md), as engine/src/.../data/level_rooms_*.c
  * define it. tools/levels.py generates those definitions from the
- * editable sources in data/levels/. The code reads the same records
+ * editable sources in games/xs/data/levels/. The code reads the same records
  * through its own local views, named on each struct below.
  */
 
 /* One layer (BG0-3 or the collision layer): the BG layers' and their
- * streamers' source (include/game/level/bg_layer.hpp), and the raw `source` of the
+ * streamers' source (engine/include/game/level/bg_layer.hpp), and the raw `source` of the
  * terrain cache (tile_cache.cpp/tile_cache_cell.cpp). */
 struct level_layer_desc {
     const u16 *chunkGrid; // 0x00 - gridWidth x gridHeight chunk ids, row-major
@@ -177,7 +177,7 @@ struct level_desc {
 };
 
 /*
- * One room record of the level table (src/game/level/data/level_table.cpp):
+ * One room record of the level table (engine/src/game/level/data/level_table.cpp):
  * the record RunRoom hands to LoadRoom, and the current room
  * (`LevelProgress::cat`, `LevelState::room.cat`). It merges level_layers.cpp's
  * `struct level_load_args` (batch 8b), level_query.cpp's `MedalListItem`

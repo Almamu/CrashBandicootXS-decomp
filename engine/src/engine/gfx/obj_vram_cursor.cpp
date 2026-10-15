@@ -1,5 +1,5 @@
 /* The OBJ VRAM upload cursor (ObjVramCursor, gObjVramCursor;
- * include/game/entities/sprite_obj.hpp). Split from gfx/graphics.cpp (#767), same flags
+ * engine/include/game/entities/sprite_obj.hpp). Split from gfx/graphics.cpp (#767), same flags
  * (old_agbcc). */
 
 #include "engine/sys/display.hpp"

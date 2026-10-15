@@ -1,4 +1,4 @@
-/* The sprite box (ScaledSprite; include/engine/gfx/graphics_package.hpp): the fitter,
+/* The sprite box (ScaledSprite; engine/include/engine/gfx/graphics_package.hpp): the fitter,
  * its OAM writer and the template accessors. Split from
  * gfx/graphics_package.cpp (#767), same flags (old_agbcc). */
 
@@ -24,7 +24,7 @@ using Engine::Gfx::ScaledSprite;
  * and an area-derived tile number into the OAM template, and stores the
  * Q8 scale factors plus the affine mode (3 shrunk, 1 enlarged, 0 1:1). */
 /* UNUSED - no caller anywhere in the ROM (no Thumb `bl` to it and no
- * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
+ * pointer to it in baserom.gba, nor any reference in asm/ or engine/src/). */
 void ScaledSprite::Fit(s32 width, s32 height)
 {
     const s32 *widths;
@@ -62,7 +62,7 @@ void ScaledSprite::Fit(s32 width, s32 height)
  * affine matrix holding the scale factors when affine, and queues the
  * entry into the shadow OAM buffer. */
 /* UNUSED - no caller anywhere in the ROM (no Thumb `bl` to it and no
- * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
+ * pointer to it in baserom.gba, nor any reference in asm/ or engine/src/). */
 void ScaledSprite::Draw()
 {
     OamBuffer *buf;

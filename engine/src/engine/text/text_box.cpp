@@ -2,13 +2,13 @@
 
 using Engine::Text::Font;
 
-/* Sits right after LoadBackgroundTileAndPalette (ROM 0x080011C0, in src/engine/gfx/asset.cpp)
+/* Sits right after LoadBackgroundTileAndPalette (ROM 0x080011C0, in engine/src/engine/gfx/asset.cpp)
  * and before whatever's still raw in asm/code_3_1_7.s. */
 
 /* Returns the length of the next "word" starting at `s`: the number of
  * characters up to and including the first space, or up to (but not
  * including) the NUL terminator if no space is found first. Used by
- * DrawWrappedText (src/engine/text/wrapped_text.cpp) to walk text one
+ * DrawWrappedText (engine/src/engine/text/wrapped_text.cpp) to walk text one
  * token at a time. */
 s32 GetWordLength(const u8 *s)
 {
@@ -38,11 +38,11 @@ done:
     return len;
 }
 
-/* Thin wrapper around DrawWrappedText (src/engine/text/wrapped_text.cpp):
+/* Thin wrapper around DrawWrappedText (engine/src/engine/text/wrapped_text.cpp):
  * sets `self`'s margin to `box->x`, computes a line-count limit as
  * `box->h / self->lineHeight` (Font::HeightToLines), then
  * forwards to DrawWrappedText with that limit and returns its result
- * (unused by the one call site matched so far, in `src/game/ui/power_dialog_draw.cpp`'s
+ * (unused by the one call site matched so far, in `engine/src/game/ui/power_dialog_draw.cpp`'s
  * still-parked `DrawPowerDialog`, but the ROM does actually propagate it -
  * confirmed by the epilogue needing r1, not r0, to restore the return
  * address, since r0 holds the forwarded value at that point). */

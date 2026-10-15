@@ -34,11 +34,11 @@ using Game::Ui::CutscenePlayer;
  * docs/matching/archive/gap-22354-game-context.md.
  *
  * - DestroyLevelState (UNUSED): LevelState's destructor
- *   (include/game/level/level_state.hpp), the counterpart of its constructor
+ *   (engine/include/game/level/level_state.hpp), the counterpart of its constructor
  *   (InitLevelState) - frees every subsystem singleton that constructor
  *   built and clears the context pointer `instance` (gLevelStateSingleton).
  * - PlayCutscene: plays cutscene `idx`, a CUTSCENE_* id (constants/cutscenes.h,
- *   from data/cutscenes.json; include/game/ui/cutscene.hpp): blanks the
+ *   from games/xs/data/cutscenes.json; engine/include/game/ui/cutscene.hpp): blanks the
  *   palette, resets the BG2 affine transform, then runs a stack-allocated
  *   cutscene player (InitCutscenePlayer/RunCutscenePlayer) over the
  *   slides gCutscenes[idx] and the current language's pages until it
@@ -48,7 +48,7 @@ using Game::Ui::CutscenePlayer;
  * virtual calls were spelled out as calls and slot reads); built with the
  * current agbcp, as the C was with agbcc. */
 
-/* UNUSED - no caller anywhere in the ROM (checked every asm/ and src/
+/* UNUSED - no caller anywhere in the ROM (checked every asm/ and engine/src/
  * file for the symbol, every Thumb `bl` in baserom.gba for its address,
  * and every word in baserom.gba for 0x08022355). Matched anyway.
  *

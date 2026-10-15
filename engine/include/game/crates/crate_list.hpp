@@ -4,7 +4,7 @@
 /* The crate list as C++ (#664, docs/cplusplus.md, part 7f): `gCrateList`,
  * the crates of the room filed in a grid of 256-pixel columns.
  *
- *   CrateList  src/game/crates/crate_list*.cpp
+ *   CrateList  engine/src/game/crates/crate_list*.cpp
  *
  * The classes have no C view (crates.h's `struct pool_init_node`, a
  * codegen view of the nodes, is CrateGridNodeInit below since #754).
@@ -116,7 +116,7 @@ public:
     CrateGridLink *links;      // 0x810
     CrateGridLink *freeHead;   // 0x814
 
-    CrateList(s32 capacity); // InitCrateList (src/game/crates/crate_list_update.cpp)
+    CrateList(s32 capacity); // InitCrateList (engine/src/game/crates/crate_list_update.cpp)
     ~CrateList();            // DestroyCrateList
     void Reset();            // ResetCrateList
     void Update();           // UpdateCrateList

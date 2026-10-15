@@ -19,7 +19,7 @@ using Game::Entities::MovingSprite;
 using Game::Level::EntitySpawner;
 
 /* GitHub issue #9/#10: EnemyCtrl's attack updaters and state setter
- * (include/game/enemies/enemy_ctrl.hpp), from the 0x0800B8DC-0x0800D040 cluster
+ * (engine/include/game/enemies/enemy_ctrl.hpp), from the 0x0800B8DC-0x0800D040 cluster
  * (docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md). The whole
  * file is old_agbcc's code (issue #10 NAKED retry,
  * docs/matching/archive/issue-10-naked-retry.md).
@@ -323,7 +323,7 @@ void EnemyCtrl::SetRangeX(s32 radius)
     rangeX[1] = target->x + INT_TO_Q8(radius);
 }
 
-/* The enemy controller's small methods (include/game/enemies/enemy_ctrl.hpp), ROM
+/* The enemy controller's small methods (engine/include/game/enemies/enemy_ctrl.hpp), ROM
  * 0x0800C8AC-0x0800CACC: EnemyCtrl's mode triggers, oscillators,
  * constructor, destructor and setters. The periodic spawner and the
  * knocked controller follow in periodic_spawner.cpp and
@@ -492,7 +492,7 @@ void EnemyCtrl::SetShotPeriod(s32 newPeriod, s32 newPhase)
 /* The attack cycle (UpdateAttackCycle, SetState) - the same stores as
  * spawn_enemies.cpp's inline SetAttackCycle, which the enemy spawners
  * use instead.
- * UNUSED - no caller anywhere in the ROM (checked every src/ and lib/ .c
+ * UNUSED - no caller anywhere in the ROM (checked every engine/src/ and lib/ .c
  * file and every word-aligned Thumb pointer in baserom.gba). */
 void EnemyCtrl::SetAttackTiming(s32 newIdleTime, s32 newAttackTime, s32 newCycleOffset)
 {
@@ -518,7 +518,7 @@ void EnemyCtrl::SetModeTable(const s32 *newAnims)
 }
 
 /* The enemy kind; the level spawners store `kind` directly.
- * UNUSED - no caller anywhere in the ROM (checked every src/ and lib/ .c
+ * UNUSED - no caller anywhere in the ROM (checked every engine/src/ and lib/ .c
  * file and every word-aligned Thumb pointer in baserom.gba). */
 void EnemyCtrl::SetKind(s32 newKind)
 {

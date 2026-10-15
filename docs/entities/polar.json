@@ -1,7 +1,7 @@
 {
   "sheet_rom_address": "0x080B2120",
   "decompressed_size": 213064,
-  "graphics_dir": "graphics/vehicles/polar/sprite_sheet",
+  "graphics_dir": "games/xs/graphics/vehicles/polar/sprite_sheet",
   "descriptor_rom_address": "0x08175558",
   "descriptor_stride": 52,
   "categories": [
@@ -628,82 +628,82 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/basic_crate/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/basic_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/basic_crate/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/basic_crate/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/basic_crate/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/basic_crate/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/basic_crate/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/basic_crate/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/basic_crate/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/basic_crate/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/basic_crate/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/basic_crate/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/basic_crate/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/basic_crate/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/basic_crate/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/basic_crate/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/basic_crate/08.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/basic_crate/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/crate_shards/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/crate_shards/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/crate_shards/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/crate_shards/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/crate_shards/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/crate_shards/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/crate_shards/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/crate_shards/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/crate_shards/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/crate_shards/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/crate_shards/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -777,22 +777,22 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/riderless_polar/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/riderless_polar/00.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/riderless_polar/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/riderless_polar/01.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/riderless_polar/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/riderless_polar/02.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "9": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/riderless_polar/09.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/riderless_polar/09.png",
           "w_tiles": 8,
           "h_tiles": 8
         }
@@ -920,32 +920,32 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/checkpoint_crate/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/checkpoint_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/checkpoint_crate/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/checkpoint_crate/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/checkpoint_crate/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/checkpoint_crate/03.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/checkpoint_crate/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/checkpoint_crate/04.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "13": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/checkpoint_crate/13.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/checkpoint_crate/13.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "14": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/crate_shards/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -1982,97 +1982,97 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/nitro_crate/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/nitro_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/nitro_crate/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/nitro_crate/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/nitro_crate/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/nitro_crate/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/nitro_crate/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/nitro_crate/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/nitro_crate/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/nitro_crate/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/nitro_crate/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/nitro_crate/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/nitro_crate/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/nitro_crate/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/nitro_crate/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/nitro_crate/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/nitro_crate/08.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/nitro_crate/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/nitro_crate/09.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/nitro_crate/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/nitro_crate/10.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/nitro_crate/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/nitro_crate/11.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/nitro_crate/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/nitro_crate/12.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/nitro_crate/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/nitro_crate/13.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/nitro_crate/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/nitro_crate/14.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/nitro_crate/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/nitro_crate/15.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/nitro_crate/15.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/nitro_crate/16.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/nitro_crate/16.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/nitro_crate/17.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/nitro_crate/17.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/nitro_crate_burst/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/nitro_crate_burst/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -2866,97 +2866,97 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/08.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/09.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/10.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/11.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/12.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/13.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/14.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/15.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/15.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/16.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/16.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/17.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/17.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_shards/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -3750,97 +3750,97 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_2/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_2/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_2/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_2/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_2/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_2/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_2/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_2/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_2/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_2/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_2/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_2/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_2/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_2/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_2/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_2/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_2/08.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_2/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_2/09.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_2/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_2/10.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_2/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_2/11.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_2/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_2/12.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_2/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_2/13.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_2/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_2/14.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_2/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_2/15.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_2/15.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_2/16.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_2/16.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_2/17.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_2/17.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_shards/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -4634,97 +4634,97 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_3/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_3/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_3/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_3/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_3/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_3/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_3/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_3/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_3/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_3/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_3/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_3/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_3/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_3/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_3/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_3/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_3/08.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_3/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_3/09.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_3/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_3/10.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_3/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_3/11.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_3/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_3/12.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_3/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_3/13.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_3/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_3/14.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_3/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_3/15.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_3/15.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_3/16.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_3/16.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_3/17.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_3/17.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_shards/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -5518,97 +5518,97 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/life_crate/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/life_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/life_crate/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/life_crate/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/life_crate/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/life_crate/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/life_crate/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/life_crate/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/life_crate/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/life_crate/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/life_crate/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/life_crate/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/life_crate/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/life_crate/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/life_crate/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/life_crate/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/life_crate/08.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/life_crate/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/life_crate/09.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/life_crate/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/life_crate/10.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/life_crate/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/life_crate/11.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/life_crate/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/life_crate/12.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/life_crate/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/life_crate/13.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/life_crate/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/life_crate/14.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/life_crate/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/life_crate/15.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/life_crate/15.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/life_crate/16.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/life_crate/16.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/life_crate/17.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/life_crate/17.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/crate_shards/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -6402,97 +6402,97 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/aku_aku_crate/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/aku_aku_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/aku_aku_crate/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/aku_aku_crate/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/aku_aku_crate/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/aku_aku_crate/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/aku_aku_crate/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/aku_aku_crate/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/aku_aku_crate/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/aku_aku_crate/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/aku_aku_crate/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/aku_aku_crate/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/aku_aku_crate/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/aku_aku_crate/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/aku_aku_crate/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/aku_aku_crate/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/aku_aku_crate/08.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/aku_aku_crate/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/aku_aku_crate/09.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/aku_aku_crate/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/aku_aku_crate/10.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/aku_aku_crate/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/aku_aku_crate/11.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/aku_aku_crate/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/aku_aku_crate/12.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/aku_aku_crate/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/aku_aku_crate/13.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/aku_aku_crate/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/aku_aku_crate/14.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/aku_aku_crate/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/aku_aku_crate/15.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/aku_aku_crate/15.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/aku_aku_crate/16.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/aku_aku_crate/16.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/aku_aku_crate/17.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/aku_aku_crate/17.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/crate_shards/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -6872,82 +6872,82 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/basic_crate/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/basic_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/basic_crate/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/basic_crate/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/basic_crate/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/basic_crate/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/basic_crate/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/basic_crate/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/basic_crate/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/basic_crate/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/basic_crate/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/basic_crate/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/basic_crate/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/basic_crate/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/basic_crate/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/basic_crate/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/basic_crate/08.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/basic_crate/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/crate_shards/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/crate_shards/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/crate_shards/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/crate_shards/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/crate_shards/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/crate_shards/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/crate_shards/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/crate_shards/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/crate_shards/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/crate_shards/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/crate_shards/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -7903,72 +7903,72 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/wumpa/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/wumpa/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/wumpa/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/wumpa/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/wumpa/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/wumpa/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/wumpa/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/wumpa/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/wumpa/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/wumpa/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/wumpa/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/wumpa/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/wumpa/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/wumpa/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/wumpa/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/wumpa/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/wumpa/08.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/wumpa/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/wumpa/09.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/wumpa/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/wumpa/10.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/wumpa/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/wumpa/11.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/wumpa/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/wumpa/12.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/wumpa/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/wumpa/13.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/wumpa/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -8051,17 +8051,17 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/boost_pad/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/boost_pad/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/boost_pad/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/boost_pad/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/boost_pad/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/boost_pad/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -8360,12 +8360,12 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/obstacle/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/obstacle/00.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -8664,12 +8664,12 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/obstacle/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/obstacle/00.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -8752,17 +8752,17 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/boost_pad/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/boost_pad/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/boost_pad/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/boost_pad/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/boost_pad/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/boost_pad/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -10267,67 +10267,67 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/01.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/02.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/04.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "5": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/05.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/06.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "7": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/07.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "8": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/08.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/08.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/09.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/09.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/10.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/10.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/11.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/11.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -11832,67 +11832,67 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/01.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/02.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/04.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "5": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/05.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/06.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "7": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/07.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "8": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/08.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/08.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/09.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/09.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/10.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/10.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/11.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/11.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -13397,67 +13397,67 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/01.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/02.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/04.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "5": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/05.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/06.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "7": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/07.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "8": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/08.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/08.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/09.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/09.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/10.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/10.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/11.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/11.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -14962,67 +14962,67 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/01.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/02.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/04.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "5": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/05.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/06.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "7": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/07.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "8": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/08.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/08.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/09.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/09.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/10.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/10.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/11.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/11.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -16527,67 +16527,67 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/01.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/02.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/04.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "5": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/05.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/06.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "7": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/07.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "8": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/08.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/08.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/09.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/09.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/10.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/10.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/11.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/11.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -18092,67 +18092,67 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/01.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/02.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/04.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "5": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/05.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/06.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "7": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/07.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "8": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/08.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/08.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/09.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/09.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/10.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/10.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/icicle/11.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/icicle/11.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -19954,97 +19954,97 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/launcher/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/launcher/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/launcher/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/launcher/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/launcher/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/launcher/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/launcher/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/launcher/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/launcher/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/launcher/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/launcher/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/launcher/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/launcher/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/launcher/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/launcher/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/launcher/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/launcher/08.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/launcher/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/launcher/09.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/launcher/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/launcher/10.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/launcher/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/launcher/11.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/launcher/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/launcher/12.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/launcher/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/launcher/13.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/launcher/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/launcher/14.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/launcher/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/launcher/15.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/launcher/15.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/launcher/16.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/launcher/16.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/launcher/17.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/launcher/17.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/launcher/18.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/launcher/18.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -21711,97 +21711,97 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/electric_fence/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/electric_fence/00.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/electric_fence/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/electric_fence/01.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/electric_fence/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/electric_fence/02.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/electric_fence/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/electric_fence/03.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/electric_fence/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/electric_fence/04.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "5": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/electric_fence/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/electric_fence/05.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/electric_fence/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/electric_fence/06.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "7": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/electric_fence/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/electric_fence/07.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "8": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/electric_fence_wreck/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/electric_fence_wreck/00.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "9": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/electric_fence_wreck/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/electric_fence_wreck/01.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "10": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/electric_fence_wreck/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/electric_fence_wreck/02.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "11": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/electric_fence_wreck/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/electric_fence_wreck/03.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "12": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/electric_fence_wreck/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/electric_fence_wreck/04.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "13": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/electric_fence_wreck/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/electric_fence_wreck/05.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "14": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/electric_fence_wreck/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/electric_fence_wreck/06.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "15": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/electric_fence_wreck/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/electric_fence_wreck/07.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "16": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/electric_fence_wreck/08.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/electric_fence_wreck/08.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "17": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/electric_fence_wreck/09.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/electric_fence_wreck/09.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "18": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/electric_fence_wreck/10.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/electric_fence_wreck/10.png",
           "w_tiles": 8,
           "h_tiles": 8
         }
@@ -21992,47 +21992,47 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/penguin/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/penguin/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/penguin/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/penguin/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/penguin/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/penguin/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/penguin/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/penguin/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/penguin/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/penguin/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/penguin/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/penguin/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/penguin/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/penguin/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/penguin/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/penguin/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/penguin/08.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/penguin/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -22124,12 +22124,12 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/goal/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/goal/00.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -22221,12 +22221,12 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/goal/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/goal/00.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -22282,17 +22282,17 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/aku_aku/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/aku_aku/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/aku_aku/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/aku_aku/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/aku_aku_feathers/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/aku_aku_feathers/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -23086,97 +23086,97 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/08.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/09.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/10.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/11.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/12.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/13.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/14.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/15.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/15.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/16.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/16.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/17.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/17.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/crate_shards/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -23970,97 +23970,97 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/08.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/09.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/10.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/11.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/12.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/13.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/14.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/15.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/15.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/16.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/16.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/17.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/17.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/crate_shards/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -24854,97 +24854,97 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/08.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/09.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/10.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/11.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/12.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/13.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/14.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/15.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/15.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/16.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/16.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/17.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/17.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/crate_shards/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -25738,97 +25738,97 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/08.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/09.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/10.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/11.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/12.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/13.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/14.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/15.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/15.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/16.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/16.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/17.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/17.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/crate_shards/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -26634,97 +26634,97 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/02.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/03.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/05.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/06.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/07.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/08.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/09.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/10.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/11.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/12.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/13.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/14.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/15.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/15.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/16.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/16.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/question_crate/17.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/question_crate/17.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/crate_shards/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -26807,17 +26807,17 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/boost_pad/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/boost_pad/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/boost_pad/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/boost_pad/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/boost_pad/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/boost_pad/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -26900,17 +26900,17 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/boost_pad/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/boost_pad/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/boost_pad/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/boost_pad/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/boost_pad/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/boost_pad/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -26993,17 +26993,17 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/boost_pad/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/boost_pad/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/boost_pad/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/boost_pad/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/boost_pad/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/boost_pad/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -27086,17 +27086,17 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/boost_pad/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/boost_pad/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/boost_pad/01.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/boost_pad/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/boost_pad/04.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/boost_pad/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -27125,7 +27125,7 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/vehicles/polar/sprite_sheet/checkpoint_text/00.png",
+          "asset_file": "games/xs/graphics/vehicles/polar/sprite_sheet/checkpoint_text/00.png",
           "w_tiles": 8,
           "h_tiles": 4
         }

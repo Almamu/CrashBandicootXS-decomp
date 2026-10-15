@@ -32,7 +32,7 @@ the game to build it.
   [docs/progress_report.md](./docs/progress_report.md)). Every ROM table is
   a typed `const` array and every asset is rebuilt from a source file.
 - **The cleanup is complete.** The game code is real g++ 2.9 C++
-  (`src/**/*.cpp`, [docs/cplusplus.md](./docs/cplusplus.md)) with its
+  (`engine/src/**/*.cpp`, [docs/cplusplus.md](./docs/cplusplus.md)) with its
   classes and namespaces; pointer arithmetic and hardware addresses are
   structs, fields and `REG_*` macros; every function and global is
   declared once, in a header; and the text is gettext files. Functions
@@ -49,8 +49,8 @@ the game to build it.
   wrappers, GAX2's ARM DSP routines, and `itoa_arm` (`asm/itoa_arm.s`,
   [#662](https://github.com/Almamu/CrashBandicootXS-decomp/issues/662): another compiler's output, most likely armcc's; it is counted as a
   function).
-- **The ARM functions of the IWRAM image** (`src/engine/gfx/sprite_arm.cpp`,
-  `src/engine/util/string_arm.cpp`) are built with a locally patched ARM
+- **The ARM functions of the IWRAM image** (`engine/src/engine/gfx/sprite_arm.cpp`,
+  `engine/src/engine/util/string_arm.cpp`) are built with a locally patched ARM
   compiler, `agbcp_arm_patched` (see INSTALL.md): the ROM's ARM compiler
   was a later build whose code stock agbcc_arm can't produce ([#553](https://github.com/Almamu/CrashBandicootXS-decomp/issues/553),
   [docs/matching/iwram-image.md](./docs/matching/iwram-image.md)).
@@ -135,13 +135,13 @@ and the sample mod.
   a hash of the level data, so a save made with other levels is reset
   instead of misread.
 - **Graphics** ([docs/graphics.md](./docs/graphics.md)): indexed PNGs and
-  JASC palettes under `graphics/`, sprite banks and new frames.
+  JASC palettes under `games/xs/graphics/`, sprite banks and new frames.
 - **Text and translations** ([docs/text.md](./docs/text.md)): every string
-  and the credits, as gettext files in `text/` (the template
+  and the credits, as gettext files in `games/xs/text/` (the template
   `crashxs.pot` and a `.po` per translation). `make text-check` runs the
   translation checks.
 - **Audio** ([docs/audio.md](./docs/audio.md)): XM songs and WAV samples
-  under `sound/`, new songs on the ROM's instruments, and which song plays
+  under `games/xs/sound/`, new songs on the ROM's instruments, and which song plays
   where.
 - **Cutscenes** ([docs/data.md, "Cutscenes"](./docs/data.md#cutscenes)):
   slides, pictures, timing, music and text.
@@ -165,12 +165,14 @@ The full list is in [docs/modding.md, "What a mod can't do yet"](./docs/modding.
 
 ## How the code is organised
 
-`src/` follows the code's namespaces: `Engine` in `src/engine/` (`sys/`,
+`engine/src/` follows the code's namespaces: `Engine` in `engine/src/engine/` (`sys/`,
 `gfx/`, `actor/`, `audio/`, `save/`, `link/`, `text/`, `util/`) and
-`Game` in `src/game/` (`crash/`, `entities/`, `enemies/`, `bosses/`,
-`vehicles/`, `crates/`, `objects/`, `level/`, `ui/`), with `include/`
+`Game` in `engine/src/game/` (`crash/`, `entities/`, `enemies/`, `bosses/`,
+`vehicles/`, `crates/`, `objects/`, `level/`, `ui/`), with `engine/include/`
 mirroring it. Each area's ROM tables are in its `data/` folder. No file
-is named after a ROM address. See
+is named after a ROM address. XS's own files (its levels, cutscenes and
+credits in `games/xs/data/`, its `graphics/`, `sound/` and `text/`, the
+linker script) are under `games/xs/`, N-Tranced's under `games/n2/`. See
 [CONTRIBUTING.md, "Source layout"](./CONTRIBUTING.md#source-layout) and
 [docs/file_layout.md](./docs/file_layout.md).
 
@@ -184,14 +186,14 @@ supplies its own platform there.
 
 `games/xs/expected/` holds frozen copies of the original disassembly, the target
 the progress report diffs the build against. Never edit them; see
-[games/xs/expected/README.md](./expected/README.md).
+[games/xs/expected/README.md](./games/xs/expected/README.md).
 
 ## Contributing
 
 Read [CONTRIBUTING.md](./CONTRIBUTING.md) and
 [docs/workflow.md](./docs/workflow.md) before changing code. Every change
 has to keep the ROM byte-identical with the original data, and only a
-full clean `make compare` proves it. A change under `text/` also needs
+full clean `make compare` proves it. A change under `games/xs/text/` also needs
 `make text-check`, and a change to what a doc says updates that doc in
 the same PR.
 
@@ -255,7 +257,7 @@ know it going in.
 
 **Matching history**
 
-- [docs/matching_techniques.md](./docs/matching_techniques.md): the matching techniques (compilers and flags, source shapes, register pins, the `include/match.h` idioms)
+- [docs/matching_techniques.md](./docs/matching_techniques.md): the matching techniques (compilers and flags, source shapes, register pins, the `engine/include/match.h` idioms)
 - [docs/matching/](./docs/matching/): the matching references (the IWRAM image, per-file flags) and the [archive](./docs/matching/archive/)
 - [docs/matching.md](./docs/matching.md): the frozen per-pass matching log
 - [docs/casts.md](./docs/casts.md), [docs/simplify.md](./docs/simplify.md): the cleanup of casts and of matching-only source shapes
@@ -271,8 +273,8 @@ the [GNU General Public License v3.0](./LICENSE).
 
 That covers this project's own work. It doesn't grant any rights to
 Crash Bandicoot XS itself: its characters, art, music and text, including
-the assets extracted into this repository (`graphics/`, `sound/`, `text/`,
-`data/levels/`), belong to their owners. The libraries in [`lib/`](./lib/) (Shin'en's GAX2 sound engine,
+the assets extracted into this repository (`games/xs/graphics/`, `games/xs/sound/`, `games/xs/text/`,
+`games/xs/data/levels/`), belong to their owners. The libraries in [`lib/`](./lib/) (Shin'en's GAX2 sound engine,
 Nintendo's AgbEeprom library, libgcc) are reconstructions of third-party
 code and keep their authors' terms; see [docs/libraries.md](./docs/libraries.md).
 

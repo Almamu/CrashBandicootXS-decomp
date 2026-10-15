@@ -8,7 +8,7 @@ extern "C" {
 
 using Game::Ui::Hud;
 
-/* Hud's (#664 cleanup, include/game/ui/hud.hpp) slide-in timers for the lives,
+/* Hud's (#664 cleanup, engine/include/game/ui/hud.hpp) slide-in timers for the lives,
  * wumpa and crate counters, the crate total's setters and the
  * destructor. Each counter has a
  * {state, timer} pair: state 0 idle, 1 counting up to a threshold then
@@ -188,7 +188,7 @@ void Hud::IncCrateTotal()
 
 /* Sits right after hud_slide.cpp's blink-timer trio (ROM 0x08028568) and
  * before FontDrawGlyph/InitSmallFont/InitLargeFont/FontPutChar
- * (src/engine/text/font_glyph.cpp) - see GitHub issue #46. */
+ * (engine/src/engine/text/font_glyph.cpp) - see GitHub issue #46. */
 
 /* DestroyHud: deletes the parts (each one's virtual destructor, slot 10
  * of gHudPartVtable, from the last to the first, then the array with its

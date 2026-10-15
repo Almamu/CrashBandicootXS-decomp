@@ -10,7 +10,7 @@ extern "C" {
 using Game::Crates::CrateList;
 using Game::Level::BgLayer;
 
-/* CrateList::Draw (#664, part 7f; include/game/crates/crate_list.hpp). */
+/* CrateList::Draw (#664, part 7f; engine/include/game/crates/crate_list.hpp). */
 
 /* Draws the listed sprites on screen (the 240x160 GBA screen, in Q8, at
  * `gLevelLayers->layer0`'s scroll position): those in the camera's column

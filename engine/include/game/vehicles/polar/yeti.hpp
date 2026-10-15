@@ -1,7 +1,7 @@
 #ifndef GUARD_YETI_HPP
 #define GUARD_YETI_HPP
 
-/* The yeti that chases the polar player (src/vehicle/polar/yeti*.cpp,
+/* The yeti that chases the polar player (engine/src/vehicle/polar/yeti*.cpp,
  * #772): an all-static class. The ROM keeps its state in separate
  * globals (IWRAM 0x030014BC-0x030014D7) and loads each one's own address,
  * even for two adjacent bytes in one function; one object's fields would
@@ -11,9 +11,9 @@
  *
  * cxx_symbols.txt maps every member onto its C name: the IWRAM variables
  * get their addresses from games/xs/sym_iwram.txt under those names, and the ROM
- * tables are defined in src/.../data/*.cpp as the members (`const
+ * tables are defined in engine/src/.../data/*.cpp as the members (`const
  * struct YetiCharge Yeti::chargeParams[6] = ...`). The actor category table
- * (src/engine/actor/data/actor_categories.cpp) points at Create, Update,
+ * (engine/src/engine/actor/data/actor_categories.cpp) points at Create, Update,
  * UpdateBg2, Destroy and LoadGraphics.
  *
  * Yeti is in the namespace Game::Vehicles::Polar (#1033, vehicle.hpp):
@@ -101,7 +101,7 @@ private:
     static s32 state;                      // gYetiState - indexes stateFuncs
     static s32 paramsIndex;                // gYetiParamsIndex - indexes chargeParams
 
-    /* ROM (src/.../data) */
+    /* ROM (engine/src/.../data) */
     static const StateFunc stateFuncs[4];               // gYetiStateFuncs
     static const struct YetiCharge chargeParams[6];     // gYetiChargeParams
     static const struct anim_box box;                   // gYetiBox - IsTouching's

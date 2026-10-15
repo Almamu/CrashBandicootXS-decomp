@@ -9,7 +9,7 @@ extern "C" {
 using Game::Enemies::EnemyCtrl;
 using Game::Entities::MovingSprite;
 
-/* EnemyCtrl's motion updaters (include/game/enemies/enemy_ctrl.hpp), from the
+/* EnemyCtrl's motion updaters (engine/include/game/enemies/enemy_ctrl.hpp), from the
  * 0x0800B8DC-0x0800D040 cluster
  * (docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md).
  *

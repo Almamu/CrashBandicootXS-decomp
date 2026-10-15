@@ -11,7 +11,7 @@ Neo Cortex stops the target). Each class's Update is one `switch` on
 `state`. Tiny's and Dingodile's Updates switch on a local copy, which is
 where the inventory's `local state (Update, ...)` rows come from.
 
-The names sit next to each class in include/boss_ctrl.hpp. Values no
+The names sit next to each class in engine/include/boss_ctrl.hpp. Values no
 code enters are `_UNK<n>`, except where the case's code says what it does.
 
 ## Dingodile (`DINGODILE_STATE_*`)

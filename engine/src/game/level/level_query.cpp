@@ -31,7 +31,7 @@ using Game::Level::LevelProgress;
  * descriptor's `entities` list, whose `typeCounts` LevelHasEntityType
  * reads. */
 
-/* UNUSED - no caller anywhere in the ROM (checked src/ and asm/): the
+/* UNUSED - no caller anywhere in the ROM (checked engine/src/ and asm/): the
  * destructor (DestroyUnusedLevelObject; g++'s deleting destructor frees
  * `this` when bit 0 of its __in_chrg is set) and the empty constructor
  * (InitUnusedLevelObject, which returns `this` by leaving r0 alone) of a

@@ -37,7 +37,7 @@ struct anim_frame_record {
 };
 
 /* A box in the actors' 16-bit world units: position then size. The
- * anim_table_record's box_14, ActorSelf's `box` and several small src/.../data
+ * anim_table_record's box_14, ActorSelf's `box` and several small engine/src/.../data
  * tables are this. A fixed box is copied into an actor by struct
  * assignment (`box = gJetpackRocketBox`): the ROM's `ldm`/`stm`. */
 struct anim_box {
@@ -48,7 +48,7 @@ COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct anim_box) == 0xC);
 
 /* gCategoryFamily0AnimTable (categories 0-2, 41 slots) and gCategoryFamily1AnimTable
  * (categories 3-6, 47 slots) - one record per animation clip, defined in
- * data/levels/anim_tables/polar.json / jetpack.json (docs/levels.md). Several slots
+ * games/xs/data/levels/anim_tables/polar.json / jetpack.json (docs/levels.md). Several slots
  * share another slot's table_A/table_B arrays (see "duplicate_of_slot"
  * in docs/entities/), and slots 32-34 of the first table are all zero. */
 struct anim_table_record {
@@ -92,7 +92,7 @@ LAYOUT_ASSERT(actor_anim_h, sizeof(struct anim_table_record) == 0x28);
  *     unpacked by the gUnpackRleSpriteFrameFunc IWRAM hook). Used only by record
  *     0 of both animation tables (and the CreateYeti singleton's table):
  *     the frame sets are polar_rle_sprites.cpp / jetpack_rle_sprites.cpp,
- *     built from graphics/vehicles/ (docs/data.md, "Compressed sprite
+ *     built from games/xs/graphics/vehicles/ (docs/data.md, "Compressed sprite
  *     frames").
  *
  *   - "pool_offset": each entry is a byte offset from the start of the
@@ -100,7 +100,7 @@ LAYOUT_ASSERT(actor_anim_h, sizeof(struct anim_table_record) == 0x28);
  *     (gPolarSpriteSheet for categories 0-2, gJetpackSpriteSheet for
  *     3-6) to a frame: a 4-byte {w_tiles, h_tiles, 0x10, 0} header and
  *     the 4bpp tiles (docs/graphics.md has the format). These frames *are*
- *     extracted - see graphics/vehicles/<family>/sprite_sheet/<entity>/NN.png,
+ *     extracted - see games/xs/graphics/vehicles/<family>/sprite_sheet/<entity>/NN.png,
  *     one file per frame.
  *
  * docs/entities/'s "addressing_mode" field records which mode each
@@ -243,17 +243,17 @@ struct category_vtable {
 }; // 0x34
 LAYOUT_ASSERT(actor_anim_h, sizeof(struct category_vtable) == 0x34);
 
-/* Both tables are defined in src/engine/actor/data/actor_categories.cpp (7*0x34 =
+/* Both tables are defined in engine/src/engine/actor/data/actor_categories.cpp (7*0x34 =
  * 0x16C bytes of descriptors, then ActorCategory::vtables). The latter
  * has 3 entries, which is also all of it - there is no 4th/5th/6th/7th
  * vtable to find,
  * see the comment on category_descriptor.type above. What follows it at
  * ActorCategory::vtables+0x9C (ROM 0x08175760) is unrelated: the BG
- * palette-cycle frames of src/engine/actor/data/actor_palette_cycle_frames.cpp. Both are
+ * palette-cycle frames of engine/src/engine/actor/data/actor_palette_cycle_frames.cpp. Both are
  * ActorCategory's static data members (actor_category.hpp). */
 
-/* Defined in src/game/vehicles/polar/data/polar_anim_family.cpp and jetpack_anim_family.cpp,
- * generated from data/levels/anim_tables/ (docs/levels.md, "Animation tables"). */
+/* Defined in engine/src/game/vehicles/polar/data/polar_anim_family.cpp and jetpack_anim_family.cpp,
+ * generated from games/xs/data/levels/anim_tables/ (docs/levels.md, "Animation tables"). */
 extern const struct anim_table_record gCategoryFamily0AnimTable[41]; // 0x081796CC, categories 0-2
 extern const struct anim_table_record gCategoryFamily1AnimTable[47]; // 0x0817B2A4, categories 3-6
 

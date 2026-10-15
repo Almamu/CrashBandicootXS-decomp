@@ -3,10 +3,10 @@
 
 /* The audio context as C++ (docs/cplusplus.md, "The audio context"):
  * class AudioContext, the music and sound-effect front end over GAX2
- * (src/engine/audio/audio.cpp). gAudioContext (globals.h declares it as an
+ * (engine/src/engine/audio/audio.cpp). gAudioContext (globals.h declares it as an
  * `AudioContext *` to C++) is the one instance: LevelState's constructor
- * makes it with `new AudioContext` (src/game/level/spawn_markers.cpp) and its
- * destructor deletes it (src/game/level/level_cutscene.cpp). It has no vtable.
+ * makes it with `new AudioContext` (engine/src/game/level/spawn_markers.cpp) and its
+ * destructor deletes it (engine/src/game/level/level_cutscene.cpp). It has no vtable.
  *
  * The C++ traits the C had: the destructor takes `__in_chrg` and frees
  * on bit 0 (DestroyAudioContext's `if (flags & 1) IwramFree(self)`), the
@@ -38,7 +38,7 @@ extern "C" {
 }
 
 /* One record of the sound-effect trigger table at ROM `0x0816AA6C`
- * (`sound/sfx_table.json`, SFX_COUNT entries, 99 in the ROM) - see
+ * (`games/xs/sound/sfx_table.json`, SFX_COUNT entries, 99 in the ROM) - see
  * docs/audio.md's "Sound effects" section. Indexed by the id
  * `PlaySfx`/`PlayAmbientSfx` take. */
 struct SfxTableEntry {
@@ -54,18 +54,18 @@ struct SfxTableEntry {
 
 extern struct SfxTableEntry gSfxTable[SFX_COUNT];
 
-/* The GAX2 music block (data/data.s, built by tools/gax_audio.py) and
- * the song table pointing into it (src/engine/audio/data/song_table.cpp). */
+/* The GAX2 music block (games/xs/data/data.s, built by tools/gax_audio.py) and
+ * the song table pointing into it (engine/src/engine/audio/data/song_table.cpp). */
 extern const u8 gGaxMusicData[];
 extern const void *const gSongTable[SONG_COUNT];
 
-/* src/engine/sys/iwram_data.cpp */
-/* VBlankHandler (src/engine/sys/irq.cpp) calls GAX_irq while this is set. */
+/* engine/src/engine/sys/iwram_data.cpp */
+/* VBlankHandler (engine/src/engine/sys/irq.cpp) calls GAX_irq while this is set. */
 extern u8 gGaxIrqEnabled;
 /* PlaySfx's two-voice round robin. */
 extern u32 gSfxVoiceToggle;
 
-/* src/engine/audio/audio.cpp: the two free functions, with C linkage so their
+/* engine/src/engine/audio/audio.cpp: the two free functions, with C linkage so their
  * symbols keep the C names (the methods get theirs from
  * cxx_symbols.txt). */
 extern "C" void EnableMusicVCountIrq(void);

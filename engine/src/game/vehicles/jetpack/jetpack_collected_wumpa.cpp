@@ -21,8 +21,8 @@ using Game::Vehicles::Jetpack::JetpackCollectedWumpa;
 using Game::Vehicles::Jetpack::JetpackRing;
 
 /* The jetpack ring's constructor and IsUnshootable and the collected
- * wumpa (#664 part 11h, include/game/vehicles/vehicle.hpp), ROM 0x080326E4-0x08032910,
- * between jetpack_rocket.cpp and src/game/bosses/hovercraft_fireball.cpp. The
+ * wumpa (#664 part 11h, engine/include/game/vehicles/vehicle.hpp), ROM 0x080326E4-0x08032910,
+ * between jetpack_rocket.cpp and engine/src/game/bosses/hovercraft_fireball.cpp. The
  * collected wumpa's destructor is its key method, so
  * gJetpackCollectedWumpaVtable is emitted here. In hovercraft.cpp until
  * #769; built with old_agbcp, as that was. See

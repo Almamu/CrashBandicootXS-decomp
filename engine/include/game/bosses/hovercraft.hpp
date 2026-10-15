@@ -2,20 +2,20 @@
 #define GUARD_HOVERCRAFT_HPP
 
 /* The hovercraft boss (#772, docs/cplusplus.md "The hovercraft as an
- * all-static class"): src/game/bosses/hovercraft.cpp and hovercraft_state.cpp. A class
+ * all-static class"): engine/src/game/bosses/hovercraft.cpp and hovercraft_state.cpp. A class
  * whose members are all `static`: the ROM loads a separate address for
  * each of its variables, so they were separate globals, not one object's
  * fields, and static data members compile exactly like them (and static
  * member functions like plain functions). The data members are only
  * declared: cxx_symbols.txt (block "#772 Hovercraft") maps each mangled
  * name to its C name, whose address is in games/xs/sym_iwram.txt; the functions
- * keep their C names the same way. Its weapons (include/game/bosses/boss_actors.hpp)
+ * keep their C names the same way. Its weapons (engine/include/game/bosses/boss_actors.hpp)
  * read it through the public getters.
  *
  * The ROM tables only it reads are static data members too, defined in
- * their src/.../data/*.cpp files (`const u16 Hovercraft::palette[256] = ...`):
+ * their engine/src/.../data/*.cpp files (`const u16 Hovercraft::palette[256] = ...`):
  * `_Q34Game6Bosses10Hovercraft.palette` is renamed to gHovercraftPalette.
- * The actor category table (src/engine/actor/data/actor_categories.cpp) points at
+ * The actor category table (engine/src/engine/actor/data/actor_categories.cpp) points at
  * Create, Update, UpdateBg2, Destroy and LoadGraphics.
  *
  * It is in the namespace Game::Bosses (#1033, boss_ctrl.hpp), with its
@@ -154,7 +154,7 @@ private:
     }
 
     /* The state functions (gHovercraftStateFuncs,
-     * src/game/bosses/data/hovercraft_state_tables.cpp), a plain function table. */
+     * engine/src/game/bosses/data/hovercraft_state_tables.cpp), a plain function table. */
     static void (*const stateFuncs[6])();
 
     /* IWRAM 0x1590-0x1600, in address order (games/xs/sym_iwram.txt) */
@@ -196,7 +196,7 @@ private:
      * fills them; an integer store may alias its heights[]). */
     static uintptr_t mapFrames[]; // gHovercraftMapFrames
 
-    /* The ROM tables (src/.../data): attacks, box and keyframes are in
+    /* The ROM tables (engine/src/.../data): attacks, box and keyframes are in
      * hovercraft_attacks.cpp, palette and picture in
      * boss_pictures.cpp. */
     static const struct hovercraft_attack attacks[2];   // gHovercraftAttacks

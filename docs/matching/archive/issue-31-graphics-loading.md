@@ -9,7 +9,7 @@ Continues the first pass (PR #202, recorded in `docs/matching.md` under
 "`graphics_loading` chunk `0x0801FA3C`-`0x08021668` (issue #31)"), which
 matched/parked the 4-function "trigger effect type N" twin family
 (`SpawnRedGemPlatform`/`SpawnYellowGemPlatform`/`SpawnGreenGemPlatform`/`SpawnBlueGemPlatform`,
-`src/game/objects/spawn_gem_platforms.c`) and left the other 21 functions raw.
+`engine/src/game/objects/spawn_gem_platforms.c`) and left the other 21 functions raw.
 This pass picks one of those 21 back up: `SpawnSquid`.
 
 ## Semantics
@@ -63,7 +63,7 @@ first). Left untouched this pass - see "Left raw" below.
 
 ## Matched: `SpawnSquid`
 
-`src/game/enemies/spawn_enemies.c` - full clean `make compare`
+`engine/src/game/enemies/spawn_enemies.c` - full clean `make compare`
 verified (`La suma coincide`). `arg0` has to stay `u32` (not `u16` like
 its siblings) for the same reason documented for the twin family in
 `docs/matching.md`: the ROM only truncates it at its single call site
@@ -131,7 +131,7 @@ uses elsewhere in the same function.
 File split: `SpawnSquid` sat alone between still-raw neighbors on both
 sides in `asm/code_3_2_17_1e990.s`, so it became three pieces in ROM
 order - the trimmed `asm/code_3_2_17_1e990.s` (unchanged content, just
-shorter), the new `src/game/enemies/spawn_enemies.c`, and the new
+shorter), the new `engine/src/game/enemies/spawn_enemies.c`, and the new
 `asm/code_3_2_17_1feec.s` (everything from `SpawnJellyfish` onward that
 used to be in the same file) - see `ldscript.txt` and
 `tools/report_units.py`'s `graphics_loading` category, both updated to
@@ -170,7 +170,7 @@ Verified via a full clean `make compare` (`La suma coincide`) and
 ## Third pass: the "trigger effect type N" twin family matched via NAKED transcription
 
 `SpawnRedGemPlatform`/`SpawnYellowGemPlatform`/`SpawnGreenGemPlatform`/`SpawnBlueGemPlatform`
-(`src/game/objects/spawn_gem_platforms.c`), parked since the first pass
+(`engine/src/game/objects/spawn_gem_platforms.c`), parked since the first pass
 referenced above, are now all byte-exact matched, confirmed by a full
 clean `make compare` ("La suma coincide"). Semantics were already fully
 understood and confirmed instruction-for-instruction against the ROM;
@@ -180,7 +180,7 @@ sequencing gcc 2.9 never reproduced) never responded to further plain-C
 restructuring, so all four were converted to `NAKED` and their ROM
 disassembly transcribed instruction-for-instruction - the same escape
 hatch this project already established for `MakeLinkHandshakeId`/`ResetLinkSessionState`
-(`src/engine/link/link_handshake.c`, see
+(`engine/src/engine/link/link_handshake.c`, see
 `docs/matching/archive/issue-4-sio-settings-sync.md`'s "The general strategy
 for the rest" section). All four share the exact same shape (confirmed
 by the transcription itself matching one-for-one once the twin family
@@ -235,7 +235,7 @@ old `asm/code_3_2_17_21280.s`) is now real, matched C, plus one more
 (`SpawnRoomExit`-`SpawnCortexBoss`, the 4 remaining full popup-family
 instances - see "Left raw" below).
 
-New file: `src/game/objects/spawn_objects.c`, inserted in
+New file: `engine/src/game/objects/spawn_objects.c`, inserted in
 `ldscript.txt` right after `asm/code_3_2_17_21280.o` (which now ends
 at `SpawnCortexBoss`'s literal pool) and before
 `src/game/crates/spawn_crates.o`.
@@ -350,7 +350,7 @@ A gated `CreatePlatform`/`SetBonusPlatform` dispatcher: picks id `7` if
 `IsBonusRoundDone(gLevelState)` is true or `gLevelState+0x8c` is
 nonzero, else id `5` - the same OR-gated shape the twin family in
 `spawn_gem_platforms.c` uses for its own sound-id choice, just feeding
-`SetBonusPlatform` (`self->0x1b8` setter, `src/game/level/level_state.c`)
+`SetBonusPlatform` (`self->0x1b8` setter, `engine/src/game/level/level_state.c`)
 instead of `SetGemPlatform`. Semantics are fully understood and every
 instruction's operation matches the ROM, but the `arg0`-`arg3`
 parameter-home registers (`r5`-`r8`, a mix of immediate and deferred
@@ -427,7 +427,7 @@ Verified via a full clean `make compare` (`La suma coincide`) and
 Picked up the "Left raw (4)" list the fourth pass left behind - the last
 still-raw stretch of `asm/code_3_2_17_21280.s`. All four are now real,
 always-compiled code (2 matched, 2 NAKED), retiring the raw file entirely.
-New file: `src/game/bosses/spawn_bosses.c`, replacing
+New file: `engine/src/game/bosses/spawn_bosses.c`, replacing
 `asm/code_3_2_17_21280.o` in `ldscript.txt` at the same point.
 
 ### Matched: `SpawnDingodile`, `SpawnCortexBoss`
@@ -504,7 +504,7 @@ this) - both fixed with small `asm volatile` blocks:
 
 Both fully understood, every instruction's *content* confirmed matching
 via isolated compile, but both hit the confirmed `r7`-pin gap documented
-for `IsEntityInsideRect` (src/gfx/graphics.c) and `SpawnBonusPlatform` above -
+for `IsEntityInsideRect` (engine/src/gfx/graphics.c) and `SpawnBonusPlatform` above -
 this compiler only adds a hard-pinned register to a function's callee-saved
 push/pop set when it tracks that register as holding a value live across
 a *wider* span than a single inline-asm block, and `r7` in both of these
@@ -573,7 +573,7 @@ several tail shapes this cluster's earlier passes already catalogued
 (a single header write, a "second `header->0x84` rewrite plus a
 struct-field or record-field copy", an OAM trio, a bit-27 re-test, or -
 for `SpawnSeal` alone - a `PlaySfx` call). New file:
-`src/game/enemies/spawn_enemies.c`, replacing
+`engine/src/game/enemies/spawn_enemies.c`, replacing
 `asm/code_3_2_17_1e990.o` at that point in `ldscript.txt` (the raw file
 itself shrinks to just `SpawnCrystal`-`SpawnYellowGem`, the still-raw
 "trigger effect type N" twin-family shape noted at the top of this
@@ -706,7 +706,7 @@ trampoline calls - varying only the embedded offsets/constants and tail
 shape (a header->0x84 double-rewrite plus a record-field/struct-field
 copy; the standard OAM trio; a plain record-relookup feeding
 `SetEnemyState`/`SetEnemyRangeX`; a bit-27 re-test). New file:
-`src/game/enemies/spawn_enemies.c`, replacing
+`engine/src/game/enemies/spawn_enemies.c`, replacing
 `asm/code_3_2_17_1feec.o` at the same point in `ldscript.txt` - this
 retires that raw file entirely.
 
@@ -797,7 +797,7 @@ worth noting that hadn't appeared in quite this form before:
 
 Full clean `make compare` (`La suma coincide`) and `make NON_MATCHING=1
 report`, both passing. This retires `asm/code_3_2_17_1feec.s` entirely -
-the file no longer exists, replaced by `src/game/enemies/spawn_enemies.c`
+the file no longer exists, replaced by `engine/src/game/enemies/spawn_enemies.c`
 at the same point in `ldscript.txt`. 1 of the 13 functions in this file is
 real C, the other 12 are NAKED, tracked in `docs/status/graphics_loading.md`
 and `tools/report_units.py`. Issue #31 stays open - the remaining raw/parked

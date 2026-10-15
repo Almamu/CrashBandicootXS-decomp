@@ -1,7 +1,7 @@
 #ifndef GUARD_ACTOR_CATEGORY_HPP
 #define GUARD_ACTOR_CATEGORY_HPP
 
-/* The actor category driver (src/engine/actor/, #915): a room's category stage,
+/* The actor category driver (engine/src/engine/actor/, #915): a room's category stage,
  * the 3D levels (the polar levels, the jetpack levels, the airship and
  * the hovercraft). Init runs the category from start to end: it builds
  * the VRAM pool, selects the category (its vtable, its spawn table, the
@@ -19,7 +19,7 @@
  * table (ActorSpawns) are classes of their own. cxx_symbols.txt (block
  * "#915 ActorCategory") maps each member to its C name
  * (`_Q36Engine5Actor13ActorCategory.current` is gActorCategory, ...): games/xs/sym_iwram.txt
- * places the IWRAM ones, src/engine/actor/data/actor_categories.cpp defines the
+ * places the IWRAM ones, engine/src/engine/actor/data/actor_categories.cpp defines the
  * ROM tables. The functions keep their C names the same way
  * (`Init__Q36Engine5Actor13ActorCategoryi` is InitActorCategory).
  *
@@ -84,7 +84,7 @@ private:
     static const struct category_vtable *vtable; // gActorCategoryVtable - the type's
     static s32 frameCount;                       // gActorCategoryFrameCount - since Select
 
-    /* ROM (src/engine/actor/data/actor_categories.cpp) */
+    /* ROM (engine/src/engine/actor/data/actor_categories.cpp) */
     static const struct category_descriptor descriptors[CATEGORY_COUNT]; // gActorCategories
     static const struct category_vtable vtables[CATEGORY_TYPE_COUNT];    // gActorCategoryVtables
 };

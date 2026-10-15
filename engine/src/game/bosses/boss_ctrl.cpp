@@ -2,7 +2,7 @@
 
 using Game::Bosses::BossCtrl;
 
-/* GitHub issue #22, ROM 0x08017A70-0x08017AB0 (include/game/bosses/boss_ctrl.hpp):
+/* GitHub issue #22, ROM 0x08017A70-0x08017AB0 (engine/include/game/bosses/boss_ctrl.hpp):
  * BossCtrl, the controller base of the bosses: Mega-Mix
  * (gMegaMixCtrlVtable), Tiny, the Neo Cortex fight's controller and
  * Dingodile with his shield and rocket/stalactite. g++ emits

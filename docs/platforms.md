@@ -1,6 +1,6 @@
 # Platforms (`platform/`)
 
-The game and engine code (`src/`, `include/`) and the libraries (`lib/`)
+The game and engine code (`engine/src/`, `engine/include/`) and the libraries (`lib/`)
 are built on a platform: the hardware headers they include, the startup
 and interrupt code, and the BIOS calls. The original is the GBA, in
 `platform/gba/`, and both ROMs (Crash Bandicoot XS and N-Tranced) are
@@ -50,7 +50,7 @@ The build (Makefile, before the per-game part, so every game gets it):
 ```
 PLATFORM ?= gba
 PLATFORM_DIR := platform/$(PLATFORM)
-CPPFLAGS := ... -iquote include -I $(PLATFORM_DIR)/include \
+CPPFLAGS := ... -iquote engine/include -I $(PLATFORM_DIR)/include \
 	-I lib/*/include -I $(PLATFORM_DIR)/lib/*/include ...
 ```
 
@@ -69,7 +69,7 @@ the `-iquote` directories, then the `-I` ones, so:
 
 - no header named `gba/<x>.h` may exist anywhere but
   `platform/<name>/include/`: one next to a file that includes it, or
-  under the `-iquote` directories (`include/`, `build/include/`, and for
+  under the `-iquote` directories (`engine/include/`, `build/include/`, and for
   N-Tranced `games/n2/include/` and `build/ntranced/include/`), would be
   picked before the platform's;
 - the platform headers include each other relative to themselves
@@ -79,7 +79,7 @@ the `-iquote` directories, then the `-I` ones, so:
 #1093 checked this when the headers moved out of `include/gba/`: every
 include of them (5 of `gba/gba.h`, 19 of `gba/types.h`, 9 of
 `gba/io_reg.h`, 13 of `gba/dma_macros.h`, 2 of `gba/defines.h`, 23 of
-`<agb_syscall.h>`, in 64 files of `include/`, `src/`, `lib/` and
+`<agb_syscall.h>`, in 64 files of `engine/include/`, `engine/src/`, `lib/` and
 `platform/`, and the `"gba/types.h"` that tools/levels.py,
 tools/gfx_manifest.py and tools/sprite_banks.py write into their
 generated sources) uses one of these names, none uses a relative path, and the only
@@ -107,7 +107,7 @@ A port is a `platform/<name>/` with:
    method's C name calls, for an ABI that returns small structs in
    registers.
 2. **Startup and interrupts** in place of crt0 and IntrMain: run
-   `AgbMain` (src/engine/sys/main.cpp), and drive the game's interrupt
+   `AgbMain` (engine/src/engine/sys/main.cpp), and drive the game's interrupt
    handlers from `gIntrTable` (Irq::Setup fills it, irq.cpp) once a
    frame: VBlank at line 160, VCount at the line `DISPSTAT` asks for
    (the music fade's, 0x35), Timer2 for the EEPROM, Timer3 and Serial for
@@ -115,7 +115,7 @@ A port is a `platform/<name>/` with:
 3. **The BIOS calls** of `agb_syscall.h` (`CpuSet`, `CpuFastSet`,
    `LZ77UnCompVram`, `RLUnCompVram`, `BgAffineSet`, `ObjAffineSet`,
    `Sqrt`, `VBlankIntrWait`), as C, plus the DivMod `svc #6`
-   (src/engine/sys/bios_util.cpp).
+   (engine/src/engine/sys/bios_util.cpp).
 4. **Audio** behind GAX2's API (`lib/gax/include/gax.h`: `GAX_irq`,
    `GAX_play`, the init and fx calls), reading the built music and sfx
    data, and `gGaxIrqEnabled`; the game's `AudioContext` stays as it is.
@@ -183,7 +183,7 @@ The code must compile for a 64-bit host with the GBA build unchanged
 What phase 0 left (none of it can change without changing the GBA code,
 or it is replaced at its API, see "What a port provides"):
 
-- `vsprintf` (src/engine/util/printf.cpp) reads its arguments as
+- `vsprintf` (engine/src/engine/util/printf.cpp) reads its arguments as
   pointer-sized slots (`uintptr_t *args`, `%s` as `(u8 *)*args`: 4 bytes
   on the GBA, so that a host's `%s` reads a whole address), and `sprintf`
   hands it the stack's, not `va_arg`'s: a host needs its own `sprintf`.
@@ -193,7 +193,7 @@ or it is replaced at its API, see "What a port provides"):
   GAX2 (`lib/gax/`) is compiled, but for its ARM parts, and its song data
   is converted ("The sound" below).
 
-The pc platform (below) is the check that this holds: every `src/`
+The pc platform (below) is the check that this holds: every `engine/src/`
 object compiles and links on a 64-bit host, in CI.
 
 ## `platform/pc/`
@@ -270,8 +270,8 @@ platform/pc/src/
     libgcc.c                       __divsi3 & co. and __udivdi3, which the game and
                                    GAX2 call by name
     sound_data.S                   gSfxTable, gGaxMusicData and gGaxSfxData,
-                                   data/data.s's sound blocks, as the built bytes
-platform/pc/units/                 units built in place of src/'s and lib/'s
+                                   games/xs/data/data.s's sound blocks, as the built bytes
+platform/pc/units/                 units built in place of engine/src/'s and lib/'s
     engine/sys/bios_util.cpp       DivMod in C (the GBA's is an inline `svc #6`)
     lib/gax/src/*.c                GAX2's files that can't run on a host as they are
                                    ("The sound")
@@ -462,7 +462,7 @@ effects with the original's own code, so the replay (patterns, the
 instruments' sequences, envelopes, vibrato, sweeps, the sound effects'
 voice stealing, the volumes) is the original's by construction. What
 can't run on a host is replaced, in units (platform/pc/units/lib/gax/src/,
-built in place of the same files, as a src/ unit is) or in the
+built in place of the same files, as an engine/src/ unit is) or in the
 platform's own code:
 
 - the ARM routines (lib/gax/asm/gax_arm_dsp.s: the resampler, the downmix
@@ -584,12 +584,12 @@ is stubbed: the host is a GBA with no cable attached, and the game's
 own code runs as it does on one. The link's one use is the save menu's
 "load link game" (SaveMenu::MainInput's cursor 1, from the level
 select's Start or the title's load), which exchanges save records with
-a second console (SaveMenu::LinkExchange, src/game/ui/save_menu_draw.cpp);
+a second console (SaveMenu::LinkExchange, engine/src/game/ui/save_menu_draw.cpp);
 nothing probes the link at boot or anywhere else. The save menu's
 constructor makes the session (`new LinkSession`, whose Reset stops the
 port: RCNT 0, SIOCNT in UART mode, Timer3 stopped). With the option
 picked, the exchange loops a frame at a time: LinkSession::Update
-(src/engine/link/link_session.cpp) puts the port in multi-player mode
+(engine/src/engine/link/link_session.cpp) puts the port in multi-player mode
 and waits for SIOCNT's SD terminal (bit 3, every console ready), and
 SaveTransfer::Poll waits for the session to connect, while the screen
 says "transferring data" and that B aborts. On a GBA with no cable both
@@ -629,7 +629,7 @@ tile's number from the low bits of its VRAM address (company_logos.cpp,
 `tilesB >> 5`).
 
 **Swapping a unit.** `platform/pc/units/<path>.cpp` is built in place of
-`src/<path>.cpp`, into the same object, so that object's dependencies and
+`engine/src/<path>.cpp`, into the same object, so that object's dependencies and
 flags still apply, and `platform/pc/units/lib/gax/src/<file>.c` in place
 of `lib/gax/src/<file>.c`. It is for a unit the host can't compile or run
 as it is: bios_util.cpp, and GAX2's ("The sound").
@@ -660,7 +660,7 @@ exactly 2x), AgbEeprom's (replaced, unused on the host), the stacks and
 the EWRAM heap.
 
 The game's strcpy, strlen, strcat, strncpy, sprintf, vsprintf, rand and
-srand (src/engine/util/) have the C library's names, and the executable's
+srand (engine/src/engine/util/) have the C library's names, and the executable's
 would stand in for the C library's for its other users (libstdc++, the
 platform's own code). platform.mk renames them in the game's objects
 after compiling each (`objcopy --redefine-syms=libc_names.txt`, so

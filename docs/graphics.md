@@ -4,18 +4,18 @@ How graphics assets were located and extracted from the ROM, and ongoing
 notes on the sprite/actor rendering system. For byte-exact matching
 decompilation notes (workflow, register-allocation gotchas, per-function
 parked/matched log across the whole codebase, including the
-graphics-adjacent functions in `src/engine/gfx/` (`oam_buffer.cpp`, `vram_dma_queue.cpp`,
-`obj_vram_cursor.cpp`, `palette_cache.cpp`, `sprite_bank_set.cpp`; `src/gfx/graphics.c`
-until #767, which also moved some to `src/game/entities/entity.cpp` and
-`src/game/level/game_progress.cpp`), `src/game/ui/power_dialog_draw.cpp` and
-`src/game/vehicles/actor_destructors.cpp`, see [matching.md](./matching.md) instead.
+graphics-adjacent functions in `engine/src/engine/gfx/` (`oam_buffer.cpp`, `vram_dma_queue.cpp`,
+`obj_vram_cursor.cpp`, `palette_cache.cpp`, `sprite_bank_set.cpp`; `engine/src/gfx/graphics.c`
+until #767, which also moved some to `engine/src/game/entities/entity.cpp` and
+`engine/src/game/level/game_progress.cpp`), `engine/src/game/ui/power_dialog_draw.cpp` and
+`engine/src/game/vehicles/actor_destructors.cpp`, see [matching.md](./matching.md) instead.
 
-## The `graphics/` tree
+## The `games/xs/graphics/` tree
 
-`graphics/` holds only editable sources, grouped by what the game does
+`games/xs/graphics/` holds only editable sources, grouped by what the game does
 with them. Every asset is built back into the ROM's bytes by
-`graphics.mk` (see "Build pipeline"), into C arrays that `src/*/data/*.cpp`
-`#include`s. File names carry no ROM addresses: `graphics/manifest.json`
+`graphics.mk` (see "Build pipeline"), into C arrays that `engine/src/*/data/*.cpp`
+`#include`s. File names carry no ROM addresses: `games/xs/graphics/manifest.json`
 records them (see "The manifest"), and data_map.md's "Graphics assets"
 table lists them by address. A numeric prefix is kept only where it is an
 index the C or the build uses.
@@ -33,9 +33,9 @@ index the C or the build uses.
 | `vehicles/jetpack/` | the jetpack stages: the framed sprite sheet, the player, the BG0 clouds, the three skies (`skies/`) and the airship (`airship/frameN.png`) | `gJetpackSpriteSheet`, `gJetpackPlayerRleFrames`, `gCategoryFamily1CellAnim`, `gCategory3-5BgPicture`, `gAirshipPicture` | `jetpack_sprite_sheet.cpp`, `jetpack_rle_sprites.cpp`, `jetpack_cell_anim.cpp`, `jetpack_sky_pictures.cpp`, `boss_pictures.cpp` |
 | `bosses/` | N. Gin's hovercraft, `hovercraft.png` | `gHovercraftPicture` | `boss_pictures.cpp` |
 
-`vehicles/` mirrors `src/game/vehicles/`: everything a polar or jetpack stage
+`vehicles/` mirrors `engine/src/game/vehicles/`: everything a polar or jetpack stage
 draws is in one place. The rooms' graphics aren't here: each room's BG
-layers are pictures under `data/levels/<level>/<slot>/`, and the BG tile
+layers are pictures under `games/xs/data/levels/<level>/<slot>/`, and the BG tile
 sets are made from them ([levels.md](./levels.md), "Tile sets"). The
 framed sheets' record dumps are `docs/entities/polar.json` and
 `jetpack.json`.
@@ -53,13 +53,13 @@ were found.
 ## Background/tileset extraction (done)
 
 Most of the ROM's background and tileset graphics have been identified and
-split out of the raw `baserom.gba` incbins in `data/data.s`, under
-`graphics/<region>/` (the folders of that time, since regrouped as "The
-`graphics/` tree" above):
+split out of the raw `baserom.gba` incbins in `games/xs/data/data.s`, under
+`games/xs/graphics/<region>/` (the folders of that time, since regrouped as "The
+`games/xs/graphics/` tree" above):
 
-- `graphics/intro/`, `graphics/tileset1/` — tile graphics (4bpp) and
+- `games/xs/graphics/intro/`, `games/xs/graphics/tileset1/` — tile graphics (4bpp) and
   palettes for the regions scanned so far.
-- `graphics/unknown/` — LZ77-compressed blocks that decompress fine but
+- `games/xs/graphics/unknown/` — LZ77-compressed blocks that decompress fine but
   don't produce a coherent image as tile data (wrong width guessed, a
   non-tile asset, or genuinely something else) - kept as raw binary rather
   than forced into a misleading PNG. Two of these (`00_0b2120`,
@@ -102,20 +102,20 @@ rather than a "garbled" one.
 
 ## Build pipeline
 
-`graphics.mk` + `Makefile` (`GRAPHICS_BUILDDIR`) convert the `graphics/`
+`graphics.mk` + `Makefile` (`GRAPHICS_BUILDDIR`) convert the `games/xs/graphics/`
 sources (PNGs, with their palettes, and JASC `.pal` files) into the original bytes, output to
 `build/crashbandicootxs/graphics/` (mirroring the source subdirectory
-layout) — `graphics/` itself only ever holds editable sources, never build
+layout) — `games/xs/graphics/` itself only ever holds editable sources, never build
 products. grit (`tools/grit`) does the pixel layout of every PNG, and
 `tools/jasc_pal.py` the palettes. `tools/gbagfx` (vendored from the sibling
 `sa2` decompilation, same Dimps-engine lineage) does the LZ77 compression.
 `tools/bin2c.py` writes the result as C initializer bytes that a
-`src/*/data/*.cpp` definition `#include`s, so every graphics asset is a C
-array (`data/data.s` incbins no graphics).
+`engine/src/*/data/*.cpp` definition `#include`s, so every graphics asset is a C
+array (`games/xs/data/data.s` incbins no graphics).
 
 | ROM | object | contents |
 |---|---|---|
-| `080B2120`, `0814174C` | `polar_sprite_sheet.cpp`, `jetpack_sprite_sheet.cpp` | the two framed OBJ sprite sheets (`graphics/unknown/`, `tools/framed_gfx.py`) |
+| `080B2120`, `0814174C` | `polar_sprite_sheet.cpp`, `jetpack_sprite_sheet.cpp` | the two framed OBJ sprite sheets (`games/xs/graphics/unknown/`, `tools/framed_gfx.py`) |
 | `085A4E70` | `font_tiles.cpp` | the two HUD fonts |
 | `085A9F70` | `cutscene_pictures.cpp` | the 24 cutscene pictures |
 | `0861BADC` | `menu_graphics.cpp` | menu/title palettes, the `bg_package` pictures, the credits and VV logos |
@@ -129,7 +129,7 @@ padding"](./data.md#lz77-stream-padding)).
 
 ### The manifest
 
-`graphics/manifest.json` lists every source under `graphics/`, one entry
+`games/xs/graphics/manifest.json` lists every source under `games/xs/graphics/`, one entry
 per asset: its path, what kind of asset it is, its symbol and its ROM
 address, and what extracting it needs (bpp, width, palette, OBJ layout).
 Its header comment in `tools/gfx_manifest.py` describes each kind.
@@ -145,13 +145,13 @@ from the entries: the tile sheets by bpp (`TILE_SHEETS_4BPP`, `_8BPP`, the
 16-colour PNG palettes (`PALETTE_COLORS_16`), the class objects and each
 object's prerequisites (the `.inc` files of its members). The ROM's
 layout comes from `games/xs/ldscript.txt` and the order of the definitions in each
-`src/*/data/*.cpp`, and every reference is a symbol, so an asset that grows
+`engine/src/*/data/*.cpp`, and every reference is a symbol, so an asset that grows
 or shrinks just moves what follows it. The addresses are kept so the
 sources can be extracted from `baserom.gba` again, and to put the
 classes' definitions in ROM order:
 
 - `tools/gfx_manifest.py extract [baserom.gba]` writes every source
-  under `graphics/` and `data/levels/` from the ROM. Most kinds are
+  under `games/xs/graphics/` and `games/xs/data/levels/` from the ROM. Most kinds are
   written by `gfx_manifest.py` itself. The sprite banks
   (`tools/sprite_frames.py extract`), the framed sheets
   (`tools/split_entities.py`, `tools/dump_entities.py`) and the rooms
@@ -162,7 +162,7 @@ classes' definitions in ROM order:
   pixels and palette, other files byte for byte. On the original data it
   reproduces the whole tree.
 - `tools/gfx_manifest.py check` checks that every file under
-  `graphics/` belongs to an entry and every entry's files exist, and the
+  `games/xs/graphics/` belongs to an entry and every entry's files exist, and the
   graphics classes (below).
 - `tools/gfx_manifest.py table` writes the "Graphics assets" table of
   [data_map.md](./data_map.md) from the manifest: the reverse lookup from
@@ -178,7 +178,7 @@ for it, its `palette` or its `map`. It is a graphics class (a `class`), a
 `tiles` sheet, a `bg_package` without `obj_sheet` or a cutscene picture
 (a `bitmap`) (gfx_manifest.py's `NEW_KINDS`: the kinds whose build rules
 come from the manifest, and the cutscene pictures, which graphics.mk
-builds from every PNG of `graphics/cutscenes/`; an OBJ sheet's layout is
+builds from every PNG of `games/xs/graphics/cutscenes/`; an OBJ sheet's layout is
 graphics.mk's), and it names the manifest `objects` entry that defines
 it, `"object"` (or it is a category graphic, below):
 
@@ -210,11 +210,11 @@ A new level-select picture is a new graphic of `level_select_graphics`,
 which a theme names as its `"picture"` ([levels.md,
 "Themes"](./levels.md#themes)).
 
-A new cutscene picture is a `bitmap` in `graphics/cutscenes/` (240x160,
+A new cutscene picture is a `bitmap` in `games/xs/graphics/cutscenes/` (240x160,
 8bpp, its 256-colour palette in the PNG) of `cutscene_pictures`, with a
 `palette` of 256 `colors` (`check` asks for both): its palette comes
 after the ROM's 24 pictures, its bitmap right after it, where
-`ShowSlidePicture` reads it. A slide of `data/cutscenes.json` names it
+`ShowSlidePicture` reads it. A slide of `games/xs/data/cutscenes.json` names it
 by its path ([data.md, "A new cutscene"](./data.md#a-new-cutscene)).
 
 **Category graphics.** A new `cell_anim`, `bg_picture`,
@@ -238,7 +238,7 @@ checks it: no `class`, `object`, `palette` or `map`, and its kind's files
 and fields.
 
 A new framed sheet is a directory like the ROM's two
-(`graphics/vehicles/<family>/sprite_sheet/`): one folder of frame PNGs
+(`games/xs/graphics/vehicles/<family>/sprite_sheet/`): one folder of frame PNGs
 per entity and a `sheet.json` listing the folders in the sheet's order
 (see "The framed sheets' folders and colours"), with its own `"prefix"`,
 which names its frames' offsets (`FRAMED_<prefix>_<FOLDER>_<NN>`, in
@@ -280,7 +280,7 @@ The manifest decides them:
   category's, defined with other data). The other kinds can't have a
   class (docs/cplusplus.md says why). The part's `symbol` stays its C name. `about`, if
   given, says what the graphic is, for the class's comment.
-- **`objects`.** The top-level list of the `src/*/data` objects whose
+- **`objects`.** The top-level list of the `engine/src/*/data` objects whose
   graphics are all class members, each `{name, rom, end}`. Every part in
   an object's ROM range is defined by it, in ROM order.
 
@@ -294,7 +294,7 @@ The manifest decides them:
 - `defs OBJECT OUT`: the member definitions of one object, in ROM order
   (`const u8 Engine::Gfx::TitleScreenBg::palette[] __attribute__((aligned(4))) = {
   #include "title/logo.gbapal.lz.inc" };`), into
-  `build/.../graphics/<object>.inc`, which `src/*/data/<object>.cpp`
+  `build/.../graphics/<object>.inc`, which `engine/src/*/data/<object>.cpp`
   `#include`s.
 - `symbols`: the block of cxx_symbols.txt between the `graphics classes`
   markers, which maps each member back to its C name
@@ -317,7 +317,7 @@ the members.
 | `polar_rle_sprites.cpp`, `jetpack_rle_sprites.cpp` | the vehicles' frame sets: `PolarPlayerFrameSet`, `YetiFrameSet`, `JetpackPlayerFrameSet` (`frames`) |
 
 The rooms are classes too, generated by `tools/levels.py` from
-`data/levels/` (levels.md, "Room classes"): `Room37::palette`,
+`games/xs/data/levels/` (levels.md, "Room classes"): `Room37::palette`,
 `Room37::bg1Grid`, `Room37::asset`. What stays free, and why, is in
 docs/cplusplus.md, "The graphics as static classes (#915)".
 
@@ -326,10 +326,10 @@ docs/cplusplus.md, "The graphics as static classes (#915)".
 A palette that belongs to one picture lives in that picture's PNG: the
 PNG's palette *is* the asset. That covers 54 palettes:
 - the 30 LZ77 palettes of the menu, title and logo pictures (the 12 BG
-  packages in `graphics/menus/`, `graphics/title/`, `graphics/logos/` and
+  packages in `games/xs/graphics/menus/`, `games/xs/graphics/title/`, `games/xs/graphics/logos/` and
   the level-select page, the credits and VV logo sheets in
-  `graphics/logos/`) and of the ten level-select pictures
-  (`graphics/level_select/pictures/`): 16 with 16 colours and 14 with
+  `games/xs/graphics/logos/`) and of the ten level-select pictures
+  (`games/xs/graphics/level_select/pictures/`): 16 with 16 colours and 14 with
   256;
 - the 24 cutscene pictures' uncompressed palettes (below).
 
@@ -344,7 +344,7 @@ can't be read from the bpp: the Universal logo is an 8bpp picture with a
 
 The standalone palettes, which belong to no single picture, are JASC-PAL
 `.pal` files (CRLF line endings, see `.gitattributes`): the 125 OBJ
-palettes of `graphics/sprites/palettes/` (`gObjPalettes`).
+palettes of `games/xs/graphics/sprites/palettes/` (`gObjPalettes`).
 `tools/jasc_pal.py to-gba` builds those.
 
 A JASC file, like a PNG palette, has 8 bits per channel. The tool reads a channel as gbagfx
@@ -366,14 +366,14 @@ to-jasc` turns a raw palette back into a `.pal`, and `jasc_pal.py
 gba-to-png` puts a raw palette into an indexed PNG, keeping its pixels.
 
 The 24 cutscene pictures' palettes (uncompressed `u16[256]`) live in the
-pictures too: each `graphics/cutscenes/NN_<what>.png` carries its real
+pictures too: each `games/xs/graphics/cutscenes/NN_<what>.png` carries its real
 palette, and `tools/jasc_pal.py png-to-gba` reads it back (bit 15
 included) for `tools/bin2c.py --u16`. The room palettes live in the room's layer pictures
 ([levels.md, "BG layers"](./levels.md#bg-layers)). The palettes still written out in C (HUD
 and menu palettes) keep bit 15 as part of their hex values.
 
-The 24 cutscene Mode 4 bitmaps (`graphics/cutscenes/NN_<what>.png`) are
-built as C const arrays (`src/game/ui/data/cutscene_pictures.cpp`, each after
+The 24 cutscene Mode 4 bitmaps (`games/xs/graphics/cutscenes/NN_<what>.png`) are
+built as C const arrays (`engine/src/game/ui/data/cutscene_pictures.cpp`, each after
 its palette) instead of `data.s` incbins, like the category backgrounds
 and the raw tile pools. The pipeline is grit (`tools/grit`, pixel layout) ->
 gbagfx (LZ77) -> `tools/bin2c.py --lz`. grit's layout and palettes are
@@ -393,8 +393,8 @@ map}`):
 Before, each was stored as a tile-set PNG plus a raw `.bin` map, or as a
 map misfiled as tiles or as a palette. Now each one is a single indexed
 PNG of the whole picture, drawn with the package's palette, in the
-folder of what it is: `graphics/menus/`, `graphics/title/`,
-`graphics/logos/`, `graphics/level_select/` (graphics.mk's `BG_PACKAGES`
+folder of what it is: `games/xs/graphics/menus/`, `games/xs/graphics/title/`,
+`games/xs/graphics/logos/`, `games/xs/graphics/level_select/` (graphics.mk's `BG_PACKAGES`
 lists them). The build
 rebuilds both the tile set and the map from that PNG, byte for byte:
 
@@ -439,7 +439,7 @@ How the build does it (`graphics.mk`):
    doesn't use. On three pictures (sky, pause menu, smoke) that drops
    grit's blank. On the others it changes nothing.
 3. **gbagfx compresses the result** (LZ77), and `tools/bin2c.py --lz`
-   writes it as the C bytes of `src/game/ui/data/menu_graphics.cpp`.
+   writes it as the C bytes of `engine/src/game/ui/data/menu_graphics.cpp`.
 
 The universal logo (`gUniversalLogoBg`, the Universal Interactive logo
 before the title) used to be built as a 4bpp text BG, which drew it as
@@ -574,10 +574,10 @@ HUD widget:
   `_087E4D64`/`_087E4D1C` and set a graphics-package pointer at a struct
   offset that varies by variant:
   - `InitSmallFont` -> `_087E4D64`: sets `self+0x128 = gSmallFontTiles`
-    (an *already-extracted* graphics block, `graphics/fonts/small.png`
+    (an *already-extracted* graphics block, `games/xs/graphics/fonts/small.png`
     - 5056 bytes decompressed, only 16px wide).
   - `InitLargeFont` -> `_087E4D1C`: sets `self+0x110 = gLargeFontTiles`
-    (also already extracted, `graphics/fonts/large.png` - 9600
+    (also already extracted, `games/xs/graphics/fonts/large.png` - 9600
     bytes decompressed) and flips a bit in a `+3` flags byte
     (`& 0x3F | 0x40`), which is presumably what tells the shared rendering
     code which struct offset to treat as the graphics pointer for this
@@ -615,7 +615,7 @@ code turned up in places that weren't previously recognized as code:
    assumed to be the exact end of all disassembled code (`asm/code_3.s`
    covered `0x0`-`0x3B0C4`) with everything after treated as data
    (`gStaticData_0803B0C4`, labeled "padding/unidentified data between
-   assets"). `data/data.s`'s padding block now correctly starts at
+   assets"). `games/xs/data/data.s`'s padding block now correctly starts at
    `0x0803B8B0` instead.
 2. **`0x0803AFF0`-`0x0803B058`** (104 bytes, 2 functions) - this one was
    *inside* the already-disassembled `asm/code_3.s`, but the original
@@ -647,7 +647,7 @@ looking function among them) called from these stubs or from the vtables.
 
 This does not affect the two already-extracted graphics blocks further
 into the (still unidentified) region beyond it
-(`graphics/unknown/00_0b2120.bin` at `0x080B2120` and `01_14174c.bin` at
+(`games/xs/graphics/unknown/00_0b2120.bin` at `0x080B2120` and `01_14174c.bin` at
 `0x08151AC2` sit well past this code).
 
 ### Found the real sprite-loading path (not through the HUD vtable system)
@@ -661,7 +661,7 @@ the three menu-text palettes on OBJ banks 13-15), and `RunTitleScreen`
 is its menu loop ("new game" / "load game" / "credits"). The notes below
 are kept as written, with the functions' current names.
 
-Traced from the other direction as planned: `AgbMain` (`src/engine/sys/main.cpp`) calls
+Traced from the other direction as planned: `AgbMain` (`engine/src/engine/sys/main.cpp`) calls
 `MainLoop`, which contains the game's true main loop (an unconditional
 `b` back to itself, calling `UpdateGameFrame` every iteration - this never
 returns during normal play, which is why `AgbMain`'s post-loop cleanup
@@ -839,12 +839,12 @@ as 4bpp) - `38_62556c` has a prime tile count (317), so it's stored as a
 
 ### Swept the remaining raw `.bin` files for the same mistake
 
-Checked all 72 remaining raw `.bin` blocks (every one in `graphics/unknown/`,
-`graphics/tileset1/`, and the leftover ones in `graphics/intro/`) for the
+Checked all 72 remaining raw `.bin` blocks (every one in `games/xs/graphics/unknown/`,
+`games/xs/graphics/tileset1/`, and the leftover ones in `games/xs/graphics/intro/`) for the
 same 4bpp/8bpp mixup: 25 divide evenly by 64 (8bpp tile size) and are
 candidates; rendered all 25 as a contact sheet to review at once. Result:
 
-- **`graphics/tileset1/01`-`10` (10 files) were all real 8bpp graphics** -
+- **`games/xs/graphics/tileset1/01`-`10` (10 files) were all real 8bpp graphics** -
   once rendered with the palette sitting right next to them in ROM
   (`gLevelSelectPicture0Palette`, already-extracted as `11_63cf98.pal`), they turned
   out to be **circular level-select map icons** - a waterfall, a ship/dock
@@ -864,8 +864,8 @@ candidates; rendered all 25 as a contact sheet to review at once. Result:
     each PNG's color table from its real palette (the pixel *index* data,
     and therefore the built ROM bytes, are untouched by this - it only
     affects what the source PNG looks like when viewed/edited) and
-    correcting `data/data.s`'s per-file comments; verified byte-exact.
-- **`graphics/tileset1/12`-`20` (9 files, 512 bytes each) are not tile
+    correcting `games/xs/data/data.s`'s per-file comments; verified byte-exact.
+- **`games/xs/graphics/tileset1/12`-`20` (9 files, 512 bytes each) are not tile
   graphics at all - they're almost certainly 256-color palettes** that just
   happen to be the same byte size as 8 tiles' worth of 8bpp pixels (both are
   512 bytes, hence they passed the "divides evenly by 64" filter by
@@ -878,13 +878,13 @@ candidates; rendered all 25 as a contact sheet to review at once. Result:
   **Update (#914):** they are `.pal` files now, and `tools/jasc_pal.py`
   keeps bit 15 (see "Palettes" above), as for every other bit-15 palette
   mentioned below.
-- Similarly, 3 more small 512-byte blocks in `graphics/intro/` (`25_61bb04`,
+- Similarly, 3 more small 512-byte blocks in `games/xs/graphics/intro/` (`25_61bb04`,
   `26_61bd48`, `29_61bf80`) look plausibly palette-like (varied RGB555-ish
   values) but are unconfirmed and hit the same bit-15 round-trip problem -
   left as raw `.bin` with a similar comment. **Update:** all 3 are now
   confirmed (not just "plausible") - see "Swept `LoadGraphicsPackage`'s package
   structs" below.
-- **One more, `graphics/intro/35_61c224`, is a confirmed palette** - it's
+- **One more, `games/xs/graphics/intro/35_61c224`, is a confirmed palette** - it's
   `gTitleScreenBg`'s (the XS logo package's) own palette pointer,
   found while tracing that struct. Same bit-15 issue prevents converting it
   to `.pal`, so it stays raw `.bin` too, but the comment now states this
@@ -895,7 +895,7 @@ candidates; rendered all 25 as a contact sheet to review at once. Result:
   unchanged; genuinely still unidentified. **Update:** they aren't
   graphics: `tileset1/27`-`60` are the LZ77-packed level assets of 34
   rooms (per-layer chunk streams), and are now built from the decoded
-  tilemaps in `data/levels/` - see [levels.md](./levels.md).
+  tilemaps in `games/xs/data/levels/` - see [levels.md](./levels.md).
 
 The other 47 raw blocks don't divide evenly by 64 at all, so they can't be
 straightforward 8bpp tile data - not swept further here.
@@ -993,7 +993,7 @@ separate, much more elaborate chain:
   (`gCategoryFamily0AnimTable` for categories 0-2, `gCategoryFamily1AnimTable` for
   3-6), `+0x1C` = a big LZ77 sprite-sheet pointer (`0x080B2120` for
   categories 0-2, `0x0814174C` for 3-6 - these are the same two giant
-  blocks as `graphics/unknown/00_0b2120.bin`/`01_14174c.bin` from the very
+  blocks as `games/xs/graphics/unknown/00_0b2120.bin`/`01_14174c.bin` from the very
   first extraction pass). **Note:** despite living in the same descriptor
   record, this `+0x1C` sheet is *not* the data source for the animation
   system below - see the callout at the end of this section.
@@ -1132,7 +1132,7 @@ stores it in **`gCategorySpriteSheet`**, and decompresses into it via
 addressing modes in play for animation-table records, both already
 present in the code, and confirmed by directly decompressing
 `0x080B2120` (a standard LZ77 stream, tag `0x10`, declared size 213064 -
-matches `graphics/unknown/00_0b2120.bin` exactly) and checking real
+matches `games/xs/graphics/unknown/00_0b2120.bin` exactly) and checking real
 records against it:
 
 - **Category 0-2's record 0** (the "mask", `table_B = gPolarPlayerFrames`)
@@ -1162,7 +1162,7 @@ records against it:
     record 2's real data ends and record 3's begins - not necessarily
     one single animated object).
 
-This conclusively confirms `graphics/unknown/00_0b2120.bin` is genuine
+This conclusively confirms `games/xs/graphics/unknown/00_0b2120.bin` is genuine
 **rotating pickup/hazard sprite art** (crates confirmed, a
 companion/enemy likely) - not a background or something unrelated.
 
@@ -1233,13 +1233,13 @@ start offsets for each record) exact and exhaustive: sorting all known
 record-start offsets and using each as a cut point accounts for every
 single byte in both sheets.
 
-- `graphics/unknown/00_0b2120/` (categories 0-2's sheet, in ROM order):
+- `games/xs/graphics/unknown/00_0b2120/` (categories 0-2's sheet, in ROM order):
   9 files at this point - 5 decorated crate variants, a Nitro crate, a
   TNT crate, a barrel, and one 92-frame mixed-content pool (see
   "Cataloguing the `unidentified.png` pools" below - **this initial
   9-way split was later replaced entirely**, see "Re-splitting into one
   file per entity" further down for the current, final layout).
-- `graphics/unknown/01_14174c/` (categories 3-6's sheet, in ROM order):
+- `games/xs/graphics/unknown/01_14174c/` (categories 3-6's sheet, in ROM order):
   4 files at this point - badge icons, a winged creature, one small
   mixed pool, one large 176-frame mixed pool (see below - **also later
   replaced entirely**, see "Re-splitting into one file per entity").
@@ -1274,10 +1274,10 @@ gained a generic `%.bin: %.png %.frames` rule (runs `framed_gfx.py`) plus
 two explicit rules that `cat` each directory's *built* per-record `.bin`
 fragments back together in filename order (numeric prefixes preserve
 original ROM order, computed via `$(patsubst ...,$(sort $(wildcard
-graphics/unknown/<name>/*.png)))` so new/removed records stay in sync
+games/xs/graphics/unknown/<name>/*.png)))` so new/removed records stay in sync
 automatically) before the existing generic `.bin.lz` compression rule
 runs - `Makefile`'s `GRAPHICS_BUILT` listed the two composite `.bin.lz`
-targets explicitly since the flat `graphics/*/*.bin`/`*.png` wildcards
+targets explicitly since the flat `games/xs/graphics/*/*.bin`/`*.png` wildcards
 don't reach 3 directory levels deep (today `graphics.mk` makes
 `src/game/vehicles/polar/data/polar_sprite_sheet.o`/`jetpack_sprite_sheet.o` depend on them). Verified byte-exact via a full clean
 `make compare` (including rebuilding `gbagfx`) after the change.
@@ -1299,7 +1299,7 @@ its own file (`16_guard_barrier.png`, `17_wumpa_fruit.png`,
 `19_checkpoint_text.png`, etc.) - but the identification work described
 here is what made that re-split possible, so it's kept as-is.
 
-**`graphics/unknown/00_0b2120/08_unidentified.png`** (92 frames, the byte
+**`games/xs/graphics/unknown/00_0b2120/08_unidentified.png`** (92 frames, the byte
 range covered by categories 0-2's record 2) is genuinely several
 different objects sharing one physical frame pool - and unlike the rest
 of this section, this one **is** code-verified: `gCategoryFamily0AnimTable`
@@ -1348,7 +1348,7 @@ exists as a single file either; each object below now has its own file
 (`19_treasure_chest.png`, `13_parachute_crate.png`, `17_clock.png`, the
 3 balloon files, etc.).
 
-**`graphics/unknown/01_14174c/03_unidentified.png`** (176 frames,
+**`games/xs/graphics/unknown/01_14174c/03_unidentified.png`** (176 frames,
 categories 3-6's record 3) got the same code-level treatment:
 `gCategoryFamily1AnimTable` also runs far past the 3 records originally
 catalogued - valid entries go up to at least record 46 (again with many
@@ -1395,12 +1395,12 @@ and both animation tables' full record lists (`gCategoryFamily0AnimTable`:
 resolved reference to the exact split PNG frame each keyframe uses - is
 now bundled into two generated files:
 
-- `graphics/unknown/00_0b2120/entities.json`
-- `graphics/unknown/01_14174c/entities.json`
+- `games/xs/graphics/unknown/00_0b2120/entities.json`
+- `games/xs/graphics/unknown/01_14174c/entities.json`
 
 Generated by `tools/dump_entities.py` (re-run any time - it only reads
 `baserom.gba` and whatever entity folders/frame PNGs currently exist
-under `graphics/unknown/*/`, never writes to them). Purpose: once the
+under `games/xs/graphics/unknown/*/`, never writes to them). Purpose: once the
 actor/entity C code behind this system is reversed, this is the *data*
 half ready to go - real ROM addresses, per-record keyframe->frame
 mappings, and a direct `asset_file` reference straight to each keyframe's
@@ -1424,12 +1424,12 @@ used `table_B` index resolved to either `{asset_file, w_tiles, h_tiles}`
 - `asset_file` pointing straight at that one frame's own PNG - for
 `pool_offset` records, or `{rom_address, w_tiles, h_tiles}` for
 `absolute_rom` ones), and `label`, the record's actor kind
-(`include/constants/actor_kinds.h`).
+(`engine/include/constants/actor_kinds.h`).
 
 The matching C data layout - `struct category_descriptor`,
 `struct category_vtable`, `struct anim_table_record`,
 `struct keyframe_entry` - is written up in
-`include/engine/actor/actor_anim.h`, field-for-field with this section (same offsets,
+`engine/include/engine/actor/actor_anim.h`, field-for-field with this section (same offsets,
 same names where a role is known, same honest `unknown_XX` where it
 isn't). It's data-layout only - none of the functions that walk these
 structs have been reversed to C yet - but it compiles clean today
@@ -1448,7 +1448,7 @@ are (the DMA3 writes in `FlushVramDmaQueue`):
 | 0x03 | u8 | always 0x00 |
 | 0x04 | width*height*32 bytes | 4bpp tile data |
 
-`graphics/vehicles/<family>/sprite_sheet/<entity>/NN.png` holds one frame
+`games/xs/graphics/vehicles/<family>/sprite_sheet/<entity>/NN.png` holds one frame
 each; `tools/framed_gfx.py` strips the header when it extracts a frame
 and puts it back when it builds the sheet.
 
@@ -1548,21 +1548,21 @@ records whose `table_B` arrays reference a frame changes: a folder is one
 run of consecutive frames that exactly the same records use. Every frame
 of both sheets is referenced (274 + 221), so the cut is exhaustive, and
 the folder names are the records' actor kinds
-(`include/constants/actor_kinds.h`) and what the frames show:
+(`engine/include/constants/actor_kinds.h`) and what the frames show:
 25 folders for categories 0-2 (`00_time_crate_1/` ... `24_checkpoint_text/`),
 27 for categories 3-6 (`00_shot/` ... `26_checkpoint_text/`). A record's
 frames can span several folders - the polar Nitro crate is
 `06_nitro_crate/` then `20_nitro_crate_burst/`, every wooden polar crate
 ends in the shared `19_crate_shards/`, the jetpack rocket is
 `18_rocket/`, `14_explosion/` and `21_rocket_burst/`. The sheets are now
-`graphics/vehicles/polar/sprite_sheet/` and
-`graphics/vehicles/jetpack/sprite_sheet/` (mirroring `src/game/vehicles/`),
+`games/xs/graphics/vehicles/polar/sprite_sheet/` and
+`games/xs/graphics/vehicles/jetpack/sprite_sheet/` (mirroring `engine/src/game/vehicles/`),
 and the folders are just the names (`question_crate/`, `rocket/`): the
 order of the `"folders"` list in the sheet's `sheet.json` is the sheet's
 byte order, which is also the build's pack order (`tools/framed_gfx.py
 order`, graphics.mk's `FRAMED_ENTITIES_<sheet>`), so the ROM doesn't
 change. The `FRAMED_POLAR_<FOLDER>_<NN>` and `FRAMED_JETPACK_...` names
-in the animation tables (`data/levels/anim_tables/`, where a frame is
+in the animation tables (`games/xs/data/levels/anim_tables/`, where a frame is
 `"<folder>/<NN>"`, docs/levels.md "Animation tables") follow the folders'
 names.
 
@@ -1586,10 +1586,10 @@ build reads only the 4-bit indices (`framed_gfx.py to-bin-folder`), so the
 colours never reach the ROM.
 
 A folder that several records draw in different banks takes the first
-record's (in table order), unless the sheet's `graphics/manifest.json`
+record's (in table order), unless the sheet's `games/xs/graphics/manifest.json`
 entry picks another of them in `folder_banks` ({folder: bank}): the
 jetpack explosion is drawn in the explosion actor's bank 4 rather than the
-bomber's 2 (#914). `graphics/vehicles/<family>/sprite_sheet/sheet.json`, which
+bomber's 2 (#914). `games/xs/graphics/vehicles/<family>/sprite_sheet/sheet.json`, which
 `split_entities.py` writes, lists every folder's records, palette and
 bank, and `other_banks` for these two:
 
@@ -1625,7 +1625,7 @@ calls the `+0x0C` field `palette_bank` (it was `header_byte`).
   still-undecoded descriptor/record fields listed at the end of that
   section.
 - The two giant LZ77 sheets are split into editable PNG folders under
-  `graphics/unknown/00_0b2120/`, `01_14174c/`, one per run of frames the
+  `games/xs/graphics/unknown/00_0b2120/`, `01_14174c/`, one per run of frames the
   same records use, named and coloured from the records - see "The framed
   sheets' folders and colours".
 - Given the raw-tag (`0x0`) upload path exists (see the VRAM upload
@@ -1643,7 +1643,7 @@ almost every moving thing in a level: Crash, the enemies, the bosses, the
 crates and pickups, the effects, and the level-select and HUD icons. Their
 art is the sprite tile pool (`0x082BF120`-`0x084A4660`, 1,987,904 bytes of
 raw 4bpp tiles), and their colours are the 125 OBJ palettes after it
-(`gObjPalettes`, `graphics/sprites/palettes/NNN_<owner>.pal`, see "OBJ
+(`gObjPalettes`, `games/xs/graphics/sprites/palettes/NNN_<owner>.pal`, see "OBJ
 palettes").
 
 ### Format
@@ -1653,7 +1653,7 @@ an x, y offset from the sprite's position, plus one run of tiles in the
 pool: the first piece's tiles, then the next piece's, each piece's tiles
 in 1D OBJ order (row by row). The renderer (`DrawPieces`,
 `DrawAffinePieces`) uploads the run and puts one OAM entry per piece.
-Each bank is a directory, `graphics/sprites/bankNN_<name>/`, with:
+Each bank is a directory, `games/xs/graphics/sprites/bankNN_<name>/`, with:
 
 - `fKKK.png` for frame KKK: the frame as the game draws it, every piece
   in place. It is a 4bpp indexed PNG cropped to the pieces' bounding box.
@@ -1669,7 +1669,7 @@ Each bank is a directory, `graphics/sprites/bankNN_<name>/`, with:
   - `layout` is the frame's layout type, the high nibble of its first
     piece byte. It says which boxes and anchor follow the frame header in
     the C, so it must match the frame's struct type there
-    (`include/engine/gfx/sprite_bank.h`). The generated header declares each frame
+    (`engine/include/engine/gfx/sprite_bank.h`). The generated header declares each frame
     with the struct of its layout, so a mismatch doesn't compile (except
     for 2 against 5, which have the same struct).
   - `tiles` says where the frame's tile run starts. `"own"` means new
@@ -1711,9 +1711,9 @@ the size of every bank before it). It reads the PNG indices (the palette
 is ignored), cuts each piece's rectangle into tiles, and places the runs
 frame by frame. It writes:
 - `bankNN_tiles.inc`, the bytes of `gSpriteBankNNTiles`
-  (`src/engine/gfx/data/sprite_tiles.cpp`);
+  (`engine/src/engine/gfx/data/sprite_tiles.cpp`);
 - `bankNN_pieces.inc`, the frames' `...Pos` and `...Pieces` arrays, which
-  `src/*/data/sprite_banks_*.cpp` include where the ROM has them;
+  `engine/src/*/data/sprite_banks_*.cpp` include where the ROM has them;
 - `sprite_frames.h`, with `SPRITE_TILES_BANKnn` (the bank's offset in the
   pool), `SPRITE_TILES_BANKnn_SIZE`, `SPRITE_TILES_BANKnn_FRAMEkkk` (the
   frame's tile offset, used by the frame headers in the C), and the
@@ -1796,13 +1796,13 @@ shape in several colours. Such a frame's PNG is drawn with
 the first one in `palettes` (the first animation that shows it), and the
 others are listed after it. The PNG's palette is only for viewing. To
 see the frame in another of its palettes, load
-`graphics/sprites/palettes/NNN_<owner>.pal` into the image. The indices
+`games/xs/graphics/sprites/palettes/NNN_<owner>.pal` into the image. The indices
 don't change.
 
 ### OBJ palettes
 
 The 125 OBJ palettes (`gObjPalettes`) are JASC `.pal` files,
-`graphics/sprites/palettes/NNN_<owner>.pal`: NNN is the `paletteId` the
+`games/xs/graphics/sprites/palettes/NNN_<owner>.pal`: NNN is the `paletteId` the
 animations give (`sprite_anim.paletteId`), which also fixes the build's
 order (graphics.mk concatenates them sorted), and `<owner>` says what
 uses it: the first sprite bank, in bank order, whose animations name it
@@ -1821,14 +1821,14 @@ extract` writes them again.
 ### Level BG tile sets
 
 The six 4bpp tile sets of the level BG1-3 layers and the five 8bpp BG0
-ones used to be PNGs here (`graphics/level_bg_tiles/`,
-`graphics/level_tilesets/`). They aren't sources any more: the build
+ones used to be PNGs here (`games/xs/graphics/level_bg_tiles/`,
+`games/xs/graphics/level_tilesets/`). They aren't sources any more: the build
 makes each set from the room layer pictures that use it, and the PNGs are
 gone. See [levels.md, "Tile sets"](./levels.md#tile-sets).
 
 ### Level BG layer pictures
 
-The 131 BG layers of the 41 rooms are `data/levels/<room>/bg0-3.png`, each
+The 131 BG layers of the 41 rooms are `games/xs/data/levels/<room>/bg0-3.png`, each
 the layer's whole picture (the chunk grid, 8x8 pixels per cell), 8bpp
 indexed with the room's BG palette. They used to be raw `u16` maps
 (`<layer>.map.bin`). [levels.md, "BG layers"](./levels.md#bg-layers) has
@@ -1854,8 +1854,8 @@ No sidecar file is needed. The pictures take 12.3 MB against the
 The remaining 4bpp tile PNGs that gbagfx had written as grayscale are
 indexed (`P` mode) PNGs now, with the same indices. grit (`-gt -gB4 -p!`,
 or `-gB8` for the level-select pictures) builds the same bytes gbagfx did,
-checked on all 21 sheets (`graphics/fonts/`, `graphics/logos/` and
-`graphics/level_select/` today):
+checked on all 21 sheets (`games/xs/graphics/fonts/`, `games/xs/graphics/logos/` and
+`games/xs/graphics/level_select/` today):
 - the credits and VV logo sheets (`logos/credits/`, `logos/vicarious_visions/`)
   carry their real 16-colour palettes, which the build reads (see
   "Palettes");
@@ -1865,7 +1865,7 @@ checked on all 21 sheets (`graphics/fonts/`, `graphics/logos/` and
 
 ### Level-select pictures
 
-`graphics/level_select/` holds the level select's graphics:
+`games/xs/graphics/level_select/` holds the level select's graphics:
 `platform.png` (`gLevelSelectPageBg`, a BG package), `cursor_zoom.png`
 (`gLevelSelectCursorZoomTiles`) and the ten round pictures in
 `pictures/`. `ZoomBg::SetPicture` indexes `gLevelSelectPictures[]` by
@@ -1889,7 +1889,7 @@ in the order 0, 1, 4, 2, 5, 3, 9, 7, 8, 6, then their palettes in the
 same order (`level_select_graphics.cpp`).
 
 Which picture a theme shows is its `"picture"` in
-`data/levels/levels.json`'s `"themes"` (a path above), and
+`games/xs/data/levels/levels.json`'s `"themes"` (a path above), and
 `gLevelSelectPictures` is generated from it ([levels.md,
 "Themes"](./levels.md#themes)), so a new theme can show any of them.
 
@@ -1942,15 +1942,15 @@ Any pixel outside the OBJs must be 0, so drawing there fails the build.
 ### Run-time palettes
 
 Three tile sheets have no palette of their own in the ROM:
-`gSmallFontTiles` (`graphics/fonts/small.png`),
+`gSmallFontTiles` (`games/xs/graphics/fonts/small.png`),
 `gLargeFontTiles` (`00_5a551c_tiles.png`) and
-`gLevelSelectCursorZoomTiles` (`graphics/level_select/cursor_zoom.png`).
+`gLevelSelectCursorZoomTiles` (`games/xs/graphics/level_select/cursor_zoom.png`).
 The game picks their OBJ palette bank at run time, through the OAM
 entry that draws them: the font glyphs take `oam_scratch.palette`,
 which `Font::SetPalette` sets and `Font::ResetPalette` points back at
-the palette-cache slot of sprite bank 35's palette (`src/engine/text/font.cpp`),
+the palette-cache slot of sprite bank 35's palette (`engine/src/engine/text/font.cpp`),
 and the cursor zoom takes the palette of the cursor's sprite part
-(`oam.palette = part->palette`, `src/game/ui/level_select_cursor.cpp`).
+(`oam.palette = part->palette`, `engine/src/game/ui/level_select_cursor.cpp`).
 So no ROM palette is tied to them.
 
 Their PNGs carry the palette the game uses by default, taken from

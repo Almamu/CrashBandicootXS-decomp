@@ -16,7 +16,7 @@ using Engine::Sys::Display;
 using Engine::Sys::FrameLimiter;
 using Game::Ui::Starfield;
 
-/* The starfield (Starfield, #664 part 10c, include/game/ui/frontend.hpp): a BG0
+/* The starfield (Starfield, #664 part 10c, engine/include/game/ui/frontend.hpp): a BG0
  * "raw bitmap" behind the language select's, the credits' and the
  * company logos' text. The whole screen is one run of 8x8 tiles on BG0
  * (tile index == screen position, palette bank 15), and a 4bpp shadow

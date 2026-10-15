@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """List, and try, the simplifications of #846 in the game code.
 
-    tools/simplify_scan.py [PATH...]                 inventory (default: src/)
+    tools/simplify_scan.py [PATH...]                 inventory (default: engine/src/)
     tools/simplify_scan.py --list [PATH...]          every candidate, one per line
     tools/simplify_scan.py --try [-j N] [--kinds K] FILE.cpp...
 
@@ -771,12 +771,12 @@ def overlong(old, new):
 
 
 def macros(text):
-    """{name: max uses of one parameter} for the function-like macros of include/ and text."""
+    """{name: max uses of one parameter} for the function-like macros of engine/include/ and text."""
     global _MACROS
     if _MACROS is None:
         # filled before it is published: --try's threads read it while it's built
         found = {}
-        for top in ("include", os.path.join("platform", "gba", "include")):
+        for top in (os.path.join("engine", "include"), os.path.join("platform", "gba", "include")):
             for d, _, fs in os.walk(os.path.join(ROOT, top)):
                 for f in fs:
                     with open(os.path.join(d, f), errors="replace") as fh:
@@ -898,7 +898,7 @@ APPLY = {"block": apply_block, "braces": apply_block, "caseblk": apply_block, "n
 
 
 def compile_cmds(src):
-    obj = "build/crashbandicootxs/" + os.path.splitext(src)[0] + ".o"
+    obj = "build/crashbandicootxs/" + os.path.splitext(src)[0].removeprefix("engine/") + ".o"
     out = subprocess.run(["make", "-n", "-B", obj], cwd=ROOT, capture_output=True, text=True).stdout
     cpp = cc1 = asm = None
     for line in out.splitlines():
@@ -1156,7 +1156,7 @@ def merge_names(p, c):
 
 def sources(paths):
     out = []
-    for p in paths or ["src"]:
+    for p in paths or ["engine/src"]:
         if os.path.isfile(os.path.join(ROOT, p)):
             out.append(p)
             continue

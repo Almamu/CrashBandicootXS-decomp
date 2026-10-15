@@ -9,7 +9,7 @@ extern "C" {
 using Game::Level::LevelLayers;
 
 /* GitHub issues #9/#10/#41's shared cross-reference: `CollidePlayer`
- * (`src/game/crash/player_collide.c`, still `NON_MATCHING`/parked) flags
+ * (`engine/src/game/crash/player_collide.c`, still `NON_MATCHING`/parked) flags
  * this as "still raw, only its return code's meaning as an opaque
  * 'hit' test against the constant 6 is used" from its own camera-
  * probe tail; `DrawAffineSpritePieces`'s original write-up
@@ -19,9 +19,9 @@ using Game::Level::LevelLayers;
  * return value, so it was never examined on its own until now.
  *
  * `GetTerrainFlagsAt(x, y)` (LevelLayers::GetTerrainFlags) is a small
- * wrapper around the already-matched terrain-tile-cache lookup `GetTerrainType` (`src/game/level/
+ * wrapper around the already-matched terrain-tile-cache lookup `GetTerrainType` (`engine/src/game/level/
  * tile_cache.cpp`, GitHub issue #40): it takes `this->tiles` (+0x20), the
- * TileCache (include/game/level/bg_layer.hpp), converts `x`/`y` into that cache's own lookup
+ * TileCache (engine/include/game/level/bg_layer.hpp), converts `x`/`y` into that cache's own lookup
  * units via a plain `>>3` (clamped to a minimum of 0 on each axis
  * independently - `ProbeTerrain`'s own bounds-clamp neighbors use the
  * same "clamp each axis, don't just floor a negative tile index"
@@ -80,7 +80,7 @@ s32 LevelLayers::GetTerrainFlags(s32 x, s32 y)
 /* GitHub issue #9/#10: single-point terrain-height ("floor") probes,
  * split out of `docs/matching/archive/issue-9-0x0800a178-graphics.md`'s existing
  * write-up - both callers (`ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor`, GitHub issue
- * #9/#10, `src/game/entities/ground_sprite_collide.cpp`) already fully placed their
+ * #9/#10, `engine/src/game/entities/ground_sprite_collide.cpp`) already fully placed their
  * argument roles: `s32 fn(void *player, struct vec2 *pos, s32
  * *outValue)`, computing `pos->x >> 3`/`pos->y >> 3` tile coords from
  * `player+0x20`'s terrain-data pointer (the same `TileCache *`
@@ -155,7 +155,7 @@ s32 LevelLayers::GetTerrainFlags(s32 x, s32 y)
  * flush byte-exact on the first isolated-compile attempt (no relocation
  * sites, no register pins). Neither has any caller anywhere in the ROM,
  * checked every asm/*.s, games/xs/expected/*.s (aside from their own definitions
- * there), and every .c file under src/ for a bl/.4byte reference to
+ * there), and every .c file under engine/src/ for a bl/.4byte reference to
  * either symbol, none found, so both are UNUSED, matched anyway following this
  * project usual practice of still routing genuinely dead code through
  * the normal matching workflow:
@@ -227,7 +227,7 @@ s32 LevelLayers::ProbeSolidFloor(struct vec2 *pos, s32 *outValue)
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked every asm/*.s,
- * games/xs/expected/*.s, and every .c file under src/ for a bl/.4byte reference).
+ * games/xs/expected/*.s, and every .c file under engine/src/ for a bl/.4byte reference).
  * See the file-level comment above. */
 s32 LevelLayers::sub_8026C80(s32 cond, volatile s32 *ptr)
 {
@@ -237,7 +237,7 @@ s32 LevelLayers::sub_8026C80(s32 cond, volatile s32 *ptr)
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked every asm/*.s,
- * games/xs/expected/*.s, and every .c file under src/ for a bl/.4byte reference).
+ * games/xs/expected/*.s, and every .c file under engine/src/ for a bl/.4byte reference).
  * See the file-level comment above. */
 s32 sub_8026C8C(void)
 {

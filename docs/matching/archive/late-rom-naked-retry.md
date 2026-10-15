@@ -8,8 +8,8 @@ function was tried under both agbcc and old_agbcc.
 
 | Function | File | Compiler | What it took |
 |---|---|---|---|
-| `InitLanguageSelectGraphics` | `src/game/ui/language_select.c` | both | The icon-manager steps as `static inline` helpers taking the manager (`IconSetBase`/`IconReserveVram`, the idiom from `InitCredits` in credits.c), plus one `u32 zero` local shared by the `field_8` and `field_108` stores. |
-| `FillBgPictureMap` | `src/engine/actor/bg_picture.c` | old_agbcc (object joined `OLD_AGBCC_OBJS`) | Map entry read as `v = *map; v += base;`, high nibble masked as `(*nib >> 4) & 0xf`, and the function declared `inline` ahead of `LoadBgPicture`. |
+| `InitLanguageSelectGraphics` | `engine/src/game/ui/language_select.c` | both | The icon-manager steps as `static inline` helpers taking the manager (`IconSetBase`/`IconReserveVram`, the idiom from `InitCredits` in credits.c), plus one `u32 zero` local shared by the `field_8` and `field_108` stores. |
+| `FillBgPictureMap` | `engine/src/engine/actor/bg_picture.c` | old_agbcc (object joined `OLD_AGBCC_OBJS`) | Map entry read as `v = *map; v += base;`, high nibble masked as `(*nib >> 4) & 0xf`, and the function declared `inline` ahead of `LoadBgPicture`. |
 
 ### `InitLanguageSelectGraphics`
 

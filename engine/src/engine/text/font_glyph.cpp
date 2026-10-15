@@ -15,7 +15,7 @@ using Engine::Text::LargeFont;
 using Engine::Text::SmallFont;
 
 /* GitHub issue #46: Font's glyph drawer and character dispatcher, and the
- * two fonts' constructors (include/engine/text/font.hpp). Built with old_agbcp: under
+ * two fonts' constructors (engine/include/engine/text/font.hpp). Built with old_agbcp: under
  * agbcp, DrawGlyph derives its bitfield masks differently. */
 
 /* The value arrives as a parameter so old_agbcp loads the 0x1ff mask
@@ -50,7 +50,7 @@ void Font::DrawGlyph(u8 charByte)
 
 /* gSmallFont: 9-pixel lines, 4-pixel spaces, glyph stride 2, and a
  * charLookup built from the gSmallFontChars font order table (see
- * include/engine/text/bitmap_font.h). */
+ * engine/include/engine/text/bitmap_font.h). */
 SmallFont::SmallFont()
 {
     u32 i;

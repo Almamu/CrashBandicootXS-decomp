@@ -17,7 +17,7 @@ using Game::Entities::HpActor;
 using Game::Vehicles::Jetpack::JetpackCannonball;
 using Game::Vehicles::Jetpack::JetpackPlane;
 
-/* The jetpack plane (#664 part 11f, include/game/vehicles/vehicle.hpp), ROM
+/* The jetpack plane (#664 part 11f, engine/include/game/vehicles/vehicle.hpp), ROM
  * 0x0802FA38-0x0802FF08, between jetpack_shot.cpp and jetpack_bomber.cpp:
  * JetpackPlane (gJetpackPlaneVtable), one of the jetpack levels'
  * HpActors. It hops between the level's spawn points (Aim and the

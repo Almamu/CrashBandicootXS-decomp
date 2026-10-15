@@ -4,7 +4,7 @@ These are the two functions between issue #33's chunk
 (`spawn_pickups.c`, which ends with the game-context
 constructor `InitLevelState`) and `UpdateGameFrame` (`game_frame.c`). No
 issue covered them. Both are now real C in
-`src/game/level/level_cutscene.c`, and `asm/code_3_2_17_22354.s` is
+`engine/src/game/level/level_cutscene.c`, and `asm/code_3_2_17_22354.s` is
 retired. Both match under either compiler. The file is built with the
 current agbcc like its neighbours.
 
@@ -25,11 +25,11 @@ each with flags 3 when it is non-NULL:
 It then clears the context pointer `gLevelStateSingleton` and frees `self`
 on bit 0 of `flags`, gcc 2.x's deleting-destructor convention. Nothing
 in the ROM calls it. There is no `bl` to it, no word `0x08022355`, and no
-symbol reference in `asm/`/`src/`. That fits: the game never returns from
+symbol reference in `asm/`/`engine/src/`. That fits: the game never returns from
 `MainLoop`.
 
 The icon managers' destructor entry is the method record at +0x08 of
-their `record`. `struct icon_record` (`include/engine/text/bitmap_font.h`) now names
+their `record`. `struct icon_record` (`engine/include/engine/text/bitmap_font.h`) now names
 it `destroy`, taken out of the leading `unused_00` padding. The call goes
 through `_call_via_r2`, linked with the usual `.set`
 alias.

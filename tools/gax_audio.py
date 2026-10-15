@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
 """
-Builds sound/gax_audio_data.bin (the Shin'en GAX2 sound-engine data block used
+Builds build/crashbandicootxs/sound/gax_audio_data.bin (the Shin'en GAX2 sound-engine data block used
 by this game: shared instrument/sample pool + all 19 songs) from editable
 sources:
 
-  sound/gax_manifest.json  - instrument definitions (envelopes, vibrato, rows),
+  games/xs/sound/gax_manifest.json  - instrument definitions (envelopes, vibrato, rows),
                               per-song scaffold fields, and the raw bytes for a
                               small pre-existing shared structure this data
                               happens to sit next to (see NOTE below).
-  sound/songs/*.xm          - one FastTracker II module per song. Patterns,
+  games/xs/sound/songs/*.xm          - one FastTracker II module per song. Patterns,
                               notes and instrument assignments are read from
                               here - this is what a modder edits to change a
                               song.
-  sound/songs/<key>.json    - a new song's settings (optional): a song of
+  games/xs/sound/songs/<key>.json    - a new song's settings (optional): a song of
                               the manifest's song_table with no recorded
                               scaffold has it derived from its XM
                               (new_song, docs/audio.md "Adding a song").
-  sound/samples/*.wav       - one 8-bit mono PCM sample per instrument voice
+  games/xs/sound/samples/*.wav       - one 8-bit mono PCM sample per instrument voice
                               (shared across songs) - this is what a modder
                               edits to change a sound.
-  sound/instruments/*.json  - new instruments, each with a WAV under sound/,
+  games/xs/sound/instruments/*.json  - new instruments, each with a WAV under games/xs/sound/,
                               for new songs and sound effects; a new song's
                               XM can also bring its own (docs/audio.md, "New
                               instruments"). They are appended to the pool.
@@ -27,11 +27,11 @@ sources:
 It also builds the GAX2 sound-effect set that sits right before the music
 block (`--sfx`, see docs/audio.md) from
 
-  sound/gax_sfx_manifest.json - its 88 instruments (the same record types as
+  games/xs/sound/gax_sfx_manifest.json - its 88 instruments (the same record types as
                               the music's), the handler type's song fields
                               and how many voice-type pointers to emit.
-  sound/sfx_samples/*.wav     - its 87 samples (8-bit mono PCM).
-  sound/sfx_table.json        - the new instruments its new sound effects
+  games/xs/sound/sfx_samples/*.wav     - its 87 samples (8-bit mono PCM).
+  games/xs/sound/sfx_table.json        - the new instruments its new sound effects
                               name, appended to the set.
 
 The music block starts with the 36-byte GaxSongHeader.sfxTypes array
@@ -39,25 +39,25 @@ The music block starts with the 36-byte GaxSongHeader.sfxTypes array
 sound-effect set's one handler type, generated from that set's layout.
 
 Each block is written twice: OUTPUT.bin, its bytes with every pointer
-left 0, and OUTPUT.s, which data/data.s includes: the .bin's bytes
+left 0, and OUTPUT.s, which games/xs/data/data.s includes: the .bin's bytes
 (`.incbin`) with each pointer as a relocation (`.4byte gGaxMusicData +
 0x1234`, `.4byte GaxInfoInit`), so the blocks can sit anywhere in the
 ROM and change size (#967, docs/shifting.md). Each block must start
-word-aligned; data/data.s aligns them.
+word-aligned; games/xs/data/data.s aligns them.
 
 The block ends with a 20th, silent song: the engine's default handler
 layout (one channel, one empty pattern, no instruments; manifest
 `default_song`). Its song struct is written to a separate file (LAYOUT.bin),
-which data/data.s incbins as gGaxDefaultSong, the label the code uses.
+which games/xs/data/data.s incbins as gGaxDefaultSong, the label the code uses.
 SONGS.h #defines each song's offset in the block for the song table
-(src/engine/audio/data/song_table.cpp), so songs can change size.
+(engine/src/engine/audio/data/song_table.cpp), so songs can change size.
 
 The song IDs (the gSongTable index) come from the manifest's `song_table`
 list, in table order, each with a comment on where the game plays it, and
 `no_song_comment` documents SONG_NONE (one past the table).
 `--constants SONGS.h` writes them as the SONG_* #defines of
 constants/songs.h (build/include), with the song each screen plays
-(sound/music.json's screen_music) as SCREEN_SONG_<SCREEN>, and `--table SONG_TABLE.inc` gSongTable
+(games/xs/sound/music.json's screen_music) as SCREEN_SONG_<SCREEN>, and `--table SONG_TABLE.inc` gSongTable
 in the same order (the song table song_table.cpp #includes); both read only
 the manifest.
 
@@ -77,9 +77,9 @@ import sys
 import wave
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SOUND_DIR = os.path.join(ROOT, 'sound')
+SOUND_DIR = os.path.join(ROOT, 'games', 'xs', 'sound')
 
-# The labels data/data.s gives the two blocks: every pointer into a block
+# The labels games/xs/data/data.s gives the two blocks: every pointer into a block
 # is a relocation against its label.
 MUSIC_SYMBOL = 'gGaxMusicData'
 SFX_SYMBOL = 'gGaxSfxData'
@@ -695,7 +695,7 @@ class Allocator:
 
     def write(self, bin_path, asm_path, start=0, end=None):
         """Writes buf[start:end]: the bytes to bin_path (pointers 0), and
-        to asm_path the assembly that data/data.s includes, the bytes as
+        to asm_path the assembly that games/xs/data/data.s includes, the bytes as
         `.incbin` ranges of bin_path with a `.4byte` relocation per
         pointer."""
         end = len(self.buf) if end is None else end
@@ -939,7 +939,7 @@ def link_sfx(instruments_by_index, samples_by_index, song_info):
 # ---------------------------------------------------------------------------
 # New instruments (docs/audio.md, "New instruments"): an instrument the
 # ROM's pool doesn't have, from an XM's own instrument and sample or from
-# sound/instruments/<name>.json and a WAV, appended to a pool after the
+# games/xs/sound/instruments/<name>.json and a WAV, appended to a pool after the
 # ROM's instruments and samples.
 # ---------------------------------------------------------------------------
 
@@ -1174,7 +1174,7 @@ def xm_instrument_spec(xi, sample_no, fail):
 
 
 def json_instrument_spec(name, fixed_pitch, fail):
-    """A new instrument from sound/instruments/<name>.json and its WAV
+    """A new instrument from games/xs/sound/instruments/<name>.json and its WAV
     (docs/audio.md, "New instruments")."""
     path = os.path.join(INSTRUMENTS_DIR, f'{name}.json')
     rel = os.path.relpath(path, ROOT)
@@ -1190,10 +1190,10 @@ def json_instrument_spec(name, fixed_pitch, fail):
     if unknown:
         bad(f"unknown fields {', '.join(unknown)} (an instrument's are {', '.join(INSTRUMENT_FIELDS)})")
     if 'sample' not in m:
-        bad('no "sample" (the WAV, a path under sound/, e.g. "samples/lead.wav")')
+        bad('no "sample" (the WAV, a path under games/xs/sound/, e.g. "samples/lead.wav")')
     wav = os.path.normpath(os.path.join(SOUND_DIR, m['sample']))
     if not os.path.isfile(wav):
-        bad(f"its sample {m['sample']} isn't a file under sound/")
+        bad(f"its sample {m['sample']} isn't a file under games/xs/sound/")
     data, wav_rate = load_wav(wav, bad)
     rate = m.get('rate', wav_rate)
     if isinstance(rate, bool) or not isinstance(rate, (int, float)) or rate <= 0:
@@ -1280,7 +1280,7 @@ class Pool:
         return idx
 
     def add_named(self, name, fixed_pitch, fail):
-        """sound/instruments/<name>.json's instrument: one pool entry
+        """games/xs/sound/instruments/<name>.json's instrument: one pool entry
         however many songs or sound effects use it."""
         if name not in self.named:
             self.named[name] = self.add(json_instrument_spec(name, fixed_pitch, fail), fail)
@@ -1299,7 +1299,7 @@ class Pool:
 
 
 def named_instrument(name):
-    """Whether an XM instrument's name is sound/instruments/<name>.json's."""
+    """Whether an XM instrument's name is games/xs/sound/instruments/<name>.json's."""
     return bool(name) and os.path.basename(name) == name and \
         os.path.isfile(os.path.join(INSTRUMENTS_DIR, f'{name}.json'))
 
@@ -1328,8 +1328,8 @@ def load_pool(manifest, samples_dir):
 
 def sfx_pool(manifest_path=None, samples_dir=None, table_path=None):
     """The sound-effect set's pool, with the new instruments sound effects
-    name (sound/sfx_table.json's entries with an "instrument",
-    sound/instruments/<name>.json, docs/audio.md "Adding a sound
+    name (games/xs/sound/sfx_table.json's entries with an "instrument",
+    games/xs/sound/instruments/<name>.json, docs/audio.md "Adding a sound
     effect"), and {name: its instrument number}, which tools/sfx_table.py
     writes as the entry's slot_id."""
     manifest_path = manifest_path or SFX_MANIFEST
@@ -1345,21 +1345,21 @@ def sfx_pool(manifest_path=None, samples_dir=None, table_path=None):
 
         if ('slot_id' in e) == ('instrument' in e):
             fail('an entry has either a "slot_id" (one of the set\'s instruments) or an "instrument" '
-                 '(sound/instruments/<name>.json)')
+                 '(games/xs/sound/instruments/<name>.json)')
         if 'slot_id' in e:
             if not 0 < e['slot_id'] < pool.rom_instruments:
                 fail(f"slot_id {e['slot_id']}: the set's instruments are 1-{pool.rom_instruments - 1}")
             continue
         name = e['instrument']
         if not named_instrument(name):
-            fail(f"instrument {name!r}: there is no sound/instruments/{name}.json")
+            fail(f"instrument {name!r}: there is no games/xs/sound/instruments/{name}.json")
         slots[name] = pool.add_named(name, True, fail)
     return pool, slots
 
 
 def build_sfx(manifest_path, samples_dir):
-    """The sound-effect set (sound/gax_sfx_manifest.json, sound/sfx_samples/,
-    and the new instruments sound/sfx_table.json names) and the
+    """The sound-effect set (games/xs/sound/gax_sfx_manifest.json, games/xs/sound/sfx_samples/,
+    and the new instruments games/xs/sound/sfx_table.json names) and the
     handler-type array the music block starts with.
 
     Returns (the set's Allocator, the sfxTypes Chunk). Every pointer is a
@@ -1401,7 +1401,7 @@ def c_name(key):
 
 def write_header(path, songs_by_key):
     """#defines of each song's offset in the music block, for the song
-    table (src/engine/audio/data/song_table.cpp)."""
+    table (engine/src/engine/audio/data/song_table.cpp)."""
     out = ['/* Generated by tools/gax_audio.py: the offset of each song in the',
            ' * music block gGaxMusicData (gax_audio_data.bin). */',
            '#ifndef GUARD_GAX_SONGS_H', '#define GUARD_GAX_SONGS_H', '']
@@ -1414,7 +1414,7 @@ def write_header(path, songs_by_key):
 
 def check_song_table(manifest, manifest_path):
     """song_table lists every song once: each of the ROM's (the manifest's
-    `songs`) and the new ones, songs with an XM in sound/songs/ but no
+    `songs`) and the new ones, songs with an XM in games/xs/sound/songs/ but no
     recorded scaffold."""
     rel = os.path.relpath(manifest_path, ROOT)
     keys = [t['song'] for t in manifest['song_table']]
@@ -1426,7 +1426,7 @@ def check_song_table(manifest, manifest_path):
         sys.exit(f"{rel}: song_table doesn't list {', '.join(missing)}")
     for k in keys:
         if k not in manifest['songs'] and not os.path.exists(os.path.join(SOUND_DIR, 'songs', f'{k}.xm')):
-            sys.exit(f"{rel}: song_table's {k} is neither a song of the ROM nor sound/songs/{k}.xm")
+            sys.exit(f"{rel}: song_table's {k} is neither a song of the ROM nor games/xs/sound/songs/{k}.xm")
 
 
 def song_keys(manifest_path=None):
@@ -1438,7 +1438,7 @@ def song_keys(manifest_path=None):
 
 
 def screen_songs(music_path, keys):
-    """sound/music.json's screen_music: (SCREEN_SONG_<SCREEN>, its song's
+    """games/xs/sound/music.json's screen_music: (SCREEN_SONG_<SCREEN>, its song's
     SONG_<KEY>, comment) for each screen, in the file's order."""
     rel = os.path.relpath(music_path, ROOT)
     out = []
@@ -1468,11 +1468,11 @@ def write_constants(manifest_path, path):
         '#define GUARD_CONSTANTS_SONGS_H',
         '',
         '/*',
-        ' * Song IDs: the index into gSongTable (src/engine/audio/data/song_table.cpp)',
+        ' * Song IDs: the index into gSongTable (engine/src/engine/audio/data/song_table.cpp)',
         ' * that PlaySong/StartSong take, in the order of the manifest\'s',
-        ' * song_table. Each name is the song\'s key in sound/gax_manifest.json',
+        ' * song_table. Each name is the song\'s key in games/xs/sound/gax_manifest.json',
         ' * (the title the ROM stores with the song, e.g. "jungle (c) Manfred',
-        ' * Linzner"; a new song\'s is its XM\'s, sound/songs/<key>.xm), and',
+        ' * Linzner"; a new song\'s is its XM\'s, games/xs/sound/songs/<key>.xm), and',
         ' * gSongTable pairs every SONG_<NAME> with the generated',
         " * GAX_SONG_<NAME> offset, so the two can't drift apart. The comments",
         ' * say where the game plays each one.',
@@ -1503,7 +1503,7 @@ def write_constants(manifest_path, path):
 
 
 def write_song_table(manifest_path, path):
-    """song_table.inc: gSongTable, which src/engine/audio/data/song_table.cpp
+    """song_table.inc: gSongTable, which engine/src/engine/audio/data/song_table.cpp
     #includes. One entry per song of the manifest's song_table, in song id
     order: the song's GAX_SONG_<KEY> offset in the music block (gax_songs.h).
     Generated with constants/songs.h's ids, so no song is left NULL."""
@@ -1552,7 +1552,7 @@ def rom_song(sm, xm, instruments):
     return song
 
 
-# A new song's settings (sound/songs/<key>.json, every field optional):
+# A new song's settings (games/xs/sound/songs/<key>.json, every field optional):
 # its title and artist (the `"title" (c) artist` string stored with it) and
 # its GaxSongData fields. The defaults are the ROM's level songs': volume
 # 1.0, the 15769 Hz mix rate, 3 sound-effect voices mixed at half that
@@ -1612,7 +1612,7 @@ def new_song_instruments(xm, order_rows, pool, fail):
     """The pool instrument each XM instrument the song plays is
     (`gax_instrument_indices` of a ROM song's XM; None for the others): an
     `Instrument N` is the ROM pool's N, an instrument named like
-    sound/instruments/<name>.json is that one, any other one is a new
+    games/xs/sound/instruments/<name>.json is that one, any other one is a new
     instrument from its own sample (Pool.add). Also checks that the notes
     a new instrument plays are in GAX2's period table.
 
@@ -1648,7 +1648,7 @@ def new_song_instruments(xm, order_rows, pool, fail):
         else:
             if not xi['samples']:
                 bad("it has no sample: name it \"Instrument N\" for the pool's instrument N, name it after "
-                    "sound/instruments/<name>.json, or give it a sample")
+                    "games/xs/sound/instruments/<name>.json, or give it a sample")
             keymap = xi.get('keymap', [0] * 96)
             used = sorted({keymap[k - 1] for k in notes.get(n, ())}) or [keymap[XM_C4 - 1]]
             if len(used) > 1:
@@ -1681,7 +1681,7 @@ def set_effect(rows, row, effect, param, why, fail):
 
 def new_song(key, xm_path, xm, pool):
     """A song with no ROM history: its scaffold derived from the XM, with
-    the settings of the optional sound/songs/<key>.json next to it.
+    the settings of the optional games/xs/sound/songs/<key>.json next to it.
 
     - one GAX2 channel per XM channel, in order;
     - one order position per entry of the XM's order list (a channel's
@@ -1691,7 +1691,7 @@ def new_song(key, xm_path, xm, pool):
       same notes on two channels); no transposes.
 
     The XM's instruments are the shared pool's (`Instrument N`, as in the
-    ROM's songs), sound/instruments/<name>.json's by name, or new ones
+    ROM's songs), games/xs/sound/instruments/<name>.json's by name, or new ones
     from their own samples (new_song_instruments). GAX2 songs have one
     pattern length and start at speed 6: a shorter pattern gets a pattern
     break (D00) on its last row, and another speed an Fxx on the first
@@ -1831,7 +1831,7 @@ def build(manifest_path, songs_dir, samples_dir, out_path, layout_path=None, hea
                  "the GBA's 32 MiB of ROM")
     # The default song's own song struct is the layout the code references
     # as gGaxDefaultSong: a separate output, so it can have that label.
-    # Its pointers are relocations against gGaxMusicData too, so data/data.s
+    # Its pointers are relocations against gGaxMusicData too, so games/xs/data/data.s
     # must put it right after the block.
     split = default.new_offset.off
     n = alloc.write(out_path, asm_path(out_path), 0, split)

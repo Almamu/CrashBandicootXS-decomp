@@ -6,7 +6,7 @@ extern "C" {
 
 /*
  * ROM 0x0816C418-0x0816C460: an entry table and the entry set that
- * points into it. Linked in ROM order between data/data.s sections by
+ * points into it. Linked in ROM order between games/xs/data/data.s sections by
  * games/xs/ldscript.txt - see docs/data.md.
  */
 

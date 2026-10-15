@@ -21,10 +21,10 @@ using Game::Entities::MovingSprite;
 using Game::Objects::Platform;
 
 /* The spawners of the bosses, the room exit and Mega-Mix (#664,
- * include/game/level/spawners.hpp), ROM 0x08021280-0x08021748. Built with
+ * engine/include/game/level/spawners.hpp), ROM 0x08021280-0x08021748. Built with
  * old_agbcp. Since #915 the bosses' and Mega Mix's are static members of
  * their controllers' classes (DingodileCtrl::Spawn, TinyCtrl::Spawn,
- * CortexBossCtrl::Spawn, MegaMixCtrl::Spawn; include/game/bosses/boss_ctrl.hpp); the
+ * CortexBossCtrl::Spawn, MegaMixCtrl::Spawn; engine/include/game/bosses/boss_ctrl.hpp); the
  * room exit, a bare Entity or a Platform by the level, stays free. */
 
 /* The part's X and Y mirror bits from its parameter record's flags (bit

@@ -38,7 +38,7 @@ using Game::Ui::TitleScreen;
 /* UpdateGameFrame - the main per-frame game-loop driver at the head of
  * the UpdateGameFrame-MainLoop cluster (GitHub issue #34,
  * docs/matching.md). Called once per frame from `MainLoop`
- * (src/game/level/main_loop.cpp) on `gLevelState`, the
+ * (engine/src/game/level/main_loop.cpp) on `gLevelState`, the
  * central per-level state object every other function in this
  * cluster (`EndBonusRound`/`SetCheckpointAtPlayer`, bonus_round.cpp; the
  * `+0x80`-`0xc4`/`+2` accessor family, level_state.cpp) also shares.
@@ -68,7 +68,7 @@ using Game::Ui::TitleScreen;
  * - `bonusPlatform = gemPlatform = 0` computes the 0x1b8 address
  *   first, and the `SetMaskLevel` argument starts at 2 and takes the
  *   tier only when it is <= 1.
- * - `gHud = new Hud`: the HUD's constructor (include/game/ui/hud.hpp; the C
+ * - `gHud = new Hud`: the HUD's constructor (engine/include/game/ui/hud.hpp; the C
  *   needed a `void *` conversion of InitHud's result to load the global's
  *   address before the call, as the ROM does), and `delete gHud`.
  */

@@ -5,11 +5,11 @@
  * classes behind gEntityVtable, gSpriteObjVtable, gMovingSpriteVtable and
  * gGroundSpriteVtable, and the subclasses built on them.
  *
- *   Entity        0x1C  gEntityVtable        (11 slots) src/game/entities/entity.cpp
- *   Sprite        0x40  gSpriteObjVtable     (13 slots) src/game/entities/sprite*.cpp
- *   UiSprite      0x40  gUiSpriteObjVtable              src/game/entities/ui_sprite.cpp
- *   MovingSprite  0x78  gMovingSpriteVtable  (15 slots) src/game/entities/moving_sprite*.cpp
- *   GroundSprite  0x80  gGroundSpriteVtable  (15 slots) src/game/entities/ground_sprite*.cpp
+ *   Entity        0x1C  gEntityVtable        (11 slots) engine/src/game/entities/entity.cpp
+ *   Sprite        0x40  gSpriteObjVtable     (13 slots) engine/src/game/entities/sprite*.cpp
+ *   UiSprite      0x40  gUiSpriteObjVtable              engine/src/game/entities/ui_sprite.cpp
+ *   MovingSprite  0x78  gMovingSpriteVtable  (15 slots) engine/src/game/entities/moving_sprite*.cpp
+ *   GroundSprite  0x80  gGroundSpriteVtable  (15 slots) engine/src/game/entities/ground_sprite*.cpp
  *
  * The sizes are the ROM's: CreateEntity allocates 0x1C bytes,
  * CreateSpriteObj 0x40, CreateMovingSprite 0x78 and CreateGroundSprite
@@ -66,7 +66,7 @@ namespace Entities
 class Ctrl;
 class MovingSprite;
 
-/* The sprite object (src/game/entities/sprite_obj.cpp, sprite.cpp,
+/* The sprite object (engine/src/game/entities/sprite_obj.cpp, sprite.cpp,
  * sprite_obj.cpp; gSpriteObjVtable): an entity with a sprite bank
  * animation. `bank` is the sprite bank (sprite_bank.h), `tag` the
  * animation in it, `frame` the step within the animation. */
@@ -293,7 +293,7 @@ inline void Sprite::SetFlipY(u8 value)
 #endif
 
 /* A sprite on the HUD or a menu (gUiSpriteObjVtable;
- * src/game/entities/ui_sprite.cpp): its OBJ priority is its own. */
+ * engine/src/game/entities/ui_sprite.cpp): its OBJ priority is its own. */
 class UiSprite : public Sprite
 {
 public:
@@ -304,7 +304,7 @@ public:
 
 LAYOUT_ASSERT(sprite_obj_hpp, sizeof(UiSprite) == 0x40);
 
-/* The moving sprite (src/game/entities/moving_sprite.cpp, moving_sprite_collide.cpp,
+/* The moving sprite (engine/src/game/entities/moving_sprite.cpp, moving_sprite_collide.cpp,
  * moving_sprite.cpp, moving_sprite_probe.cpp; gMovingSpriteVtable): a sprite with a
  * controller (`mover`), per-axis speeds and their ramps, and the terrain
  * probe's state. Its update runs the controller's, its events go to the
@@ -386,7 +386,7 @@ public:
     u8 GetProbeTries(); // GetGroundSpriteProbeTries
     void ResolvePlayerContact();
     /* ProbeHitboxEdgeTerrain: ProbeTerrain along the edge of `quad` that
-     * faces `mode`, retried lower (src/game/entities/moving_sprite_probe.cpp). */
+     * faces `mode`, retried lower (engine/src/game/entities/moving_sprite_probe.cpp). */
     bool ProbeEdgeTerrain(s32 mode, const struct hitbox_quad *quad);
 };
 
@@ -399,7 +399,7 @@ inline MovingSprite *Sprite::AsMovingSprite()
     return (MovingSprite *)this;
 }
 
-/* The ground sprite (src/game/entities/ground_sprite.cpp, ground_sprite_collide.cpp,
+/* The ground sprite (engine/src/game/entities/ground_sprite.cpp, ground_sprite_collide.cpp,
  * ground_sprite.cpp; gGroundSpriteVtable): a moving sprite that
  * probes the terrain under it (slot 1) and keeps its hitbox anchored to
  * the floor or the ceiling (slot 3). */
@@ -449,7 +449,7 @@ LAYOUT_ASSERT(sprite_obj_hpp, sizeof(GroundSprite) == 0x80);
 
 /* A list of sprite objects (the room's part lists, globals.h):
  * Update compacts `items` and fills `visible`, the parts on screen, which
- * Collide walks. Its methods are C++, in src/game/entities/part_list.cpp,
+ * Collide walks. Its methods are C++, in engine/src/game/entities/part_list.cpp,
  * part_list_collide.cpp (part 7c). The items are
  * Sprites: gTouchableList holds pickups, platforms and Tiny's hop pads,
  * gCollidableList and gForegroundList moving sprites and effect parts.
@@ -470,7 +470,7 @@ public:
     void CollideWithPlayer(struct aabb box, MovingSprite *part);    // CollidePartWithPlayer
     void CollideWithObject(struct aabb box, MovingSprite *part,
                            MovingSprite *other); // CollidePartWithObject
-    /* part 7c (include/game/entities/part_list.hpp; src/game/entities/part_list.cpp,
+    /* part 7c (engine/include/game/entities/part_list.hpp; engine/src/game/entities/part_list.cpp,
      * part_list_collide.cpp) */
     PartList(s32 capacity);         // InitPartList
     ~PartList();                    // DestroyPartList
@@ -510,7 +510,7 @@ namespace Engine
 namespace Gfx
 {
 
-/* The sprite graphics managers (src/engine/gfx/oam_buffer.cpp, obj_vram_cursor.cpp,
+/* The sprite graphics managers (engine/src/engine/gfx/oam_buffer.cpp, obj_vram_cursor.cpp,
  * palette_cache.cpp, sprite_bank_set.cpp, sprite_renderer.cpp), in the
  * namespace Engine::Gfx (#1033, docs/cplusplus.md "Namespaces"). */
 
@@ -635,7 +635,7 @@ LAYOUT_ASSERT(sprite_obj_hpp, sizeof(SpriteBankSet) == 4);
 
 /* The sprite renderer (gSpriteRenderer, an empty object InitLevelState
  * allocates): draws a sprite's OAM pieces (DrawPieces and
- * DrawAffinePieces, src/engine/gfx/sprite_renderer.cpp). */
+ * DrawAffinePieces, engine/src/engine/gfx/sprite_renderer.cpp). */
 class SpriteRenderer
 {
 public:

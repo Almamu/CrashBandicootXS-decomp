@@ -24,7 +24,7 @@ using Game::Vehicles::Jetpack::JetpackQuestionCrate;
 using Game::Vehicles::Jetpack::JetpackTimeCrate;
 
 /* 0x08031A6C-0x08032480 (#664 part 11g): the jetpack levels' crates and
- * the parachute nitro (include/game/vehicles/vehicle.hpp):
+ * the parachute nitro (engine/include/game/vehicles/vehicle.hpp):
  *
  * - JetpackBalloonCrate (gJetpackBalloonCrateVtable): a crate hanging from
  *   a balloon (JetpackBalloon, jetpack_balloon.cpp), swaying around its

@@ -8,7 +8,7 @@ extern "C" {
 
 using Game::Entities::MovingSprite;
 
-/* MovingSprite's step probe (#664, include/game/entities/sprite_obj.hpp). */
+/* MovingSprite's step probe (#664, engine/include/game/entities/sprite_obj.hpp). */
 
 /* Probes the terrain along the edge of the sprite's hitbox `quad` that
  * faces `mode` (ProbeTerrain's 1 right, 2 left, 4 up, 8 down): from the

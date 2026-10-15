@@ -79,7 +79,7 @@ s32 itoa(s32 value, u8 *buffer, s32 base)
     return len;
 }
 
-/* strcpy and strlen (src/engine/util/string.cpp), as the inline copies
+/* strcpy and strlen (engine/src/engine/util/string.cpp), as the inline copies
  * FormatPaddedNumber's code has: the ROM inlines both, re-storing the
  * terminator from a fresh `movs r0, #0`. */
 static inline void InlineCopyString(u8 *dst, u8 *src)

@@ -7,7 +7,7 @@ using Game::Entities::MovingSprite;
 using Game::Objects::PlatformMover;
 
 /* PlatformMover, the moving platforms' controller (#664,
- * include/game/objects/platform.hpp), ROM 0x0801B304-0x0801B85C. g++ emits
+ * engine/include/game/objects/platform.hpp), ROM 0x0801B304-0x0801B85C. g++ emits
  * gPlatformMoverVtable here.
  *
  * UNUSED - no caller anywhere in the ROM: SetTargetMotionYFromSet,

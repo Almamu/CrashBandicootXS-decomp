@@ -14,7 +14,7 @@ using Engine::Gfx::BgSetup;
 /* C++ since the #664 cleanup: LoadGraphicsPackage's tilemap buffer is a
  * `new u16[]`/`delete[]` (the C called OperatorNewArray and
  * OperatorDeleteArray). The BG setup and the sprite box are classes since
- * #753 (BgSetup, ScaledSprite; include/engine/gfx/graphics_package.hpp). */
+ * #753 (BgSetup, ScaledSprite; engine/include/engine/gfx/graphics_package.hpp). */
 
 /* GitHub issue #30. Loads one BG: the palette into bank `paletteBank`,
  * the tiles into char block `charBlock`, and the tilemap into screen

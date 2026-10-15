@@ -13,7 +13,7 @@ using Game::Crates::CollisionQueue;
 using Game::Crates::Crate;
 
 /* The player's collision queue, CollisionQueue (#664, part 7c;
- * include/game/entities/part_list.hpp): the crate collisions QueueCratePlayerCollision
+ * engine/include/game/entities/part_list.hpp): the crate collisions QueueCratePlayerCollision
  * (crate_break.cpp) finds during the frame, resolved once a frame by
  * ResolvePlayerCollisions (crate.c). */
 

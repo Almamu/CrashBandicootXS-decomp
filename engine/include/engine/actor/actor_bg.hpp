@@ -1,7 +1,7 @@
 #ifndef GUARD_ACTOR_BG_HPP
 #define GUARD_ACTOR_BG_HPP
 
-/* The 3D stages' BG scroll (src/engine/actor/actor_bg.cpp, #915): the BG0/BG1
+/* The 3D stages' BG scroll (engine/src/engine/actor/actor_bg.cpp, #915): the BG0/BG1
  * scroll that eases after the player, its shake, its centre, and the depth
  * of the BG2 boss layer that the actors draw behind.
  *

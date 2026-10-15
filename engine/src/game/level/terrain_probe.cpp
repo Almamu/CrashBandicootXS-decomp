@@ -10,9 +10,9 @@ extern "C" {
 using Game::Level::LevelLayers;
 
 /* GitHub issues #9/#10/#41's shared cross-reference: `ProbeHitboxEdgeTerrain`'s
- * physics/collision step-probe (`src/game/entities/moving_sprite_probe.cpp`, see
+ * physics/collision step-probe (`engine/src/game/entities/moving_sprite_probe.cpp`, see
  * `docs/matching/archive/naked-spatial-grid-tail.md`) and `PlayerHasRoomForAnim`'s
- * input-action-check gate (`src/game/crash/player_anim_room.c`, see
+ * input-action-check gate (`engine/src/game/crash/player_anim_room.c`, see
  * `docs/matching/archive/issue-9-10-0x0800aaec-graphics.md`) both flagged this
  * function as "still unexamined" from their own call sites.
  * `docs/rom_map.md` (line ~2472) had already sketched it as "an
@@ -47,7 +47,7 @@ using Game::Level::LevelLayers;
  * `ProbeTerrainX`/`ProbeTerrainY` (both still raw, `asm/code_3_2_17_266bc.s`)
  * are `docs/rom_map.md`'s already-documented "horizontal/vertical
  * collision-resolver pair": each iterates a run of tiles along one axis
- * via `GetSolidTerrainHeights` (matched, `src/game/level/tile_cache.cpp`) and, on a
+ * via `GetSolidTerrainHeights` (matched, `engine/src/game/level/tile_cache.cpp`) and, on a
  * solid hit, accumulates a `±(tile_edge_distance << 8)` push-out delta
  * into `*outValue`. Reading their own raw bytes alongside this
  * function confirms which axis each one actually resolves:

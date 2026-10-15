@@ -2,9 +2,9 @@
 
 ## DrawWrappedText's `mode`, `WRAPPED_TEXT_MODE_*`
 
-DrawWrappedText (src/engine/text/wrapped_text.cpp) and DrawWrappedTextInBox
+DrawWrappedText (engine/src/engine/text/wrapped_text.cpp) and DrawWrappedTextInBox
 (text_box.cpp) take a `mode` that says when the drawn words reach the
-screen. The names are in include/engine/text/text.h, next to the prototypes.
+screen. The names are in engine/include/engine/text/text.h, next to the prototypes.
 
 | Value | Name | What DrawWrappedText does | Callers |
 |---|---|---|---|
@@ -14,14 +14,14 @@ screen. The names are in include/engine/text/text.h, next to the prototypes.
 
 ## The credits, `CREDITS_OP_*` and `CREDITS_POPUP_MODE_*`
 
-Credits::UpdateText (src/game/ui/credits.cpp) reads gCreditsText
-(src/game/ui/data/credits_text.cpp) a line at a time. Three bytes are opcodes.
-The names are in include/game/ui/frontend.hpp, before `struct CreditsPopup`.
-The stream is generated from data/credits.json and text/crashxs.pot's
+Credits::UpdateText (engine/src/game/ui/credits.cpp) reads gCreditsText
+(engine/src/game/ui/data/credits_text.cpp) a line at a time. Three bytes are opcodes.
+The names are in engine/include/game/ui/frontend.hpp, before `struct CreditsPopup`.
+The stream is generated from games/xs/data/credits.json and games/xs/text/crashxs.pot's
 credits.* entries (docs/text.md, "The credits"), whose items stand for the
 opcodes:
 
-| Byte | Name | data/credits.json item | Meaning |
+| Byte | Name | games/xs/data/credits.json item | Meaning |
 |---|---|---|---|
 | 1 | `CREDITS_OP_PICTURE` | `{"picture": n}` (0-4) | the next byte is a logo's index: a logo popup |
 | 2 | `CREDITS_OP_SMALL` | `{"small": key}` | the text that follows is in gSmallFont |

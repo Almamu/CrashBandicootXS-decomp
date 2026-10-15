@@ -106,7 +106,7 @@ void LoadBgPicture(const u8 *pic)
 }
 
 /* UNUSED - no caller anywhere in the ROM (no Thumb `bl` to it and no
- * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
+ * pointer to it in baserom.gba, nor any reference in asm/ or engine/src/). */
 void FillBgPictureMap(const u8 *nib, const u16 *map, s32 cols, s32 rows)
 {
     u16 *dest;

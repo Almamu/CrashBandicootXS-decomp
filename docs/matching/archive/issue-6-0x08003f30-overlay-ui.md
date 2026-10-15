@@ -1,7 +1,7 @@
 # Issue #6: 0x08003F30-0x08004D74 (overlay_ui, 2 functions)
 
 Issue #6's only two remaining functions on the composite pause/options
-screen (`src/game/ui/save_menu_draw.c`): `DrawSaveSlotStats` and
+screen (`engine/src/game/ui/save_menu_draw.c`): `DrawSaveSlotStats` and
 `InitSaveMenuIcons`, both previously "left completely untouched" (raw in
 `asm/code_3_1_10_4.s`, no `#if NON_MATCHING` reconstruction at all) per
 `docs/matching.md`'s "Issue #6/#7 status" note and the follow-up
@@ -10,13 +10,13 @@ record that these two were reviewed but not attempted.
 
 ## Parked (`NON_MATCHING`, 1)
 
-- **`DrawSaveSlotStats`** (`src/game/ui/save_menu_draw.c`, real bytes wrapped
+- **`DrawSaveSlotStats`** (`engine/src/game/ui/save_menu_draw.c`, real bytes wrapped
   `.if NON_MATCHING == 0` in `asm/code_3_1_10_4.s`) - a per-row numeric
   display: draws three of the row's `struct settings_row_stats` fields
   (`field_4`/`field_10`/`field_8` - `statPtr` is
   `(&self->currentStats)[rowIdx]`, i.e. `currentStats` and `rowStats
   [0..3]` read as one contiguous 5-element array, the same shape
-  `RefreshSaveSlotSummaries`/`SummarizeProgress` in `src/save/save_menu_ui.c`
+  `RefreshSaveSlotSummaries`/`SummarizeProgress` in `engine/src/save/save_menu_ui.c`
   already establish for `rowStats`) as plain decimal strings via
   `itoa`, one each into `self->rowObjA[rowIdx]`/`rowObjC[rowIdx]`/
   `rowObjB[rowIdx]` (small position objects `InitSaveMenuIcons` below
@@ -48,7 +48,7 @@ record that these two were reviewed but not attempted.
   cross-block-live locals (`highlight`, the running `buf[]` contents,
   the row object pointers) that would need the same kind of
   `SUB_8006600_*`/`UPDATE_ICON_FRAME_NIBBLE`-style per-call-site
-  register-pin macro work `src/game/ui/power_dialog.c`'s
+  register-pin macro work `engine/src/game/ui/power_dialog.c`'s
   `InitPowerDialog` needed (see that file's header comment for the concrete
   gotchas that technique runs into) - not attempted here given the size
   of the function and the number of near-identical blocks it would need
@@ -69,7 +69,7 @@ record that these two were reviewed but not attempted.
   reconciled against `struct save_menu`'s existing
   `rowStats`/`currentStats` layout, which only covers up to offset
   `0x8c`), then runs the **exact same 9-statement two-icon-manager init
-  block** `src/game/ui/power_dialog.c`'s parked `ShowPowerDialog`
+  block** `engine/src/game/ui/power_dialog.c`'s parked `ShowPowerDialog`
   already transcribes byte-for-byte identically (zero `gSmallFont`/
   `030012E0`'s posX/posY, fire each one's `record->slots[6]` trampoline,
   reserve `field_12c<<5` bytes of VRAM via `ReserveObjVram`, copying
@@ -137,8 +137,8 @@ pass that also converted this file's five sibling functions
 (`LinkExchangeSaveData`, `DrawSaveMenuMessageLines`, `DrawSaveMenuCancel`, `DrawYesNoPrompt`,
 `DrawSaveSlots` - all built on the same centered-label/positioned-glyph
 primitive, all hitting the identical difficulty class) - see
-`src/game/ui/save_menu_draw.c`'s header comment and
-`src/engine/util/printf.cpp`'s `FindSubstring` for the established NAKED-
+`engine/src/game/ui/save_menu_draw.c`'s header comment and
+`engine/src/engine/util/printf.cpp`'s `FindSubstring` for the established NAKED-
 transcription pattern. Every instruction in all six now matches the
 ROM exactly; verified via a full clean `make compare` (`La suma
 coincide`). Per this project's tracking policy, byte-exact NAKED asm
@@ -176,7 +176,7 @@ Two are left:
 
 ## Later pass: hard-register hold
 
-`InitSaveMenuIcons` is now real C in `src/game/ui/save_menu_draw.c` (old_agbcc)
+`InitSaveMenuIcons` is now real C in `engine/src/game/ui/save_menu_draw.c` (old_agbcc)
 and `asm/code_3_1_10_4.s` is gone. The loop pre-header was already fixed
 by plain `u8 *`/`u16 *` stores (early-rom-naked-retry-2.md). The last 6
 halfwords were the third icon: the frame-0 store takes its address in r0

@@ -1,10 +1,10 @@
 #ifndef __OBJECTS_H__
 #define __OBJECTS_H__
 
-/* The objects subsystem (src/game/entities/): the base level objects (sprite
+/* The objects subsystem (engine/src/game/entities/): the base level objects (sprite
  * objects, moving and ground sprites, platforms and their movers, the
  * controllers), their animation, the part lists and the collision queue.
- * Every function src/game/entities/ defines, with the prototype of its
+ * Every function engine/src/game/entities/ defines, with the prototype of its
  * definition, and the globals and tables its files use
  * (docs/headers.md). InitCrateList (crate_list_update.cpp) is in crates.h. A
  * .c file that needs a different local declaration for codegen keeps it
@@ -84,30 +84,30 @@ struct speed_ramp {
     s32 target;
 };
 
-/* src/game/entities/ctrl.cpp: Ctrl's methods (include/game/entities/ctrl.hpp)
+/* engine/src/game/entities/ctrl.cpp: Ctrl's methods (engine/include/game/entities/ctrl.hpp)
  * under their C names (cxx_symbols.txt), for the C callers. */
 
-/* src/game/entities/moving_sprite_collide.cpp */
+/* engine/src/game/entities/moving_sprite_collide.cpp */
 
-/* src/game/entities/sprite.cpp */
+/* engine/src/game/entities/sprite.cpp */
 extern void *GetSpriteAttackBox(void *dest, void *pt);
 extern void *GetSpriteBodyBox(void *dest, void *pt);
 
-/* src/game/entities/sprite_obj.cpp */
+/* engine/src/game/entities/sprite_obj.cpp */
 
-/* src/game/entities/sprite_obj.cpp */
+/* engine/src/game/entities/sprite_obj.cpp */
 extern void OffsetFromHitboxEdge(struct vec2 *dest, s32 kind, const struct hitbox_quad *rec);
 extern void OffsetToHitboxEdge(struct vec2 *dest, s32 kind, const struct hitbox_quad *rec);
 extern void OffsetToHitboxEdgeStart(struct vec2 *dest, s32 kind, const struct hitbox_quad *rec);
 
-/* The controllers' motion records (src/game/crash/data/motion_records.cpp),
+/* The controllers' motion records (engine/src/game/crash/data/motion_records.cpp),
  * read by StartCtrlTargetMotionYFromSet/StartCtrlTargetMotionXFromSet and
  * ApplyActionCtrlMotion. player.hpp has the player's two tables. */
 extern const struct speed_ramp gCtrlMotionRecords[44];
 
-/* The platform mover's entry set (src/game/bosses/data/dingodile_motion_entries.cpp), whose
+/* The platform mover's entry set (engine/src/game/bosses/data/dingodile_motion_entries.cpp), whose
  * entries are gDingodileMotionEntries[4..7] (bosses.h), and its motion
- * records (src/game/objects/data/platform_mover_motion.cpp). */
+ * records (engine/src/game/objects/data/platform_mover_motion.cpp). */
 extern const struct entry_set gPlatformMoverMotionSet;
 extern const struct speed_ramp gPlatformMoverMotionRecords[3];
 /* Their steps (Q8 px a frame per frame, docs/fixed_point.md): a falling
@@ -120,7 +120,7 @@ extern const struct speed_ramp gPlatformMoverMotionRecords[3];
 #define PLATFORM_SLOW_MOVE_ACCEL Q8_FRAC(0, 8)
 
 /* The empty box GetSpriteFrameBodyBox and friends return for a frame
- * without one (src/engine/gfx/data/obj_piece_sizes.cpp). */
+ * without one (engine/src/engine/gfx/data/obj_piece_sizes.cpp). */
 extern const struct hitbox_quad gEmptySpriteBox;
 /* The anchor point GetSpriteFrameAnchor returns for a frame without one
  * (same file): {0, 0}. */

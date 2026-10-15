@@ -5,8 +5,8 @@ extern "C" {
 #include "engine/sys/system.h"
 }
 
-/* Sits right after src/engine/sys/key_input.cpp's matched functions and before
- * src/engine/util/fixed_math.cpp - the only function in this address range,
+/* Sits right after engine/src/engine/sys/key_input.cpp's matched functions and before
+ * engine/src/engine/util/fixed_math.cpp - the only function in this address range,
  * non-adjacent to bios_util.cpp's MemCopy32/UpdateCtrl since
  * main.cpp/memory.c/irq.c/key_input.cpp sit between them. Replaced the raw
  * asm/code_3_1.s (now deleted - this was its only function). */
@@ -18,7 +18,7 @@ extern "C" {
  * screen, then DMAs `palette` into palette RAM and loads `asset`'s
  * tile/tilemap data into VRAM via the already-matched
  * `LoadTaggedAsset`. Used for full-screen bitmap-style images (the
- * cutscene pictures, `graphics/cutscenes/`).
+ * cutscene pictures, `games/xs/graphics/cutscenes/`).
  *
  * The two `FixedInverse16` results each need a genuinely separate
  * unsigned-truncate (for the raw `BG2PA`/`BG2PD` halfword store) and
@@ -48,7 +48,7 @@ extern "C" {
  * writes until after the mask/shift is computed, whereas ROM advances
  * the pointer immediately after each store. */
 /* UNUSED - no caller anywhere in the ROM (no Thumb `bl` to it and no
- * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
+ * pointer to it in baserom.gba, nor any reference in asm/ or engine/src/). */
 void ShowBitmapScreen(void *asset, void *palette)
 {
     u16 rawA;

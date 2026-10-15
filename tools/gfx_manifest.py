@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-"""graphics/manifest.json: every source under graphics/, what it is, and
+"""games/xs/graphics/manifest.json: every source under games/xs/graphics/, what it is, and
 where baserom.gba has it (docs/graphics.md, "The manifest").
 
 The build reads the manifest only for the graphics classes (below): the
 ROM's layout comes from games/xs/ldscript.txt and the order of the definitions in
-each src/.../data/*.cpp, and every reference is a symbol. The ROM addresses
+each engine/src/.../data/*.cpp, and every reference is a symbol. The ROM addresses
 are kept so the sources can be extracted from baserom.gba again, and to
 put a class's members in ROM order.
 
     tools/gfx_manifest.py check
-        Every file under graphics/ belongs to one manifest entry, every
+        Every file under games/xs/graphics/ belongs to one manifest entry, every
         entry's files exist, every part in an object's range has a class
         and cxx_symbols.txt's graphics and room classes blocks are up to
         date.
 
     tools/gfx_manifest.py extract [baserom.gba] [--check]
-        Writes every source under graphics/ and data/levels/ from the ROM
+        Writes every source under games/xs/graphics/ and games/xs/data/levels/ from the ROM
         (the room data through tools/levels.py extract), and the framed
         sheets' record dumps, docs/entities/. With --check, it
         writes them into a temporary tree instead and compares that with
@@ -32,7 +32,7 @@ put a class's members in ROM order.
         The graphics classes (docs/graphics.md, "Graphics classes"): the
         header declaring them (graphics.hpp), the definitions of one
         object's members in ROM order, then its new graphics' (the .inc its
-        src/.../data/OBJECT.cpp #includes), and cxx_symbols.txt's block
+        engine/src/.../data/OBJECT.cpp #includes), and cxx_symbols.txt's block
         mapping each member to its C name.
 
     tools/gfx_manifest.py make OUT
@@ -44,7 +44,7 @@ put a class's members in ROM order.
     tools/gfx_manifest.py --graphics-dir DIR ...
         Another game's graphics (#1115, docs/n_tranced.md "Graphics"):
         DIR/manifest.json, its sources in DIR or, for a graphic it shares
-        with XS, in graphics/ (source()). check, extract, header, defs and
+        with XS, in games/xs/graphics/ (source()). check, extract, header, defs and
         make work on it as on XS's; extract writes to DIR only what isn't
         XS's already (a file entry's; a directory's files are all the
         game's, as sprite_frames.py reads only its own), and extract --check
@@ -105,7 +105,7 @@ their role: the entry's own symbol is `tiles` (bg_package, tiles),
 `map` is `map`. A palette OAM picks at run time ({"obj_palette": n})
 isn't one, nor an rle_frames' palette (the category's, defined with
 other data). The manifest's `objects` ({name, rom, end}) are the
-src/.../data objects whose graphics are all class members: every part in an
+engine/src/.../data objects whose graphics are all class members: every part in an
 object's ROM range is defined, in ROM order, in the .inc `defs` writes
 for it. The rooms are classes too, of tools/levels.py (rooms.hpp).
 
@@ -146,7 +146,8 @@ import rle_sprites  # noqa: E402
 
 ROM_BASE = 0x08000000
 # The game's graphics (--graphics-dir), XS's by default, and its manifest
-XS_GRAPHICS = Path("graphics")
+XS_DIR = Path("games/xs")
+XS_GRAPHICS = XS_DIR / "graphics"
 GRAPHICS = XS_GRAPHICS
 MANIFEST = GRAPHICS / "manifest.json"
 DATA_MAP = Path("docs/data_map.md")
@@ -197,8 +198,8 @@ def addr(v):
 
 # The kinds a new graphic (an entry with no `rom`) can be: those whose
 # build rules graphics.mk takes from the manifest (graphics_manifest.mk),
-# and a cutscene picture (graphics.mk builds every graphics/cutscenes/
-# PNG; a slide of data/cutscenes.json shows it). An OBJ sheet's layout is
+# and a cutscene picture (graphics.mk builds every games/xs/graphics/cutscenes/
+# PNG; a slide of games/xs/data/cutscenes.json shows it). An OBJ sheet's layout is
 # code's.
 NEW_KINDS = ("tiles", "bg_package", "bitmap")
 # Where a new bitmap goes: a cutscene picture, defined with the ROM's.
@@ -243,7 +244,7 @@ def new_entry_errors(e, objects):
         errors.append("%s: a bg_package has a `map` with its `symbol`" % what)
     if e["kind"] == "bitmap":
         if not e.get("path", "").startswith(NEW_BITMAP_DIR) or e.get("object") != NEW_BITMAP_OBJECT:
-            errors.append("%s: a new bitmap is a cutscene picture: a PNG in graphics/%s, defined by %s"
+            errors.append("%s: a new bitmap is a cutscene picture: a PNG in games/xs/graphics/%s, defined by %s"
                           % (what, NEW_BITMAP_DIR, NEW_BITMAP_OBJECT))
         pal = e.get("palette", {})
         if "symbol" not in pal or pal.get("colors") != 256:
@@ -280,7 +281,7 @@ def category_entry_errors(e, what):
 
 
 def palette_cycle_frames(e):
-    """A palette_cycle's frame files, under graphics/: 00.pal, 01.pal, ..."""
+    """A palette_cycle's frame files, under games/xs/graphics/: 00.pal, 01.pal, ..."""
     return [e["path"] + "%02d.pal" % k for k in range(e.get("frames", 0))]
 
 
@@ -338,7 +339,7 @@ def category_incs(e):
 # check
 
 def owner(entries, rel):
-    """The entry a file under graphics/ belongs to: the one naming it, or
+    """The entry a file under games/xs/graphics/ belongs to: the one naming it, or
     the longest directory entry holding it."""
     best = None
     for e in entries:
@@ -643,7 +644,7 @@ def run_tool(root, rom_path, cmd):
 
 
 def extract(rom_path, root):
-    """Writes graphics/ and data/levels/ under `root` from the ROM; another
+    """Writes games/xs/graphics/ and games/xs/data/levels/ under `root` from the ROM; another
     game's graphics directory, only its graphics (extract_game)."""
     entries = load()
     by_symbol = {e["symbol"]: e for e in entries}
@@ -698,7 +699,7 @@ def extract_game(rom_path, check_only):
     """Another game's graphics from its ROM, into a temporary tree: with
     `check_only` compared with each source (source(): the game's, or XS's
     for a graphic both have), else written to the game's directory, all
-    but the files XS's graphics/ already has the same."""
+    but the files XS's games/xs/graphics/ already has the same."""
     with tempfile.TemporaryDirectory(prefix="gfx_manifest_") as tmp:
         root = Path(tmp)
         extract(Path(rom_path).resolve(), root)
@@ -733,31 +734,31 @@ def extract_check(rom_path):
         # the tools, and the hand-written level lists levels.py extract keeps
         shutil.copytree(TOOLS, root / "tools", ignore=shutil.ignore_patterns("agbcc", "gbagfx", "grit", "permuter",
                                                                               "__pycache__", "*.c", "*.h"))
-        (root / "data/levels").mkdir(parents=True)
-        for f in Path("data/levels").glob("*.json"):
-            shutil.copy(f, root / "data/levels" / f.name)
+        (root / XS_DIR / "data/levels").mkdir(parents=True)
+        for f in (XS_DIR / "data/levels").glob("*.json"):
+            shutil.copy(f, root / XS_DIR / "data/levels" / f.name)
         # and the animation tables, whose arrays (their symbols, lengths and
         # order) levels.py extract keeps
-        (root / "data/levels/anim_tables").mkdir()
-        for f in Path("data/levels/anim_tables").glob("*.json"):
-            shutil.copy(f, root / "data/levels/anim_tables" / f.name)
+        (root / XS_DIR / "data/levels/anim_tables").mkdir()
+        for f in (XS_DIR / "data/levels/anim_tables").glob("*.json"):
+            shutil.copy(f, root / XS_DIR / "data/levels/anim_tables" / f.name)
         # the cutscenes, which levels' "on_clear" can name
-        shutil.copy("data/cutscenes.json", root / "data")
+        shutil.copy(XS_DIR / "data/cutscenes.json", root / XS_DIR / "data")
         # the actor kinds, which name the actor categories' spawns
-        (root / "include/constants").mkdir(parents=True)
-        shutil.copy("include/constants/actor_kinds.h", root / "include/constants")
-        (root / "graphics").mkdir()
+        (root / "engine/include/constants").mkdir(parents=True)
+        shutil.copy("engine/include/constants/actor_kinds.h", root / "engine/include/constants")
+        (root / XS_GRAPHICS).mkdir()
         shutil.copy(MANIFEST, root / MANIFEST)
         # the songs, which name the level themes' music (levels.json "themes")
-        (root / "sound").mkdir()
-        shutil.copy("sound/gax_manifest.json", root / "sound")
+        (root / XS_DIR / "sound").mkdir()
+        shutil.copy(XS_DIR / "sound/gax_manifest.json", root / XS_DIR / "sound")
         (root / "baserom.gba").symlink_to(rom_path)
         extract("baserom.gba", root)
         errors = check()
         # the new graphics aren't the ROM's
         new = [p for e in load() if is_new(e) for p in entry_paths(e)]
-        errors += compare(root / "graphics", Path("graphics"), skip=new)
-        errors += compare(root / "data/levels", Path("data/levels"))
+        errors += compare(root / XS_GRAPHICS, XS_GRAPHICS, skip=new)
+        errors += compare(root / XS_DIR / "data/levels", XS_DIR / "data/levels")
         errors += compare(root / "docs/entities", Path("docs/entities"))
     return errors
 
@@ -800,7 +801,7 @@ class Part:
 
 
 def picture(e):
-    """The entry's PNG, without graphics/ and .png."""
+    """The entry's PNG, without games/xs/graphics/ and .png."""
     return [p for p in entry_paths(e) if p.endswith(".png")][0][:-4]
 
 
@@ -879,7 +880,7 @@ def header():
     out = ["/* %s */" % generated(), "",
            "/* The graphics classes (docs/graphics.md, \"Graphics classes\"): one",
            " * class per graphic of %s that has a `class`, its" % MANIFEST.as_posix(),
-           " * parts static const data members. Each is defined in the src/.../data",
+           " * parts static const data members. Each is defined in the engine/src/.../data",
            " * object of its ROM range (gfx_manifest.py defs) and keeps its C name",
            " * through cxx_symbols.txt. They are in the namespace %s (#1033," % "::".join(NAMESPACE),
            " * docs/cplusplus.md \"Namespaces\"). */",
@@ -922,7 +923,7 @@ def defs(name):
 
 def symbols_block():
     lines = [SYMBOLS_BEGIN,
-             "# The graphics classes (graphics/manifest.json, docs/graphics.md \"Graphics",
+             "# The graphics classes (games/xs/graphics/manifest.json, docs/graphics.md \"Graphics",
              "# classes\"): each part keeps its C name."]
     lines += ["%s %s" % (p.mangled(), p.symbol) for e in class_entries() for p in class_parts(e)]
     return "\n".join(lines + [SYMBOLS_END])
@@ -1068,7 +1069,7 @@ def make_fragment():
 # table
 
 def table():
-    rows = ["| ROM | symbol | kind | source (graphics/) |", "|---|---|---|---|"]
+    rows = ["| ROM | symbol | kind | source (games/xs/graphics/) |", "|---|---|---|---|"]
     for e in load():
         if is_new(e):
             continue
@@ -1091,7 +1092,7 @@ def table():
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--graphics-dir", default=str(XS_GRAPHICS),
-                    help="the game's graphics directory (XS's graphics/ by default)")
+                    help="the game's graphics directory (XS's games/xs/graphics/ by default)")
     sub = ap.add_subparsers(dest="mode", required=True)
     sub.add_parser("check")
     p = sub.add_parser("extract")

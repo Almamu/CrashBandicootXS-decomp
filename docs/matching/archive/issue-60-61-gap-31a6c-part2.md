@@ -5,9 +5,9 @@ Second half of issue #59's Phase 2 gap - the 60 raw functions left after
 pass closed `0x08031784`-`0x08031A6C`. That Phase 2 gap
 (`0x08031A6C`-`0x08033804`, `asm/code_3_2_20_28568_c99c_31784_31a6c.s`)
 was split in half for parallel work: a sibling pass covers the first 30
-functions (`UpdateJetpackBalloonCrate`-`UpdateJetpackRing`, `src/vehicle/jetpack_crates.c`);
+functions (`UpdateJetpackBalloonCrate`-`UpdateJetpackRing`, `engine/src/vehicle/jetpack_crates.c`);
 this pass covers the last 30 (`CreateJetpackRing`-`nullsub_35`, new file
-`src/game/bosses/hovercraft.c`).
+`engine/src/game/bosses/hovercraft.c`).
 
 ## What this pass closed: 16 matched, 14 NAKED, 0 left raw
 
@@ -25,7 +25,7 @@ have entries for this pass, cross-referencing this document).
    fields (`gHovercraftX`-`030015EC`, ~9 live fields across a
    ~0x38-byte span with a few gaps, plus a separate small cluster at
    `030015FC`-`030015FF`). A **later** ROM region (issue #62,
-   `0x08033804`+, `src/bosses/hovercraft_parts.c`-`hovercraft_launcher.c`,
+   `0x08033804`+, `engine/src/bosses/hovercraft_parts.c`-`hovercraft_launcher.c`,
    already matched in an earlier pass) also touches this exact family
    and had *already* established the naming and, more importantly, the
    **representation convention**: flat, independently-linked `extern`
@@ -227,7 +227,7 @@ OK` (the project's `sha1sum -c checksum.sha1` success message).
 
 This pass's own range (`0x080326E4`-`0x08033804`) is fully closed - 16
 matched, 14 NAKED, 0 left raw. The sibling pass covering
-`0x08031A6C`-`0x080326E4` (`src/vehicle/jetpack_crates.c`, issues #59
+`0x08031A6C`-`0x080326E4` (`engine/src/vehicle/jetpack_crates.c`, issues #59
 rest/#60) is tracked separately; once both land, the whole gap between
 issue #58 and issue #62 (`0x08031784`-`0x08033804`) is closed.
 
@@ -239,7 +239,7 @@ matched/parked list this entry feeds into.
 A later pass promoted `UpdateJetpackCollectedWumpa`, `DestroyJetpackCollectedWumpa`, `UpdateHovercraftFireball` and `RunHovercraftFireballState` (`hovercraft.c`). `DestroyJetpackCollectedWumpa`'s parameter-copy order came out right from a plain C destructor with no barrier; `UpdateJetpackCollectedWumpa`'s anim idiom needed per-field `anims[animIndex]` indexing. The other NAKED functions here (many-high-register, DMA/tile, constructor cases) were not retried from NAKED to real C. The "r7 table-base"
 shape was gcc 2.x's pointer-to-member-function call
 `(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
-`include/actor_self.h` reproduces with no register pins. See
+`engine/include/actor_self.h` reproduces with no register pins. See
 [pmf-dispatch-retry.md](pmf-dispatch-retry.md).
 
 ## Later pass: NAKED retry

@@ -17,9 +17,9 @@ using Game::Level::Camera;
 /* GitHub issue #44: the `gCamera` camera-follow block (the
  * "generic 0x18-byte block" docs/matching/archive/issue-37-game-loop-2375c.md
  * saw `PlayRoom`'s tail flush via `SnapCamera`), class Camera
- * (include/game/level/camera.hpp, #761). The global
+ * (engine/include/game/level/camera.hpp, #761). The global
  * `operator new` & co. that follow it in ROM are in
- * src/engine/sys/operator_new.cpp (here until #770).
+ * engine/src/engine/sys/operator_new.cpp (here until #770).
  *
  * The camera holds a Q8 position (`x`/`y`), a Q8 look-ahead offset
  * (`vx`/`vy`), the followed object (`target`) and a `mode`. Every

@@ -1,4 +1,4 @@
-# File layout (#1071)
+# File layout (#1071, #1167)
 
 The source tree follows the namespaces of the code (#1033,
 [cplusplus.md](cplusplus.md) "Namespaces"), and no file name carries a
@@ -14,20 +14,74 @@ to the new ones: every address is the same.
 ## The layout
 
 ```
-src/engine/{sys,gfx,actor,audio,save,link,text,util}/
-src/game/{crash,entities,enemies,bosses,crates,objects,level,ui}/
-src/game/vehicles/{polar,jetpack}/
-src/<area>/<namespace>/data/        the ROM data tables of that code
-include/engine/... include/game/... mirroring src/
-include/{core.h,globals.h,match.h,byte_arg.h,screen.h,constants/}
+engine/src/engine/{sys,gfx,actor,audio,save,link,text,util}/
+engine/src/game/{crash,entities,enemies,bosses,crates,objects,level,ui}/
+engine/src/game/vehicles/{polar,jetpack}/
+engine/src/<area>/<namespace>/data/ the ROM data tables of that code
+engine/include/engine/... engine/include/game/...   mirroring engine/src/
+engine/include/{core.h,globals.h,match.h,byte_arg.h,screen.h,constants/}
 lib/{gax,agb_eeprom,libgcc}/        the third-party and SDK libraries
 asm/                                itoa_arm.s, the assembler macros
 platform/gba/include/gba/           the GBA's hardware headers (#1093)
 platform/gba/asm/                   crt0, IntrMain, the ROM header
 platform/gba/lib/libagbsyscall/     the BIOS SWI wrappers
+platform/pc/                        the host port (platforms.md)
+games/xs/                           Crash Bandicoot XS: data/ (data.s,
+                                    levels/, cutscenes.json, credits.json),
+                                    graphics/, sound/, text/, its .mk files
+                                    (graphics, levels, text, cutscenes),
+                                    ldscript.txt, sym_*.txt, expected/,
+                                    checksum.sha1
+games/n2/                           Crash Bandicoot 2: N-Tranced (n_tranced.md)
 ```
 
-## Decisions
+The rest stays at the root: the Makefile (the toolchain, the flags, the
+game switch and XS's build), `compile.mk` and `graphics_rules.mk` (the
+rules both games share), `cxx_symbols.txt` (the C names of
+`engine/src/`'s C++ symbols, which both games' objects are renamed with),
+`tools/`, `mods/` and `docs/`.
+
+## The monorepo move (#1167)
+
+The first step of #1167's workspace layout moved the shared code and XS's
+data, each a rename (`git log --follow` and rebases follow them):
+
+| Old path | New path |
+|---|---|
+| `src/` | `engine/src/` |
+| `include/` | `engine/include/` |
+| `data/` | `games/xs/data/` |
+| `graphics/` | `games/xs/graphics/` |
+| `sound/` | `games/xs/sound/` |
+| `text/` | `games/xs/text/` |
+| `graphics.mk`, `levels.mk`, `text.mk`, `cutscenes.mk` | `games/xs/` (as `games/n2/` has its own) |
+
+- **Includes are unchanged** (`"engine/..."`, `"game/..."`, `core.h`):
+  only the search path moved (`-iquote engine/include`).
+- **The build directory keeps its layout**: `engine/src/X.cpp` builds
+  `build/crashbandicootxs/src/X.o` (`C_BUILDDIR` is `$(OBJ_DIR)/src`, as
+  N-Tranced's `games/n2/src/X.cpp` builds `build/ntranced/src/X.o`), and
+  `games/xs/data/data.s` builds `build/crashbandicootxs/data/data.o`. So
+  both linker scripts, the report units (`tools/report_units.py`), the
+  shift check's targets and every tool that names an object are as they
+  were, and both .map files are byte-identical. A path that names an
+  object (`src/engine/sys/main.o`) is under the build directory; one that
+  names a source is under `engine/` or `games/`.
+- **The tools' defaults follow**: `tools/levels.py`'s
+  `games/xs/data/levels`, `tools/gfx_manifest.py`'s and
+  `tools/sprite_frames.py`'s `games/xs/graphics`, `tools/gax_audio.py`'s
+  `games/xs/sound`, `tools/text.py`'s `games/xs/text`, ... The Makefile's
+  `XS_DIR` is `games/xs`, and `graphics_rules.mk`'s `XS_GRAPHICS_DIR`
+  (the graphics N-Tranced falls back on) `games/xs/graphics`.
+- **A mod names the new paths** ([modding.md](modding.md)): its `files/`
+  mirror the tree, so XS's data goes under `files/games/xs/`, and
+  `mod.py`'s `tree.path()`s are `games/xs/...` and `engine/src/...`.
+- The decisions and the rename map below (#1033, #1071) are older: their
+  paths, old and new, are the tree's before this move (`src/` is now
+  `engine/src/`, `include/` `engine/include/`, `graphics/` and `data/`
+  `games/xs/graphics/` and `games/xs/data/`).
+
+## Decisions (#1071)
 
 - **A file goes with the namespace of what it defines.** The namespace of
   each object's definitions was read from its compiled `.s` (the `Q`

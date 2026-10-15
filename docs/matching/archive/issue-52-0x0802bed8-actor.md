@@ -7,7 +7,7 @@ this same chunk that got closed out later.
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
-- **`RunPolarPlayerState`** (`src/vehicle/polar_player_dispatch.c`) - a
+- **`RunPolarPlayerState`** (`engine/src/vehicle/polar_player_dispatch.c`) - a
   `gPolarPlayerStateFuncs` stride-8 trampoline-record dispatcher (`{s16
   baseOff; s16 count; s16 subOffset}`, count-gated between an inline
   fallback pair and a per-instance list's last entry). Previously
@@ -25,7 +25,7 @@ this same chunk that got closed out later.
   push/pop set via the separate `mov r7, sb` high-register relay
   idiom, which doesn't apply to this function). Every instruction is a
   direct, byte-verified transcription of the ROM disassembly (same
-  technique as `src/engine/link/link_handshake.c`'s `MakeLinkHandshakeId`), so the
+  technique as `engine/src/engine/link/link_handshake.c`'s `MakeLinkHandshakeId`), so the
   built ROM is byte-identical here - but per this project's current
   tracking policy, a NAKED transcription of a substantial function
   (branches, struct-shaped field access - not a trivial wrapper/stub)
@@ -35,11 +35,11 @@ this same chunk that got closed out later.
   The same r7 hazard and NAKED-transcription-but-not-matched status
   apply identically to this dispatcher's other four instances sharing
   this exact stride-8 shape: `RunJetpackPlayerState` (issue #56,
-  `src/vehicle/jetpack_player.c`, `gJetpackPlayerStateFuncs`),
+  `engine/src/vehicle/jetpack_player.c`, `gJetpackPlayerStateFuncs`),
   `UpdateHovercraftCannon`/`RunHovercraftCannonState`/`UpdateHovercraftLauncher` (issue #62,
-  `src/game/bosses/hovercraft_cannon.c`/`hovercraft_launcher.c`,
+  `engine/src/game/bosses/hovercraft_cannon.c`/`hovercraft_launcher.c`,
   `gHovercraftCannonStateFuncs`/`gHovercraftLauncherStateFuncs`), and `RunHovercraftLauncherState`
-  (issue #63, `src/game/bosses/hovercraft_launcher.c`, `gHovercraftLauncherStateFuncs`) -
+  (issue #63, `engine/src/game/bosses/hovercraft_launcher.c`, `gHovercraftLauncherStateFuncs`) -
   see those files' own doc comments and the matching-issue docs for
   issues #56/#62/#63.
 
@@ -52,5 +52,5 @@ recorded as matched - see the note above.
 A later pass promoted `RunPolarPlayerState` (`polar_player_dispatch.c`) from NAKED to real C. The "r7 table-base"
 shape was gcc 2.x's pointer-to-member-function call
 `(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
-`include/actor_self.h` reproduces with no register pins. See
+`engine/include/actor_self.h` reproduces with no register pins. See
 [pmf-dispatch-retry.md](pmf-dispatch-retry.md).

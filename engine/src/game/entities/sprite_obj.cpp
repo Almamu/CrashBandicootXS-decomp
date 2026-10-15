@@ -21,7 +21,7 @@ extern "C" {
 using Game::Entities::Entity;
 using Game::Entities::Sprite;
 
-/* Sprite's methods (#664, include/game/entities/sprite_obj.hpp): the virtual ones, the
+/* Sprite's methods (#664, engine/include/game/entities/sprite_obj.hpp): the virtual ones, the
  * constructor and destructor, and the accessors of its animation and
  * flags; and the three hitbox edge helpers the terrain probes use. */
 
@@ -478,7 +478,7 @@ u8 Sprite::IsAnimLooping()
     return bank->anims[tag].flags & SPRITE_ANIM_LOOP;
 }
 
-/* The rest of Sprite's accessors (#664, include/game/entities/sprite_obj.hpp; #771:
+/* The rest of Sprite's accessors (#664, engine/include/game/entities/sprite_obj.hpp; #771:
  * merged from sprite_anim.cpp). UiSprite follows in ui_sprite.cpp. */
 
 /* The current animation's step count. */

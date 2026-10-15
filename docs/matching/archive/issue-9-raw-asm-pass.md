@@ -9,9 +9,9 @@ two NAKED holdouts from #9. It removes `asm/code_3_2.s`,
 
 | Function | File | Compiler | Technique |
 |---|---|---|---|
-| `PlayerHandleEvent` | `src/player/player_event.c` | old_agbcc | New plain-`switch` C, see below |
-| `UpdateEnemyBob` | `src/game/enemies/enemy_ctrl.c` | either | Empty asm clobber of r5, plus pins |
-| `UpdateEnemyOscillateY` | `src/game/enemies/enemy_ctrl.c` | either | Empty asm clobber of r8, one pin |
+| `PlayerHandleEvent` | `engine/src/player/player_event.c` | old_agbcc | New plain-`switch` C, see below |
+| `UpdateEnemyBob` | `engine/src/game/enemies/enemy_ctrl.c` | either | Empty asm clobber of r5, plus pins |
+| `UpdateEnemyOscillateY` | `engine/src/game/enemies/enemy_ctrl.c` | either | Empty asm clobber of r8, one pin |
 
 ### PlayerHandleEvent (formerly raw)
 
@@ -57,14 +57,14 @@ Each empty asm has a comment in the source.
 
 ## Moved to C as NAKED + draft (not matched)
 
-- **`DrawAffineSpritePieces`** is in the new `src/gfx/affine_sprite_pieces.c`, which
+- **`DrawAffineSpritePieces`** is in the new `engine/src/gfx/affine_sprite_pieces.c`, which
   replaces `asm/code_3_2.o` in `ldscript.txt`. It is the affine sibling of
   `DrawSpritePieces`. The draft follows the ROM block for block, with bitfield
   OAM words and the affine-matrix slot allocation. It is 468 halfwords off
   (1032 bytes under agbcc and 1024 under old_agbcc, against the ROM's
   1044). The ROM spills nearly every local into a 0x48-byte frame, the
   same obstacle that parks `DrawSpritePieces`.
-- **`CollidePlayer`**'s NAKED body moved into `src/game/crash/player_collide.c`,
+- **`CollidePlayer`**'s NAKED body moved into `engine/src/game/crash/player_collide.c`,
   and `asm/code_3_2_16_a884.s` is gone. The old draft used register pins
   and two asm islands and was 137 halfwords off under both compilers,
   not the near match its comment described. It was replaced with plain C:

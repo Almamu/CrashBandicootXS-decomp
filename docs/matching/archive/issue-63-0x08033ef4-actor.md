@@ -45,7 +45,7 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
 
 ## Matched (19 of 25 functions)
 
-- **`CreateHovercraftLauncher`/`HovercraftLauncherStateDestroyed`/`HovercraftLauncherStateWait`** (`src/game/bosses/hovercraft_launcher.c`)
+- **`CreateHovercraftLauncher`/`HovercraftLauncherStateDestroyed`/`HovercraftLauncherStateWait`** (`engine/src/game/bosses/hovercraft_launcher.c`)
   - Kind 1's constructor, its trampoline-fire helper (same shape as
   `HovercraftCannonStateDestroyed`, hovercraft_cannon.c), and a position-sync/state-1-transition
   helper gated on the singleton's lifetime counter and animation "kind".
@@ -54,10 +54,10 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
   register pin (`r0`) placed *after* the `b`/`c` pins so this compiler
   fetches the 5th (stack) constructor argument in the same position the
   ROM's own build does, rather than up front with the others.
-- **`IsHovercraftLauncherUnshootable`** (`src/game/bosses/hovercraft_launcher.c`) - trivial Kind 1
+- **`IsHovercraftLauncherUnshootable`** (`engine/src/game/bosses/hovercraft_launcher.c`) - trivial Kind 1
   death-flag getter (`self+0x6c`).
 - **`DamageHovercraftSideGun`/`UpdateHovercraftSideGun`/`RunHovercraftSideGunState`/`IsHovercraftSideGunUnshootable`/`DamageHovercraftCannonFlash`**
-  (`src/game/bosses/hovercraft_side_gun.c`) - Kind 2's damage/death handler (same
+  (`engine/src/game/bosses/hovercraft_side_gun.c`) - Kind 2's damage/death handler (same
   `DamageHovercraftCannon` shape, register-pinned `zero`/`one` reused across the
   `self+0x58`/`+0x2c`/`+0x28`/`+0x44`/`+8` stores and the gate-byte read
   at `self+0x59` - reachable only via a pointer-offset walk from
@@ -71,12 +71,12 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
   (initially miscopied as a byte-identical twin - the map-file address-
   shift diagnostic caught the missing 4-byte call), a trivial death-flag
   getter, and a no-op stub.
-- **`CreateHovercraftCannonFlash`** (`src/game/bosses/hovercraft_cannon_flash.c`) - Kind 3's
+- **`CreateHovercraftCannonFlash`** (`engine/src/game/bosses/hovercraft_cannon_flash.c`) - Kind 3's
   constructor, same two-distinct-zero-register reset idiom as
   `CreateHovercraftLauncher`.
-- **`IsHovercraftCannonFlashUnshootable`** (`src/game/bosses/hovercraft_cannon_flash.c`) - trivial Kind 3
+- **`IsHovercraftCannonFlashUnshootable`** (`engine/src/game/bosses/hovercraft_cannon_flash.c`) - trivial Kind 3
   one-shot-flag getter (`self+0x58`).
-- **`UpdateStarfield`/`StarfieldWaitForButton`/`DestroyStarfield`** (`src/game/ui/starfield.c`)
+- **`UpdateStarfield`/`StarfieldWaitForButton`/`DestroyStarfield`** (`engine/src/game/ui/starfield.c`)
   - a particle-spawn-budget driver (calls `DrawStarfield`, then spawns up
   to 8 particles via `SpawnStar`; needed the incoming-`idx`-value
   register pinned through `r0` then copied to `r1` for the call,
@@ -135,7 +135,7 @@ diffing it byte-for-byte against `baserom.gba`, and cross-referencing
 every differing byte range against `crashbandicootxs.map`'s function
 boundaries - not by re-reading the isolated compiles more carefully.
 
-- **`InitStarfield`** (`src/game/ui/starfield.c`) - constructs the
+- **`InitStarfield`** (`engine/src/game/ui/starfield.c`) - constructs the
   particle-trail BG0 object (see that file's header comment for the
   full `struct particle_bg` field layout: a `tileVramBase`/`mapVramBase`
   pair of fixed VRAM constants, a 128-slot particle array, an active
@@ -143,7 +143,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   apparent "read of an uninitialized local" this function was
   previously left raw over turned out to be the same negative-constant
   bit-clear idiom already established for `LoadTitleScreenBg`'s
-  `bg2cnt` (`src/frontend/title_screen_init.c`, issue #65) - an
+  `bg2cnt` (`engine/src/frontend/title_screen_init.c`, issue #65) - an
   intentionally uninitialized `u32` ANDed against `0xFFFF0000` before
   every bit the final halfword write actually reads gets ORed in, not a
   real bug. Now fully matched as real C: the ROM builds the tilemap-
@@ -171,7 +171,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   (real bytes for the twin `DrawStarfield`) - that fragment is also retired
   now that `DrawStarfield` itself is matched (see below), so
   `starfield.c` is fully matched, closing the whole file.
-- **`CreateHovercraftSideGun`** (`src/game/bosses/hovercraft_side_gun.c`) - Kind 2's
+- **`CreateHovercraftSideGun`** (`engine/src/game/bosses/hovercraft_side_gun.c`) - Kind 2's
   constructor. Now fully matched as real C, closing two gaps: the 6th
   (stack-passed, byte-sized) constructor argument needs the same
   stack-slot-address-then-`ldrb` `asm volatile` anchor already
@@ -209,7 +209,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   for `UpdateActorPaletteCycle` in `actor.c`. Retires the raw
   `asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`.
 
-- **`SpawnStar`/`PlotStarfieldPixel`** (`src/game/ui/starfield.c`) - a
+- **`SpawnStar`/`PlotStarfieldPixel`** (`engine/src/game/ui/starfield.c`) - a
   128-slot particle spawner (rolls two `RandRange` random values
   against the 256-entry `gSineTable` direction table to seed a
   position/velocity record) and a 4-bit-per-cell tilemap nibble writer;
@@ -266,7 +266,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   address) as inputs, and `val` (already pinned to `r3` for the leaf-
   function register-spill fix) as an in/out operand.
 
-- **`DrawStarfield`** (`src/game/ui/starfield.c`) - the particle-trail
+- **`DrawStarfield`** (`engine/src/game/ui/starfield.c`) - the particle-trail
   BG0 object's per-frame updater (`InitStarfield`'s companion, same file);
   now fully matched as real C, closing the file entirely. Commits last
   frame's `tileBuffer` to tile VRAM, clears it back to zero, then for
@@ -310,7 +310,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
 
 ## NAKED transcription (byte-correct, not counted as matched)
 
-- **`RunHovercraftLauncherState`** (`src/game/bosses/hovercraft_launcher.c`) - a
+- **`RunHovercraftLauncherState`** (`engine/src/game/bosses/hovercraft_launcher.c`) - a
   `gHovercraftLauncherStateFuncs` stride-8 trampoline-record dispatcher
   returning a 0/1 result instead of tail-calling. Same `{s16 baseOff;
   s16 count; void *fn}` record shape as `UpdateHovercraftCannon`/`RunHovercraftCannonState`/
@@ -331,7 +331,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
 ## Parked (2 of 25 functions, `NON_MATCHING`)
 
 - **`UpdateHovercraftCannonFlash`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34270.s`, C
-  in `src/game/bosses/hovercraft_cannon_flash.c`) - position-sync/flag/trampoline
+  in `engine/src/game/bosses/hovercraft_cannon_flash.c`) - position-sync/flag/trampoline
   updater for Kind 1. Semantics fully understood and every field/call
   confirmed correct; parked because the ROM computes a "should animate"
   0/1 value into a register and re-checks it against zero before
@@ -341,7 +341,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   step, the same class of gap already documented for `DrawPolarCollectedWumpa`
   (issue #52) and the dead `| 0` term in `DrawJetpackCheckpointText` (issue #71).
 - **`RunHovercraftCannonFlashState`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34314.s`, C
-  in `src/game/bosses/hovercraft_cannon_flash.c`) - `UpdateHovercraftCannonFlash`'s boolean-returning
+  in `engine/src/game/bosses/hovercraft_cannon_flash.c`) - `UpdateHovercraftCannonFlash`'s boolean-returning
   twin, parked on the identical gap.
 
 ## Left raw (3 of 25 functions, not attempted)
@@ -366,5 +366,5 @@ matched/parked list this entry feeds into.
 A later pass promoted `RunHovercraftLauncherState` (`hovercraft_launcher.c`) from NAKED to real C. The "r7 table-base"
 shape was gcc 2.x's pointer-to-member-function call
 `(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
-`include/actor_self.h` reproduces with no register pins. See
+`engine/include/actor_self.h` reproduces with no register pins. See
 [pmf-dispatch-retry.md](pmf-dispatch-retry.md).

@@ -24,7 +24,7 @@ using Game::Entities::Entity;
 
 /* The crate list's update pass (Crate::UpdateAll), the nitro detonation,
  * the nitro and iron switches, the outline crates and Crate::BreakInArea
- * (#664, include/game/crates/crate.hpp, part 7g), ROM 0x0800F1B8-0x0800F798: the
+ * (#664, engine/include/game/crates/crate.hpp, part 7g), ROM 0x0800F1B8-0x0800F798: the
  * middle of crate_break.cpp's "physics/collision" cluster, split out of
  * it (#768). Built with old_agbcp, as the C was with old_agbcc. */
 

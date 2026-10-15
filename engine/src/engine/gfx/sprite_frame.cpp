@@ -102,7 +102,7 @@ void ObjTileAllocator::Init(void *base)
 /* ROM 0x08028C48 - frees a block previously returned by
  * Alloc, coalescing with its address-order neighbors when
  * they're also free (the same two-sided merge `mem_free` in
- * src/engine/sys/memory.cpp does, but against this allocator's own external
+ * engine/src/engine/sys/memory.cpp does, but against this allocator's own external
  * node pool instead of an embedded-in-buffer header - see the struct's
  * comment above). Reclaimed node records go back onto the
  * `spares` spare stack. */
@@ -217,7 +217,7 @@ void *ObjTileAllocator::Alloc(s32 size)
  * `list` free-block list all the way around, discarding
  * both results - the same "list-walk with the result never stored"
  * optimizer-leftover shape already documented for `mem_walk_heaps` in
- * src/engine/sys/memory.cpp (see that function's comment). */
+ * engine/src/engine/sys/memory.cpp (see that function's comment). */
 void ObjTileAllocator::Walk()
 {
     struct vram_tile_block *p;

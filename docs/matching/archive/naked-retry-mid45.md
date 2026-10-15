@@ -15,7 +15,7 @@ listed in the table below.
 | `UpdateHudCrates`, `UpdateHudWumpa`, `UpdateHudPercentCounters` | `hud_counters.c` | old_agbcc (file switched) | Same clamp as above. A literal `-1` frame lets the compiler fold a clamp into a bare store, which the ROM does in some branches. Where the ROM keeps the compare, a `-1` held in a local does too. The "100%" branches read `self->parts` into a block-local, so the ROM's lack of cross-jumping comes out. `UpdateHudCrates`'s second counter reads value, cached value, then `self->parts`, in that order, and uses separate `digits`/`off` locals. `UpdateHudWumpa` matched on the first compile. |
 | `SpawnRoomExit` | `spawn_bosses.c` | old_agbcc (the file already used it) | The 9-halfword gap was `{x - 2, y - 0x1e}` landing in fresh registers. Four register pins (`r1`/`r2`/`r0`/`r3`) and one documented empty `asm("" : "+r" (x))` close it. The `asm` stops combine from folding `x` back into its input before `y` is loaded. |
 
-`include/hud.h`'s `struct hud_digit_part` now names `x`/`y` at
+`engine/include/hud.h`'s `struct hud_digit_part` now names `x`/`y` at
 `+0`/`+4`; they were `unknown_00[0x18]` and nothing else used them.
 
 ## Not closed

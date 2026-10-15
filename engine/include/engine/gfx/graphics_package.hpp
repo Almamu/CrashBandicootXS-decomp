@@ -1,7 +1,7 @@
 #ifndef GUARD_GRAPHICS_PACKAGE_HPP
 #define GUARD_GRAPHICS_PACKAGE_HPP
 
-/* The BG setup and the sprite box as C++ (#753; src/engine/gfx/graphics_package.cpp
+/* The BG setup and the sprite box as C++ (#753; engine/src/engine/gfx/graphics_package.cpp
  * and scaled_sprite.cpp), and the graphics package they load.
  * Both classes are in the namespace Engine::Gfx (#1033, docs/cplusplus.md
  * "Namespaces"); the C types stay global. Neither class has a vtable.
@@ -14,9 +14,9 @@ extern "C" {
 
 /* A 5-field {width, height, paletteAsset, tileAsset, mapAsset} asset
  * package descriptor, read by `LoadGraphicsPackage`
- * (src/engine/gfx/graphics_package.cpp) and the level/obj loaders
- * (`LoadTitleScreenBg`/`LoadTitleScreenObjTiles`, src/game/ui/title_screen.cpp).
- * The src/.../data tables define the packages. */
+ * (engine/src/engine/gfx/graphics_package.cpp) and the level/obj loaders
+ * (`LoadTitleScreenBg`/`LoadTitleScreenObjTiles`, engine/src/game/ui/title_screen.cpp).
+ * The engine/src/.../data tables define the packages. */
 struct bg_package {
     s32 width;
     s32 height;

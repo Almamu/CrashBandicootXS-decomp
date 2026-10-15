@@ -1,4 +1,4 @@
-/* The entity base class (Entity, gEntityVtable; include/game/entities/entity.hpp), with
+/* The entity base class (Entity, gEntityVtable; engine/include/game/entities/entity.hpp), with
  * WorldToScreen, WorldPosToScreen and nullsub_12 between its methods. Its
  * key method, CheckPlayerContact, is here, so g++ emits the vtable and, at
  * the end of the file, the out-of-line copies of Entity's inline methods
@@ -168,7 +168,7 @@ void WorldPosToScreen(s32 *pos, s32 *outX, s32 *outY)
     *outY = Q8_TO_INT(y - cy);
 }
 
-/* UNUSED - empty, no caller anywhere in the ROM (checked src/, asm/,
+/* UNUSED - empty, no caller anywhere in the ROM (checked engine/src/, asm/,
  * games/xs/expected/ and every word-aligned Thumb pointer in baserom.gba). Keeps
  * the nullsub_N name (docs/naming.md): no call, table slot or neighbour
  * shows what it stood for. */

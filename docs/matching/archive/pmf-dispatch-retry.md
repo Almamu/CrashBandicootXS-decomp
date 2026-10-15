@@ -5,7 +5,7 @@ that the shape this project had parked as NAKED again and again, the
 "r7 table-base-pin hazard" or "stride-8 trampoline table
 dispatcher", is gcc 2.x's pointer-to-member-function call
 `(this->*table[this->state])()`. The `ACTOR_PMF_CALL` macro in
-`include/actor_self.h` reproduces it byte for byte with no register
+`engine/include/actor_self.h` reproduces it byte for byte with no register
 pins. This pass retried every NAKED function that had been parked for
 that reason, plus a few same-file neighbors that turned out to be
 closable too.
@@ -85,7 +85,7 @@ and closed:
   `adds r7, r1`. Both compilers do this. The compiler put `flags` in
   `r7` itself; nothing is pinned.
 
-## Header changes (`include/actor_self.h`)
+## Header changes (`engine/include/actor_self.h`)
 
 - `struct actor_vtable` gains the `m38` slot (+0x38), called by
   `DamageJetpackBalloon` with no argument.

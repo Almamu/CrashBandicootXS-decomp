@@ -1,7 +1,7 @@
 # Issues #51 and #54: NAKED retry
 
 A retry of the 14 NAKED functions left in issue #51's range
-(`0x0802AC28`-`0x0802BED8`, all in `src/vehicle/polar_player.c`) and
+(`0x0802AC28`-`0x0802BED8`, all in `engine/src/vehicle/polar_player.c`) and
 issue #54's range (`0x0802D3A8`-`0x0802E0A4`: `polar_objects.c`,
 `yeti_update.c`, `yeti_graphics.c`, `yeti.c`). 11 closed, 3 are
 still NAKED with near-miss C drafts under `#if NON_MATCHING`.

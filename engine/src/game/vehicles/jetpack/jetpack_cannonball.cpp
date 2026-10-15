@@ -14,7 +14,7 @@ using Game::Entities::ActorSelf;
 using Game::Entities::HpActor;
 using Game::Vehicles::Jetpack::JetpackCannonball;
 
-/* The jetpack cannonball (#664 part 11f, include/game/vehicles/vehicle.hpp), ROM
+/* The jetpack cannonball (#664 part 11f, engine/include/game/vehicles/vehicle.hpp), ROM
  * 0x08030298-0x08030334, between jetpack_bomber.cpp and
  * airship_fireball.cpp: JetpackCannonball (gJetpackCannonballVtable), a
  * straight-line projectile that damages the player on contact. See

@@ -13,7 +13,7 @@ using Game::Bosses::HovercraftSideGun;
 using Game::Entities::ActorSelf;
 using Game::Entities::HpActor;
 
-/* The hovercraft's side guns (#664 part 11h, include/game/bosses/boss_actors.hpp):
+/* The hovercraft's side guns (#664 part 11h, engine/include/game/bosses/boss_actors.hpp):
  * two HpActors on the hovercraft's sides (`left`, SpawnHovercraft) that
  * fire fireballs in bursts. See
  * docs/matching/archive/issue-63-0x08033ef4-actor.md. */
@@ -125,7 +125,7 @@ void HovercraftSideGun::Update()
 }
 
 /* Update without the common update.
- * UNUSED - no caller anywhere in the ROM (checked every src/ file and
+ * UNUSED - no caller anywhere in the ROM (checked every engine/src/ file and
  * every word-aligned Thumb pointer in baserom.gba). */
 void HovercraftSideGun::RunState()
 {

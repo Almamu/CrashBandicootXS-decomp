@@ -29,14 +29,14 @@ using Game::Objects::Pickups;
  *   (cortex.cpp) with kind 0/1/2 instead; otherwise they test
  *   bits 0/2/1 of gLevelState+2.
  *
- * C++ since #664 part 9 (include/game/level/spawners.hpp), built with old_agbcp
+ * C++ since #664 part 9 (engine/include/game/level/spawners.hpp), built with old_agbcp
  * (Makefile OLD_AGBCC_OBJS): the ROM materializes each bit mask before
  * loading the byte it is ANDed with, old_agbcc's tell. Under it all six
  * were plain C with no pins, and are plain C++ now (the current agbcc
  * misses all six - likely also what parked the spawn_gem_platforms.cpp
  * siblings, issue #31). See docs/matching/archive/issue-30-graphics-loading.md,
  * "Tenth pass". Since #915 all six are static members of Pickups
- * (Pickups::SpawnCrystal, ..., include/game/objects/pickups.hpp). */
+ * (Pickups::SpawnCrystal, ..., engine/include/game/objects/pickups.hpp). */
 
 /* The `tag`/`type` locals are not just naming: the ROM loads both
  * constants into callee-saved registers before the Sprite::Create call and

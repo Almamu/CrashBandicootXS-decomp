@@ -96,7 +96,7 @@ the caller pre-loads with its own current edge-code value.
 Body:
 1. `next = GetCrateAbove(self)` ("get next"), `prev = GetCrateBelow(self)`
    ("get prev") - the established doubly-linked neighbor-list accessor
-   pair (`src/game/crates/crate_break.c`'s own header comment; also used by
+   pair (`engine/src/game/crates/crate_break.c`'s own header comment; also used by
    `QueueCratePlayerCollision` itself and `ClearCrateStackTouched`/`MarkCrateStackTouched`).
 2. If **both** are `NULL`: return `self` unchanged, no other side
    effect - `self` is isolated in the list.
@@ -135,7 +135,7 @@ action-dispatch gate), these two have no caller outside the subsystem.
 
 Neither was attempted as a plain-C reconstruction. Both are the same
 single-inlined-AABB-build primitive `GetSpriteHitbox`
-(`src/game/entities/sprite.c`) already documents as resistant to gcc
+(`engine/src/game/entities/sprite.c`) already documents as resistant to gcc
 2.9's register allocation *even in its simplest, unbranched, single-call
 form* ("about 10 of ~73 instructions... which anonymous scratch
 register" gaps) - a shape this project has now independently hit and
@@ -179,7 +179,7 @@ since it never touches the player global). These resolve correctly once
 linked, the same pattern every prior NAKED closure in this neighborhood
 has shown.
 
-New file `src/game/crates/crate_hit.c` (both functions - they're
+New file `engine/src/game/crates/crate_hit.c` (both functions - they're
 ROM-contiguous with each other, `0x0800CEAC`-`0x0800D040`, so one file
 per `docs/workflow.md`'s "one `.c` file per contiguous ROM region"
 rule), inserted in `ldscript.txt` exactly where `asm/code_3_2_17_ceac.o`

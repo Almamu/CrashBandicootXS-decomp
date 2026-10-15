@@ -10,7 +10,7 @@ extern "C" {
 using Game::Crates::Crate;
 using Game::Entities::Entity;
 
-/* The time trial's crate conversion (#664, include/game/crates/crate.hpp). The Aku
+/* The time trial's crate conversion (#664, engine/include/game/crates/crate.hpp). The Aku
  * Aku crate, which the ROM puts right after it, starts crate_fields.cpp. */
 
 /* In a time trial, each crate of the crate list (class id 3) with a

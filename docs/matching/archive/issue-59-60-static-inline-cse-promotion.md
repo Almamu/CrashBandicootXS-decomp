@@ -3,7 +3,7 @@
 Three external-contributor PRs (#412-#416) demonstrated a technique this
 project hadn't used before: wrapping a small, repeated field-address
 computation in a `static inline` helper function instead of writing it
-inline, e.g. `src/game/level/tile_slot_pool.c`'s `PushFreeSlot`/`GetTileSlot`/
+inline, e.g. `engine/src/game/level/tile_slot_pool.c`'s `PushFreeSlot`/`GetTileSlot`/
 `SetTileSlot`:
 
 ```c
@@ -33,7 +33,7 @@ previously documented as blocked by exactly this class of compiler
 behavior. Two closed; one didn't (a related but distinct blocker - see
 below).
 
-## Closed: `UpdateTitleLogoPieces` (`src/frontend/title_screen_init.c`)
+## Closed: `UpdateTitleLogoPieces` (`engine/src/frontend/title_screen_init.c`)
 
 The highest-confidence candidate - its own file's header comment already
 described the blocker in almost these exact words: "any plain-C phrasing
@@ -106,7 +106,7 @@ NON_MATCHING=1 report` (no warnings), `rm -rf build crashbandicootxs.elf
 crashbandicootxs.gba crashbandicootxs.map && make compare` ->
 `crashbandicootxs.gba: OK`.
 
-## Closed: `RunHovercraftState` (`src/game/bosses/hovercraft.c`)
+## Closed: `RunHovercraftState` (`engine/src/game/bosses/hovercraft.c`)
 
 Lower initial confidence (flagged as "fully inlines `SetHovercraftFlashColor`'s own
 P1/P2 speed-toggle shape twice... the same cross-jump-merging register-
@@ -120,7 +120,7 @@ forces max speed (0x7FFF) on a P1/P2 object pair; every 8th-but-not-16th
 frame it restores a cached "normal" speed instead; both paths, plus a
 "do nothing" fallthrough, converge on `UpdateHovercraftHitFlash()` + a category-vtable
 animation dispatch. The already-matched `SetHovercraftFlashColor`
-(`src/bosses/hovercraft_parts.c`) implements the identical toggle as a
+(`engine/src/bosses/hovercraft_parts.c`) implements the identical toggle as a
 real, standalone function - but the ROM's own build of `RunHovercraftState`
 never calls it (no `bl SetHovercraftFlashColor` anywhere in the disassembly), so the
 original source duplicated the logic inline twice rather than sharing it
@@ -181,7 +181,7 @@ now points at `hovercraft.o` (matched), `0x08032C0C` keeps `None`
 (`HovercraftStateCloseIn`/`HovercraftStateFallBack` remain parked - unrelated many-high-register
 gap, untouched by this pass).
 
-## Did not close: `TitleScreenCheatInput` (`src/frontend/title_screen_init.c`)
+## Did not close: `TitleScreenCheatInput` (`engine/src/frontend/title_screen_init.c`)
 
 Given a real attempt per the task, but this one's blocker is a genuinely
 different shape than the other two, exactly as this project's own prior

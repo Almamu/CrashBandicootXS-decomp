@@ -15,7 +15,7 @@ crashbandicootxs.elf`) and runs it again twice, into <out>/stabs/ and
 
 -Werror is dropped (-g adds warnings of its own) and the two ARM objects
 are left out (agbcp_arm_patched doesn't take -g with -fomit-frame-pointer).
-The data tables (src/*/data/) have no code and are skipped. XS is built
+The data tables (engine/src/*/data/) have no code and are skipped. XS is built
 first (`make crashbandicootxs.gba`): the commands use its generated
 headers (build/include/) and its objects are what the code is compared
 with. An
@@ -36,7 +36,7 @@ ABBREV_END = '\t.section\t.debug_abbrev\n\t.byte\t0\n'
 def commands():
     out = subprocess.run(['make', '-n', '-B', 'crashbandicootxs.elf'], capture_output=True, text=True).stdout
     for line in out.splitlines():
-        if '| tools/agbcc/bin/' not in line or ' src/' not in line or '/data/' in line:
+        if '| tools/agbcc/bin/' not in line or ' engine/src/' not in line or '/data/' in line:
             continue
         if 'agbcp_arm_patched' in line:
             continue

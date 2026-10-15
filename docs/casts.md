@@ -11,13 +11,13 @@ and then it has a short comment.
 ## The inventory: `tools/magic_numbers.py --casts`
 
 [tools/magic_casts.py](../tools/magic_casts.py) lists the C-style casts in
-the game code (src/ without src/*/data/, and include/), grouped by the thing
+the game code (engine/src/ without engine/src/*/data/, and engine/include/), grouped by the thing
 being cast:
 
 - a **field**: `Sprite::x`, the class that declares the member and the
   member path from there (magic_bits.py's model, as `--bits` uses it);
 - a **local** or a **parameter**: `local from (HandleEvent,
-  src/game/crash/player_update.cpp)`;
+  engine/src/game/crash/player_update.cpp)`;
 - a **global**: `global gActorList`;
 - a function's **result**: `GetUiText()`, `LevelState::HasTurboRun()`;
 - an **address**: `&Entity::x`, the `(T *)&x` views;
@@ -45,7 +45,7 @@ comes first: those are the retype candidates.
 tools/magic_numbers.py --casts                 per thing, ranked, with its sites
 tools/magic_numbers.py --casts --report [OUT]  the same as Markdown
 tools/magic_numbers.py --casts --json          every cast as JSON
-tools/magic_numbers.py --casts --path src/game/ui --field 'GetUiText|Text'
+tools/magic_numbers.py --casts --path engine/src/game/ui --field 'GetUiText|Text'
 tools/magic_numbers.py --casts --kind derived --kind byteoff
 ```
 
@@ -75,7 +75,7 @@ The top retype candidates:
 - `AnimPart::animTimer` (declared `u16`): cast at 12/12 reads, to `s16` 12; scalar/sign 12
 - `anim_table_record::index` (declared `u32`): cast at 12/13 reads, to `u8` 12; scalar/narrow 12
 - `LevelEntityFlags::IsActivated()` (declared `s32`): cast at 8/8 reads, to `u8` 8; scalar/narrow+sign 8
-- `local from (HandleEvent, src/game/crash/player_update.cpp)` (declared `s32`): cast at 8/8 reads, to `MovingSprite *` 8; pointer/from int 8
+- `local from (HandleEvent, engine/src/game/crash/player_update.cpp)` (declared `s32`): cast at 8/8 reads, to `MovingSprite *` 8; pointer/from int 8
 - `PartList::items[]` (declared `Sprite *`): cast at 9/9 reads, to `MovingSprite *` 8, `Wumpa *` 1; derived/down 9
 - `LevelState::HasTurboRun()` (declared `s32`): cast at 7/7 reads, to `u8` 7; scalar/narrow+sign 7
 - `LevelLayers::Probe()` (declared `s32`): cast at 6/6 reads, to `u8` 6; scalar/narrow+sign 6

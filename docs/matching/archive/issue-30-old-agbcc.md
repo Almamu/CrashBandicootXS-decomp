@@ -26,7 +26,7 @@ that were already matched (`graphics_package.c` and
 
 ## Types
 
-- `struct bg_setup` (`include/graphics_package.h`) is the 0x10-byte
+- `struct bg_setup` (`engine/include/graphics_package.h`) is the 0x10-byte
   buffer callers build with `InitBgSetup` before `LoadGraphicsPackage`.
   It holds the char block, screen block and palette bank, and a BGnCNT
   bitfield union at +0x0C that `GetBgSetupControl` reads back. The ROM's

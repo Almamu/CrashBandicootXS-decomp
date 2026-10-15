@@ -5,8 +5,8 @@ tree. Both closed as real C under old_agbcc.
 
 | Function | File | Issue | Size | Compiler | Result |
 |---|---|---|---|---|---|
-| `UpdateEnemyCtrl` | `src/game/enemies/enemy_ctrl_update.c` | #10 | 1132 bytes | old_agbcc (object added to `OLD_AGBCC_OBJS`) | matched |
-| `ActionCtrlHandleEvent` | `src/game/crash/action_ctrl_event.c` | #16 | 1420 bytes | old_agbcc (object added to `OLD_AGBCC_OBJS`) | matched |
+| `UpdateEnemyCtrl` | `engine/src/game/enemies/enemy_ctrl_update.c` | #10 | 1132 bytes | old_agbcc (object added to `OLD_AGBCC_OBJS`) | matched |
+| `ActionCtrlHandleEvent` | `engine/src/game/crash/action_ctrl_event.c` | #16 | 1420 bytes | old_agbcc (object added to `OLD_AGBCC_OBJS`) | matched |
 
 Under the current agbcc the final C is 43 halfwords off for
 `UpdateEnemyCtrl` and 36 for `ActionCtrlHandleEvent`. The other function in
@@ -17,7 +17,7 @@ builds the same under old_agbcc. `action_ctrl_event.c` holds only
 Neither function needed loop work: both are a single `switch`. Both
 first drafts were written from the ROM disassembly, with the case
 bodies in the ROM's block order and the fields named through
-`include/part_ctrl.h` and `include/game/crash/action_input.h`. Each first draft
+`engine/include/part_ctrl.h` and `engine/include/game/crash/action_input.h`. Each first draft
 already had most instructions right. The rest was found with the
 `brute2.py` variant runner, a few options per run, mostly one statement
 at a time.
@@ -100,7 +100,7 @@ other way round: the function returns *when* `self->state == 0x1D`.
   - The zero in cases 1/4/6 is a local assigned before the `slippery`
     test.
 
-`include/game/crash/action_input.h`'s unused `unk_54[0xC]` became three named `s32`s
+`engine/include/game/crash/action_input.h`'s unused `unk_54[0xC]` became three named `s32`s
 (now `rampYStart`/`rampYStep`/`rampYTarget`) for the velocity triple. No other file
 used it.
 

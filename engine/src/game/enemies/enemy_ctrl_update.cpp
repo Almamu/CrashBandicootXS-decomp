@@ -20,7 +20,7 @@ using Game::Entities::MovingSprite;
 using Game::Level::EntitySpawner;
 
 /* EnemyCtrl's Update (UpdateEnemyCtrl, gEnemyCtrlVtable slot 1) and
- * HandleEvent (HitEnemy, slot 2), include/enemy_ctrl.hpp. They sit next
+ * HandleEvent (HitEnemy, slot 2), engine/include/enemy_ctrl.hpp. They sit next
  * to each other in the ROM; neither calls the other directly (state 11
  * calls HandleEvent through the vtable). The states' semantic map is in
  * docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md. */

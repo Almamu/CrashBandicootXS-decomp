@@ -8,7 +8,7 @@ touched: `ResetLinkSessionState` and `HandleLinkSerial` (#4), `DrawPauseFraction
 
 ## Closed (1)
 
-- **`UnlinkCrateFromGrid`** (`src/crates/crate_grid_unlink.c`) builds with old_agbcc,
+- **`UnlinkCrateFromGrid`** (`engine/src/crates/crate_grid_unlink.c`) builds with old_agbcc,
   and the object is now on `OLD_AGBCC_OBJS`. There was no earlier C draft;
   a first straightforward draft landed 44 halfwords off under agbcc and 6
   off under old_agbcc. Three steps took it to a match:

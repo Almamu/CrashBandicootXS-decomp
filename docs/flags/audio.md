@@ -1,7 +1,7 @@
 # `audio_context::state`: the song's playback state (#843)
 
 `state` (+0x04 of `struct audio_context`, the AudioContext class in
-include/engine/audio/audio.hpp) is what the GAX song player is doing. The names sit
+engine/include/engine/audio/audio.hpp) is what the GAX song player is doing. The names sit
 next to the struct. `IsStopped`, `IsPlaying` and `IsPaused` test it.
 
 | Value | Name | Set by | Meaning |

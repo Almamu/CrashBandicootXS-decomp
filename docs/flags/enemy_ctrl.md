@@ -1,6 +1,6 @@
 # `EnemyCtrl::state` and `mode`: the enemy controller (#843)
 
-The enemy controller (`class EnemyCtrl`, include/game/enemies/enemy_ctrl.hpp) has two
+The enemy controller (`class EnemyCtrl`, engine/include/game/enemies/enemy_ctrl.hpp) has two
 small-number fields:
 
 - `state` (+0x74) picks what Update does each frame. A spawner sets it
@@ -60,7 +60,7 @@ behaviour is clear from Update.
 `ENEMY_ANIM_NONE` (8) is the table entry for a mode the enemy has no
 animation for. UpdateAttackCycle tests `anims[ENEMY_MODE_ATTACK_START]`
 and `anims[ENEMY_MODE_ATTACK_END]` against it and skips that mode when it
-matches. The tables themselves (src/game/enemies/data/enemy_anim_maps.cpp) stay
+matches. The tables themselves (engine/src/game/enemies/data/enemy_anim_maps.cpp) stay
 numbers.
 
 ## Not named here

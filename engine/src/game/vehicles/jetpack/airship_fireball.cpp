@@ -14,7 +14,7 @@ using Game::Entities::HpActor;
 using Game::Vehicles::Jetpack::AirshipFireball;
 
 /* The airship's fireball (#664 parts 11f and 11i,
- * include/game/bosses/boss_actors.hpp), ROM 0x08030334-0x080306AC: an HpActor that
+ * engine/include/game/bosses/boss_actors.hpp), ROM 0x08030334-0x080306AC: an HpActor that
  * the airship fires in volleys (AirshipStateFireballs,
  * AirshipFireball::Spawn). It circles the point it was spawned at, then
  * spirals in on it (StateOrbit, StateSpiralIn), and explodes when shot

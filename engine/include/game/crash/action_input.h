@@ -1,12 +1,12 @@
 #ifndef GUARD_ACTION_INPUT_H
 #define GUARD_ACTION_INPUT_H
 
-/* Helpers of the action controller's C++ files (include/game/crash/action_ctrl.hpp,
- * src/game/crash/action_ctrl*.cpp): the input word's halves. The byte view of
+/* Helpers of the action controller's C++ files (engine/include/game/crash/action_ctrl.hpp,
+ * engine/src/game/crash/action_ctrl*.cpp): the input word's halves. The byte view of
  * the player's flags2 is in action_ctrl.hpp. The controller has no C view:
  * `struct act` went with its last C user (ResetActionCtrl, part 7h of
  * #664), and its C prototypes with the state table's conversion to C++
- * (src/game/crash/data/action_ctrl_state_table.cpp, #656). */
+ * (engine/src/game/crash/data/action_ctrl_state_table.cpp, #656). */
 
 
 /* gKeys is the input word: low half held, high half newly

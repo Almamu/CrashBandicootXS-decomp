@@ -6,7 +6,7 @@ using Game::Bosses::HovercraftCannonFlash;
 using Game::Entities::ActorSelf;
 using Game::Entities::HpActor;
 
-/* The cannon's muzzle flash (#664 part 11h, include/game/bosses/boss_actors.hpp): an
+/* The cannon's muzzle flash (#664 part 11h, engine/include/game/bosses/boss_actors.hpp): an
  * HpActor the cannon spawns with each shot (HovercraftCannonFlash::Spawn).
  * It stays in front of the cannon until its animation has played once,
  * then deletes itself. See docs/matching/archive/issue-63-0x08033ef4-actor.md. */
@@ -52,7 +52,7 @@ HovercraftCannonFlash::HovercraftCannonFlash(const struct anim_table_record *rec
 }
 
 /* Update without the common update.
- * UNUSED - no caller anywhere in the ROM (checked every src/ file and
+ * UNUSED - no caller anywhere in the ROM (checked every engine/src/ file and
  * every word-aligned Thumb pointer in baserom.gba). */
 s32 HovercraftCannonFlash::RunState()
 {

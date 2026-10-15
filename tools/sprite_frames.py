@@ -5,7 +5,7 @@
 A frame of a sprite bank is a list of OBJ pieces (a shape/size and an x, y
 offset from the sprite's position) and one run of 4bpp tiles in the pool,
 each piece's tiles back to back in 1D OBJ order. The sources are, per
-bank, graphics/sprites/bankNN_<name>/:
+bank, games/xs/graphics/sprites/bankNN_<name>/:
 
 - fKKK.png: frame KKK, the pieces drawn where they go, as a 4bpp indexed
   PNG cropped to the pieces' bounding box, in the palette of the first
@@ -20,7 +20,7 @@ bank, graphics/sprites/bankNN_<name>/:
                        frames), which is its own PNG, fKKK_pN.png (N its
                        index), not part of fKKK.png
     "layout": n        the frame's layout type (the high nibble of its first
-                       piece byte, include/engine/gfx/sprite_bank.h); it says which
+                       piece byte, engine/include/engine/gfx/sprite_bank.h); it says which
                        struct the frame is in the C
     "tiles":           where the frame's tile run starts in the pool:
         "own"              at the end of the tiles placed so far (new tiles)
@@ -44,11 +44,11 @@ bank, graphics/sprites/bankNN_<name>/:
   ROM's tables keep their bytes (docs/graphics.md, "New frames").
 
     tools/sprite_frames.py extract [baserom.gba]
-        Writes graphics/sprites/bankNN_<name>/ from the ROM and checks
+        Writes games/xs/graphics/sprites/bankNN_<name>/ from the ROM and checks
         that packing them gives the ROM's pool and frame offsets.
 
     tools/sprite_frames.py pack OUTDIR
-        Builds, from graphics/sprites/bankNN_<name>/:
+        Builds, from games/xs/graphics/sprites/bankNN_<name>/:
         OUTDIR/bankNN_tiles.inc   the bank's tile bytes (C initializer)
         OUTDIR/bankNN_pieces.inc  the bank's piece arrays (...FrameKKKPos,
                                   ...FrameKKKPieces), in the ROM's order
@@ -90,15 +90,15 @@ TILE_BASE = 0x082BF120
 OBJ_PALETTES = 0x084A4660
 OBJ_W = 0x0816B2E0  # gObjPieceWidths
 OBJ_H = 0x0816B2EC  # gObjPieceHeights
-SPRITES = Path("graphics/sprites")
-XS_GRAPHICS = Path("graphics")
+SPRITES = Path("games/xs/graphics/sprites")
+XS_GRAPHICS = Path("games/xs/graphics")
 
 # shape/size index (the low nibble of a piece byte) -> (width, height)
 SHAPES = [(8, 8), (16, 16), (32, 32), (64, 64), (16, 8), (32, 8), (32, 16), (64, 32),
           (8, 16), (8, 32), (16, 32), (32, 64)]
 SHAPE_NAMES = {f"{w}x{h}": i for i, (w, h) in enumerate(SHAPES)}
 
-# layout type -> the frame's struct (include/engine/gfx/sprite_bank.h)
+# layout type -> the frame's struct (engine/include/engine/gfx/sprite_bank.h)
 LAYOUT_STRUCTS = {
     0: "sprite_frame_3box_anchor",
     1: "sprite_frame",
@@ -119,7 +119,7 @@ LAYOUT_STRUCTS = {
 # with the macros pack writes; another bank needs the same before it can
 # take new frames.
 NEW_FRAME_HOOKS = {51: [0]}
-# The boxes of a frame header, by layout (include/engine/gfx/sprite_bank.h),
+# The boxes of a frame header, by layout (engine/include/engine/gfx/sprite_bank.h),
 # and the layouts with an anchor.
 LAYOUT_BOXES = {0: 3, 1: 0, 2: 1, 3: 2, 4: 3, 5: 1, 6: 1}
 LAYOUT_ANCHORS = (0, 6)
@@ -188,7 +188,7 @@ BANK_NAMES = [
 
 def use_graphics_dir(d):
     """Works on the game whose graphics are in `d` (its manifest's
-    sprite_banks entry); XS's constants for XS's graphics/."""
+    sprite_banks entry); XS's constants for XS's games/xs/graphics/."""
     global BANK_TABLE, TILE_BASE, OBJ_PALETTES, OBJ_W, OBJ_H, SPRITES, BANK_NAMES, NEW_FRAME_HOOKS
     d = Path(d)
     if d == XS_GRAPHICS:

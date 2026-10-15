@@ -1,11 +1,11 @@
-/* The camera lead (CameraLead, gCameraLeadVtable; include/game/ui/level_select.hpp):
+/* The camera lead (CameraLead, gCameraLeadVtable; engine/include/game/ui/level_select.hpp):
  * the 0x80-byte moving sprite InputCtrl::StateStart (input_ctrl.cpp) spawns
  * for the input controller. It trails the player at a horizontal offset
  * that eases 2 px per frame toward a clamped target, and is gCamera's
  * follow target while alive. Its key method is here, so g++ emits its
  * vtable here (games/xs/ldscript.txt places it).
  *
- * UNUSED - no `bl`/`.4byte` reference in asm/, games/xs/expected/ or src/: SetUnk32,
+ * UNUSED - no `bl`/`.4byte` reference in asm/, games/xs/expected/ or engine/src/: SetUnk32,
  * SetOffset and GetOffset. Matched anyway.
  *
  * Split from the start of menus/level_select.cpp (GitHub issue #26) in
@@ -45,7 +45,7 @@ static inline void ToggleHiddenNow(Sprite *s)
     s->f.b.blink = !s->f.b.blink;
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked asm/, data/, src/ and a
+/* UNUSED - no caller anywhere in the ROM (checked asm/, games/xs/data/, engine/src/ and a
  * whole-ROM Thumb-pointer scan). Sets the byte at 0x32, the third byte of
  * Sprite::frame, which nothing else touches on its own, so its meaning
  * (and this method's name) is open. */
@@ -132,7 +132,7 @@ CameraLead::CameraLead()
     Reset();
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked asm/, data/, src/ and a
+/* UNUSED - no caller anywhere in the ROM (checked asm/, games/xs/data/, engine/src/ and a
  * whole-ROM Thumb-pointer scan). Sets the target offset, clamped to
  * 10-50 px. */
 void CameraLead::SetOffset(s32 v)
@@ -144,7 +144,7 @@ void CameraLead::SetOffset(s32 v)
     targetOffset = v;
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked asm/, data/, src/ and a
+/* UNUSED - no caller anywhere in the ROM (checked asm/, games/xs/data/, engine/src/ and a
  * whole-ROM Thumb-pointer scan). Returns the target offset. */
 s32 CameraLead::GetOffset()
 {

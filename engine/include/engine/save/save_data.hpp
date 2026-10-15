@@ -11,10 +11,10 @@
  * link exchange (SaveMenu::LinkExchange); cxx_symbols.txt maps the
  * methods onto their C names.
  *
- *   src/engine/save/save_data.cpp           SaveData
- *   src/engine/save/save_transfer.cpp       SaveTransfer's SendChunk and
+ *   engine/src/engine/save/save_data.cpp           SaveData
+ *   engine/src/engine/save/save_transfer.cpp       SaveTransfer's SendChunk and
  *                                    ReceiveChunk
- *   src/engine/save/save_transfer_state.cpp SaveTransfer's Poll, SetRecord,
+ *   engine/src/engine/save/save_transfer_state.cpp SaveTransfer's Poll, SetRecord,
  *                                    GetData, Reset
  *
  * Neither has a vtable, a constructor or a destructor: `new` and
@@ -127,7 +127,7 @@ public:
         field_1fb = 0;
     }
 
-    /* src/engine/save/save_data.cpp */
+    /* engine/src/engine/save/save_data.cpp */
     s32 Read(s32 len);                  // ReadSaveData
     s32 Write(s32 len);                 // WriteSaveData
     s32 Load();                         // LoadSaveData
@@ -357,7 +357,7 @@ namespace Save
 
 /* A transient SIO send/receive envelope wrapping a SaveData copy - made
  * for each "connecting..." spinner-dialog session (SaveMenu::
- * LinkExchange, src/game/ui/save_menu_draw.cpp) and deleted with it.
+ * LinkExchange, engine/src/game/ui/save_menu_draw.cpp) and deleted with it.
  * `tmpl`/`cursor` stream a SaveData's bytes out to the link session's
  * outgoing ring (SendChunk); `data` receives the other side's copy of the
  * same shape from that player's incoming ring (ReceiveChunk), with
@@ -381,11 +381,11 @@ public:
     u32 receiveDone;
     u32 settleTimer; // 0x21c - elapsed-poll counter, Poll
 
-    /* src/engine/save/save_transfer.cpp */
+    /* engine/src/engine/save/save_transfer.cpp */
     void SendChunk();                   // SendSaveTransferChunk
     void ReceiveChunk(s32 playerIndex); // ReceiveSaveTransferChunk
 
-    /* src/engine/save/save_transfer_state.cpp */
+    /* engine/src/engine/save/save_transfer_state.cpp */
     s32 Poll();                       // PollSaveTransfer
     void SetRecord(SaveData *record); // SetSaveTransferRecord
     void *GetData();                  // GetSaveTransferData

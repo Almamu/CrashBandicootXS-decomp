@@ -1,4 +1,4 @@
-/* A Bresenham line's single-octant steppers, for include/game/crates/crate.hpp, with
+/* A Bresenham line's single-octant steppers, for engine/include/game/crates/crate.hpp, with
  * no include guard: crate.hpp includes them as inline functions
  * (CRATE_LINE_STEP `inline`), which FindLineCrossing (crate_reset.cpp)
  * inlines, one per octant; crate.cpp includes them at its end with

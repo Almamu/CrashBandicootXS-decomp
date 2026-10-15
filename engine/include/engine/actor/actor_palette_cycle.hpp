@@ -1,7 +1,7 @@
 #ifndef GUARD_ACTOR_PALETTE_CYCLE_HPP
 #define GUARD_ACTOR_PALETTE_CYCLE_HPP
 
-/* The 3D stages' BG palette cycle (src/engine/actor/actor_palette_cycle.cpp,
+/* The 3D stages' BG palette cycle (engine/src/engine/actor/actor_palette_cycle.cpp,
  * #915): while it is enabled, every cell animation frame DMAs one frame
  * of `frames` to BG palette RAM, and every 0x24 frames moves the cursor
  * one frame toward its bound.
@@ -14,7 +14,7 @@
  * declared: cxx_symbols.txt (block "#915 ActorPaletteCycle") maps each
  * one to its C name (`_Q36Engine5Actor17ActorPaletteCycle.frame` is
  * gActorPaletteCycleFrame, ...), whose address is in games/xs/sym_iwram.txt; the
- * ROM tables are defined in src/engine/actor/data/actor_palette_cycle_frames.cpp. The
+ * ROM tables are defined in engine/src/engine/actor/data/actor_palette_cycle_frames.cpp. The
  * functions keep their C names the same way (`Update__Q36Engine5Actor17ActorPaletteCycle`
  * is UpdateActorPaletteCycle).
  *
@@ -53,7 +53,7 @@ private:
     static s32 target;      // gActorPaletteCycleTarget - the frame the cursor stops at
     static s32 timer;       // gActorPaletteCycleTimer - the calls since the cursor moved
 
-    /* ROM (src/engine/actor/data/actor_palette_cycle_frames.cpp) */
+    /* ROM (engine/src/engine/actor/data/actor_palette_cycle_frames.cpp) */
     static const u16 frames[32][14 * 16]; // gActorPaletteCycleFrames - BG palettes 0-13
     static const s32 startFrames[4];      // gActorPaletteCycleStartFrames
     static const s32 targetFrames[4];     // gActorPaletteCycleTargetFrames

@@ -26,7 +26,7 @@ of no-argument helpers reading a fixed global object (`gUnknown_
 
 All four are the lowest-register-pressure members of the
 `CreateJetpackActor` constructor family - just `r4`-`r6`, no `r8`/`sb`/`sl` -
-in `src/vehicle/jetpack_spawn.c`:
+in `engine/src/vehicle/jetpack_spawn.c`:
 
 - **`YetiStateStop`** - state-3 anim-frame edge reset: while `self`
   (`gYeti`)'s table-index isn't already 3 and its anim-
@@ -64,7 +64,7 @@ y, s32 amount);` extern declaration in `jetpack_player.c`).
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
-The other 21 functions, all in `src/vehicle/jetpack_spawn.c`. Given
+The other 21 functions, all in `engine/src/vehicle/jetpack_spawn.c`. Given
 how heavily this whole neighborhood (issues #50/#52/#56, see their own
 matching docs) has already needed the NAKED-transcription escape hatch
 for gcc-2.9 register-pressure/branch-layout gaps, and the size of this
@@ -127,7 +127,7 @@ make compare`): `crashbandicootxs.gba: La suma coincide`. (This
 session's sandbox lacked a working Pillow install for the graphics
 pipeline; the `build/crashbandicootxs/graphics`/`sound` binary outputs
 were reused verbatim from another worktree after confirming byte-
-identical `graphics/`/`sound/` source trees via `diff -rq` - every
+identical `games/xs/graphics/`/`games/xs/sound/` source trees via `diff -rq` - every
 `.c`/`.s` file that actually changed was still fully recompiled and
 relinked from scratch.) `make NON_MATCHING=1 report` also compiled
 clean, no warnings for `jetpack_spawn.c`.

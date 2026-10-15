@@ -9,7 +9,7 @@ extern "C" {
 
 using Engine::Sys::FrameLimiter;
 
-/* Sits between FormatCentiseconds (ROM 0x0800106C, in src/engine/util/time_format.cpp) and
+/* Sits between FormatCentiseconds (ROM 0x0800106C, in engine/src/engine/util/time_format.cpp) and
  * LoadTaggedAsset (still raw in asm/code_3_1_5.s). */
 
 /* Polls input (via FrameLimiter::WaitForVBlank/UpdateKeys, the same VBlank-wait-then-
@@ -23,7 +23,7 @@ using Engine::Sys::FrameLimiter;
  * clear and `count == 0`, it returns 1 immediately without polling at
  * all. Reads the "newly pressed this frame" keys (`gKeys`'s
  * companion u16 at +2, see `UpdateKeys`'s own notes in
- * `src/engine/sys/key_input.cpp`) fresh each poll (no caching across polls, since
+ * `engine/src/engine/sys/key_input.cpp`) fresh each poll (no caching across polls, since
  * `UpdateKeys`'s call in between could change it). `UpdateKeys`
  * is gInput's method (KeyInput::Update, key_input.hpp) but never reads
  * the object. Built with old_agbcc: agbcc loads `pressed`

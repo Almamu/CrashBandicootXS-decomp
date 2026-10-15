@@ -33,7 +33,7 @@ using Game::Vehicles::Jetpack::JetpackShot;
 
 /* JetpackPlayer's constructor, virtual methods, steering, first three
  * states, course end, ring pass and VRAM tile buffers (#664 part 11e,
- * include/game/vehicles/vehicle.hpp), ROM 0x0802E740-0x0802F3BC, between
+ * engine/include/game/vehicles/vehicle.hpp), ROM 0x0802E740-0x0802F3BC, between
  * jetpack_spawn.cpp and jetpack_player.cpp. JetpackPlayer is
  * gJetpackPlayerVtable; its state lives in the gJetpack* globals.
  *

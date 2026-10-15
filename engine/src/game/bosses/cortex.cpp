@@ -42,7 +42,7 @@ using Game::Objects::PlatformMover;
  * class's methods end with its destructor and constructor, so the
  * controllers' boundaries put these functions in one original unit.
  *
- * Small controllers (include/game/bosses/boss_ctrl.hpp, include/game/objects/platform.hpp), in ROM
+ * Small controllers (engine/include/game/bosses/boss_ctrl.hpp, engine/include/game/objects/platform.hpp), in ROM
  * order, for the fight in sprite bank 53 (the Tesla cannon at three
  * angles in anims 3-5, the green/red crosshairs in 0xF/0x10/0x12, the
  * shots in 0xE/0x11 and the shrinking gems in 9-0xD): the boss controller
@@ -56,11 +56,11 @@ using Game::Objects::PlatformMover;
  * cannon (CortexCannonCtrl) and the boss controller's SetState,
  * destructor and constructor.
  *
- * UNUSED - no `bl`/`.4byte` reference in asm/, data/ or src/, and no
+ * UNUSED - no `bl`/`.4byte` reference in asm/, games/xs/data/ or engine/src/, and no
  * Thumb pointer anywhere in the ROM: CortexCannonCtrl::SetState. Matched
  * anyway. */
 
-/* The player's HandleEvent (Player, include/game/crash/player.hpp). */
+/* The player's HandleEvent (Player, engine/include/game/crash/player.hpp). */
 static inline void HitPlayer(Player *pl, s32 event)
 {
     pl->HandleEvent(0, event, 0);

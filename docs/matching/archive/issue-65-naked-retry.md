@@ -1,8 +1,8 @@
 # Retrying issue #65's NAKED functions (`0x080354E0`-`0x08037110`)
 
 Issue #65's range had 18 NAKED functions: `LoadTitleScreenBg` in
-`src/frontend/title_screen_init.c` and 17 in
-`src/frontend/title_screen_init.c`. The first pass
+`engine/src/frontend/title_screen_init.c` and 17 in
+`engine/src/frontend/title_screen_init.c`. The first pass
 ([issue-65-0x08035780-graphics-loading.md](issue-65-0x08035780-graphics-loading.md))
 made one quick C attempt per function and then transcribed them.
 This pass closed 10 of the 18. The other 8 stay NAKED. Seven of those

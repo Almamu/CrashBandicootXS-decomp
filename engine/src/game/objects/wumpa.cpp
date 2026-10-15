@@ -15,7 +15,7 @@ using Game::Entities::ClampFrame;
 using Game::Objects::Wumpa;
 
 /* The wumpa's flight to the HUD, payout start and hop, and its small
- * methods (#664, include/game/objects/pickups.hpp). The stopwatch follows in
+ * methods (#664, engine/include/game/objects/pickups.hpp). The stopwatch follows in
  * stopwatch.cpp. The first three were the end
  * of wumpa_update.cpp; they need cse's skip-blocks, which that object is
  * built without (#662 round 3, see the Makefile). */

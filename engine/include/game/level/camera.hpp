@@ -1,7 +1,7 @@
 #ifndef GUARD_CAMERA_HPP
 #define GUARD_CAMERA_HPP
 
-/* The camera (gCamera, globals.h; src/game/level/camera.cpp, #761): a Q8
+/* The camera (gCamera, globals.h; engine/src/game/level/camera.cpp, #761): a Q8
  * position, a Q8 look-ahead offset, the followed sprite and the mode.
  * PlayRoom builds it with `new Camera` and frees it with `delete
  * gCamera`: with no constructor, destructor or vtable those are the

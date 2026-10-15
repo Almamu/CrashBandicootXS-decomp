@@ -12,7 +12,7 @@ extern "C" {
 
 using Game::Enemies::PeriodicSpawner;
 
-/* PeriodicSpawner, the periodic trigger entity (include/game/enemies/enemy_ctrl.hpp),
+/* PeriodicSpawner, the periodic trigger entity (engine/include/game/enemies/enemy_ctrl.hpp),
  * ROM 0x0800CACC-0x0800CB64. g++ emits gPeriodicSpawnerVtable here. An
  * old_agbcp object (OLD_AGBCC_OBJS). */
 
@@ -51,7 +51,7 @@ void PeriodicSpawner::SetPeriod(s32 newPeriod, s32 newPhase)
 
 /* The function Update calls; PeriodicSpawner::Spawn (spawn_objects.cpp) stores
  * `callback` directly.
- * UNUSED - no caller anywhere in the ROM (checked every src/ and lib/ .c
+ * UNUSED - no caller anywhere in the ROM (checked every engine/src/ and lib/ .c
  * file and every word-aligned Thumb pointer in baserom.gba). */
 void PeriodicSpawner::SetCallback(void (*newCallback)(u32 id, u16 x, u16 y, u16 param))
 {

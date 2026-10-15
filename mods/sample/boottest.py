@@ -56,11 +56,11 @@ def constants(*headers):
 
 C = constants("build/include/constants/levels.h", "build/include/constants/songs.h",
               "build/include/constants/categories.h", "build/include/constants/cutscenes.h",
-              "include/constants/bosses.h")
-OBJ_PALETTE = [v & 0x7FFF for v in jasc_pal.read_jasc("graphics/vehicles/polar/sample_ice.pal")]
-CYCLE = [[v & 0x7FFF for v in jasc_pal.read_jasc("graphics/vehicles/polar/sample_ice_cycle/%02d.pal" % k)]
+              "engine/include/constants/bosses.h")
+OBJ_PALETTE = [v & 0x7FFF for v in jasc_pal.read_jasc("games/xs/graphics/vehicles/polar/sample_ice.pal")]
+CYCLE = [[v & 0x7FFF for v in jasc_pal.read_jasc("games/xs/graphics/vehicles/polar/sample_ice_cycle/%02d.pal" % k)]
          for k in range(32)]
-TYPE_CYCLE = [[v & 0x7FFF for v in jasc_pal.read_jasc("graphics/vehicles/polar/palette_cycle/%02d.pal" % k)]
+TYPE_CYCLE = [[v & 0x7FFF for v in jasc_pal.read_jasc("games/xs/graphics/vehicles/polar/palette_cycle/%02d.pal" % k)]
               for k in range(32)]
 
 

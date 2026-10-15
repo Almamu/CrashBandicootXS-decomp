@@ -7,7 +7,7 @@ extern "C" {
 /*
  * ROM 0x080FF1B0-0x0814174C: BG0 cell animation B (categories 3-6),
  * category 3's BG1 picture and its spawnTable. Linked in ROM order
- * between data/data.s sections by games/xs/ldscript.txt - see docs/data.md
+ * between games/xs/data/data.s sections by games/xs/ldscript.txt - see docs/data.md
  * ("Category backgrounds").
  */
 
@@ -16,7 +16,7 @@ extern "C" {
  * UploadCellAnimFrame (cell_anim.cpp): 38x10 cells, 21 frames. Not a type-0
  * category, so there are no per-cell banks: ResetCellAnimBg maps the cells to
  * consecutive tiles in palette bank 0. Built from
- * graphics/vehicles/jetpack/clouds.png, all 21 frames stacked top to
+ * games/xs/graphics/vehicles/jetpack/clouds.png, all 21 frames stacked top to
  * bottom. */
 struct jetpack_cell_anim {
     struct cell_anim_header header;
@@ -40,7 +40,7 @@ extern const struct jetpack_cell_anim gCategoryFamily1CellAnim = {
 
 /* Category 3's BG1 picture (ActorCategory::descriptors[3].bgPicture,
  * loaded by LoadBgPicture in bg_picture.cpp): 38x16 map, 357 tiles. Built from
- * graphics/vehicles/jetpack/skies/rocket_racket.png (palette and map) and
+ * games/xs/graphics/vehicles/jetpack/skies/rocket_racket.png (palette and map) and
  * 13d934_picture_tiles.png (the tile set, grit's -fx external tileset). */
 struct bg_picture_13d934 {
     struct bg_picture_header header;
@@ -69,6 +69,6 @@ extern const struct bg_picture_13d934 gCategory3BgPicture = {
 };
 
 /* Category 3's spawn list (ActorCategory::descriptors[3].spawnTable),
- * generated from its data/levels/spawns/ file (`levels.py spawns`,
+ * generated from its games/xs/data/levels/spawns/ file (`levels.py spawns`,
  * docs/levels.md "Actor categories"). */
 #include "spawns/gCategory3SpawnTable.inc"

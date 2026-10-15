@@ -2,7 +2,7 @@
 
 using Engine::Text::Font;
 
-/* GitHub issue #46: Font's TextHeight (include/engine/text/font.hpp), between
+/* GitHub issue #46: Font's TextHeight (engine/include/engine/text/font.hpp), between
  * font_draw_text.cpp and font.cpp in the ROM. */
 
 /* The height of a block of text: `lineHeight` for the first line plus

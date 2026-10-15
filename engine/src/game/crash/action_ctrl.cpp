@@ -12,7 +12,7 @@ using Game::Crash::Player;
 using Game::Entities::Ctrl;
 using Game::Entities::MovingSprite;
 
-/* ActionCtrl's small methods (include/game/crash/action_ctrl.hpp, gActionCtrlVtable;
+/* ActionCtrl's small methods (engine/include/game/crash/action_ctrl.hpp, gActionCtrlVtable;
  * #664, docs/cplusplus.md): the empty and forwarding state methods, the
  * mode+animation setter, the target animation override (the skid swap),
  * the constructor and destructor, and the motion queue accessors. The C
@@ -194,7 +194,7 @@ void ActionCtrl::QueueMotionX(s32 entry)
     motionX = entry;
 }
 
-/* UNUSED - no caller anywhere in the ROM (no `bl` in src/, no Thumb
+/* UNUSED - no caller anywhere in the ROM (no `bl` in engine/src/, no Thumb
  * pointer to it in baserom.gba). */
 u8 ActionCtrl::GetPrevState()
 {

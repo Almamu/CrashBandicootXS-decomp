@@ -1,4 +1,4 @@
-/* The OAM shadow buffer (OamBuffer, gOamBuffer; include/game/entities/sprite_obj.hpp).
+/* The OAM shadow buffer (OamBuffer, gOamBuffer; engine/include/game/entities/sprite_obj.hpp).
  * Split from gfx/graphics.cpp (#767), same flags (old_agbcc). */
 
 #include "game/entities/sprite_obj.hpp"

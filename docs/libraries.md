@@ -2,7 +2,7 @@
 
 Part of the ROM was never this game's code: it is third-party and SDK code
 that was linked in. It lives under `lib/`, one directory per library, the
-way pokeemerald keeps `libagbsyscall`/`libgcc` apart from the game. `src/`
+way pokeemerald keeps `libagbsyscall`/`libgcc` apart from the game. `engine/src/`
 holds only the game. The one library that only wraps the GBA's hardware,
 `libagbsyscall` (the BIOS calls), is part of the GBA platform instead:
 `platform/gba/lib/libagbsyscall/`, laid out the same way
@@ -39,8 +39,8 @@ as it did under `lib/`.
   ROM's (alphabetical) order.
 
 The lib1funcs routines and the SWI wrappers are hand-written assembly.
-They used to be NAKED functions in C files (`src/util/math_div_util.c`,
-`math_div64_util.c`, `src/system/reg_trampolines.c`, `timer_util.c`); they
+They used to be NAKED functions in C files (`engine/src/util/math_div_util.c`,
+`math_div64_util.c`, `engine/src/system/reg_trampolines.c`, `timer_util.c`); they
 are plain `.s` now, with the same bytes. Each `.s` block ends in
 `.align 2, 0`: without it the assembler pads the end of the section with
 `nop`s (`c0 46`) where the ROM has zero bytes.
@@ -51,7 +51,7 @@ Game code includes a library's public header and nothing else from it:
 
 - `<gax.h>`: `GAX2_new`/`GAX2_estimate`/`GAX2_init`/`GAX2_jingle`,
   `GAX_irq`/`GAX_play`, the music and sound-effect calls, and
-  `struct GaxSongHeader` (GAX2's parameter block). `include/engine/audio/audio.hpp` (the
+  `struct GaxSongHeader` (GAX2's parameter block). `engine/include/engine/audio/audio.hpp` (the
   game's audio manager) includes it. The engine's internal structures
   (player state, handler types, channel state, and Shin'en's inline asm
   `GAX_DMA_WAIT`/`GAX_CALL_ARM`) are in `lib/gax/src/gax_internal.h`.
@@ -59,7 +59,7 @@ Game code includes a library's public header and nothing else from it:
   `EEPROMWrite`, `EEPROMCompare`, `EEPROMWrite1_check`, `struct
   EepromConfig` and `gEepromConfig`. The timer state and helpers are in
   `lib/agb_eeprom/src/agb_eeprom_internal.h`.
-- `<agb_syscall.h>`: the SWI wrappers. `src/engine/gfx/asset.cpp` keeps its
+- `<agb_syscall.h>`: the SWI wrappers. `engine/src/engine/gfx/asset.cpp` keeps its
   own one-argument `LZ77UnCompVram`/`RLUnCompVram` declarations: its
   callers leave the destination in r1 from their own argument, and the
   two-argument call compiles differently.
@@ -172,20 +172,20 @@ No library object uses old_agbcc, agbcp_arm_patched or
 
 ## What stayed in the game
 
-- **The songs and the sound-effect set** (`sound/`, `gGaxMusicData`,
+- **The songs and the sound-effect set** (`games/xs/sound/`, `gGaxMusicData`,
   `gGaxSfxData`, built by `tools/gax_audio.py`): they are in GAX2's format
   but they are this game's content (its 19 songs and its sound effects),
   not part of the engine, so they stay with the game's assets. So does
   `gGaxDefaultSong`, the engine's default handler layout: it sits at the
   end of the music block and `tools/gax_audio.py` builds it with the songs
   (docs/audio.md).
-- **The game-side audio code**: the audio manager (`src/engine/audio/audio.cpp`), the song
-  table (`src/engine/audio/data/song_table.cpp`) and the sound-effect table
-  (`sound/sfx_table.json`). They call GAX2 through `<gax.h>`.
+- **The game-side audio code**: the audio manager (`engine/src/engine/audio/audio.cpp`), the song
+  table (`engine/src/engine/audio/data/song_table.cpp`) and the sound-effect table
+  (`games/xs/sound/sfx_table.json`). They call GAX2 through `<gax.h>`.
 - **GAX2's IWRAM variables**: `gGaxIrqEnabled` is the game's flag (its
   VBlank handler calls `GAX_irq` while it is set). `gGaxHaltFont`, the
   fatal-error screen's font, is GAX2 data, but it sits in the middle of
-  the IWRAM image's initialised data (`src/engine/sys/iwram_data.cpp`, one
+  the IWRAM image's initialised data (`engine/src/engine/sys/iwram_data.cpp`, one
   object), so it stays there.
 - **crt0 and IntrMain** (`platform/gba/asm/crt0.s`,
   `platform/gba/asm/intr_main.s`) are not libraries: they derive from the
@@ -203,4 +203,4 @@ No library object uses old_agbcc, agbcp_arm_patched or
 and `libgcc` ("libgcc (lib)"); game audio keeps `audio`. The hand-written
 ranges (lib1funcs.s, libagbsyscall.s, `lib/gax/asm/gax_arm_dsp.s`) are
 `HANDWRITTEN`: no unit, out of the totals. `tools/cleanup_scan.py` scans `lib/**/*.c` as well as
-`src/**/*.c` for cleanup candidates.
+`engine/src/**/*.c` for cleanup candidates.

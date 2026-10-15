@@ -21,11 +21,11 @@ using Game::Objects::Platform;
 
 /* The decoration, platform and seal-spawner spawners, between the
  * bosses' and the crates' (ROM 0x08021748-0x08021A4C; #664,
- * include/game/level/spawners.hpp). Built with old_agbcp. Since #915 the platforms',
+ * engine/include/game/level/spawners.hpp). Built with old_agbcp. Since #915 the platforms',
  * the launch pad's and the seal spawner's are static members of the
  * classes they create (Platform::SpawnRock, LaunchPad::SpawnEntity,
  * PeriodicSpawner::Spawn, ...), and the decorations' (plain Sprites)
- * are Pickups' (Pickups::SpawnSeaweed, ..., include/game/objects/pickups.hpp); the
+ * are Pickups' (Pickups::SpawnSeaweed, ..., engine/include/game/objects/pickups.hpp); the
  * empty slot stays free. */
 
 /* Builds a sprite on sprite bank 45, resets
@@ -44,7 +44,7 @@ void Pickups::SpawnSeaweed(u32 id, u16 x, u16 y, u16 param)
     DecorationList()->Add(part);
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the spawn
+/* UNUSED - no caller anywhere in the ROM (checked engine/src/, asm/ and the spawn
  * table). SpawnSeaweed without the animation reset. */
 void Pickups::SpawnSeaweedNoAnimReset(u32 id, u16 x, u16 y, u16 param)
 {

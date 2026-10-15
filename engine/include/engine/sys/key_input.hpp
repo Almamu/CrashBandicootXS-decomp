@@ -1,7 +1,7 @@
 #ifndef GUARD_KEY_INPUT_HPP
 #define GUARD_KEY_INPUT_HPP
 
-/* The key input object (gInput, globals.h; src/engine/sys/key_input.cpp,
+/* The key input object (gInput, globals.h; engine/src/engine/sys/key_input.cpp,
  * #759). Its methods read and write gKeys (globals.h), never the object:
  * every caller still loads gInput into r0 as `this`, as the C passed it
  * as the ignored `input` argument. cxx_symbols.txt maps them onto their
