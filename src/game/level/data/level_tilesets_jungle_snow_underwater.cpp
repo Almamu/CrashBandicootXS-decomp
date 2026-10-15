@@ -32,7 +32,7 @@ const u16 gLanguageSelectPalette3[16] = {
 
 /* Tile set 1: 6638 tiles, used by 10 rooms' layer descriptors. */
 #include "tilesets/gJungleBg0Tiles.h"
-extern const TAGGED_RAW_ASSET(TILES_SIZE_gJungleBg0Tiles) gJungleBg0Tiles = {
+extern "C" const TAGGED_RAW_ASSET(TILES_SIZE_gJungleBg0Tiles) gJungleBg0Tiles = {
     TAGGED_RAW_HEADER(TILES_SIZE_gJungleBg0Tiles),
     {
 #include "tilesets/gJungleBg0Tiles.bin.inc"
@@ -41,7 +41,7 @@ extern const TAGGED_RAW_ASSET(TILES_SIZE_gJungleBg0Tiles) gJungleBg0Tiles = {
 
 /* Tile set 2: 1707 tiles, 10 rooms. */
 #include "tilesets/gSnowBg0Tiles.h"
-extern const TAGGED_RAW_ASSET(TILES_SIZE_gSnowBg0Tiles) gSnowBg0Tiles = {
+extern "C" const TAGGED_RAW_ASSET(TILES_SIZE_gSnowBg0Tiles) gSnowBg0Tiles = {
     TAGGED_RAW_HEADER(TILES_SIZE_gSnowBg0Tiles),
     {
 #include "tilesets/gSnowBg0Tiles.bin.inc"
@@ -50,7 +50,7 @@ extern const TAGGED_RAW_ASSET(TILES_SIZE_gSnowBg0Tiles) gSnowBg0Tiles = {
 
 /* Tile set 3: 4769 tiles, 5 rooms. */
 #include "tilesets/gUnderwaterBg0Tiles.h"
-extern const TAGGED_RAW_ASSET(TILES_SIZE_gUnderwaterBg0Tiles) gUnderwaterBg0Tiles = {
+extern "C" const TAGGED_RAW_ASSET(TILES_SIZE_gUnderwaterBg0Tiles) gUnderwaterBg0Tiles = {
     TAGGED_RAW_HEADER(TILES_SIZE_gUnderwaterBg0Tiles),
     {
 #include "tilesets/gUnderwaterBg0Tiles.bin.inc"

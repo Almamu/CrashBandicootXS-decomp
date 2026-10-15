@@ -87,28 +87,33 @@ public:
     //        always counts as on screen)
     u8 screenSpace;
     u8 unk_26[2];
+    /* 0x28's bits as bitfields (the union below). Declared here, not
+     * inside the anonymous union: a type declared in an anonymous union
+     * is a g++ 2.9 extension that standard C++ rejects (#1093). */
+    struct MirrorBits {
+        u8 gfxMode:2; // OBJ mode (Get/SetSpriteGfxMode): OAM_OBJ_MODE_*
+        u8 mosaic:1;
+        u8 colorMode:1; // 8bpp
+        s32 flipX:1;    // signed: test them with `< 0` (`lsl #27`, a sign test)
+        s32 flipY:1;
+        u8 priority:2; // OBJ priority (Get/SetSpritePriority)
+    } __attribute__((packed));
+    /* The same bits unsigned: read as
+     * values (`lsl #27; lsr #31`), not tested. */
+    struct MirrorFlags {
+        u32 gfxMode:2;
+        u32 mosaic:1;
+        u32 colorMode:1;
+        u32 mirrorX:1;
+        u32 mirrorY:1;
+        u32 priority:2;
+    } __attribute__((packed));
     /* 0x28: the OBJ mode, mosaic, 8bpp, mirror and priority bits of the
      * sprite's OAM entries, as a byte or as bitfields. */
     union {
         u8 mirror; // bit 4: X mirrored, bit 5: Y mirrored
-        struct MirrorBits {
-            u8 gfxMode:2; // OBJ mode (Get/SetSpriteGfxMode): OAM_OBJ_MODE_*
-            u8 mosaic:1;
-            u8 colorMode:1; // 8bpp
-            s32 flipX:1;    // signed: test them with `< 0` (`lsl #27`, a sign test)
-            s32 flipY:1;
-            u8 priority:2; // OBJ priority (Get/SetSpritePriority)
-        } __attribute__((packed)) mirrorBits;
-        /* The same bits unsigned: read as
-         * values (`lsl #27; lsr #31`), not tested. */
-        struct MirrorFlags {
-            u32 gfxMode:2;
-            u32 mosaic:1;
-            u32 colorMode:1;
-            u32 mirrorX:1;
-            u32 mirrorY:1;
-            u32 priority:2;
-        } __attribute__((packed)) mirrorFlags;
+        struct MirrorBits mirrorBits;
+        struct MirrorFlags mirrorFlags;
     } __attribute__((packed)); // one byte, not the 4 of an ARM union
     u8 palette:4;              // 0x29 - low nibble: the OBJ palette slot
     u32:20;                    // 0x29 bit 4-0x2B: the unused rest of the 0x28 word

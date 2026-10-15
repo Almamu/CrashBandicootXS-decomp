@@ -24,8 +24,11 @@ CC1FLAGS := -mthumb-interwork $(WARNFLAGS) -O2 -fhex-asm  -fprologue-bugfix
 # The platform (#1093, docs/platforms.md): the GBA's hardware headers
 # (platform/gba/include/gba/*.h, included as "gba/io_reg.h" and so on),
 # its startup and interrupt code and its BIOS wrappers. A port builds
-# with its own platform/<name>/ in its place. Both games build for the GBA.
-PLATFORM_DIR := platform/gba
+# with its own platform/<name>/ in its place: `make PLATFORM=pc` builds
+# the game for the host (platform/pc/platform.mk). Both games build for
+# the GBA.
+PLATFORM ?= gba
+PLATFORM_DIR := platform/$(PLATFORM)
 # The libraries' public headers (lib/*/include, and the platform's own,
 # platform/gba/lib/*/include) are on the -I path, so game code includes
 # them as <gax.h>, <agb_eeprom.h>, <agb_syscall.h>.
@@ -59,6 +62,9 @@ endif
 GAME ?= xs
 
 ifeq ($(GAME),n2)
+ifneq ($(PLATFORM),gba)
+$(error PLATFORM=$(PLATFORM) builds Crash Bandicoot XS only (#1093))
+endif
 include games/n2/game.mk
 else ifneq ($(GAME),xs)
 $(error GAME must be xs or n2, not "$(GAME)")
@@ -68,7 +74,11 @@ CPPFLAGS += -D GAME_XS=1
 ASFLAGS += --defsym GAME_XS=1
 
 #### Files ####
+ifeq ($(PLATFORM),gba)
 OBJ_DIR:= build/crashbandicootxs
+else
+OBJ_DIR:= build/$(PLATFORM)/crashbandicootxs
+endif
 ROM      := crashbandicootxs.gba
 ELF      := $(ROM:.gba=.elf)
 MAP      := $(ROM:.gba=.map)
@@ -181,10 +191,12 @@ SOUND_BUILT := $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_audio_
 #### Main Targets ####
 
 .PHONY: all compare
+ifeq ($(PLATFORM),gba)
 all: $(ROM)
 
 compare: $(ROM)
 	sha1sum -c games/xs/checksum.sha1
+endif
 
 # The ROM shiftability check (#967, docs/shifting.md): links the ROM again
 # with padding in front of several objects, and fails if anything that
@@ -309,6 +321,7 @@ report: $(C_OBJS) $(CXX_OBJS) $(LIB_C_OBJS) $(LIBGCC2_OBJS) $(ASM_BUILDDIR)/itoa
 
 #### Recipes ####
 	
+ifeq ($(PLATFORM),gba)
 $(ELF): $(OBJS) $(LDSCRIPT)
 	$(LD) $(LDFLAGS) -T $(LDSCRIPT) -Map $(MAP) $(OBJS) tools/agbcc/lib/libgcc.a tools/agbcc/lib/libc.a -o $@
 
@@ -320,6 +333,11 @@ include compile.mk
 $(PLATFORM_BUILDDIR)/%.o: $(PLATFORM_DIR)/%.s
 	@mkdir -p $(dir $@)
 	$(AS) $(ASFLAGS) -o $@ $<
+else
+# Another platform's build (docs/platforms.md): its `all`, its compile
+# rules and its link.
+include $(PLATFORM_DIR)/platform.mk
+endif
 
 $(GFX):
 	$(MAKE) -C tools/gbagfx

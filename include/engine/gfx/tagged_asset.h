@@ -22,6 +22,10 @@
  *
  * agbcc pads a struct to 4 bytes, so the payload size must be a multiple
  * of 4 (true of every tile set).
+ *
+ * An asset other files use is defined `extern "C"`: a C++ variable of an
+ * unnamed type is local to its file on a modern compiler (the pc
+ * platform, #1093), one with C linkage is global everywhere.
  */
 #define TAGGED_RAW_ASSET(size) struct { u32 header; u8 data[size]; }
 #define TAGGED_RAW_HEADER(size) ((u32)(size) << 8)

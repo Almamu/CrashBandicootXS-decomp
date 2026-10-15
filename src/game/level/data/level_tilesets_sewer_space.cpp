@@ -11,7 +11,7 @@ extern "C" {
 
 /* Tile set 4: 2619 tiles, 7 rooms. */
 #include "tilesets/gSewerBg0Tiles.h"
-extern const TAGGED_RAW_ASSET(TILES_SIZE_gSewerBg0Tiles) gSewerBg0Tiles = {
+extern "C" const TAGGED_RAW_ASSET(TILES_SIZE_gSewerBg0Tiles) gSewerBg0Tiles = {
     TAGGED_RAW_HEADER(TILES_SIZE_gSewerBg0Tiles),
     {
 #include "tilesets/gSewerBg0Tiles.bin.inc"
@@ -20,7 +20,7 @@ extern const TAGGED_RAW_ASSET(TILES_SIZE_gSewerBg0Tiles) gSewerBg0Tiles = {
 
 /* Tile set 5: 2000 tiles, 9 rooms. */
 #include "tilesets/gSpaceBg0Tiles.h"
-extern const TAGGED_RAW_ASSET(TILES_SIZE_gSpaceBg0Tiles) gSpaceBg0Tiles = {
+extern "C" const TAGGED_RAW_ASSET(TILES_SIZE_gSpaceBg0Tiles) gSpaceBg0Tiles = {
     TAGGED_RAW_HEADER(TILES_SIZE_gSpaceBg0Tiles),
     {
 #include "tilesets/gSpaceBg0Tiles.bin.inc"
