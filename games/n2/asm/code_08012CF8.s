@@ -28131,7 +28131,7 @@ InitLevelState: @ 0x08021070
 	ldr r4, _08021198 @ =gSpriteBankTable
 	adds r1, r4, #0
 	bl sub_08007D94
-	ldr r5, _0802119C @ =0x02000E68
+	ldr r5, _0802119C @ =gPaletteCache
 	ldr r0, _080211A0 @ =0x00000914
 	bl OperatorNew
 	bl sub_08007CA8
@@ -28145,16 +28145,16 @@ InitLevelState: @ 0x08021070
 	adds r0, r4, #0
 	bl OperatorNew
 	ldr r1, _080211A8 @ =gUnknown_081DECB4
-	bl sub_08028E14
+	bl __Q36Engine4Text4FontPCQ36Engine4Text9font_desc
 	str r0, [r5]
 	ldr r5, _080211AC @ =gLargeFont
 	adds r0, r4, #0
 	bl OperatorNew
 	ldr r1, _080211B0 @ =gUnknown_081DED20
-	bl sub_08028E14
+	bl __Q36Engine4Text4FontPCQ36Engine4Text9font_desc
 	str r0, [r5]
 	bl AllocVramDmaQueue
-	ldr r4, _080211B4 @ =0x02000E9C
+	ldr r4, _080211B4 @ =gOamBuffer
 	ldr r0, _080211B8 @ =0x0000040C
 	bl OperatorNew
 	bl InitOamBuffer
@@ -28216,13 +28216,13 @@ _0802118C: .4byte 0x00002094
 _08021190: .4byte 0x02000E7C
 _08021194: .4byte gSpriteBankSet
 _08021198: .4byte gSpriteBankTable
-_0802119C: .4byte 0x02000E68
+_0802119C: .4byte gPaletteCache
 _080211A0: .4byte 0x00000914
 _080211A4: .4byte 0x02000E90
 _080211A8: .4byte gUnknown_081DECB4
 _080211AC: .4byte gLargeFont
 _080211B0: .4byte gUnknown_081DED20
-_080211B4: .4byte 0x02000E9C
+_080211B4: .4byte gOamBuffer
 _080211B8: .4byte 0x0000040C
 _080211BC: .4byte gObjVramCursor
 _080211C0: .4byte 0x02000EA0
@@ -28471,7 +28471,7 @@ _080214EA:
 _080214F0: .4byte gHud
 _080214F4: .4byte 0x02000E64
 _080214F8:
-	ldr r0, _08021540 @ =0x02000E68
+	ldr r0, _08021540 @ =gPaletteCache
 	ldr r0, [r0]
 	bl sub_08007B0C
 	ldr r0, _08021544 @ =gHud
@@ -28502,7 +28502,7 @@ _080214F8:
 	beq _0802157A
 	b _080215A8
 	.align 2, 0
-_08021540: .4byte 0x02000E68
+_08021540: .4byte gPaletteCache
 _08021544: .4byte gHud
 _08021548: .4byte gRoomFrameCount
 _0802154C:
@@ -33208,7 +33208,7 @@ _08023A20: .4byte 0x02000ED0
 sub_08023A24: @ 0x08023A24
 	push {r4, lr}
 	adds r4, r0, #0
-	ldr r0, _08023AA8 @ =0x02000E68
+	ldr r0, _08023AA8 @ =gPaletteCache
 	ldr r0, [r0]
 	bl sub_08007B8C
 	ldr r0, _08023AAC @ =gCamera
@@ -33264,7 +33264,7 @@ sub_08023A24: @ 0x08023A24
 	bl _call_via_r1
 	b _08023AD2
 	.align 2, 0
-_08023AA8: .4byte 0x02000E68
+_08023AA8: .4byte gPaletteCache
 _08023AAC: .4byte gCamera
 _08023AB0: .4byte gLevelLayers
 _08023AB4: .4byte 0x02000E78
@@ -33302,13 +33302,13 @@ _08023AD2:
 	adds r0, r0, r1
 	movs r1, #0
 	str r1, [r0]
-	ldr r4, _08023B54 @ =0x02000E9C
+	ldr r4, _08023B54 @ =gOamBuffer
 	ldr r0, [r4]
 	bl HideUnusedOamEntries
 	bl WaitForVBlank
 	ldr r0, [r4]
 	bl CommitOamBuffer
-	ldr r0, _08023B58 @ =0x02000E68
+	ldr r0, _08023B58 @ =gPaletteCache
 	ldr r0, [r0]
 	bl sub_08007AE4
 	ldr r0, _08023B5C @ =gLevelLayers
@@ -33326,8 +33326,8 @@ _08023B44: .4byte gTouchableList
 _08023B48: .4byte 0x02000ECC
 _08023B4C: .4byte gCrateList
 _08023B50: .4byte 0x02000EC8
-_08023B54: .4byte 0x02000E9C
-_08023B58: .4byte 0x02000E68
+_08023B54: .4byte gOamBuffer
+_08023B58: .4byte gPaletteCache
 _08023B5C: .4byte gLevelLayers
 
 	thumb_func_start sub_08023B60
@@ -33457,7 +33457,7 @@ _08023C38: .4byte 0x020001D0
 ResumeRoomAfterPause: @ 0x08023C3C
 	push {r4, lr}
 	adds r4, r0, #0
-	ldr r0, _08023CA8 @ =0x02000E68
+	ldr r0, _08023CA8 @ =gPaletteCache
 	ldr r0, [r0]
 	bl sub_08007B8C
 	ldr r1, _08023CAC @ =0x040000D4
@@ -33475,7 +33475,7 @@ ResumeRoomAfterPause: @ 0x08023C3C
 	ldr r0, _08023CB4 @ =gObjVramCursor
 	ldr r0, [r0]
 	bl sub_08007670
-	ldr r0, _08023CB8 @ =0x02000E9C
+	ldr r0, _08023CB8 @ =gOamBuffer
 	ldr r0, [r0]
 	bl ResetOamBuffer
 	ldr r0, _08023CBC @ =gCamera
@@ -33500,11 +33500,11 @@ ResumeRoomAfterPause: @ 0x08023C3C
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08023CA8: .4byte 0x02000E68
+_08023CA8: .4byte gPaletteCache
 _08023CAC: .4byte 0x040000D4
 _08023CB0: .4byte 0x80000100
 _08023CB4: .4byte gObjVramCursor
-_08023CB8: .4byte 0x02000E9C
+_08023CB8: .4byte gOamBuffer
 _08023CBC: .4byte gCamera
 _08023CC0: .4byte gLevelLayers
 
@@ -33514,14 +33514,14 @@ ResetObjBuffers: @ 0x08023CC4
 	ldr r0, _08023CDC @ =gObjVramCursor
 	ldr r0, [r0]
 	bl sub_08007670
-	ldr r0, _08023CE0 @ =0x02000E9C
+	ldr r0, _08023CE0 @ =gOamBuffer
 	ldr r0, [r0]
 	bl ResetOamBuffer
 	pop {r0}
 	bx r0
 	.align 2, 0
 _08023CDC: .4byte gObjVramCursor
-_08023CE0: .4byte 0x02000E9C
+_08023CE0: .4byte gOamBuffer
 
 	thumb_func_start CountLevelCrates
 CountLevelCrates: @ 0x08023CE4

@@ -42,6 +42,28 @@ namespace Text
  * of each at its end, in the reverse of their declaration order, as the
  * ROM has them (InitFont, FontHeightToLines ... DestroyFont). Nothing
  * calls those copies. */
+#ifdef GAME_N2
+/* N-Tranced's glyph record: XS's struct icon_glyph_metrics, but the Y
+ * offset is a word (its DrawGlyph, 0x08029158, loads it whole). */
+struct font_glyph {
+    s32 width;   // 0x00 - the advance
+    s32 shape;   // 0x04 - the OBJ shape
+    s32 yOffset; // 0x08 - added to posY
+};
+
+/* What N-Tranced's Font is built from (its constructor's argument). */
+struct font_desc {
+    screen_h_t lineHeight;                 // 0x00
+    screen_w_t spaceWidth;                 // 0x04
+    u32 glyphTiles;                        // 0x08 - tiles per glyph
+    u32 objSize;                           // 0x0C - the glyphs' OBJ size
+    const void *tiles;                     // 0x10
+    const u8 *chars;                       // 0x14 - the characters, by glyph
+    u32 charCount;                         // 0x18
+    const struct font_glyph *glyphRecords; // 0x1C
+};
+#endif
+
 class Font
 {
 public:
@@ -49,31 +71,36 @@ public:
     //         handed to AddOamEntry; the constructor zeroes it
     struct oam_attrs oam_scratch;
 #ifdef GAME_N2
-    /* N-Tranced's font is 0x13C bytes, built from a descriptor (its
-     * constructor, 0x08028E14, copies the descriptor's words into it):
-     * this word (the descriptor's fourth) is new, so everything up to
-     * glyphTileStride is 4 bytes later (lineHeight at 0x120: TextHeight,
-     * its accessors 0x08029414-0x08029484); then two more words, and no
-     * tileCount (the constructor doesn't zero one). */
-    u32 unk_08;
+    /* N-Tranced's font is 0x13C bytes, built from a struct font_desc (its
+     * constructor, 0x08028E14): this word is new, so everything up to
+     * glyphTileStride is 4 bytes later (lineHeight at 0x120); then two
+     * more words, and no tileCount. */
+    u32 objSize; // 0x08 - the glyphs' OBJ size (attribute 1's size bits)
 #endif
     // 0x008 - char -> glyph index (1-0x4F; 0: not in the font), built by the
     //         subclasses' constructors from the font's character set
     u8 charLookup[0x100];
     // 0x108 - the OBJ tile base: a glyph's tile is tileBase + glyph * glyphTileStride
     u32 tileBase;
-    const struct icon_glyph_metrics *glyphRecords; // 0x10C
-    screen_ux_t posX;                              // 0x110 - the cursor, in screen pixels
-    screen_uy_t posY;                              // 0x114
-    screen_ux_t marginX;                           // 0x118 - posX after a newline
-    screen_h_t lineHeight;                         // 0x11C - posY's step on a newline
-    screen_w_t spaceWidth;                         // 0x120 - a space's advance
-    s32 glyphTileStride;                           // 0x124
 #ifdef GAME_N2
-    u32 unk_12C;       // the descriptor's third word (glyphTileStride is it << 5)
-    const void *tiles; // 0x130 - the descriptor's fifth word
-    // 0x134 - a pointer its 0x08029390 sets by its u8 argument (0-2)
-    const void *unk_134;
+    const struct font_glyph *glyphRecords;
+#else
+    const struct icon_glyph_metrics *glyphRecords; // 0x10C
+#endif
+    screen_ux_t posX;      // 0x110 - the cursor, in screen pixels
+    screen_uy_t posY;      // 0x114
+    screen_ux_t marginX;   // 0x118 - posX after a newline
+    screen_h_t lineHeight; // 0x11C - posY's step on a newline
+    screen_w_t spaceWidth; // 0x120 - a space's advance
+    s32 glyphTileStride;   // 0x124
+#ifdef GAME_N2
+    // (glyphTileStride is the bytes of a glyph's tiles: DrawGlyph uploads
+    // each glyph's tiles as it draws it)
+    u32 glyphTiles;    // 0x12C - tiles per glyph
+    const void *tiles; // 0x130 - the glyphs' tiles, glyphTileStride bytes each
+    // 0x134 - the 16-colour palette the glyphs are drawn with (SetPalette,
+    // and text codes 1-3)
+    const u16 *palette;
 #else
     const void *tiles; // 0x128 - the tagged tile asset
     // 0x12C - set by UploadTiles: the tile asset's first word >> 13
@@ -96,6 +123,9 @@ public:
     screen_w_t MeasureChars(const u8 *str, s32 count);
     void DrawChars(const u8 *str, s32 count);
     void PutChar(u32 charByte);
+    void DrawGlyph(u32 charByte);
+    void SetPalette(u8 kind);
+    Font(const struct font_desc *desc);
 #else
     virtual screen_w_t MeasureText(const u8 *text);            // 2 FontMeasureText
     virtual screen_w_t MeasureChars(const u8 *str, s32 count); // 3 FontMeasureChars
@@ -167,9 +197,14 @@ public:
     /* The lines of text that fit in `height` pixels (FontHeightToLines). */
     s32 HeightToLines(screen_h_t height)
     {
+#ifdef GAME_N2
+        return __divsi3(height, lineHeight); // N-Tranced's divides signed
+#else
         return __udivsi3(height, lineHeight);
+#endif
     }
 
+#ifndef GAME_N2
     /* InitFont: resets the cursor, the margin and tileCount and zeroes the
      * OAM entry. */
     Font()
@@ -178,13 +213,12 @@ public:
 
         posX = posY = 0;
         marginX = 0;
-#ifndef GAME_N2
         tileCount = 0;
-#endif
         zero = 0;
         CpuSet(&zero, &oam_scratch,
                CPU_SET_32BIT | CPU_SET_SRC_FIXED | sizeof(oam_scratch) / sizeof(u32));
     }
+#endif
 };
 
 LAYOUT_ASSERT(font_hpp, sizeof(Font) == 0x134);

@@ -136,7 +136,7 @@ sub_080276E4: @ 0x080276E4
 	ldr r0, [r1, #0x60]
 	cmp r0, #0
 	bge _08027708
-	ldr r0, _08027710 @ =0x02000E68
+	ldr r0, _08027710 @ =gPaletteCache
 	ldr r4, [r0]
 	adds r0, r1, #0
 	bl sub_08009584
@@ -151,5 +151,5 @@ _08027708:
 	pop {r1}
 	bx r1
 	.align 2, 0
-_08027710: .4byte 0x02000E68
+_08027710: .4byte gPaletteCache
 	.align 2, 0

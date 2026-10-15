@@ -28,6 +28,9 @@
 0x081D0E1C gTerrainHeights1
 0x081D0E24 gTerrainHeights2
 0x081D0E2C gTerrainHeights3
+0x081DED40 gFontCode2Palette
+0x081DED60 gFontCode3Palette
+0x081DED80 gFontButtonPalette
 0x081DF5A8 gContinuePromptCursorText
 0x081DF5AC gContinuePromptSmokeBg
 0x081DF5C0 gContinuePromptGlowBg

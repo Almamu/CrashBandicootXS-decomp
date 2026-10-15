@@ -1397,7 +1397,7 @@ sub_08003434: @ 0x08003434
 	adds r4, r0, #0
 	adds r7, r1, #0
 	adds r5, r2, #0
-	ldr r0, _0800347C @ =0x02000E68
+	ldr r0, _0800347C @ =gPaletteCache
 	ldr r0, [r0]
 	bl sub_08007B0C
 	ldr r6, _08003480 @ =0x0200004C
@@ -1426,7 +1426,7 @@ sub_08003434: @ 0x08003434
 	str r1, [r0, #0x10]
 	b _0800348C
 	.align 2, 0
-_0800347C: .4byte 0x02000E68
+_0800347C: .4byte gPaletteCache
 _08003480: .4byte 0x0200004C
 _08003484: .4byte 0x02000050
 _08003488:
@@ -1472,7 +1472,7 @@ _080034A6:
 _080034DE:
 	movs r0, #0
 	str r0, [r5]
-	ldr r0, _08003500 @ =0x02000E68
+	ldr r0, _08003500 @ =gPaletteCache
 	ldr r0, [r0]
 	bl sub_08007B0C
 	adds r0, r4, #0
@@ -1483,7 +1483,7 @@ _080034DE:
 _080034F4: .4byte 0x02000EA0
 _080034F8: .4byte gKeys
 _080034FC: .4byte 0x0200004C
-_08003500: .4byte 0x02000E68
+_08003500: .4byte gPaletteCache
 
 	thumb_func_start sub_08003504
 sub_08003504: @ 0x08003504
@@ -1694,7 +1694,7 @@ InitSaveMenu: @ 0x0800366C
 	bl ResetSaveData
 	mov r0, r8
 	str r4, [r0]
-	ldr r0, _08003708 @ =0x02000E68
+	ldr r0, _08003708 @ =gPaletteCache
 	ldr r0, [r0]
 	bl sub_08007B0C
 	adds r0, r5, #0
@@ -1734,7 +1734,7 @@ InitSaveMenu: @ 0x0800366C
 	pop {r1}
 	bx r1
 	.align 2, 0
-_08003708: .4byte 0x02000E68
+_08003708: .4byte gPaletteCache
 _0800370C: .4byte 0x02000E70
 _08003710: .4byte gLinkSession
 
@@ -3288,7 +3288,7 @@ _080042F8:
 	lsls r1, r1, #0x18
 	lsrs r1, r1, #0x18
 	adds r0, r4, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	b _0800432A
 	.align 2, 0
 _08004318: .4byte 0x02000E90
@@ -3297,7 +3297,7 @@ _08004320:
 	mov r2, sb
 	ldr r0, [r2]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 _0800432A:
 	mov r3, sb
 	ldr r4, [r3]
@@ -3481,7 +3481,7 @@ sub_0800448C: @ 0x0800448C
 	ldr r6, _0800479C @ =0x02000E90
 	ldr r0, [r6]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	ldr r4, [r6]
 	movs r0, #0x9c
 	lsls r0, r0, #1
@@ -3843,7 +3843,7 @@ DrawSaveMenuMessageLines: @ 0x080047A4
 	ldr r7, _08004854 @ =0x02000E90
 	ldr r0, [r7]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	cmp r5, #0
 	beq _08004802
 	ldr r0, [r7]
@@ -3944,7 +3944,7 @@ sub_08004858: @ 0x08004858
 	movs r1, #0
 _08004878:
 	adds r0, r3, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	b _0800488E
 	.align 2, 0
 _08004880: .4byte 0x02000E90
@@ -3952,7 +3952,7 @@ _08004884:
 	ldr r0, _080048FC @ =0x02000E90
 	ldr r0, [r0]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 _0800488E:
 	ldr r0, _080048FC @ =0x02000E90
 	mov r8, r0
@@ -4019,7 +4019,7 @@ DrawYesNoPrompt: @ 0x08004900
 	ldr r7, _080049FC @ =0x02000E90
 	ldr r0, [r7]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	ldr r4, [r7]
 	movs r0, #0x9c
 	lsls r0, r0, #1
@@ -4075,7 +4075,7 @@ DrawYesNoPrompt: @ 0x08004900
 	movs r1, #0
 _0800498A:
 	adds r0, r2, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	mov r1, sl
 	ldr r0, [r1, #0x10]
 	cmp r0, #0
@@ -4177,7 +4177,7 @@ _08004A60:
 	ldr r4, _08004AAC @ =0x02000E90
 	ldr r0, [r4]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	mov r3, sl
 	ldr r0, [r3, #0x10]
 	cmp r0, #0
@@ -4305,7 +4305,7 @@ DrawSaveSlotStats: @ 0x08004AF4
 	movs r1, #0
 _08004B68:
 	adds r0, r2, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	b _08004B7E
 	.align 2, 0
 _08004B70: .4byte 0x02000E90
@@ -4313,7 +4313,7 @@ _08004B74:
 	ldr r0, _08004C0C @ =0x02000E90
 	ldr r0, [r0]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 _08004B7E:
 	ldr r3, _08004C0C @ =0x02000E90
 	mov sb, r3
@@ -4381,7 +4381,7 @@ _08004B7E:
 	movs r1, #0
 _08004C04:
 	adds r0, r2, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	b _08004C1A
 	.align 2, 0
 _08004C0C: .4byte 0x02000E90
@@ -4389,7 +4389,7 @@ _08004C10:
 	mov r1, sb
 	ldr r0, [r1]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 _08004C1A:
 	ldr r4, _08004C98 @ =0x02000E90
 	ldr r2, [r4]
@@ -4448,7 +4448,7 @@ _08004C1A:
 	movs r1, #0
 _08004C8E:
 	adds r0, r2, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	b _08004CB0
 	.align 2, 0
 _08004C98: .4byte 0x02000E90
@@ -4462,7 +4462,7 @@ _08004C9C:
 _08004CA8:
 	ldr r0, [r4]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 _08004CB0:
 	ldr r0, _08004D34 @ =0x02000E90
 	ldr r2, [r0]
@@ -4527,7 +4527,7 @@ _08004CFA:
 	movs r1, #0
 _08004D2C:
 	adds r0, r2, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	b _08004D44
 	.align 2, 0
 _08004D34: .4byte 0x02000E90
@@ -4535,7 +4535,7 @@ _08004D38: .4byte gLargeFont
 _08004D3C:
 	ldr r0, [r4]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 _08004D44:
 	mov r2, r8
 	subs r1, r2, r5
@@ -4605,7 +4605,7 @@ _08004DAE:
 	movs r1, #0
 _08004DC6:
 	adds r0, r2, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	b _08004DDE
 	.align 2, 0
 _08004DD0: .4byte 0x02000E90
@@ -4613,7 +4613,7 @@ _08004DD4:
 	ldr r0, _08004E48 @ =0x02000E90
 	ldr r0, [r0]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 _08004DDE:
 	ldr r6, _08004E48 @ =0x02000E90
 	ldr r4, [r6]
@@ -4704,7 +4704,7 @@ _08004E7A:
 	movs r1, #0
 _08004E92:
 	adds r0, r2, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	b _08004EAA
 	.align 2, 0
 _08004E9C: .4byte 0x02000E90
@@ -4712,7 +4712,7 @@ _08004EA0:
 	ldr r0, _08004F14 @ =0x02000E90
 	ldr r0, [r0]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 _08004EAA:
 	ldr r6, _08004F14 @ =0x02000E90
 	ldr r4, [r6]
@@ -4803,7 +4803,7 @@ _08004F46:
 	movs r1, #0
 _08004F5E:
 	adds r0, r2, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	b _08004F76
 	.align 2, 0
 _08004F68: .4byte 0x02000E90
@@ -4811,7 +4811,7 @@ _08004F6C:
 	ldr r0, _08004FE0 @ =0x02000E90
 	ldr r0, [r0]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 _08004F76:
 	ldr r6, _08004FE0 @ =0x02000E90
 	ldr r4, [r6]
@@ -4902,7 +4902,7 @@ _08005012:
 	movs r1, #0
 _0800502A:
 	adds r0, r2, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	b _08005042
 	.align 2, 0
 _08005034: .4byte 0x02000E90
@@ -4910,7 +4910,7 @@ _08005038:
 	ldr r0, _080050AC @ =0x02000E90
 	ldr r0, [r0]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 _08005042:
 	ldr r6, _080050AC @ =0x02000E90
 	ldr r4, [r6]
@@ -4994,7 +4994,7 @@ sub_080050D8: @ 0x080050D8
 	push {r5, r6, r7}
 	sub sp, #8
 	adds r7, r0, #0
-	ldr r4, _08005274 @ =0x02000E9C
+	ldr r4, _08005274 @ =gOamBuffer
 	ldr r0, [r4]
 	bl ResetOamBuffer
 	ldr r0, [r4]
@@ -5002,17 +5002,17 @@ sub_080050D8: @ 0x080050D8
 	bl WaitForVBlank
 	ldr r0, [r4]
 	bl CommitOamBuffer
-	ldr r0, _08005278 @ =0x02000E68
+	ldr r0, _08005278 @ =gPaletteCache
 	ldr r0, [r0]
 	bl sub_08007B0C
 	ldr r0, _0800527C @ =0x02000E90
 	ldr r0, [r0]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	ldr r0, _08005280 @ =gLargeFont
 	ldr r0, [r0]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	ldr r0, _08005284 @ =gObjVramCursor
 	ldr r0, [r0]
 	movs r1, #0
@@ -5168,8 +5168,8 @@ _0800513C:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08005274: .4byte 0x02000E9C
-_08005278: .4byte 0x02000E68
+_08005274: .4byte gOamBuffer
+_08005278: .4byte gPaletteCache
 _0800527C: .4byte 0x02000E90
 _08005280: .4byte gLargeFont
 _08005284: .4byte gObjVramCursor
@@ -5341,7 +5341,7 @@ DrawEmptySlotLabel: @ 0x080053B0
 	movs r1, #0
 _080053DA:
 	adds r0, r2, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	b _080053F2
 	.align 2, 0
 _080053E4: .4byte 0x02000E90
@@ -5349,7 +5349,7 @@ _080053E8:
 	ldr r0, _08005464 @ =0x02000E90
 	ldr r0, [r0]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 _080053F2:
 	ldr r0, _08005464 @ =0x02000E90
 	mov r8, r0
@@ -5416,7 +5416,7 @@ DrawSaveMenuTitle: @ 0x08005468
 	ldr r6, _080054E8 @ =gLargeFont
 	ldr r0, [r6]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	ldr r4, [r6]
 	movs r5, #0x9c
 	lsls r5, r5, #1
@@ -5688,7 +5688,7 @@ _0800566E:
 sub_0800567C: @ 0x0800567C
 	push {r4, r5, lr}
 	adds r5, r0, #0
-	ldr r0, _080056AC @ =0x02000E9C
+	ldr r0, _080056AC @ =gOamBuffer
 	ldr r0, [r0]
 	bl ResetOamBuffer
 	ldr r4, _080056B0 @ =gObjVramCursor
@@ -5707,7 +5707,7 @@ sub_0800567C: @ 0x0800567C
 	ldr r0, [r0]
 	mov pc, r0
 	.align 2, 0
-_080056AC: .4byte 0x02000E9C
+_080056AC: .4byte gOamBuffer
 _080056B0: .4byte gObjVramCursor
 _080056B4: .4byte _080056B8
 	.global _080056B8
@@ -5776,14 +5776,14 @@ _08005734:
 	bl sub_08005544
 	.global _0800573A
 _0800573A:
-	ldr r0, _08005748 @ =0x02000E9C
+	ldr r0, _08005748 @ =gOamBuffer
 	ldr r0, [r0]
 	bl HideUnusedOamEntries
 	pop {r4, r5}
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08005748: .4byte 0x02000E9C
+_08005748: .4byte gOamBuffer
 
 	thumb_func_start DeleteSaveSlot
 DeleteSaveSlot: @ 0x0800574C
@@ -5852,10 +5852,10 @@ sub_080057B8: @ 0x080057B8
 	adds r0, #0x58
 	ldrh r0, [r0]
 	strh r0, [r1]
-	ldr r4, _08005828 @ =0x02000E68
+	ldr r4, _08005828 @ =gPaletteCache
 	ldr r0, [r4]
 	bl sub_08007B8C
-	ldr r0, _0800582C @ =0x02000E9C
+	ldr r0, _0800582C @ =gOamBuffer
 	ldr r0, [r0]
 	bl CommitOamBuffer
 	ldr r0, [r4]
@@ -5896,8 +5896,8 @@ _08005822:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08005828: .4byte 0x02000E68
-_0800582C: .4byte 0x02000E9C
+_08005828: .4byte gPaletteCache
+_0800582C: .4byte gOamBuffer
 
 	thumb_func_start sub_08005830
 sub_08005830: @ 0x08005830
@@ -5918,7 +5918,7 @@ sub_08005830: @ 0x08005830
 	movs r0, #0x80
 	lsls r0, r0, #0x13
 	strh r1, [r0]
-	ldr r5, _08005910 @ =0x02000E68
+	ldr r5, _08005910 @ =gPaletteCache
 	ldr r0, [r5]
 	mov r8, r0
 	ldr r0, _08005914 @ =0x00000914
@@ -5932,11 +5932,11 @@ sub_08005830: @ 0x08005830
 	ldr r0, _0800591C @ =0x02000E90
 	ldr r0, [r0]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	ldr r0, _08005920 @ =gLargeFont
 	ldr r0, [r0]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	ldr r4, _08005924 @ =gObjVramCursor
 	ldr r0, [r4]
 	bl sub_08007620
@@ -5995,7 +5995,7 @@ _080058FA:
 	b _0800593C
 	.align 2, 0
 _0800590C: .4byte 0x02000E6C
-_08005910: .4byte 0x02000E68
+_08005910: .4byte gPaletteCache
 _08005914: .4byte 0x00000914
 _08005918: .4byte gSpriteBankTable
 _0800591C: .4byte 0x02000E90
@@ -6783,7 +6783,7 @@ _08005F34:
 DrawPauseMenu: @ 0x08005F3C
 	push {r4, r5, r6, r7, lr}
 	adds r5, r0, #0
-	ldr r0, _08006044 @ =0x02000E9C
+	ldr r0, _08006044 @ =gOamBuffer
 	ldr r0, [r0]
 	bl ResetOamBuffer
 	ldr r0, _08006048 @ =gObjVramCursor
@@ -6904,7 +6904,7 @@ _08005FE0:
 	ldr r0, [r0]
 	mov pc, r0
 	.align 2, 0
-_08006044: .4byte 0x02000E9C
+_08006044: .4byte gOamBuffer
 _08006048: .4byte gObjVramCursor
 _0800604C: .4byte gLargeFont
 _08006050: .4byte _08006054
@@ -6946,14 +6946,14 @@ _08006094:
 	adds r0, r5, #0
 	bl sub_08006754
 _0800609A:
-	ldr r0, _080060A8 @ =0x02000E9C
+	ldr r0, _080060A8 @ =gOamBuffer
 	ldr r0, [r0]
 	bl HideUnusedOamEntries
 	pop {r4, r5, r6, r7}
 	pop {r0}
 	bx r0
 	.align 2, 0
-_080060A8: .4byte 0x02000E9C
+_080060A8: .4byte gOamBuffer
 
 	thumb_func_start DrawPauseMenuRows
 DrawPauseMenuRows: @ 0x080060AC
@@ -7002,7 +7002,7 @@ _080060F6:
 	ldr r0, _0800610C @ =0x02000E90
 	ldr r0, [r0]
 	movs r1, #1
-	bl FontResetPalette
+	bl FontSetPalette
 	b _0800612A
 	.align 2, 0
 _08006108: .4byte gVBlankCounter
@@ -7011,7 +7011,7 @@ _08006110:
 	ldr r0, _0800611C @ =0x02000E90
 	ldr r0, [r0]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	b _0800612A
 	.align 2, 0
 _0800611C: .4byte 0x02000E90
@@ -7019,7 +7019,7 @@ _08006120:
 	ldr r0, _08006190 @ =0x02000E90
 	ldr r0, [r0]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 _0800612A:
 	ldr r0, [r7, #0x14]
 	mov r1, sl
@@ -7173,7 +7173,7 @@ _0800625A:
 	ldr r0, _08006274 @ =0x02000E90
 	ldr r0, [r0]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	add sp, #0xc
 	pop {r3, r4, r5}
 	mov r8, r3
@@ -8543,7 +8543,7 @@ DrawPauseFraction: @ 0x08006DA8
 	adds r1, r0, r2
 	str r3, [r1]
 	movs r1, #0x2f
-	bl sub_08029158
+	bl DrawGlyph__Q36Engine4Text4FontUi
 	ldr r1, [r4]
 	adds r3, r7, #0
 	adds r0, r1, r3
@@ -8995,10 +8995,10 @@ CommitPauseMenuFrame: @ 0x08007174
 	push {r4, r5, lr}
 	adds r5, r0, #0
 	bl WaitForVBlank
-	ldr r4, _080071C8 @ =0x02000E68
+	ldr r4, _080071C8 @ =gPaletteCache
 	ldr r0, [r4]
 	bl sub_08007B8C
-	ldr r0, _080071CC @ =0x02000E9C
+	ldr r0, _080071CC @ =gOamBuffer
 	ldr r0, [r0]
 	bl CommitOamBuffer
 	ldr r0, [r4]
@@ -9029,8 +9029,8 @@ CommitPauseMenuFrame: @ 0x08007174
 	pop {r0}
 	bx r0
 	.align 2, 0
-_080071C8: .4byte 0x02000E68
-_080071CC: .4byte 0x02000E9C
+_080071C8: .4byte gPaletteCache
+_080071CC: .4byte gOamBuffer
 _080071D0: .4byte 0x04000050
 
 	thumb_func_start GetCompletionPercent
