@@ -35,7 +35,15 @@ gUnknown_0852CEF4:
 
 	.global gUnknown_0852CF00
 gUnknown_0852CF00:
-	.incbin "baserom_n2.gba", 0x52CF00, 0x38
+	.incbin "baserom_n2.gba", 0x52CF00, 0x14
+
+	.global gUnknown_0852CF14
+gUnknown_0852CF14:
+	.incbin "baserom_n2.gba", 0x52CF14, 0xC
+
+	.global gUnknown_0852CF20
+gUnknown_0852CF20:
+	.incbin "baserom_n2.gba", 0x52CF20, 0x18
 
 	.global gUnknown_0852CF38
 gUnknown_0852CF38:
