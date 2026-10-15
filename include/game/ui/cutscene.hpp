@@ -10,8 +10,10 @@
  * (the C `struct cutscene_player` went in #754).
  *
  * The cutscenes themselves are data (src/game/ui/data/cutscenes.cpp,
- * cutscene_slides.cpp): the slide and page tables below. The
- * cutscene text is C (src/game/ui/data/cutscene_text_*.cpp) and includes nothing.
+ * cutscene_slides.cpp, generated from data/cutscenes.json): the slide and
+ * page tables below, CUTSCENE_COUNT long (constants/cutscenes.h). The
+ * cutscene text is C (src/game/ui/data/cutscene_text_*.cpp, generated
+ * from text/) and includes nothing.
  *
  * `#pragma interface`: no class here has a vtable, so there is none to
  * emit; the pragma keeps g++ from emitting out-of-line copies of inline
@@ -20,6 +22,7 @@
 
 extern "C" {
 #include "core.h"
+#include "constants/cutscenes.h"
 #include "engine/util/aabb.h"
 }
 
@@ -36,7 +39,7 @@ struct cutscene_slide {
                         //        slide is skipped past (SkipSlides)
     u8 duckMusic;       // 0x11 - FadeOutMusic after the slide
     u8 rearmSfx;        // 0x12 - replay `sfx` after the slide
-    u32 cue;            // 0x14 - music cue (PlaySong)
+    u32 cue;            // 0x14 - music cue (PlaySong): a SONG_* id
     u32 sfx;            // 0x18 - sound effect, 99 = none
 };
 
@@ -54,18 +57,18 @@ struct cutscene_page {
 
 /* The cutscenes, one {slides, count} header each
  * (src/game/ui/data/cutscenes.cpp). */
-extern const struct cutscene_slides gCutscenes[11];
+extern const struct cutscene_slides gCutscenes[CUTSCENE_COUNT];
 
 /* Every cutscene's pages, per language (gLanguage), each indexed like
  * gCutscenes. Defined in src/engine/sys/iwram_data.cpp. */
 extern const struct cutscene_page *const *gCutsceneTexts[6];
 /* The tables gCutsceneTexts points at (src/game/ui/data/cutscenes.cpp). */
-extern const struct cutscene_page *const gCutsceneTextEnglish[11];
-extern const struct cutscene_page *const gCutsceneTextFrench[11];
-extern const struct cutscene_page *const gCutsceneTextGerman[11];
-extern const struct cutscene_page *const gCutsceneTextSpanish[11];
-extern const struct cutscene_page *const gCutsceneTextItalian[11];
-extern const struct cutscene_page *const gCutsceneTextDutch[11];
+extern const struct cutscene_page *const gCutsceneTextEnglish[CUTSCENE_COUNT];
+extern const struct cutscene_page *const gCutsceneTextFrench[CUTSCENE_COUNT];
+extern const struct cutscene_page *const gCutsceneTextGerman[CUTSCENE_COUNT];
+extern const struct cutscene_page *const gCutsceneTextSpanish[CUTSCENE_COUNT];
+extern const struct cutscene_page *const gCutsceneTextItalian[CUTSCENE_COUNT];
+extern const struct cutscene_page *const gCutsceneTextDutch[CUTSCENE_COUNT];
 
 /* The DISPCNT value the slideshow shows its pictures with:
  * SetSlideshowDispcnt sets it and ShowSlidePicture sets its bit 4 (the

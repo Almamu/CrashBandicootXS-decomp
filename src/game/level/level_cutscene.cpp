@@ -37,7 +37,8 @@ using Game::Ui::CutscenePlayer;
  *   (include/game/level/level_state.hpp), the counterpart of its constructor
  *   (InitLevelState) - frees every subsystem singleton that constructor
  *   built and clears the context pointer `instance` (gLevelStateSingleton).
- * - PlayCutscene: plays cutscene `idx` (include/game/ui/cutscene.hpp): blanks the
+ * - PlayCutscene: plays cutscene `idx`, a CUTSCENE_* id (constants/cutscenes.h,
+ *   from data/cutscenes.json; include/game/ui/cutscene.hpp): blanks the
  *   palette, resets the BG2 affine transform, then runs a stack-allocated
  *   cutscene player (InitCutscenePlayer/RunCutscenePlayer) over the
  *   slides gCutscenes[idx] and the current language's pages until it

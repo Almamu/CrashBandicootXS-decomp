@@ -1,0 +1,92 @@
+{
+  "cutscenes": [
+    {"constant": "CUTSCENE_LEGAL_NOTICE", "about": "the legal notice at boot (PlayBootCutscene)", "slides": [
+      {"slide": "legal_notice"}
+    ]},
+    {"constant": "CUTSCENE_INTRO", "about": "the intro (PlayIntroCutscene)", "slides": [
+      {"slide": "space_station", "text": "cutscene01.page0"},
+      {"slide": "uka_uka_and_cortex", "text": "cutscene01.page1"},
+      {"slide": "cortex", "text": "cutscene01.page2"},
+      {"slide": "uka_uka_and_cortex", "text": "cutscene01.page3"}
+    ]},
+    {"constant": "CUTSCENE_NEW_GAME", "about": "the story at a new game (PlayNewGameCutscene)", "slides": [
+      {"slide": "space_station", "text": "cutscene02.page0"},
+      {"slide": "cortex_hologram", "text": "cutscene02.page1"},
+      {"slide": "minimizer_console", "text": "cutscene02.page2"},
+      {"slide": "minimizer_beam"},
+      {"slide": "earth_shrinking"},
+      {"slide": "cortex_on_monitors", "text": "cutscene02.page5"},
+      {"slide": "cortex_holding_earth", "text": "cutscene02.page6"},
+      {"slide": "aku_aku_crash_and_coco", "text": "cutscene02.page7"},
+      {"slide": "aku_aku", "text": "cutscene02.page8"}
+    ]},
+    {"constant": "CUTSCENE_CORTEX_WARNING", "about": "unused: no PlayCutscene plays it", "slides": [
+      {"slide": "cortex_on_screen", "text": "cutscene03.page0"}
+    ]},
+    {"constant": "CUTSCENE_DINGODILE_CLEARED", "about": "Dingodile beaten (the super body slam)", "slides": [
+      {"slide": "cortex_on_screen", "text": "cutscene04.page0"}
+    ]},
+    {"constant": "CUTSCENE_N_GIN_CLEARED", "about": "N. Gin beaten (the double jump)", "slides": [
+      {"slide": "coco_on_screen", "text": "cutscene05.page0"}
+    ]},
+    {"constant": "CUTSCENE_TINY_CLEARED", "about": "Tiny beaten (the tornado spin)", "slides": [
+      {"slide": "uka_uka_and_cortex", "text": "cutscene06.page0"},
+      {"slide": "cortex", "text": "cutscene06.page1"}
+    ]},
+    {"constant": "CUTSCENE_ALL_CRYSTALS", "about": "unused: no PlayCutscene plays it", "slides": [
+      {"slide": "coco_on_screen", "text": "cutscene07.page0"}
+    ]},
+    {"constant": "CUTSCENE_NEO_CORTEX_COMPLETE", "about": "Neo Cortex beaten at 100%, before mega-mix", "slides": [
+      {"slide": "minimizer_overload", "text": "cutscene08.page0"},
+      {"slide": "bosses_shocked", "text": "cutscene08.page1"},
+      {"slide": "monster", "text": "cutscene08.page2"},
+      {"slide": "monster_and_crash", "text": "cutscene08.page3"}
+    ]},
+    {"constant": "CUTSCENE_MEGA_MIX_CLEARED", "about": "mega-mix beaten, before the credits", "slides": [
+      {"slide": "crash_flying_to_station"},
+      {"slide": "coco_at_enlarger", "text": "cutscene09.page1"},
+      {"slide": "earth_growing"},
+      {"slide": "earth_beam_ring"},
+      {"slide": "station_exploding"},
+      {"slide": "reversed_beam", "text": "cutscene09.page5"}
+    ]},
+    {"constant": "CUTSCENE_NEO_CORTEX_CLEARED", "about": "Neo Cortex beaten below 100%, before the credits", "slides": [
+      {"slide": "minimizer_overload", "text": "cutscene10.page0"},
+      {"slide": "crash_flying_to_station"},
+      {"slide": "coco_at_enlarger", "text": "cutscene09.page1"},
+      {"slide": "earth_growing"},
+      {"slide": "earth_beam_ring"},
+      {"slide": "aku_aku", "text": "cutscene10.page5"}
+    ]}
+  ],
+  "slides": [
+    {"name": "space_station", "picture": "cutscenes/00_space_station.png", "wait": 0, "fade": 0, "fade_after": 0, "buttons": 1, "duck_music": 0, "rearm_sfx": 0, "song": "SONG_CUTSCENES_SPOOKY", "sfx": "SFX_SPACE_STATION_AMBIENCE"},
+    {"name": "uka_uka_and_cortex", "picture": "cutscenes/01_uka_uka_and_cortex.png", "wait": 0, "fade": 0, "fade_after": 0, "buttons": 1, "duck_music": 0, "rearm_sfx": 0, "song": "SONG_CUTSCENES_SPOOKY", "sfx": "SFX_SPACE_STATION_AMBIENCE"},
+    {"name": "cortex", "picture": "cutscenes/02_cortex.png", "wait": 0, "fade": 0, "fade_after": 0, "buttons": 1, "duck_music": 0, "rearm_sfx": 0, "song": "SONG_CUTSCENES_SPOOKY", "sfx": "SFX_SPACE_STATION_AMBIENCE"},
+    {"name": "cortex_hologram", "picture": "cutscenes/03_cortex_hologram.png", "wait": 0, "fade": 0, "fade_after": 0, "buttons": 1, "duck_music": 0, "rearm_sfx": 1, "song": "SONG_CUTSCENES_SPOOKY", "sfx": "SFX_SPACE_STATION_AMBIENCE"},
+    {"name": "minimizer_console", "picture": "cutscenes/04_minimizer_console.png", "wait": 140, "fade": 0, "fade_after": 0, "buttons": 1, "duck_music": 0, "rearm_sfx": 0, "song": "SONG_CUTSCENES_SPOOKY", "sfx": "SFX_CORTEX_TARGET_BLINK"},
+    {"name": "minimizer_beam", "picture": "cutscenes/05_minimizer_beam.png", "wait": 90, "fade": 0, "fade_after": -1, "buttons": 1, "duck_music": 0, "rearm_sfx": 0, "song": "SONG_CUTSCENES_SPOOKY", "sfx": "SFX_MINIMIZER_BEAM"},
+    {"name": "earth_shrinking", "picture": "cutscenes/06_earth_shrinking.png", "wait": 120, "fade": 1, "fade_after": 0, "buttons": 1, "duck_music": 0, "rearm_sfx": 0, "song": "SONG_CUTSCENES_SPOOKY", "sfx": "SFX_UNKNOWN_5F"},
+    {"name": "cortex_on_monitors", "picture": "cutscenes/07_cortex_on_monitors.png", "wait": 0, "fade": 0, "fade_after": 0, "buttons": 1, "duck_music": 0, "rearm_sfx": 1, "song": "SONG_CUTSCENES_SPOOKY", "sfx": "SFX_UNKNOWN_5B"},
+    {"name": "cortex_holding_earth", "picture": "cutscenes/09_cortex_holding_earth.png", "wait": 0, "fade": 0, "fade_after": 0, "buttons": 1, "duck_music": 0, "rearm_sfx": 1, "song": "SONG_CUTSCENES_SPOOKY", "sfx": "SFX_SPACE_STATION_AMBIENCE"},
+    {"name": "aku_aku_crash_and_coco", "picture": "cutscenes/08_aku_aku_crash_and_coco.png", "wait": 0, "fade": 0, "fade_after": 0, "buttons": 1, "duck_music": 0, "rearm_sfx": 1, "song": "SONG_INTRO", "sfx": "SFX_UNKNOWN_60"},
+    {"name": "aku_aku", "picture": "cutscenes/10_aku_aku.png", "wait": 0, "fade": 0, "fade_after": 0, "buttons": 1, "duck_music": 0, "rearm_sfx": 0, "song": "SONG_INTRO", "sfx": "SFX_AKU_AKU_GAIN"},
+    {"name": "cortex_on_screen", "picture": "cutscenes/11_cortex_on_screen.png", "wait": 0, "fade": 0, "fade_after": 0, "buttons": 1, "duck_music": 0, "rearm_sfx": 1, "song": "SONG_INTRO", "sfx": "SFX_SPACE_STATION_AMBIENCE"},
+    {"name": "coco_on_screen", "picture": "cutscenes/12_coco_on_screen.png", "wait": 0, "fade": 0, "fade_after": 0, "buttons": 1, "duck_music": 0, "rearm_sfx": 0, "song": "SONG_INTRO", "sfx": "SFX_HUD_COLLECT"},
+    {"name": "minimizer_overload", "picture": "cutscenes/13_minimizer_overload.png", "wait": 0, "fade": 0, "fade_after": 0, "buttons": 1, "duck_music": 0, "rearm_sfx": 0, "song": "SONG_CUTSCENES_SPOOKY", "sfx": "SFX_ELECTRIC_SHOCK"},
+    {"name": "bosses_shocked", "picture": "cutscenes/14_bosses_shocked.png", "wait": 0, "fade": 0, "fade_after": 0, "buttons": 1, "duck_music": 0, "rearm_sfx": 0, "song": "SONG_CUTSCENES_SPOOKY", "sfx": "SFX_UNKNOWN_1D"},
+    {"name": "monster", "picture": "cutscenes/15_monster.png", "wait": 0, "fade": 0, "fade_after": 0, "buttons": 1, "duck_music": 0, "rearm_sfx": 0, "song": "SONG_CUTSCENES_SPOOKY", "sfx": "SFX_UNKNOWN_1D"},
+    {"name": "monster_and_crash", "picture": "cutscenes/16_monster_and_crash.png", "wait": 0, "fade": 0, "fade_after": 0, "buttons": 1, "duck_music": 0, "rearm_sfx": 0, "song": "SONG_CUTSCENES_SPOOKY", "sfx": "SFX_YETI_CHASE"},
+    {"name": "crash_flying_to_station", "picture": "cutscenes/17_crash_flying_to_station.png", "wait": 90, "fade": 0, "fade_after": 0, "buttons": 1, "duck_music": 0, "rearm_sfx": 0, "song": "SONG_INTRO", "sfx": "SFX_UNKNOWN_61"},
+    {"name": "coco_at_enlarger", "picture": "cutscenes/18_coco_at_enlarger.png", "wait": 0, "fade": 0, "fade_after": 0, "buttons": 1, "duck_music": 0, "rearm_sfx": 0, "song": "SONG_INTRO", "sfx": "SFX_AKU_AKU_GAIN"},
+    {"name": "earth_growing", "picture": "cutscenes/19_earth_growing.png", "wait": 120, "fade": 0, "fade_after": 0, "buttons": 1, "duck_music": 0, "rearm_sfx": 0, "song": "SONG_INTRO", "sfx": "SFX_UNKNOWN_5F"},
+    {"name": "earth_beam_ring", "picture": "cutscenes/20_earth_beam_ring.png", "wait": 120, "fade": 0, "fade_after": 0, "buttons": 1, "duck_music": 0, "rearm_sfx": 0, "song": "SONG_INTRO", "sfx": "SFX_UNKNOWN_62"},
+    {"name": "station_exploding", "picture": "cutscenes/21_station_exploding.png", "wait": 120, "fade": 0, "fade_after": 0, "buttons": 1, "duck_music": 0, "rearm_sfx": 0, "song": "SONG_INTRO", "sfx": "SFX_EXPLOSION"},
+    {"name": "reversed_beam", "picture": "cutscenes/22_reversed_beam.png", "wait": 0, "fade": 0, "fade_after": 0, "buttons": 1, "duck_music": 0, "rearm_sfx": 0, "song": "SONG_INTRO", "sfx": "SFX_MINIMIZER_BEAM"},
+    {"name": "legal_notice", "picture": "cutscenes/23_legal_notice.png", "wait": 120, "fade": 0, "fade_after": 0, "buttons": 0, "duck_music": 0, "rearm_sfx": 0, "song": "SONG_CUTSCENES", "sfx": "SFX_NONE"}
+  ],
+  "rom_order": {
+    "pages": ["CUTSCENE_INTRO", "CUTSCENE_NEW_GAME", "CUTSCENE_CORTEX_WARNING", "CUTSCENE_DINGODILE_CLEARED", "CUTSCENE_N_GIN_CLEARED", "CUTSCENE_TINY_CLEARED", "CUTSCENE_ALL_CRYSTALS", "CUTSCENE_NEO_CORTEX_COMPLETE", "CUTSCENE_MEGA_MIX_CLEARED", "CUTSCENE_NEO_CORTEX_CLEARED", "CUTSCENE_LEGAL_NOTICE"],
+    "slide_lists": ["CUTSCENE_LEGAL_NOTICE", "CUTSCENE_INTRO", "CUTSCENE_NEW_GAME", "CUTSCENE_CORTEX_WARNING", "CUTSCENE_TINY_CLEARED", "CUTSCENE_DINGODILE_CLEARED", "CUTSCENE_N_GIN_CLEARED", "CUTSCENE_ALL_CRYSTALS", "CUTSCENE_NEO_CORTEX_COMPLETE", "CUTSCENE_MEGA_MIX_CLEARED", "CUTSCENE_NEO_CORTEX_CLEARED"]
+  }
+}

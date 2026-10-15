@@ -156,9 +156,13 @@ def addr(v):
 
 
 # The kinds a new graphic (an entry with no `rom`) can be: those whose
-# build rules graphics.mk takes from the manifest (graphics_manifest.mk).
-# An OBJ sheet's layout and a cutscene bitmap's slide are code's.
-NEW_KINDS = ("tiles", "bg_package")
+# build rules graphics.mk takes from the manifest (graphics_manifest.mk),
+# and a cutscene picture (graphics.mk builds every graphics/cutscenes/
+# PNG; a slide of data/cutscenes.json shows it). An OBJ sheet's layout is
+# code's.
+NEW_KINDS = ("tiles", "bg_package", "bitmap")
+# Where a new bitmap goes: a cutscene picture, defined with the ROM's.
+NEW_BITMAP_DIR, NEW_BITMAP_OBJECT = "cutscenes/", "cutscene_pictures"
 # The kinds a new category graphic can be: an actor category names it, and
 # tools/levels.py categories defines it (no class, no object).
 CATEGORY_KINDS = ("cell_anim", "bg_picture", "category_palette")
@@ -191,6 +195,14 @@ def new_entry_errors(e, objects):
             errors.append("%s: its palette has no `colors`" % what)
     if e["kind"] == "bg_package" and "symbol" not in e.get("map", {}):
         errors.append("%s: a bg_package has a `map` with its `symbol`" % what)
+    if e["kind"] == "bitmap":
+        if not e.get("path", "").startswith(NEW_BITMAP_DIR) or e.get("object") != NEW_BITMAP_OBJECT:
+            errors.append("%s: a new bitmap is a cutscene picture: a PNG in graphics/%s, defined by %s"
+                          % (what, NEW_BITMAP_DIR, NEW_BITMAP_OBJECT))
+        pal = e.get("palette", {})
+        if "symbol" not in pal or pal.get("colors") != 256:
+            errors.append("%s: a cutscene picture has a `palette` with its `symbol` and 256 `colors` (ShowSlidePicture "
+                          "finds the bitmap right after it)" % what)
     return errors
 
 

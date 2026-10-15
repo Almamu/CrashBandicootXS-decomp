@@ -173,10 +173,12 @@ ROM needs no entry, unless it is to be a graphics class (below).
 
 A graphic the ROM doesn't have is an entry with **no `rom`**: no address
 for it, its `palette` or its `map`. It is a graphics class (a `class`), a
-`tiles` sheet or a `bg_package` without `obj_sheet` (gfx_manifest.py's
-`NEW_KINDS`: the kinds whose build rules come from the manifest; an OBJ
-sheet's layout is graphics.mk's), and it names the manifest `objects`
-entry that defines it, `"object"` (or it is a category graphic, below):
+`tiles` sheet, a `bg_package` without `obj_sheet` or a cutscene picture
+(a `bitmap`) (gfx_manifest.py's `NEW_KINDS`: the kinds whose build rules
+come from the manifest, and the cutscene pictures, which graphics.mk
+builds from every PNG of `graphics/cutscenes/`; an OBJ sheet's layout is
+graphics.mk's), and it names the manifest `objects` entry that defines
+it, `"object"` (or it is a category graphic, below):
 
 ```json
 {"path": "level_select/pictures/lab.png", "kind": "tiles", "symbol": "gLevelSelectPictureLabTiles",
@@ -205,6 +207,13 @@ entry that defines it, `"object"` (or it is a category graphic, below):
 A new level-select picture is a new graphic of `level_select_graphics`,
 which a theme names as its `"picture"` ([levels.md,
 "Themes"](./levels.md#themes)).
+
+A new cutscene picture is a `bitmap` in `graphics/cutscenes/` (240x160,
+8bpp, its 256-colour palette in the PNG) of `cutscene_pictures`, with a
+`palette` of 256 `colors` (`check` asks for both): its palette comes
+after the ROM's 24 pictures, its bitmap right after it, where
+`ShowSlidePicture` reads it. A slide of `data/cutscenes.json` names it
+by its path ([data.md, "A new cutscene"](./data.md#a-new-cutscene)).
 
 **Category graphics.** A new `cell_anim`, `bg_picture` or
 `category_palette` (`CATEGORY_KINDS`) is no class and names no object:

@@ -196,8 +196,9 @@ internal linkage in C++, see above), and so is every string, which keeps
 the C files' global symbols. `system.h` declares the UI text's six arrays
 with `UI_TEXT_COUNT`, so a template with another number of `ui.*` entries
 stops the build. The cutscene files (`cutscenes.cpp`,
-`cutscene_slides.cpp`) declare the page arrays their `struct
-cutscene_page` tables point at. A table that has strings and other data
+`cutscene_slides.cpp`, generated from `data/cutscenes.json`, see
+"Cutscenes") declare the page arrays their `struct cutscene_page` tables
+point at, sized by the template. A table that has strings and other data
 is split at the ROM boundary between them: the cutscenes are four files
 in ROM order.
 
@@ -280,9 +281,9 @@ The first batch (all pointer tables, all byte-exact):
 | `level_select_anims.cpp` | `0x0816C5F0` | level-select offsets, animation ids, OBJ sizes |
 | `entity_spawn_funcs.cpp` | `0x0816C6A4` | the unified 92-slot function-pointer dispatch array |
 | `level_table.cpp` | `0x0816C814` | the level table (25 `struct level_info`), the levels' room lists and 48 room records, the theme music cues and 5 colour-cycle lists, all generated from `data/levels/` (`levels.py table`, see "Level data") |
-| `cutscenes.cpp` | `0x0816D1C8` | the 11 cutscenes' language tables and slide lists, the English pages (see "Cutscenes") |
+| `cutscenes.cpp` | `0x0816D1C8` | the 11 cutscenes' language tables and slide lists, the English pages, generated from `data/cutscenes.json` (see "Cutscenes") |
 | `cutscene_text_english.cpp` | `0x0816D4D8` | the cutscenes' English text, generated from `text/` (see "Text tables") |
-| `cutscene_slides.cpp` | `0x0816E064` | the other five languages' pages, the 24 slides |
+| `cutscene_slides.cpp` | `0x0816E064` | the other five languages' pages, the 24 slides, generated from `data/cutscenes.json` |
 | `cutscene_text_translations.cpp` | `0x0816E8A4` | the French, German, Spanish, Italian and Dutch text, generated from `text/` |
 | `terrain_types.cpp` | `0x081725A8` | the 51 terrain types of the collision maps |
 | `ui_text.cpp` | `0x08172CD4` | the game's UI text in six languages, generated from `text/` (see "Terrain types and UI text") |
@@ -817,9 +818,9 @@ language's `struct cutscene_page` array. The six language tables
 (`gCutsceneTextEnglish` is English, then French, German, Spanish,
 Italian and Dutch) are listed by `gCutsceneTexts`, a pointer table in
 the IWRAM image (`src/engine/sys/iwram_data.cpp`). The text is strings (Latin-1, all lower case),
-each page's strings in a `const u8 *const []`, and page and slide counts
-are `ARRAY_COUNT()`s. The template's keys are `cutscene<NN>.page<P>.<I>`
-([text.md](./text.md)).
+each page's strings in a `const u8 *const []`. The template's keys are
+`cutscene<NN>.page<P>.<I>` ([text.md](./text.md)). The cutscenes, their
+slides and their pages are data, `data/cutscenes.json` (below).
 
 A picture is a 256-colour palette followed directly by its LZ77 Mode 4
 bitmap: a slide points at the palette and `ShowSlidePicture` reads the bitmap
@@ -838,19 +839,143 @@ One picture is often shown by several cutscenes, so the pictures are
 one flat folder, not one folder per cutscene. Slides 08 and 09 show
 pictures 09 and 08, swapped.
 
-| cutscene | played by | pictures (`graphics/cutscenes/`) |
-|---|---|---|
-| 0 | boot, `PlayBootCutscene` | 23 `legal_notice` |
-| 1 | intro, `PlayIntroCutscene` | 00 `space_station`, 01 `uka_uka_and_cortex`, 02 `cortex`, 01 |
-| 2 | new game, `PlayNewGameCutscene` | 00, 03 `cortex_hologram`, 04 `minimizer_console`, 05 `minimizer_beam`, 06 `earth_shrinking`, 07 `cortex_on_monitors`, 09 `cortex_holding_earth`, 08 `aku_aku_crash_and_coco`, 10 `aku_aku` |
-| 3 | no `PlayCutscene(3)` anywhere | 11 `cortex_on_screen` |
-| 4 | Dingodile beaten | 11 |
-| 5 | N. Gin beaten | 12 `coco_on_screen` |
-| 6 | Tiny beaten | 01, 02 |
-| 7 | no `PlayCutscene(7)` anywhere | 12 |
-| 8 | Neo Cortex beaten at 100% (Mega Mix follows) | 13 `minimizer_overload`, 14 `bosses_shocked`, 15 `monster`, 16 `monster_and_crash` |
-| 9 | Mega Mix beaten | 17 `crash_flying_to_station`, 18 `coco_at_enlarger`, 19 `earth_growing`, 20 `earth_beam_ring`, 21 `station_exploding`, 22 `reversed_beam` |
-| 10 | Neo Cortex beaten below 100% | 13, 17, 18, 19, 20, 10 |
+| cutscene | constant | played by | pictures (`graphics/cutscenes/`) |
+|---|---|---|---|
+| 0 | `CUTSCENE_LEGAL_NOTICE` | boot, `PlayBootCutscene` | 23 `legal_notice` |
+| 1 | `CUTSCENE_INTRO` | intro, `PlayIntroCutscene` | 00 `space_station`, 01 `uka_uka_and_cortex`, 02 `cortex`, 01 |
+| 2 | `CUTSCENE_NEW_GAME` | new game, `PlayNewGameCutscene` | 00, 03 `cortex_hologram`, 04 `minimizer_console`, 05 `minimizer_beam`, 06 `earth_shrinking`, 07 `cortex_on_monitors`, 09 `cortex_holding_earth`, 08 `aku_aku_crash_and_coco`, 10 `aku_aku` |
+| 3 | `CUTSCENE_CORTEX_WARNING` | nothing (unused) | 11 `cortex_on_screen` |
+| 4 | `CUTSCENE_DINGODILE_CLEARED` | Dingodile beaten | 11 |
+| 5 | `CUTSCENE_N_GIN_CLEARED` | N. Gin beaten | 12 `coco_on_screen` |
+| 6 | `CUTSCENE_TINY_CLEARED` | Tiny beaten | 01, 02 |
+| 7 | `CUTSCENE_ALL_CRYSTALS` | nothing (unused) | 12 |
+| 8 | `CUTSCENE_NEO_CORTEX_COMPLETE` | Neo Cortex beaten at 100% (Mega Mix follows) | 13 `minimizer_overload`, 14 `bosses_shocked`, 15 `monster`, 16 `monster_and_crash` |
+| 9 | `CUTSCENE_MEGA_MIX_CLEARED` | Mega Mix beaten | 17 `crash_flying_to_station`, 18 `coco_at_enlarger`, 19 `earth_growing`, 20 `earth_beam_ring`, 21 `station_exploding`, 22 `reversed_beam` |
+| 10 | `CUTSCENE_NEO_CORTEX_CLEARED` | Neo Cortex beaten below 100% | 13, 17, 18, 19, 20, 10 |
+
+Cutscenes 3 and 7 are never played. The ROM calls `PlayCutscene` ten
+times, each with the id as an immediate (`movs r1, #N`): 0, 1, 2 (twice),
+4, 5, 6, 8, 9 and 10. Nothing else reads `gCutscenes` (one literal-pool
+word, in `PlayCutscene`), no word of the ROM points at `PlayCutscene` (no
+indirect call), and none points into `gCutscenes` past its start. Their
+pages are translated like the others.
+
+#### The cutscene data
+
+The cutscenes' structure is `data/cutscenes.json` (#1092), and
+`tools/cutscenes.py` generates the tables of `cutscenes.cpp` and
+`cutscene_slides.cpp` from it (`cutscenes.mk`, into
+`build/crashbandicootxs/cutscenes/`); with the ROM's data they are the
+ROM's bytes:
+
+```json
+{
+  "cutscenes": [
+    {"constant": "CUTSCENE_INTRO", "about": "the intro (PlayIntroCutscene)", "slides": [
+      {"slide": "space_station", "text": "cutscene01.page0"},
+      ...
+    ]},
+    ...
+  ],
+  "slides": [
+    {"name": "space_station", "picture": "cutscenes/00_space_station.png", "wait": 0, "fade": 0,
+     "fade_after": 0, "buttons": 1, "duck_music": 0, "rearm_sfx": 0, "song": "SONG_CUTSCENES_SPOOKY",
+     "sfx": "SFX_SPACE_STATION_AMBIENCE"},
+    ...
+  ],
+  "rom_order": {"pages": [...], "slide_lists": [...]}
+}
+```
+
+- **`cutscenes`**, in id order. A cutscene's id is its position, the
+  index of `gCutscenes` and of each language's pages, and its
+  `constant` is the generated `CUTSCENE_*` define
+  (`build/include/constants/cutscenes.h`, with `CUTSCENE_COUNT`, the
+  tables' length). Code plays a cutscene by its constant
+  (`PlayCutscene(CUTSCENE_INTRO)`), and data that names a cutscene names
+  its constant, not its number. A cutscene's `slides` show in order:
+  each names a slide record (`slide`) and, where text shows with it, its
+  page (`text`), `cutscene<NN>.page<P>`. The page's strings are the
+  template's `cutscene<NN>.page<P>.<I>` entries, `I` from 0: the page's
+  string count is the template's, so a string added to a page in `text/`
+  needs no other edit. A slide with no `text` shows the picture only
+  (`{ 0, 0 }`). Two slides can show one page (cutscene 10's third slide
+  shows `cutscene09.page1`).
+- **`slides`**, the slide records (`gCutsceneSlideNN`, NN their
+  position), in ROM order; several cutscenes can show one. The fields are
+  `struct cutscene_slide`'s: `picture` (a cutscene picture of
+  `graphics/manifest.json`, by its path; the record points at its
+  palette), `wait` (WaitForKeyPress's frame count), `fade` and
+  `fade_after` (BrightnessFade::Start's flags as the slide starts and
+  after it, -1 none), `buttons` (1: a key press goes on, and SkipSlides
+  skips it), `duck_music` (FadeOutMusic after it), `rearm_sfx` (play the
+  sound again after it), `song` (the music cue, a `SONG_*` constant of
+  `constants/songs.h`) and `sfx` (a `SFX_*` constant, `SFX_NONE` for
+  none). `song` is a constant's name for now; once the songs have names
+  of their own (#1091), it can take one.
+- **`rom_order`**, the order the ROM stores two of the tables in: each
+  language's pages are cutscene 1 to 10, then 0, and the slide lists 0
+  to 3, 6, 4, 5, then 7 to 10. A cutscene a list leaves out comes after
+  the listed ones, in id order, so a new cutscene needs no entry here.
+
+The generated tables are, in ROM order: in `cutscenes.cpp`,
+`gCutsceneTextEnglish`, `gCutscenes`, the English pages, the other five
+languages' tables and the slide lists; in `cutscene_slides.cpp`, the
+French to Dutch pages and the slide records. Every array is declared
+`extern` first (a namespace-scope `const` has internal linkage in C++),
+with the size the data gives it.
+
+`tools/cutscenes.py` stops the build, and `make text-check` (which runs
+`tools/cutscenes.py check`), on:
+
+- a slide whose `picture` isn't a cutscene picture of the manifest (a
+  `bitmap` entry under `graphics/cutscenes/`);
+- a `text` page with no `.0` entry in the template, a page of the
+  template that no slide shows, a slide record no cutscene shows, a
+  slide name that no record has, or has twice;
+- a constant that isn't `CUTSCENE_<NAME>`, or is there twice; a cutscene
+  with no slides; a missing field or a number out of its field's range;
+  a `rom_order` name that is no cutscene's.
+
+#### A new cutscene
+
+1. **The picture**, if it is a new one: a 240x160 8bpp PNG with its
+   256-colour palette in `graphics/cutscenes/` (`24_<what>.png`), and a
+   manifest entry with no `rom`, its `class` and `"object":
+   "cutscene_pictures"` ([graphics.md, "New
+   graphics"](./graphics.md#new-graphics)):
+
+   ```json
+   {"path": "cutscenes/24_lab.png", "kind": "bitmap", "symbol": "gCutscenePicture24Bitmap",
+    "class": "CutscenePicture24", "about": "the lab", "object": "cutscene_pictures",
+    "palette": {"symbol": "gCutscenePicture24", "colors": 256}}
+   ```
+
+   then `tools/gfx_manifest.py symbols`. Its palette and bitmap come
+   after the ROM's 24 pictures in `cutscene_pictures.cpp`.
+2. **The slides**: a record in `slides` for each new picture (or new
+   timing, song or sound).
+3. **The cutscene**: an entry at the end of `cutscenes`, with its
+   constant and its slides, each with its page (`cutscene11.page0`, ...).
+4. **The text**: the pages' strings in `text/crashxs.pot`
+   (`cutscene11.page0.0`, ...), then `make text-update` and each
+   language's text ([text.md](./text.md)).
+5. **What plays it**: code calls `PlayCutscene(CUTSCENE_LAB)`, or a boss
+   level names its constant (#1086).
+
+`make` builds it: `CUTSCENE_COUNT` grows, and the tables with it.
+
+Tested in scratch with picture 03 mirrored, its red and blue swapped, as
+`24_lab.png`, a slide showing it, and `CUTSCENE_LAB` (id 11): that slide
+with a one-string page, then the space station slide with a two-string
+page, in the six languages; and a second string added to the intro's
+first page (`cutscene01.page0.1`) in the six languages, with no other
+edit. `make text-check` passes and `make` builds it. With
+`PlayIntroCutscene` playing `CUTSCENE_LAB` first (the trigger, a scratch
+code edit), mGBA shows the new picture with its page, the station
+slide's two strings one after the other, then the intro with the added
+string after the first one, in English, French and German. Each check
+above stops `tools/cutscenes.py check` and the build with its message.
 
 ### Library data
 

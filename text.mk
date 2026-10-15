@@ -38,10 +38,12 @@ $(foreach t,$(TEXT_TABLES),$(eval $(call data_obj,$(t)): CPPFLAGS += -iquote $(T
 # The translations' checks (CI runs them): `msgfmt --check --statistics`
 # on each .po, failing on an untranslated or fuzzy entry; msgcmp against
 # the template both ways, failing on a missing or extra key; and the
-# generator's checks (the font, the encoding, the level names' ids).
+# generator's checks (the font, the encoding, the level names' ids), and
+# the cutscenes' (every page in the template, cutscenes.mk).
 .PHONY: text-check text-update
 text-check:
 	python3 tools/text.py check
+	python3 tools/cutscenes.py check
 
 # After a template change: merges text/crashxs.pot into every .po. A new
 # key comes in untranslated and a changed English text marks its entry

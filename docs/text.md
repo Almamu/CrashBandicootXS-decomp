@@ -62,7 +62,10 @@ The keys:
 - `cutscene<NN>.page<P>.<I>`: string `I` of page `P` of cutscene `NN`, the
   page that shows with slide `P` of the cutscene. A page's strings show
   one after the other. A page used twice (cutscene 10's page 2 is
-  cutscene 9's page 1) has one key.
+  cutscene 9's page 1) has one key. Which slide shows a page is
+  `data/cutscenes.json`'s (a slide's `"text": "cutscene<NN>.page<P>"`,
+  [data.md, "The cutscene data"](./data.md#the-cutscene-data)), and the
+  page has as many strings as the template has entries for it.
 
 ## The text
 
@@ -125,9 +128,18 @@ it into `msgstr`.
 
 A new UI string is a new `ui.*` entry after the last one, and its text
 id is its position (for a level's name, set the level's `name_text` in
-levels.json to it, see "A new level's name" below). A new cutscene
-string needs a page that the cutscene tables (`cutscenes.cpp`,
-`cutscene_slides.cpp`) point at with that many strings.
+levels.json to it, see "A new level's name" below).
+
+A new cutscene string is an entry after the last of its page's
+(`cutscene01.page0.1` after `cutscene01.page0.0`): the page shows it
+after the others, with no other edit, since the page's string count is
+its number of entries. The entries' order in the template is the order
+the strings are stored in, and a page's entries are together and
+numbered from 0 (tools/text.py stops otherwise). A new page is new
+entries (`cutscene11.page0.0`, ...) that a slide of
+`data/cutscenes.json` shows ([data.md, "A new
+cutscene"](./data.md#a-new-cutscene)); a page no slide shows, or a slide
+showing a page the template lacks, stops the build.
 
 ### A new level's name
 

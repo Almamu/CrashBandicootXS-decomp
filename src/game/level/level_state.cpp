@@ -21,6 +21,7 @@ extern "C" {
 #include "engine/sys/system.h"
 #include "game/bosses/bosses.h"
 #include "engine/gfx/sprite_bank.h"
+#include "constants/cutscenes.h"
 }
 
 using Game::Bosses::BossCtrl;
@@ -959,12 +960,12 @@ void LevelState::EndGemPath(u8 flag)
 
 void LevelState::PlayNewGameCutscene()
 {
-    PlayCutscene(2);
+    PlayCutscene(CUTSCENE_NEW_GAME);
 }
 
 void LevelState::PlayIntroCutscene()
 {
-    PlayCutscene(1);
+    PlayCutscene(CUTSCENE_INTRO);
     gAudioContext->StopSfx(SFX_SPACE_STATION_AMBIENCE);
 }
 
@@ -982,7 +983,7 @@ void LevelState::ShowCompanyLogos()
 
 void LevelState::PlayBootCutscene()
 {
-    PlayCutscene(0);
+    PlayCutscene(CUTSCENE_LEGAL_NOTICE);
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked src/, asm/, expected/
