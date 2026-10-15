@@ -256,12 +256,17 @@ far:
   and three after `affine`, which its `Reset` sets; two more virtual
   methods, slots 13 and 15 (`GetPriority` 14, `ApplyVelocity` 16).
   `MovingSprite` is 0x98 (XS 0x78).
-- `Font` (0x13C bytes, XS 0x134): N-Tranced's constructor (0x08028E14)
-  fills it from a descriptor. A word after the OAM entry (+0x08), so
-  `charLookup` to `glyphTileStride` are 4 bytes later (`lineHeight` at
-  +0x120); then two more words (+0x12C, and +0x134, which 0x08029390
-  sets) and no `tileCount`. Its virtual methods differ from XS's too
-  (not in the header yet): only `TextHeight` (font_height.cpp) links.
+- `Font` (0x13C bytes, XS 0x134): N-Tranced's is its own, in
+  [`games/n2/src/engine/text/font.cpp`](../games/n2/src/engine/text/font.cpp)
+  (0x08028E14-0x080294A8). It's built from a `struct font_desc`, with the
+  glyphs' OBJ size at +0x08 (so `charLookup` to `glyphTileStride` are 4
+  bytes later), the tiles per glyph at +0x12C and the glyphs' palette at
+  +0x134. There is no `tileCount`. Its text has codes 1-3, which set that
+  palette (the sprite bank 27's or `gFontCode2Palette`/`gFontCode3Palette`),
+  and the button glyphs (A, B, L, R) use `gFontButtonPalette`. Each glyph's
+  tiles are uploaded as it's drawn, and its glyph records' Y offset is a
+  word (`struct font_glyph`). Its vtable (`gFontVtable`) is the destructor,
+  `DrawText`, `MeasureText` and `TextHeight`; the rest aren't virtual.
 - `gCrateHitResponse`'s rows: `ATTACK_KIND_COUNT`, 8 (XS 7).
 
 `tools/nt_compare`'s `structs.txt` gives the members' offsets the code

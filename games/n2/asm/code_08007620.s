@@ -1640,7 +1640,7 @@ _08008382:
 	ands r0, r2
 	orrs r0, r1
 	str r0, [sp, #4]
-	ldr r0, _08008454 @ =0x02000E9C
+	ldr r0, _08008454 @ =gOamBuffer
 	ldr r0, [r0]
 	mov r1, sp
 	bl AddOamEntry
@@ -1700,7 +1700,7 @@ _08008444: .4byte 0x000001FF
 _08008448: .4byte 0xFE00FFFF
 _0800844C: .4byte 0x3FFFFFFF
 _08008450: .4byte 0xFFFFFC00
-_08008454: .4byte 0x02000E9C
+_08008454: .4byte gOamBuffer
 _08008458: .4byte gObjVramCursor
 _0800845C: .4byte 0x00FFFFFF
 
@@ -1760,7 +1760,7 @@ _080084C4:
 	orrs r0, r1
 _080084CC:
 	str r0, [sp]
-	ldr r0, _08008634 @ =0x02000E9C
+	ldr r0, _08008634 @ =gOamBuffer
 	ldr r4, [r0]
 	ldr r0, [r4, #8]
 	adds r3, r0, #0
@@ -1939,7 +1939,7 @@ _080085C8:
 	subs r6, r0, r3
 	b _08008662
 	.align 2, 0
-_08008634: .4byte 0x02000E9C
+_08008634: .4byte gOamBuffer
 _08008638: .4byte 0xF1FFFFFF
 _0800863C: .4byte 0xEFFFFFFF
 _08008640: .4byte 0xDFFFFFFF
@@ -2168,7 +2168,7 @@ _080087B8:
 	ands r0, r2
 	orrs r0, r1
 	str r0, [sp, #4]
-	ldr r0, _08008880 @ =0x02000E9C
+	ldr r0, _08008880 @ =gOamBuffer
 	ldr r0, [r0]
 	mov r1, sp
 	bl AddOamEntry
@@ -2227,7 +2227,7 @@ _08008870: .4byte 0x000001FF
 _08008874: .4byte 0xFE00FFFF
 _08008878: .4byte 0x3FFFFFFF
 _0800887C: .4byte 0xFFFFFC00
-_08008880: .4byte 0x02000E9C
+_08008880: .4byte gOamBuffer
 _08008884: .4byte gObjVramCursor
 _08008888: .4byte 0x00FFFFFF
 
@@ -3906,7 +3906,7 @@ _08009660:
 	thumb_func_start sub_080096DC
 sub_080096DC: @ 0x080096DC
 	push {r4, lr}
-	ldr r1, _080096FC @ =0x02000E68
+	ldr r1, _080096FC @ =gPaletteCache
 	ldr r4, [r1]
 	bl sub_08009584
 	adds r1, r0, #0
@@ -3919,7 +3919,7 @@ sub_080096DC: @ 0x080096DC
 	pop {r1}
 	bx r1
 	.align 2, 0
-_080096FC: .4byte 0x02000E68
+_080096FC: .4byte gPaletteCache
 _08009700:
 	.byte 0x34, 0x30, 0x00, 0x78, 0x00, 0x07, 0xC0, 0x0F, 0x70, 0x47, 0x00, 0x00, 0x50, 0x30, 0x00, 0x88
 	.byte 0x70, 0x47, 0x00, 0x00, 0x50, 0x30, 0x01, 0x80, 0x70, 0x47, 0x00, 0x00

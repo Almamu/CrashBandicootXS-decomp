@@ -25,7 +25,7 @@ sub_08000F50: @ 0x08000F50
 	ldr r1, [sp, #0x38]
 	cmp r1, #0
 	beq _08000F84
-	ldr r4, _08000FD8 @ =0x02000E9C
+	ldr r4, _08000FD8 @ =gOamBuffer
 	ldr r0, [r4]
 	bl ResetOamBuffer
 	ldr r0, [r4]
@@ -76,7 +76,7 @@ _08000FB4:
 	beq _08000FF2
 	b _08001002
 	.align 2, 0
-_08000FD8: .4byte 0x02000E9C
+_08000FD8: .4byte gOamBuffer
 _08000FDC: .4byte gObjVramCursor
 _08000FE0:
 	ldr r0, [sp, #0x10]
@@ -91,7 +91,7 @@ _08000FE0:
 _08000FF2:
 	mov r0, r8
 	movs r1, #0xa
-	bl sub_08029034
+	bl FontPutChar
 	movs r2, #0
 	str r2, [sp, #8]
 	movs r0, #1
@@ -105,7 +105,7 @@ _0800100A:
 	mov r0, r8
 	adds r1, r5, #0
 	adds r2, r6, #0
-	bl sub_08029298
+	bl FontMeasureChars
 	adds r7, r0, #0
 	ldr r2, [sp, #8]
 	adds r4, r2, r7
@@ -116,7 +116,7 @@ _0800100A:
 	mov r0, r8
 	adds r1, r5, #0
 	adds r2, r6, #0
-	bl sub_08029274
+	bl FontDrawChars
 	str r4, [sp, #8]
 	ldr r2, [sp, #0x38]
 	cmp r2, #1
@@ -130,11 +130,11 @@ _08001036:
 	bge _08001072
 	mov r0, r8
 	movs r1, #0xa
-	bl sub_08029034
+	bl FontPutChar
 	mov r0, r8
 	adds r1, r5, #0
 	adds r2, r6, #0
-	bl sub_08029274
+	bl FontDrawChars
 	str r7, [sp, #8]
 	ldr r0, [sp, #0x38]
 	subs r0, #1
@@ -142,7 +142,7 @@ _08001036:
 	bhi _0800106C
 _0800105C:
 	bl WaitForVBlank
-	ldr r0, _080010A8 @ =0x02000E9C
+	ldr r0, _080010A8 @ =gOamBuffer
 	ldr r0, [r0]
 	bl CommitOamBuffer
 	bl FlushVramDmaQueue
@@ -162,7 +162,7 @@ _0800107E:
 	cmp r2, #0
 	beq _08001094
 	bl WaitForVBlank
-	ldr r0, _080010A8 @ =0x02000E9C
+	ldr r0, _080010A8 @ =gOamBuffer
 	ldr r0, [r0]
 	bl CommitOamBuffer
 	bl FlushVramDmaQueue
@@ -177,5 +177,5 @@ _08001094:
 	pop {r1}
 	bx r1
 	.align 2, 0
-_080010A8: .4byte 0x02000E9C
+_080010A8: .4byte gOamBuffer
 	.align 2, 0

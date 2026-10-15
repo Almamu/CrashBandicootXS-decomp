@@ -13386,7 +13386,7 @@ sub_08038F20: @ 0x08038F20
 	ldr r0, [r5, #0x40]
 	cmp r0, #0
 	beq _08038F3A
-	ldr r4, _08038FB0 @ =0x02000E68
+	ldr r4, _08038FB0 @ =gPaletteCache
 	ldr r0, [r4]
 	bl OperatorDelete
 	ldr r0, [r5, #0x40]
@@ -13456,7 +13456,7 @@ _08038FAA:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08038FB0: .4byte 0x02000E68
+_08038FB0: .4byte gPaletteCache
 
 	thumb_func_start sub_08038FB4
 sub_08038FB4: @ 0x08038FB4
@@ -13476,7 +13476,7 @@ sub_08038FB4: @ 0x08038FB4
 	ldr r0, [r6, #8]
 	cmp r0, #0
 	bne _08039028
-	ldr r4, _08039010 @ =0x02000E68
+	ldr r4, _08039010 @ =gPaletteCache
 	ldr r0, [r4]
 	str r0, [r6, #0x40]
 	ldr r0, _08039014 @ =0x00000914
@@ -13490,18 +13490,18 @@ sub_08038FB4: @ 0x08038FB4
 	ldr r0, _0803901C @ =0x02000E90
 	ldr r0, [r0]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	ldr r0, _08039020 @ =gLargeFont
 	ldr r0, [r0]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	ldr r0, _08039024 @ =gObjVramCursor
 	ldr r0, [r0]
 	movs r1, #0
 	bl sub_0800763C
 	b _0803902A
 	.align 2, 0
-_08039010: .4byte 0x02000E68
+_08039010: .4byte gPaletteCache
 _08039014: .4byte 0x00000914
 _08039018: .4byte gSpriteBankTable
 _0803901C: .4byte 0x02000E90
@@ -13743,10 +13743,10 @@ _080391F4: .4byte 0x0000FFFF
 sub_080391F8: @ 0x080391F8
 	push {r4, r5, r6, lr}
 	adds r5, r0, #0
-	ldr r0, _08039238 @ =0x02000E68
+	ldr r0, _08039238 @ =gPaletteCache
 	ldr r0, [r0]
 	bl sub_08007B8C
-	ldr r0, _0803923C @ =0x02000E9C
+	ldr r0, _0803923C @ =gOamBuffer
 	ldr r0, [r0]
 	bl ResetOamBuffer
 	ldr r4, _08039240 @ =gObjVramCursor
@@ -13769,8 +13769,8 @@ _08039224:
 	ldr r0, _08039248 @ =0x00001444
 	b _08039252
 	.align 2, 0
-_08039238: .4byte 0x02000E68
-_0803923C: .4byte 0x02000E9C
+_08039238: .4byte gPaletteCache
+_0803923C: .4byte gOamBuffer
 _08039240: .4byte gObjVramCursor
 _08039244: .4byte gDispcnt
 _08039248: .4byte 0x00001444
@@ -13780,14 +13780,14 @@ _0803924C:
 	lsls r0, r0, #5
 _08039252:
 	strh r0, [r1]
-	ldr r4, _0803928C @ =0x02000E9C
+	ldr r4, _0803928C @ =gOamBuffer
 	ldr r0, [r4]
 	bl HideUnusedOamEntries
 	bl WaitForVBlank
 	bl CommitDispcnt
 	ldr r0, [r4]
 	bl CommitOamBuffer
-	ldr r0, _08039290 @ =0x02000E68
+	ldr r0, _08039290 @ =gPaletteCache
 	ldr r0, [r0]
 	bl sub_08007AE4
 	bl FlushVramDmaQueue
@@ -13801,8 +13801,8 @@ _08039252:
 	mov pc, r0
 	.align 2, 0
 _08039288: .4byte gDispcnt
-_0803928C: .4byte 0x02000E9C
-_08039290: .4byte 0x02000E68
+_0803928C: .4byte gOamBuffer
+_08039290: .4byte gPaletteCache
 _08039294: .4byte _08039298
 	.global _08039298
 _08039298: @ jump table
@@ -13958,7 +13958,7 @@ _080393C0:
 	ldr r0, _080393E4 @ =0x02000E90
 	ldr r0, [r0]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	pop {r4, r5, r6}
 	pop {r0}
 	bx r0
@@ -14169,7 +14169,7 @@ _0803954E:
 _0803955E:
 	adds r0, r5, #0
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	b _08039582
 _08039568:
 	mov r2, r8
@@ -14178,12 +14178,12 @@ _08039568:
 	beq _0803957A
 	adds r0, r5, #0
 	movs r1, #1
-	bl FontResetPalette
+	bl FontSetPalette
 	b _08039582
 _0803957A:
 	adds r0, r5, #0
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 _08039582:
 	mov r3, sl
 	ldr r0, [r3]
@@ -15965,7 +15965,7 @@ sub_0803A320: @ 0x0803A320
 	ldr r6, _0803A424 @ =0x0200044C
 	str r0, [r6]
 	bl sub_080015D0
-	ldr r0, _0803A428 @ =0x02000E68
+	ldr r0, _0803A428 @ =gPaletteCache
 	ldr r0, [r0]
 	bl sub_08007B0C
 	bl sub_0803A828
@@ -16042,7 +16042,7 @@ _0803A418: .4byte gObjVramCursor
 _0803A41C: .4byte 0x02000438
 _0803A420: .4byte gDispcnt
 _0803A424: .4byte 0x0200044C
-_0803A428: .4byte 0x02000E68
+_0803A428: .4byte gPaletteCache
 _0803A42C: .4byte gUnknown_081E3924
 _0803A430: .4byte gUnknown_081E3918
 _0803A434: .4byte 0x02000450
@@ -16209,7 +16209,7 @@ _0803A56E:
 	lsls r2, r2, #1
 	bl PlaySfx
 _0803A590:
-	ldr r0, _0803A618 @ =0x02000E68
+	ldr r0, _0803A618 @ =gPaletteCache
 	ldr r0, [r0]
 	bl sub_08007B8C
 	ldr r0, _0803A61C @ =0x02000450
@@ -16271,7 +16271,7 @@ _0803A606:
 	b _0803A498
 	.align 2, 0
 _0803A614: .4byte 0x02000E6C
-_0803A618: .4byte 0x02000E68
+_0803A618: .4byte gPaletteCache
 _0803A61C: .4byte 0x02000450
 _0803A620: .4byte 0xFFFFF100
 _0803A624:
@@ -16501,7 +16501,7 @@ _0803A7C0:
 	thumb_func_start sub_0803A7CC
 sub_0803A7CC: @ 0x0803A7CC
 	push {r4, r5, lr}
-	ldr r5, _0803A810 @ =0x02000E68
+	ldr r5, _0803A810 @ =gPaletteCache
 	ldr r0, [r5]
 	bl sub_08007AE4
 	ldr r4, _0803A814 @ =0x040000D4
@@ -16518,7 +16518,7 @@ sub_0803A7CC: @ 0x0803A7CC
 	ldr r0, _0803A81C @ =0x02000448
 	ldr r0, [r0]
 	bl sub_0803BFF0
-	ldr r0, _0803A820 @ =0x02000E9C
+	ldr r0, _0803A820 @ =gOamBuffer
 	ldr r0, [r0]
 	bl CommitOamBuffer
 	ldr r0, _0803A824 @ =0x0200044C
@@ -16528,11 +16528,11 @@ sub_0803A7CC: @ 0x0803A7CC
 	pop {r0}
 	bx r0
 	.align 2, 0
-_0803A810: .4byte 0x02000E68
+_0803A810: .4byte gPaletteCache
 _0803A814: .4byte 0x040000D4
 _0803A818: .4byte 0x84000080
 _0803A81C: .4byte 0x02000448
-_0803A820: .4byte 0x02000E9C
+_0803A820: .4byte gOamBuffer
 _0803A824: .4byte 0x0200044C
 
 	thumb_func_start sub_0803A828
@@ -16541,14 +16541,14 @@ sub_0803A828: @ 0x0803A828
 	ldr r0, _0803A840 @ =gObjVramCursor
 	ldr r0, [r0]
 	bl sub_08007670
-	ldr r0, _0803A844 @ =0x02000E9C
+	ldr r0, _0803A844 @ =gOamBuffer
 	ldr r0, [r0]
 	bl ResetOamBuffer
 	pop {r0}
 	bx r0
 	.align 2, 0
 _0803A840: .4byte gObjVramCursor
-_0803A844: .4byte 0x02000E9C
+_0803A844: .4byte gOamBuffer
 
 	thumb_func_start sub_0803A848
 sub_0803A848: @ 0x0803A848
@@ -16566,7 +16566,7 @@ sub_0803A848: @ 0x0803A848
 	bl DrawPartList
 	ldr r0, [r4, #0x1c]
 	bl sub_0803DB60
-	ldr r0, _0803A890 @ =0x02000E9C
+	ldr r0, _0803A890 @ =gOamBuffer
 	ldr r0, [r0]
 	bl HideUnusedOamEntries
 	bl WaitForVBlank
@@ -16580,7 +16580,7 @@ sub_0803A848: @ 0x0803A848
 	bx r0
 	.align 2, 0
 _0803A88C: .4byte 0x02000450
-_0803A890: .4byte 0x02000E9C
+_0803A890: .4byte gOamBuffer
 
 	thumb_func_start sub_0803A894
 sub_0803A894: @ 0x0803A894
@@ -17754,7 +17754,7 @@ _0803B16C:
 _0803B18C:
 	adds r0, r6, #0
 	bl sub_0803B1DC
-	ldr r0, _0803B1D8 @ =0x02000E68
+	ldr r0, _0803B1D8 @ =gPaletteCache
 	ldr r0, [r0]
 	ldr r1, [r5]
 	bl sub_08007D1C
@@ -17790,7 +17790,7 @@ _0803B1CA:
 	bx r0
 	.align 2, 0
 _0803B1D4: .4byte 0x00002020
-_0803B1D8: .4byte 0x02000E68
+_0803B1D8: .4byte gPaletteCache
 
 	thumb_func_start sub_0803B1DC
 sub_0803B1DC: @ 0x0803B1DC
@@ -17853,7 +17853,7 @@ _0803B22A:
 	bl __divsi3
 	lsls r5, r4, #0x10
 	lsrs r5, r5, #0x10
-	ldr r1, _0803B2EC @ =0x02000E9C
+	ldr r1, _0803B2EC @ =gOamBuffer
 	ldr r1, [r1]
 	mov ip, r1
 	movs r3, #0
@@ -17924,7 +17924,7 @@ _0803B22A:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_0803B2EC: .4byte 0x02000E9C
+_0803B2EC: .4byte gOamBuffer
 _0803B2F0:
 	.byte 0x00, 0xB5, 0x40, 0x6A, 0x00, 0xF0, 0x3C, 0xFB, 0x02, 0xBC, 0x08, 0x47, 0x41, 0x61, 0x82, 0x61
 	.byte 0x70, 0x47, 0x00, 0x00, 0x01, 0x70, 0x70, 0x47
@@ -21305,7 +21305,7 @@ _0803D020:
 	ands r0, r1
 	orrs r0, r2
 	strh r0, [r7, #0x1c]
-	ldr r0, _0803D094 @ =0x02000E9C
+	ldr r0, _0803D094 @ =gOamBuffer
 	ldr r0, [r0]
 	adds r1, r7, #0
 	adds r1, #0x18
@@ -21330,7 +21330,7 @@ _0803D084: .4byte 0xFFFFFE00
 _0803D088: .4byte gUnknown_081E3A38
 _0803D08C: .4byte 0x000003FF
 _0803D090: .4byte 0xFFFFFC00
-_0803D094: .4byte 0x02000E9C
+_0803D094: .4byte gOamBuffer
 _0803D098: .4byte gUnknown_081E3A68
 _0803D09C:
 	ldr r0, _0803D0D0 @ =gUnknown_081E3A68
@@ -21468,7 +21468,7 @@ sub_0803D170: @ 0x0803D170
 	adds r7, r1, #0
 	mov r8, r2
 	mov sb, r3
-	ldr r0, _0803D204 @ =0x02000E68
+	ldr r0, _0803D204 @ =gPaletteCache
 	ldr r5, [r0]
 	ldr r1, [r6, #0x14]
 	cmp r1, #0
@@ -21529,7 +21529,7 @@ _0803D1AE:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_0803D204: .4byte 0x02000E68
+_0803D204: .4byte gPaletteCache
 _0803D208: .4byte gObjVramCursor
 _0803D20C: .4byte 0x00FFFFFF
 _0803D210:
@@ -21791,7 +21791,7 @@ sub_0803D3F4: @ 0x0803D3F4
 	bl __divsi3
 	lsls r3, r5, #0x10
 	lsrs r3, r3, #0x10
-	ldr r1, _0803D5F0 @ =0x02000E9C
+	ldr r1, _0803D5F0 @ =gOamBuffer
 	ldr r4, [r1]
 	movs r7, #0
 	mov r8, r7
@@ -21966,7 +21966,7 @@ sub_0803D3F4: @ 0x0803D3F4
 	ldr r0, _0803D62C @ =gLargeFont
 	ldr r0, [r0]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	adds r0, r6, #0
 	pop {r3, r4, r5}
 	mov r8, r3
@@ -21977,7 +21977,7 @@ sub_0803D3F4: @ 0x0803D3F4
 	bx r1
 	.align 2, 0
 _0803D5EC: .4byte gUnknown_081E3B34
-_0803D5F0: .4byte 0x02000E9C
+_0803D5F0: .4byte gOamBuffer
 _0803D5F4: .4byte gUnknown_081E3AB0
 _0803D5F8: .4byte gUnknown_081E3B04
 _0803D5FC: .4byte gUnknown_081E3AC8
@@ -22509,7 +22509,7 @@ _0803DA18:
 	ldr r5, _0803DAA4 @ =gLargeFont
 	ldr r0, [r5]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	ldr r6, _0803DAA8 @ =gUnknown_081E3B2C
 	ldr r0, [r5]
 	ldr r2, [r7, #0x50]
@@ -22538,7 +22538,7 @@ _0803DA18:
 	bl _call_via_r2
 	ldr r0, [r5]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	ldr r0, [r5]
 	ldr r2, [r7, #0x50]
 	ldr r1, [r6]
@@ -34321,7 +34321,7 @@ sub_08043B08: @ 0x08043B08
 	ldr r2, _08043B74 @ =0x01002800
 	mov r0, sp
 	bl CpuFastSet
-	ldr r4, _08043B78 @ =0x02000E68
+	ldr r4, _08043B78 @ =gPaletteCache
 	ldr r0, [r4]
 	str r0, [r6, #0x24]
 	ldr r0, _08043B7C @ =0x00000914
@@ -34335,7 +34335,7 @@ sub_08043B08: @ 0x08043B08
 	ldr r4, _08043B84 @ =0x02000E90
 	ldr r0, [r4]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	movs r0, #0xa0
 	lsls r0, r0, #0x13
 	strh r5, [r0]
@@ -34358,7 +34358,7 @@ sub_08043B08: @ 0x08043B08
 	b _08043B92
 	.align 2, 0
 _08043B74: .4byte 0x01002800
-_08043B78: .4byte 0x02000E68
+_08043B78: .4byte gPaletteCache
 _08043B7C: .4byte 0x00000914
 _08043B80: .4byte gSpriteBankTable
 _08043B84: .4byte 0x02000E90
@@ -34479,7 +34479,7 @@ _08043C66:
 sub_08043C70: @ 0x08043C70
 	push {r4, r5, r6, lr}
 	adds r5, r0, #0
-	ldr r6, _08043D8C @ =0x02000E9C
+	ldr r6, _08043D8C @ =gOamBuffer
 	ldr r0, [r6]
 	bl ResetOamBuffer
 	ldr r4, _08043D90 @ =gObjVramCursor
@@ -34515,7 +34515,7 @@ _08043CB4:
 	bl CommitDispcnt
 	ldr r0, [r6]
 	bl CommitOamBuffer
-	ldr r4, _08043D9C @ =0x02000E68
+	ldr r4, _08043D9C @ =gPaletteCache
 	ldr r0, [r4]
 	bl sub_08007B8C
 	ldr r0, [r4]
@@ -34598,16 +34598,16 @@ _08043D78:
 	str r0, [r5, #0x10]
 	ldr r0, [r5, #0x2c]
 	movs r1, #0
-	bl FontResetPalette
+	bl FontSetPalette
 	pop {r4, r5, r6}
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08043D8C: .4byte 0x02000E9C
+_08043D8C: .4byte gOamBuffer
 _08043D90: .4byte gObjVramCursor
 _08043D94: .4byte gDispcnt
 _08043D98: .4byte 0x00000404
-_08043D9C: .4byte 0x02000E68
+_08043D9C: .4byte gPaletteCache
 _08043DA0: .4byte 0x04000050
 _08043DA4: .4byte 0x02000E6C
 
@@ -34780,7 +34780,7 @@ _08043EEC: .4byte gUnknown_081E3CA0
 sub_08043EF0: @ 0x08043EF0
 	push {r4, r5, lr}
 	adds r5, r0, #0
-	ldr r4, _08043F28 @ =0x02000E68
+	ldr r4, _08043F28 @ =gPaletteCache
 	ldr r0, [r4]
 	bl OperatorDelete
 	ldr r0, [r5, #0x24]
@@ -34805,7 +34805,7 @@ _08043F22:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08043F28: .4byte 0x02000E68
+_08043F28: .4byte gPaletteCache
 
 	thumb_func_start sub_08043F2C
 sub_08043F2C: @ 0x08043F2C

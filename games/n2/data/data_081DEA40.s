@@ -36,16 +36,16 @@ gUnknown_081DECB4:
 gUnknown_081DED20:
 	.incbin "baserom_n2.gba", 0x1DED20, 0x20
 
-	.global gUnknown_081DED40
-gUnknown_081DED40:
+	.global gFontCode2Palette
+gFontCode2Palette:
 	.incbin "baserom_n2.gba", 0x1DED40, 0x20
 
-	.global gUnknown_081DED60
-gUnknown_081DED60:
+	.global gFontCode3Palette
+gFontCode3Palette:
 	.incbin "baserom_n2.gba", 0x1DED60, 0x20
 
-	.global gUnknown_081DED80
-gUnknown_081DED80:
+	.global gFontButtonPalette
+gFontButtonPalette:
 	.incbin "baserom_n2.gba", 0x1DED80, 0x7A0
 
 	.global gUnknown_081DF520
