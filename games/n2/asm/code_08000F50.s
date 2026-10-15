@@ -30,7 +30,7 @@ sub_08000F50: @ 0x08000F50
 	bl ResetOamBuffer
 	ldr r0, [r4]
 	bl HideUnusedOamEntries
-	ldr r0, _08000FDC @ =0x02000E98
+	ldr r0, _08000FDC @ =gObjVramCursor
 	ldr r0, [r0]
 	bl sub_08007670
 _08000F84:
@@ -60,7 +60,7 @@ _08000F84:
 	str r2, [sp, #0x14]
 _08000FB4:
 	mov r0, sl
-	bl sub_08001230
+	bl GetWordLength
 	adds r6, r0, #0
 	mov r5, sl
 	adds r2, r5, r6
@@ -77,7 +77,7 @@ _08000FB4:
 	b _08001002
 	.align 2, 0
 _08000FD8: .4byte 0x02000E9C
-_08000FDC: .4byte 0x02000E98
+_08000FDC: .4byte gObjVramCursor
 _08000FE0:
 	ldr r0, [sp, #0x10]
 	ldr r1, [r0]

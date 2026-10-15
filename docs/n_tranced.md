@@ -107,12 +107,23 @@ N-Tranced's aren't generated yet (`build/ntranced/include/`, #1113).
 
 `gbadisasm.cfg` seeds the disassembly with crt0, the N-Tranced address of
 each XS function the XS/N-Tranced comparison found in it (#1107) and the
-targets of the ROM's code pointers. 660 functions have their XS name (the
-ones only one XS function maps to); the rest are `sub_<address>`. To
-regenerate the disassembly and the linker script after changing the
-config or `objects.txt`:
+targets of the ROM's code pointers. 760 of its 2,703 functions have their
+XS name; the rest are `sub_<address>`. `symbols.txt` names 94 of its RAM
+variables and data tables after XS's, and the disassembly's literal-pool
+words use those names (`.4byte gLevelTable`).
+
+The names come from the comparison (`tools/nt_compare/run.py`, #1107), and
+only confident ones (docs/naming.md): `name_cfg.py` names a function when
+an XS function only one N-Tranced address maps to starts there (or a
+close match lands a few bytes in), and `name_data.py` names an address at
+least two of the matched functions' pool words agree on. To add the
+names a newer comparison finds, and regenerate the disassembly and the
+linker script (also after changing the config or `objects.txt`):
 
 ```
+python3 tools/nt_compare/run.py
+python3 tools/nt_compare/name_cfg.py
+python3 tools/nt_compare/name_data.py
 python3 games/n2/disasm.py path/to/gbadisasm/gbadisasm
 make GAME=n2 compare
 ```

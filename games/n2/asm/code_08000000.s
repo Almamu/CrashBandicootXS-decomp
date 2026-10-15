@@ -50,7 +50,7 @@ _080000C0:
 	str r0, [r2]
 	ldr r0, _08000160 @ =0x02000000
 	str r0, [r2, #4]
-	ldr r1, _0800015C @ =0x020005E0
+	ldr r1, _0800015C @ =gPrevIntrTable
 	sub r0, r1, r0
 	mov r1, #-0x7c000000
 	orr r0, r1, r0, asr #2
@@ -66,15 +66,15 @@ _08000150: .4byte 0x03007E00
 _08000154:
 	.byte 0x80, 0x13, 0x00, 0x00
 _08000158: .4byte 0x087FBE94
-_0800015C: .4byte 0x020005E0
+_0800015C: .4byte gPrevIntrTable
 _08000160: .4byte 0x02000000
 _08000164: .4byte 0x03002FF8
 _08000168: .4byte 0x03000000
 _0800016C: .4byte 0x040000D4
 _08000170: .4byte AgbMain
 
-	thumb_func_start sub_08000174
-sub_08000174: @ 0x08000174
+	thumb_func_start rand
+rand: @ 0x08000174
 	ldr r3, _080001D8 @ =0x0200001C
 	ldr r0, [r3]
 	ldr r1, _080001B8 @ =0x00003039
@@ -202,7 +202,7 @@ MemCopy32: @ 0x08000224
 	lsls r1, r1, #0x13
 	orrs r2, r1
 	adds r1, r4, #0
-	bl sub_0805AFAC
+	bl CpuSet
 	adds r0, r4, #0
 	pop {r4}
 	pop {r1}
@@ -297,7 +297,7 @@ sub_080002A4: @ 0x080002A4
 	orrs r0, r1
 	str r0, [r2, #8]
 	ldr r0, [r2, #8]
-	ldr r0, _0800035C @ =0x02000004
+	ldr r0, _0800035C @ =mem_iwram_heap_pointer
 	str r3, [r0]
 	adds r0, r3, #0
 	adds r0, #0x14
@@ -312,7 +312,7 @@ sub_080002A4: @ 0x080002A4
 	str r3, [r0, #8]
 	subs r5, #0x14
 	str r5, [r3, #0x14]
-	ldr r0, _08000360 @ =0x02000008
+	ldr r0, _08000360 @ =mem_ewram_heap_pointer
 	str r4, [r0]
 	adds r0, r4, #0
 	adds r0, #0x14
@@ -332,7 +332,7 @@ sub_080002A4: @ 0x080002A4
 	movs r0, #0xc0
 	lsls r0, r0, #0x18
 	bl mem_free_bytes
-	ldr r1, _08000364 @ =0x0200000C
+	ldr r1, _08000364 @ =mem_initial_free_bytes
 	str r0, [r1]
 	movs r0, #0
 	add sp, #8
@@ -346,9 +346,9 @@ _0800034C: .4byte 0x03002FF8
 _08000350: .4byte 0x03007E00
 _08000354: .4byte 0x02002674
 _08000358: .4byte 0x040000D4
-_0800035C: .4byte 0x02000004
-_08000360: .4byte 0x02000008
-_08000364: .4byte 0x0200000C
+_0800035C: .4byte mem_iwram_heap_pointer
+_08000360: .4byte mem_ewram_heap_pointer
+_08000364: .4byte mem_initial_free_bytes
 
 	thumb_func_start mem_collect
 mem_collect: @ 0x08000368
@@ -358,13 +358,13 @@ mem_collect: @ 0x08000368
 	adds r7, r0, #0
 	cmp r7, #0
 	bge _080003F8
-	ldr r0, _080003A0 @ =0x02000004
+	ldr r0, _080003A0 @ =mem_iwram_heap_pointer
 	ldr r5, [r0]
 	ldr r1, [r5, #8]
 	mov r8, r0
 	cmp r1, r5
 	beq _080003F8
-	ldr r0, _080003A4 @ =0x02000008
+	ldr r0, _080003A4 @ =mem_ewram_heap_pointer
 	mov ip, r0
 _08000384:
 	ldr r6, [r1, #8]
@@ -382,8 +382,8 @@ _08000384:
 	adds r4, r2, #0
 	b _080003AC
 	.align 2, 0
-_080003A0: .4byte 0x02000004
-_080003A4: .4byte 0x02000008
+_080003A0: .4byte mem_iwram_heap_pointer
+_080003A4: .4byte mem_ewram_heap_pointer
 _080003A8:
 	mov r1, ip
 	ldr r4, [r1]
@@ -435,13 +435,13 @@ _080003F8:
 	ands r0, r7
 	cmp r0, #0
 	beq _08000484
-	ldr r0, _0800042C @ =0x02000008
+	ldr r0, _0800042C @ =mem_ewram_heap_pointer
 	ldr r5, [r0]
 	ldr r1, [r5, #8]
 	mov r8, r0
 	cmp r1, r5
 	beq _08000484
-	ldr r7, _08000430 @ =0x02000004
+	ldr r7, _08000430 @ =mem_iwram_heap_pointer
 _08000410:
 	ldr r6, [r1, #8]
 	ldr r0, [r1, #4]
@@ -457,8 +457,8 @@ _08000410:
 	adds r4, r2, #0
 	b _08000438
 	.align 2, 0
-_0800042C: .4byte 0x02000008
-_08000430: .4byte 0x02000004
+_0800042C: .4byte mem_ewram_heap_pointer
+_08000430: .4byte mem_iwram_heap_pointer
 _08000434:
 	mov r1, r8
 	ldr r4, [r1]
@@ -524,7 +524,7 @@ mem_free_bytes: @ 0x080004D0
 	movs r4, #0
 	cmp r5, #0
 	bge _080004FA
-	ldr r0, _0800052C @ =0x02000004
+	ldr r0, _0800052C @ =mem_iwram_heap_pointer
 	ldr r3, [r0]
 	movs r1, #0
 	ldr r2, [r3, #8]
@@ -549,7 +549,7 @@ _080004FA:
 	ands r0, r5
 	cmp r0, #0
 	beq _08000524
-	ldr r0, _08000530 @ =0x02000008
+	ldr r0, _08000530 @ =mem_ewram_heap_pointer
 	ldr r3, [r0]
 	movs r1, #0
 	ldr r2, [r3, #8]
@@ -574,8 +574,8 @@ _08000524:
 	pop {r1}
 	bx r1
 	.align 2, 0
-_0800052C: .4byte 0x02000004
-_08000530: .4byte 0x02000008
+_0800052C: .4byte mem_iwram_heap_pointer
+_08000530: .4byte mem_ewram_heap_pointer
 
 	thumb_func_start mem_alloc
 mem_alloc: @ 0x08000534
@@ -583,15 +583,15 @@ mem_alloc: @ 0x08000534
 	adds r3, r0, #0
 	cmp r1, #0
 	bge _08000548
-	ldr r0, _08000540 @ =0x02000004
+	ldr r0, _08000540 @ =mem_iwram_heap_pointer
 	b _0800054A
 	.align 2, 0
-_08000540: .4byte 0x02000004
+_08000540: .4byte mem_iwram_heap_pointer
 _08000544:
 	movs r0, #0
 	b _08000598
 _08000548:
-	ldr r0, _0800055C @ =0x02000008
+	ldr r0, _0800055C @ =mem_ewram_heap_pointer
 _0800054A:
 	ldr r4, [r0]
 	adds r3, #0x13
@@ -602,7 +602,7 @@ _0800054A:
 	ldr r1, [r2, #0xc]
 	b _08000566
 	.align 2, 0
-_0800055C: .4byte 0x02000008
+_0800055C: .4byte mem_ewram_heap_pointer
 _08000560:
 	cmp r2, r1
 	beq _08000544
@@ -646,16 +646,16 @@ mem_free: @ 0x080005A0
 	adds r1, r0, #0
 	cmp r1, #0
 	beq _08000602
-	ldr r0, _080005B4 @ =0x02000004
+	ldr r0, _080005B4 @ =mem_iwram_heap_pointer
 	ldr r0, [r0]
 	cmp r1, r0
 	blo _080005B8
 	adds r4, r0, #0
 	b _080005BC
 	.align 2, 0
-_080005B4: .4byte 0x02000004
+_080005B4: .4byte mem_iwram_heap_pointer
 _080005B8:
-	ldr r0, _08000608 @ =0x02000008
+	ldr r0, _08000608 @ =mem_ewram_heap_pointer
 	ldr r4, [r0]
 _080005BC:
 	adds r3, r1, #0
@@ -700,7 +700,7 @@ _08000602:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08000608: .4byte 0x02000008
+_08000608: .4byte mem_ewram_heap_pointer
 
 	thumb_func_start mem_heap_shutdown
 mem_heap_shutdown: @ 0x0800060C
@@ -709,7 +709,7 @@ mem_heap_shutdown: @ 0x0800060C
 	lsls r4, r4, #0x18
 	adds r0, r4, #0
 	bl mem_free_bytes
-	ldr r1, _08000634 @ =0x0200000C
+	ldr r1, _08000634 @ =mem_initial_free_bytes
 	ldr r1, [r1]
 	cmp r1, r0
 	beq _0800062C
@@ -722,28 +722,28 @@ _0800062C:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08000634: .4byte 0x0200000C
+_08000634: .4byte mem_initial_free_bytes
 
 	thumb_func_start sub_08000638
 sub_08000638: @ 0x08000638
-	ldr r1, _08000644 @ =0x03000E08
+	ldr r1, _08000644 @ =gIntrTable
 	lsls r0, r0, #2
 	adds r0, r0, r1
 	ldr r1, _08000648 @ =IrqEmptyHandler
 	str r1, [r0]
 	bx lr
 	.align 2, 0
-_08000644: .4byte 0x03000E08
+_08000644: .4byte gIntrTable
 _08000648: .4byte IrqEmptyHandler
 
 	thumb_func_start IrqRestoreHandler
 IrqRestoreHandler: @ 0x0800064C
 	push {r4, r5, r6, lr}
 	adds r5, r0, #0
-	ldr r0, _08000680 @ =0x03000E08
+	ldr r0, _08000680 @ =gIntrTable
 	lsls r2, r5, #2
 	adds r0, r2, r0
-	ldr r1, _08000684 @ =0x020005E0
+	ldr r1, _08000684 @ =gPrevIntrTable
 	adds r6, r2, r1
 	ldr r1, [r6]
 	str r1, [r0]
@@ -766,21 +766,21 @@ _08000676:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08000680: .4byte 0x03000E08
-_08000684: .4byte 0x020005E0
+_08000680: .4byte gIntrTable
+_08000684: .4byte gPrevIntrTable
 _08000688: .4byte 0x04000208
 _0800068C: .4byte 0x04000200
 _08000690: .4byte IrqEmptyHandler
 
-	thumb_func_start sub_08000694
-sub_08000694: @ 0x08000694
+	thumb_func_start IrqSetHandler
+IrqSetHandler: @ 0x08000694
 	push {r4, r5, lr}
 	adds r5, r0, #0
 	adds r4, r1, #0
-	ldr r1, _080006C8 @ =0x020005E0
+	ldr r1, _080006C8 @ =gPrevIntrTable
 	lsls r2, r5, #2
 	adds r1, r2, r1
-	ldr r0, _080006CC @ =0x03000E08
+	ldr r0, _080006CC @ =gIntrTable
 	adds r2, r2, r0
 	ldr r0, [r2]
 	str r0, [r1]
@@ -800,8 +800,8 @@ sub_08000694: @ 0x08000694
 	strh r2, [r3]
 	b _080006EA
 	.align 2, 0
-_080006C8: .4byte 0x020005E0
-_080006CC: .4byte 0x03000E08
+_080006C8: .4byte gPrevIntrTable
+_080006CC: .4byte gIntrTable
 _080006D0: .4byte IrqEmptyHandler
 _080006D4: .4byte 0x04000208
 _080006D8: .4byte 0x04000200
@@ -834,8 +834,8 @@ IrqSetup: @ 0x08000700
 	push {r4, lr}
 	ldr r4, _08000728 @ =0x03000000
 	ldr r1, _0800072C @ =IrqEmptyHandler
-	ldr r3, _08000730 @ =0x020005E0
-	ldr r2, _08000734 @ =0x03000E08
+	ldr r3, _08000730 @ =gPrevIntrTable
+	ldr r2, _08000734 @ =gIntrTable
 	movs r0, #0xd
 _0800070C:
 	stm r3!, {r1}
@@ -855,8 +855,8 @@ _0800070C:
 	.align 2, 0
 _08000728: .4byte 0x03000000
 _0800072C: .4byte IrqEmptyHandler
-_08000730: .4byte 0x020005E0
-_08000734: .4byte 0x03000E08
+_08000730: .4byte gPrevIntrTable
+_08000734: .4byte gIntrTable
 _08000738: .4byte 0x03007FFC
 _0800073C: .4byte 0x04000208
 
@@ -868,8 +868,8 @@ IrqEmptyHandler: @ 0x08000740
 	thumb_func_start EnableVBlankHandler
 EnableVBlankHandler: @ 0x08000744
 	push {lr}
-	ldr r1, _0800076C @ =sub_08000844
-	ldr r2, _08000770 @ =0x02000620
+	ldr r1, _0800076C @ =VBlankHandler
+	ldr r2, _08000770 @ =gVBlankCallbacks
 	movs r3, #0
 	adds r0, r2, #0
 	adds r0, #0x1c
@@ -879,7 +879,7 @@ _08000750:
 	cmp r0, r2
 	bge _08000750
 	movs r0, #0
-	bl sub_08000694
+	bl IrqSetHandler
 	ldr r0, _08000774 @ =0x04000004
 	ldrb r1, [r0]
 	movs r2, #8
@@ -888,8 +888,8 @@ _08000750:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_0800076C: .4byte sub_08000844
-_08000770: .4byte 0x02000620
+_0800076C: .4byte VBlankHandler
+_08000770: .4byte gVBlankCallbacks
 _08000774: .4byte 0x04000004
 
 	thumb_func_start DisableVBlankHandler
@@ -910,21 +910,21 @@ _08000790: .4byte 0x04000004
 
 	thumb_func_start RemoveVBlankCallback
 RemoveVBlankCallback: @ 0x08000794
-	ldr r1, _080007A0 @ =0x02000620
+	ldr r1, _080007A0 @ =gVBlankCallbacks
 	lsls r0, r0, #2
 	adds r0, r0, r1
 	movs r1, #0
 	str r1, [r0]
 	bx lr
 	.align 2, 0
-_080007A0: .4byte 0x02000620
+_080007A0: .4byte gVBlankCallbacks
 
-	thumb_func_start sub_080007A4
-sub_080007A4: @ 0x080007A4
+	thumb_func_start AddVBlankCallback
+AddVBlankCallback: @ 0x080007A4
 	push {lr}
 	adds r3, r0, #0
 	movs r2, #0
-	ldr r1, _080007B8 @ =0x02000620
+	ldr r1, _080007B8 @ =gVBlankCallbacks
 _080007AC:
 	ldr r0, [r1]
 	cmp r0, #0
@@ -933,7 +933,7 @@ _080007AC:
 	adds r0, r2, #0
 	b _080007C8
 	.align 2, 0
-_080007B8: .4byte 0x02000620
+_080007B8: .4byte gVBlankCallbacks
 _080007BC:
 	adds r1, #4
 	adds r2, #1
@@ -948,21 +948,21 @@ _080007C8:
 	thumb_func_start WaitForVBlank
 WaitForVBlank: @ 0x080007CC
 	push {r4, r5, r6, lr}
-	ldr r0, _080007E0 @ =0x02000014
+	ldr r0, _080007E0 @ =gFrameLimitEnabled
 	ldrb r0, [r0]
 	cmp r0, #0
 	beq _08000804
-	ldr r5, _080007E4 @ =0x02000010
-	ldr r4, _080007E8 @ =0x02000618
-	ldr r6, _080007EC @ =0x0200061C
+	ldr r5, _080007E4 @ =gVBlankCounter
+	ldr r4, _080007E8 @ =gFrameLimitTarget
+	ldr r6, _080007EC @ =gFrameLimitInterval
 	b _080007F4
 	.align 2, 0
-_080007E0: .4byte 0x02000014
-_080007E4: .4byte 0x02000010
-_080007E8: .4byte 0x02000618
-_080007EC: .4byte 0x0200061C
+_080007E0: .4byte gFrameLimitEnabled
+_080007E4: .4byte gVBlankCounter
+_080007E8: .4byte gFrameLimitTarget
+_080007EC: .4byte gFrameLimitInterval
 _080007F0:
-	bl sub_0805AFD8
+	bl VBlankIntrWait
 _080007F4:
 	ldr r0, [r5]
 	ldr r1, [r4]
@@ -973,7 +973,7 @@ _080007F4:
 	str r0, [r4]
 	b _08000808
 _08000804:
-	bl sub_0805AFD8
+	bl VBlankIntrWait
 _08000808:
 	pop {r4, r5, r6}
 	pop {r0}
@@ -982,57 +982,57 @@ _08000808:
 
 	thumb_func_start sub_08000810
 sub_08000810: @ 0x08000810
-	ldr r1, _08000818 @ =0x02000014
+	ldr r1, _08000818 @ =gFrameLimitEnabled
 	movs r0, #0
 	strb r0, [r1]
 	bx lr
 	.align 2, 0
-_08000818: .4byte 0x02000014
+_08000818: .4byte gFrameLimitEnabled
 
 	thumb_func_start SetFrameLimit
 SetFrameLimit: @ 0x0800081C
-	ldr r1, _08000834 @ =0x0200061C
+	ldr r1, _08000834 @ =gFrameLimitInterval
 	str r0, [r1]
-	ldr r2, _08000838 @ =0x02000618
-	ldr r1, _0800083C @ =0x02000010
+	ldr r2, _08000838 @ =gFrameLimitTarget
+	ldr r1, _0800083C @ =gVBlankCounter
 	ldr r1, [r1]
 	adds r1, r1, r0
 	str r1, [r2]
-	ldr r1, _08000840 @ =0x02000014
+	ldr r1, _08000840 @ =gFrameLimitEnabled
 	movs r0, #1
 	strb r0, [r1]
 	bx lr
 	.align 2, 0
-_08000834: .4byte 0x0200061C
-_08000838: .4byte 0x02000618
-_0800083C: .4byte 0x02000010
-_08000840: .4byte 0x02000014
+_08000834: .4byte gFrameLimitInterval
+_08000838: .4byte gFrameLimitTarget
+_0800083C: .4byte gVBlankCounter
+_08000840: .4byte gFrameLimitEnabled
 
-	thumb_func_start sub_08000844
-sub_08000844: @ 0x08000844
+	thumb_func_start VBlankHandler
+VBlankHandler: @ 0x08000844
 	push {r4, r5, lr}
 	ldr r1, _0800087C @ =0x03007FF8
 	movs r0, #1
 	strh r0, [r1]
-	ldr r0, _08000880 @ =0x02000015
+	ldr r0, _08000880 @ =gGaxIrqEnabled
 	ldrb r0, [r0]
 	cmp r0, #0
 	beq _08000858
 	bl sub_08045B44
 _08000858:
-	ldr r5, _08000884 @ =0x02000620
+	ldr r5, _08000884 @ =gVBlankCallbacks
 	movs r4, #7
 _0800085C:
 	ldr r0, [r5]
 	cmp r0, #0
 	beq _08000866
-	bl sub_08047968
+	bl _call_via_r0
 _08000866:
 	adds r5, #4
 	subs r4, #1
 	cmp r4, #0
 	bge _0800085C
-	ldr r1, _08000888 @ =0x02000010
+	ldr r1, _08000888 @ =gVBlankCounter
 	ldr r0, [r1]
 	adds r0, #1
 	str r0, [r1]
@@ -1041,14 +1041,14 @@ _08000866:
 	bx r0
 	.align 2, 0
 _0800087C: .4byte 0x03007FF8
-_08000880: .4byte 0x02000015
-_08000884: .4byte 0x02000620
-_08000888: .4byte 0x02000010
+_08000880: .4byte gGaxIrqEnabled
+_08000884: .4byte gVBlankCallbacks
+_08000888: .4byte gVBlankCounter
 
-	thumb_func_start sub_0800088C
-sub_0800088C: @ 0x0800088C
+	thumb_func_start GetDpadDirection
+GetDpadDirection: @ 0x0800088C
 	push {lr}
-	ldr r0, _080008D4 @ =0x02000018
+	ldr r0, _080008D4 @ =gKeys
 	ldrh r2, [r0]
 	movs r0, #0x10
 	ands r0, r2
@@ -1087,7 +1087,7 @@ _080008CA:
 	pop {r1}
 	bx r1
 	.align 2, 0
-_080008D4: .4byte 0x02000018
+_080008D4: .4byte gKeys
 _080008D8: .4byte 0x081CD6F4
 
 	thumb_func_start sub_080008DC
@@ -1098,7 +1098,7 @@ sub_080008DC: @ 0x080008DC
 	mvns r1, r1
 	lsls r1, r1, #0x10
 	lsrs r1, r1, #0x10
-	ldr r2, _08000904 @ =0x02000018
+	ldr r2, _08000904 @ =gKeys
 	ldrh r3, [r2]
 	adds r0, r1, #0
 	bics r0, r3
@@ -1112,7 +1112,7 @@ sub_080008DC: @ 0x080008DC
 	b _0800090A
 	.align 2, 0
 _08000900: .4byte 0x04000130
-_08000904: .4byte 0x02000018
+_08000904: .4byte gKeys
 _08000908:
 	movs r0, #1
 _0800090A:
@@ -1122,13 +1122,13 @@ _0800090A:
 
 	thumb_func_start ClearKeys
 ClearKeys: @ 0x08000910
-	ldr r2, _0800091C @ =0x02000018
+	ldr r2, _0800091C @ =gKeys
 	movs r1, #0
 	strh r1, [r2]
 	strh r1, [r2, #2]
 	bx lr
 	.align 2, 0
-_0800091C: .4byte 0x02000018
+_0800091C: .4byte gKeys
 
 	thumb_func_start ShowBitmapScreen
 ShowBitmapScreen: @ 0x08000920
@@ -1265,8 +1265,8 @@ FixedDiv: @ 0x08000A24
 	pop {r1}
 	bx r1
 
-	thumb_func_start sub_08000A30
-sub_08000A30: @ 0x08000A30
+	thumb_func_start FixedMul
+FixedMul: @ 0x08000A30
 	push {lr}
 	cmp r0, r1
 	ble _08000A3A
@@ -1319,8 +1319,8 @@ FixedMul16: @ 0x08000A74
 	asrs r0, r0, #0x10
 	bx lr
 
-	thumb_func_start sub_08000A84
-sub_08000A84: @ 0x08000A84
+	thumb_func_start FormatPaddedNumber
+FormatPaddedNumber: @ 0x08000A84
 	push {r4, r5, r6, r7, lr}
 	mov r7, r8
 	push {r7}
@@ -1512,7 +1512,7 @@ _08000D6C:
 	adds r1, r5, #0
 	adds r2, r6, #0
 	movs r3, #0x30
-	bl sub_08000A84
+	bl FormatPaddedNumber
 	adds r4, r0, #0
 	ldr r0, [sp, #4]
 	b _08000D98
@@ -1523,7 +1523,7 @@ _08000D82:
 	adds r0, r4, #0
 	adds r2, r6, #0
 	movs r3, #0x20
-	bl sub_08000A84
+	bl FormatPaddedNumber
 	adds r4, r0, #0
 	ldr r0, [sp, #8]
 	subs r0, #1
