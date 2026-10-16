@@ -19,6 +19,13 @@ export const desktop: DesktopConfig | undefined = typeof window !== "undefined" 
 
 export const client = new EditorClient({ baseUrl: desktop?.url, token: desktop?.token });
 
+/** The page's hash (`#project=xs&mode=levels`) with one of its parameters set. */
+export function hashWith(key: string, value: string): string {
+  const q = new URLSearchParams(location.hash.slice(1));
+  q.set(key, value);
+  return `#${q}`;
+}
+
 /** A backend URL an <img> can load (the desktop app's token in the query). */
 export function assetUrl(path: string): string {
   const base = desktop?.url?.replace(/\/+$/, "") ?? "";

@@ -3,13 +3,21 @@
   import Diagnostics from "./components/Diagnostics.svelte";
   import FileBrowser from "./components/FileBrowser.svelte";
   import FileEditor from "./components/FileEditor.svelte";
+  import LevelEditor from "./components/level/LevelEditor.svelte";
   import Preview from "./components/Preview.svelte";
   import ProjectPicker from "./components/ProjectPicker.svelte";
-  import { desktop } from "./lib/api.ts";
+  import { desktop, hashWith } from "./lib/api.ts";
   import { editor } from "./lib/state.svelte.ts";
 
   let previewOpen = $state(false);
   let checkText = $state(true);
+  // the level editor, or the data files' forms
+  let mode = $state<"levels" | "files">(new URLSearchParams(location.hash.slice(1)).get("mode") === "files" ? "files" : "levels");
+
+  function setMode(m: "levels" | "files") {
+    mode = m;
+    history.replaceState(null, "", hashWith("mode", m));
+  }
 
   onMount(() => {
     void editor.init();
@@ -25,6 +33,10 @@
   <header>
     <h1>Crash data editor</h1>
     <ProjectPicker />
+    <div class="modes" role="tablist" aria-label="editor">
+      <button role="tab" aria-selected={mode === "levels"} class:on={mode === "levels"} onclick={() => setMode("levels")}>Level editor</button>
+      <button role="tab" aria-selected={mode === "files"} class:on={mode === "files"} onclick={() => setMode("files")}>Data files</button>
+    </div>
     <div class="spacer"></div>
     {#if editor.busy}<span class="busy" role="status">{editor.busy}…</span>{/if}
     <label class="check-text" title="also check the translations (needs gettext's msgfmt and msgcmp)">
@@ -42,10 +54,14 @@
       </div>
     {/if}
   </div>
-  <main>
-    <aside><FileBrowser /></aside>
-    <section class="editor"><FileEditor /></section>
-  </main>
+  {#if mode === "levels"}
+    <main class="levels"><LevelEditor /></main>
+  {:else}
+    <main>
+      <aside><FileBrowser /></aside>
+      <section class="editor"><FileEditor /></section>
+    </main>
+  {/if}
   <footer><Diagnostics /></footer>
 </div>
 
@@ -101,6 +117,27 @@
     display: grid;
     grid-template-columns: minmax(14rem, 22rem) 1fr;
     min-height: 0;
+  }
+  main.levels {
+    display: block;
+  }
+  .modes {
+    display: flex;
+  }
+  .modes button {
+    border-radius: 0;
+    margin-left: -1px;
+  }
+  .modes button:first-child {
+    border-radius: 4px 0 0 4px;
+  }
+  .modes button:last-child {
+    border-radius: 0 4px 4px 0;
+  }
+  .modes button.on {
+    background: var(--accent);
+    color: var(--accent-text);
+    border-color: var(--accent);
   }
   aside {
     border-right: 1px solid var(--line);
