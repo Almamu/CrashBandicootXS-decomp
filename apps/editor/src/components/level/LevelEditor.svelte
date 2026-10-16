@@ -5,19 +5,25 @@
   import { assetUrl, client, desktop } from "../../lib/api.ts";
   import { editor } from "../../lib/state.svelte.ts";
   import { BG_NAMES, level, type Tool } from "../../lib/level/state.svelte.ts";
+  import CollisionPanel from "./CollisionPanel.svelte";
   import EntityPanel from "./EntityPanel.svelte";
   import LevelNav from "./LevelNav.svelte";
+  import PalettePanel from "./PalettePanel.svelte";
   import RoomCanvas from "./RoomCanvas.svelte";
+  import TilePanel from "./TilePanel.svelte";
 
   let canvas = $state<RoomCanvas>();
   let cam = $state({ x: 0, y: 0 });
-  let hover = $state<{ world: { x: number; y: number } } | null>(null);
+  let hover = $state<{ world: { x: number; y: number }; cell: { x: number; y: number } | null } | null>(null);
+  let panel = $state<"entity" | "tiles" | "collision" | "palette">("entity");
   let play = $state<{ running: boolean; text: string; ok: boolean; image?: string | null } | null>(null);
 
   const TOOLS: { id: Tool; label: string; key: string; title: string }[] = [
     { id: "select", label: "Select", key: "v", title: "select and drag entities (shift: snap to 8); drag the room to pan" },
     { id: "add", label: "Add", key: "a", title: "click to add an entity of the type chosen" },
     { id: "link", label: "Link", key: "l", title: "click a crate, then the crate on top of it" },
+    { id: "tile", label: "Tiles", key: "t", title: "paint a BG layer with its tile set's tiles" },
+    { id: "collision", label: "Collision", key: "c", title: "paint the collision layer's cells" },
   ];
 
   const entry = $derived(level.roomEntry(level.view?.path));
@@ -31,6 +37,11 @@
   function setTool(t: Tool) {
     level.tool = t;
     level.linkFrom = null;
+    if (t === "tile") panel = "tiles";
+    else if (t === "collision") {
+      panel = "collision";
+      level.show.collision = true;
+    } else if (panel === "tiles" || panel === "collision") panel = "entity";
   }
 
   async function runPreview() {
@@ -138,7 +149,7 @@
         <RoomCanvas bind:this={canvas} onhover={(h) => (hover = h)} oncamera={(c) => { if (c.x !== cam.x || c.y !== cam.y) cam = c; }} />
         <div class="status">
           <span title="the game's camera (the screen's top left) at the view's centre">camera {cam.x}, {cam.y}</span>
-          {#if hover} — ({hover.world.x}, {hover.world.y}){/if}
+          {#if hover} — ({hover.world.x}, {hover.world.y}){#if hover.cell} cell {hover.cell.x}, {hover.cell.y}{/if}{/if}
           {#if level.dirty}<strong> — not saved</strong>{/if}
         </div>
       </div>
@@ -153,7 +164,18 @@
   </section>
   <aside class="right">
     {#if level.view}
-      <div class="panel"><EntityPanel oncentre={(x, y) => canvas?.centreOn(x, y)} /></div>
+      <div class="tabs" role="tablist">
+        <button class:on={panel === "entity"} onclick={() => (panel = "entity")}>Entities</button>
+        <button class:on={panel === "tiles"} onclick={() => setTool("tile")}>Tiles</button>
+        <button class:on={panel === "collision"} onclick={() => setTool("collision")}>Collision</button>
+        <button class:on={panel === "palette"} onclick={() => (panel = "palette")}>Palette</button>
+      </div>
+      <div class="panel">
+        {#if panel === "entity"}<EntityPanel oncentre={(x, y) => canvas?.centreOn(x, y)} />
+        {:else if panel === "tiles"}<TilePanel />
+        {:else if panel === "collision"}<CollisionPanel />
+        {:else}<PalettePanel />{/if}
+      </div>
     {/if}
   </aside>
 </div>
@@ -221,7 +243,8 @@
   .seg button:last-child {
     border-radius: 0 4px 4px 0;
   }
-  .seg button.on {
+  .seg button.on,
+  .tabs button.on {
     background: var(--accent);
     color: var(--accent-text);
     border-color: var(--accent);
@@ -253,6 +276,12 @@
     padding: 2rem;
     max-width: 40rem;
     color: var(--muted);
+  }
+  .tabs {
+    display: flex;
+    gap: 0.2rem;
+    padding: 0.4rem;
+    border-bottom: 1px solid var(--line);
   }
   .panel {
     overflow: auto;

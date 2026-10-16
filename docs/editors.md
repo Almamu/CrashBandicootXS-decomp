@@ -274,9 +274,10 @@ are next.
 
 ## The level editor
 
-The editor's first tab (#1167 stage 6) opens a room, draws it as the game
-does and edits its entities and their parameter records and links. It
-saves them back to the room's folder ([levels.md, "Room
+The editor's first tab (#1167 stage 6) opens a room and edits it: its
+entities and their parameter records, its BG layers' tiles, its collision
+layer and its palette. It saves them back to the room's folder (room.json,
+`bg0.png`-`bg3.png`, `collision.png`: [levels.md, "Room
 folders"](./levels.md#room-folders)) through the backend, which checks a
 room's save like any other and keeps all of it or none.
 
@@ -310,14 +311,15 @@ records stay raw words) and a mod's tree's open the same way.
 
 The wheel zooms at the cursor; the middle or right button, space and drag,
 or a drag on an empty spot with the Select tool pans. The status bar gives
-the camera and the world point under the cursor.
+the camera, and the world point and cell under the cursor.
 
 **Tools** (their keys): **Select** (V) selects an entity and drags it
 (Shift: in steps of 8); **Add** (A) places an entity of the type chosen;
-**Link** (L) links two crates, the lower one first. Delete deletes the
-entity selected, Escape deselects, Ctrl+Z undoes, Ctrl+Shift+Z or Ctrl+Y
-redoes, Ctrl+S saves. Every change is a step of the undo stack (a drag,
-a field; 500 of them), which also says whether the room is as saved.
+**Link** (L) links two crates, the lower one first; **Tiles** (T) and
+**Collision** (C) paint. Delete deletes the entity selected, Escape
+deselects, Ctrl+Z undoes, Ctrl+Shift+Z or Ctrl+Y redoes, Ctrl+S saves.
+Every change is a step of the undo stack (a drag, a field, a stroke, a
+colour; 500 of them), which also says whether the room is as saved.
 
 **Entities.** The right column's Entities tab lists them, or edits the one
 selected: its type (any of entity_types.json's, an unnamed one by number),
@@ -337,24 +339,54 @@ gets its own record: a copy of one its type already uses in the room, or
 every field of its type's view at zero. A deleted entity's record stays
 (another may use it).
 
-**Saving** sends room.json's value when it changed since the room was
-opened or last saved (`POST .../room/save`, "The editor's backend"), which
-writes it in `tools/levels.py`'s layout: a room saved unchanged writes
-nothing, a change shows in git as its lines.
+**Tiles.** The Tiles tab paints a BG layer with the tiles of its tile
+set, the set as the build makes it from every room that names it
+(docs/levels.md, "Tile sets"; the backend makes it once, a second or so
+for the largest): a tile, its X and Y flips and, on BG1-3, its palette
+bank (the bank it is first drawn in, to start with). A click paints one
+cell, a drag a line of them, Shift and drag a rectangle; Alt and click
+takes a cell's tile, flips and bank. A painted cell is the tile's pixels
+in the layer's picture, BG1-3's as `bank * 16 + pixel`, which the build
+reads back as that tile: painting never adds a tile, though a tile used
+earlier in the set's order than before renumbers the set (the ROM data
+after it moves). On a layer that doesn't scroll at the camera's speed,
+untick "parallax" to paint it where it is. New tiles are drawn in an
+image editor ([levels.md, "BG layers"](./levels.md#bg-layers)).
+
+**Collision.** The Collision tab paints the collision layer's cells with
+a value of the legend (one 8x8 cell of BG0's each; click, drag, Shift and
+drag, Alt and click to pick); a value no room has yet needs its own colour
+in collision_legend.json first ([levels.md, "Collision
+layers"](./levels.md#collision-layers)).
+
+**Palette.** The Palette tab edits the room's 256 colours, 5 bits a
+channel (bit 15 is kept, docs/graphics.md "Palettes"; a colour picked
+with the system's picker follows `tools/jasc_pal.py`'s rule), and the room
+is drawn with them at once. Saved, the palette goes into every layer
+picture of the room, as the build requires (docs/levels.md, "The room
+palette").
+
+**Saving** sends one request with what changed since the room was opened
+or last saved: room.json's value, the painted cells of each layer, the
+collision cells, the palette (`POST .../room/save`, "The editor's
+backend"). A room saved unchanged writes nothing; a picture is written
+only when its pixels or its palette change: a new palette alone replaces
+the picture's PLTE and keeps its pixels' bytes, painted cells write the
+picture as `tools/levels.py` writes it (which gives back the tree's
+pictures byte for byte), so a change shows only where it is.
 
 **Play this room** runs `tools/preview.py` at the room ("Preview"): in
 the desktop app the PC port's window opens, in the browser it runs
 headless and shows the room after 700 frames. It builds the saved data;
 a bonus or gem-path room can't be started on its own.
 
-**Not yet:** painting the BG layers' tiles and the collision layer and
-editing the palette (next: the backend already takes them), making a new
-room (a copy of a room's folder with its own symbols, listed in
-levels.json: [levels.md, "Adding a room"](./levels.md#adding-a-room); the
-backend writes only files that exist), resizing a room, the room record's
-`kind` and `blend` (in the "Data files" tab's form of room.json), and
-naming N-Tranced's records (their views aren't known yet: they are edited
-as words).
+**Not yet:** making a new room (a copy of a room's folder with its own
+symbols, listed in levels.json: [levels.md, "Adding a
+room"](./levels.md#adding-a-room); the backend writes only files that
+exist), resizing a room, the room record's `kind` and `blend` (in the
+"Data files" tab's form of room.json), drawing new tiles, adding a
+collision value to the legend, and naming N-Tranced's records (their
+views aren't known yet: they are edited as words).
 
 ## The editor's backend
 
@@ -468,7 +500,7 @@ CI (`.github/workflows/apps.yml`) runs `pnpm gen:check`, `pnpm typecheck`
 (tsc, svelte-check), `pnpm lint` (ESLint), `pnpm test` (vitest: the
 generation, the client, the globs and pointers, the editor's schema
 helpers, the level editor's coordinates and parallax, undo stack,
-entity order and links, palette rule and record views),
+painting, entity order and links, palette rule and record views),
 `pnpm build`, the backend's Python tests (every data file of both games
 written back unchanged, a change in the tool's layout, the refusals, the
 token; every room of both games opened and saved back unchanged through

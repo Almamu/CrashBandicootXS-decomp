@@ -4,8 +4,7 @@
   // 240x160 screen at the view's centre), the collision layer over them,
   // the entities' sprites (a labelled box where none is known) and their
   // links. Zoom with the wheel, pan with the middle or right button (or
-  // space and drag); the tools edit the entities (docs/editors.md, "The
-  // level editor").
+  // space and drag); the tools edit (docs/editors.md, "The level editor").
   import { onMount } from "svelte";
   import { EditorClient } from "@crash/schema-types/client";
   import { assetUrl } from "../../lib/api.ts";
@@ -16,8 +15,11 @@
     SCREEN_H,
     SCREEN_W,
     cameraFor,
+    cellAt,
     fit,
     layerOrigin,
+    lineCells,
+    rectCells,
     toScreen,
     toWorld,
     zoomAt,
@@ -25,10 +27,11 @@
     type View,
   } from "../../lib/level/coords.ts";
   import { pixelOf, pixelTable, toRgb } from "../../lib/level/palette.ts";
+  import type { CellChange } from "../../lib/level/paint.ts";
   import { TiledBitmap, cellFill, indexFill, transparentIndex } from "../../lib/level/render.ts";
   import { BG_NAMES, level, type BgName, type LayerName } from "../../lib/level/state.svelte.ts";
 
-  let { onhover, oncamera }: { onhover?: (p: { world: Point } | null) => void; oncamera?: (p: Point) => void } = $props();
+  let { onhover, oncamera }: { onhover?: (p: { world: Point; cell: Point | null } | null) => void; oncamera?: (p: Point) => void } = $props();
 
   let host: HTMLDivElement;
   let canvas: HTMLCanvasElement;
@@ -72,6 +75,18 @@
       if (!bitmaps[n]) continue;
       tables[n] = pixelTable(level.palette, transparentIndex(n === "bg0"));
       bitmaps[n]!.invalidateAll();
+    }
+  }
+
+  function takeDamage() {
+    for (const d of level.damage.splice(0)) {
+      const b = bitmaps[d.layer];
+      if (!b) continue;
+      const cols = d.layer === "collision" ? level.collision!.cols : level.layers[d.layer]!.width / CELL;
+      const cx = d.index % cols;
+      const cy = Math.floor(d.index / cols);
+      if (d.layer === "collision") b.invalidate(cx, cy, 1, 1);
+      else b.invalidate(cx * CELL, cy * CELL, CELL, CELL);
     }
   }
 
@@ -130,6 +145,7 @@
     if (!ctx) return;
     if (builtFor !== level.view) build();
     syncPalette();
+    takeDamage();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.imageSmoothingEnabled = false;
     ctx.fillStyle = "#3a3a42";
@@ -169,6 +185,7 @@
     }
     if (level.show.links) drawLinks(ctx);
     if (level.show.entities) drawEntities(ctx);
+    drawCursor(ctx, cam);
   }
 
   function drawColumns(ctx: CanvasRenderingContext2D) {
@@ -270,11 +287,40 @@
     });
   }
 
+  let hoverCell = $state<Point | null>(null);
+
+  function paintTarget(cam: Point): { origin: Point; cols: number; rows: number } | null {
+    if (level.tool === "collision" && level.collision) return { origin: { x: 0, y: 0 }, cols: level.collision.cols, rows: level.collision.rows };
+    if (level.tool === "tile") {
+      const l = level.layers[level.paintLayer];
+      if (l) return { origin: origin(level.paintLayer, cam), cols: l.width / CELL, rows: l.height / CELL };
+    }
+    return null;
+  }
+
+  function drawCursor(ctx: CanvasRenderingContext2D, cam: Point) {
+    const t = paintTarget(cam);
+    if (!t) return;
+    const cells: Point[] = drag?.kind === "rect" ? rectCells(drag.from, drag.to) : hoverCell ? [hoverCell] : [];
+    if (!cells.length) return;
+    const xs = cells.map((c) => c.x);
+    const ys = cells.map((c) => c.y);
+    const a = toScreen(view, t.origin.x + Math.min(...xs) * CELL, t.origin.y + Math.min(...ys) * CELL);
+    const w = (Math.max(...xs) - Math.min(...xs) + 1) * CELL * view.zoom;
+    const h = (Math.max(...ys) - Math.min(...ys) + 1) * CELL * view.zoom;
+    ctx.strokeStyle = "#00e5ff";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(a.x, a.y, w, h);
+    ctx.lineWidth = 1;
+  }
+
   // -- the mouse ------------------------------------------------------------------------
 
   type Drag =
     | { kind: "pan"; sx: number; sy: number; vx: number; vy: number }
-    | { kind: "entity"; id: number; dx: number; dy: number; x: number; y: number; moved: boolean };
+    | { kind: "entity"; id: number; dx: number; dy: number; x: number; y: number; moved: boolean }
+    | { kind: "stroke"; last: Point; tiles: CellChange<Uint8Array>[]; values: CellChange<number>[]; layer: BgName }
+    | { kind: "rect"; from: Point; to: Point };
   let drag: Drag | null = null;
   let space = false;
 
@@ -293,6 +339,16 @@
     return null;
   }
 
+  function cellUnder(w: Point): Point | null {
+    const t = paintTarget(camera());
+    return t ? cellAt(w, t.origin, t.cols, t.rows) : null;
+  }
+
+  function paintAt(cells: Point[], d: Extract<Drag, { kind: "stroke" }>) {
+    if (level.tool === "tile") d.tiles.push(...level.paintTiles(cells));
+    else d.values.push(...level.paintCollision(cells));
+  }
+
   function onpointerdown(e: PointerEvent) {
     if (!level.view) return;
     canvas.setPointerCapture(e.pointerId);
@@ -304,6 +360,27 @@
     }
     if (e.button !== 0) return;
     const tool = level.tool;
+    if (tool === "tile" || tool === "collision") {
+      const c = cellUnder(w);
+      if (!c) return;
+      if (e.altKey) {
+        if (tool === "tile") level.pickTile(c);
+        else level.pickCollision(c);
+        return;
+      }
+      if (tool === "tile" && !level.brushBlock()) {
+        editor.error = "Pick a tile first (the tile set is still loading, or didn't load)";
+        return;
+      }
+      if (e.shiftKey) drag = { kind: "rect", from: c, to: c };
+      else {
+        const d: Drag = { kind: "stroke", last: c, tiles: [], values: [], layer: level.paintLayer };
+        drag = d;
+        paintAt([c], d);
+      }
+      redraw();
+      return;
+    }
     const hit = hitEntity(w);
     if (tool === "add") {
       level.addEntity(level.addType, w.x, w.y);
@@ -331,8 +408,13 @@
   function onpointermove(e: PointerEvent) {
     const p = local(e);
     const w = toWorld(view, p.x, p.y);
-    onhover?.({ world: { x: Math.floor(w.x), y: Math.floor(w.y) } });
-    if (!drag) return;
+    const c = level.view ? cellUnder(w) : null;
+    hoverCell = c;
+    onhover?.({ world: { x: Math.floor(w.x), y: Math.floor(w.y) }, cell: c });
+    if (!drag) {
+      if (level.tool === "tile" || level.tool === "collision") redraw();
+      return;
+    }
     if (drag.kind === "pan") {
       view = { ...view, x: drag.vx - (p.x - drag.sx) / view.zoom, y: drag.vy - (p.y - drag.sy) / view.zoom };
     } else if (drag.kind === "entity") {
@@ -345,6 +427,11 @@
       drag.moved ||= x !== drag.x || y !== drag.y;
       drag.x = x;
       drag.y = y;
+    } else if (drag.kind === "stroke" && c) {
+      if (c.x !== drag.last.x || c.y !== drag.last.y) paintAt(lineCells(drag.last, c), drag);
+      drag.last = c;
+    } else if (drag.kind === "rect" && c) {
+      drag.to = c;
     }
     redraw();
   }
@@ -354,10 +441,20 @@
     drag = null;
     if (!d) return;
     if (d.kind === "entity" && d.moved) level.moveEntity(d.id, d.x, d.y);
+    else if (d.kind === "stroke") {
+      if (level.tool === "tile") level.commitTiles(d.layer, d.tiles);
+      else level.commitCollision(d.values);
+    } else if (d.kind === "rect") {
+      const s: Extract<Drag, { kind: "stroke" }> = { kind: "stroke", last: d.to, tiles: [], values: [], layer: level.paintLayer };
+      paintAt(rectCells(d.from, d.to), s);
+      if (level.tool === "tile") level.commitTiles(s.layer, s.tiles);
+      else level.commitCollision(s.values);
+    }
     redraw();
   }
 
   function onpointerleave() {
+    hoverCell = null;
     onhover?.(null);
     redraw();
   }
@@ -449,7 +546,7 @@
 
 <svelte:window {onkeydown} {onkeyup} />
 
-<div class="host" bind:this={host}>
+<div class="host" bind:this={host} class:paint={level.tool === "tile" || level.tool === "collision"}>
   <canvas
     bind:this={canvas}
     {onpointerdown}
@@ -475,6 +572,9 @@
     display: block;
     cursor: default;
     touch-action: none;
+  }
+  .paint canvas {
+    cursor: crosshair;
   }
   .loading {
     position: absolute;
