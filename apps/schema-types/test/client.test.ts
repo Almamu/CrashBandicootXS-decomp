@@ -41,6 +41,20 @@ describe("EditorClient", () => {
     expect(h["Authorization"]).toBe("Bearer t0k");
   });
 
+  it("asks for a song as saved with a GET, with unsaved edits with a POST", async () => {
+    const f = fake(200, { key: "jungle" });
+    const c = new EditorClient({ fetch: f.fetch });
+    await c.musicSong("xs", "jungle");
+    await c.musicSong("xs", "jungle", [{ pattern: 0, row: 0, channel: 0, cell: [49, 1, 0, 0, 0] }]);
+    expect(f.calls.map((x) => [x.init.method, x.url])).toEqual([
+      ["GET", "/api/projects/xs/music/song?key=jungle"],
+      ["POST", "/api/projects/xs/music/song"],
+    ]);
+    expect(JSON.parse(f.calls[1]!.init.body as string)).toEqual({ key: "jungle", edits: [{ pattern: 0, row: 0, channel: 0, cell: [49, 1, 0, 0, 0] }] });
+    await c.importSample("xs", "UklGRg==", 8000);
+    expect(JSON.parse(f.calls[2]!.init.body as string)).toEqual({ wav: "UklGRg==", rate: 8000 });
+  });
+
   it("gives a refusal's diagnostics as an ApiError", async () => {
     const d = { file: "games/xs/sound/music.json", pointer: "/screen_music/0/bogus", line: 3, col: 9,
       severity: "error", code: "schema", message: "unknown key" };

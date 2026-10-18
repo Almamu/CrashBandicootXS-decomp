@@ -99,6 +99,8 @@ def audio_checks(game, root):
     from crashdata.audio import gax as G
     from crashdata.audio import sfx_table
 
+    G.use_game(Game(game.name, root))
+
     def music():
         path = os.path.join(G.SOUND_DIR, "gax_manifest.json")
         G.check_song_table(schemas.load(path), path)
@@ -108,7 +110,21 @@ def audio_checks(game, root):
         G.sfx_pool()
         with tempfile.TemporaryDirectory() as tmp:  # the names' checks
             sfx_table.write_constants(G.SFX_TABLE, os.path.join(tmp, "sfx.h"))
-    return [("music", music), ("sfx", sfx)]
+
+    def music_build():
+        # tools/gax_audio.py's: every song encoded from its XM (a new one's
+        # instruments too), the pool, the block's limits
+        with tempfile.TemporaryDirectory() as tmp:
+            G.build(os.path.join(G.SOUND_DIR, "gax_manifest.json"), os.path.join(G.SOUND_DIR, "songs"),
+                    os.path.join(G.SOUND_DIR, "samples"), os.path.join(tmp, "music.bin"))
+
+    def sfx_build():
+        # tools/gax_audio.py --sfx and tools/sfx_table.py's
+        with tempfile.TemporaryDirectory() as tmp:
+            alloc, _ = G.build_sfx(G.SFX_MANIFEST, G.SFX_SAMPLES_DIR)
+            alloc.write(os.path.join(tmp, "sfx.bin"), os.path.join(tmp, "sfx.s"))
+            sfx_table.build(G.SFX_TABLE, os.path.join(tmp, "sfx_table.bin"))
+    return [("music", music), ("sfx", sfx), ("music-build", music_build), ("sfx-build", sfx_build)]
 
 
 def text_checks(game, root):

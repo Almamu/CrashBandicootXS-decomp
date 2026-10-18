@@ -1,7 +1,7 @@
 // A typed client of the editors' backend, tools/editor_server.py (#1167,
 // docs/editors.md "The editor's backend"). The browser editor calls it on
 // its own origin; the desktop app gives it the backend's URL and token.
-import type { Cutscenes, Room, SchemaFiles, SchemaName } from "./generated/index.ts";
+import type { Cutscenes, Music, Room, SchemaFiles, SchemaName, SfxTable } from "./generated/index.ts";
 
 /** One problem with the data (crashdata.common.diagnostics.Diagnostic). */
 export interface Diagnostic {
@@ -303,6 +303,242 @@ export interface CutscenesSave {
   newPictures?: { path: string; about?: string; palette: number[]; pixels: string }[];
 }
 
+/** What plays a song: a level theme (levels.json), a screen (music.json), a cutscene slide record. */
+export interface MusicSongUse {
+  kind: "theme" | "screen" | "cutscene";
+  /** THEME_<NAME>, the screen, the slide record's name */
+  name: string;
+  /** the theme's name, the screen's comment, the cutscenes that show the record */
+  comment: string;
+}
+
+/** A song of the song table, as the music editor lists it. */
+export interface MusicSongInfo {
+  key: string;
+  /** its song id (gSongTable's index) and SONG_<KEY> */
+  id: number;
+  constant: string;
+  comment: string;
+  /** one of the ROM's (its scaffold is the manifest's) or a new one */
+  rom: boolean;
+  /** its XM, from the tree's root */
+  file: string;
+  uses: MusicSongUse[];
+  /** the XM in brief (absent with `error`) */
+  xm?: { name: string; channels: number; patterns: number; order: number; speed: number; bpm: number; instruments: string[] };
+  error?: string;
+  mixRate?: number;
+  volume?: number;
+  halfRateFx?: number;
+  title?: string;
+  artist?: string | null;
+}
+
+/** A sound effect: sfx_table.json's entry, its id and where it is named. */
+export interface MusicSfx {
+  id: number;
+  constant: string | null;
+  name?: string;
+  slot_id?: number;
+  instrument?: string;
+  pitch_offset: number;
+  volume: number;
+  comment?: string;
+  /** code (engine/) and cutscene slides that name SFX_<NAME> */
+  uses: string[];
+}
+
+/** A sound-effect instrument of the set: slot N plays sample N, at one rate. */
+export interface MusicSfxSlot {
+  slot: number;
+  sample: number;
+  /** from the sound directory: sfx_samples/NN.wav */
+  path: string;
+  length: number;
+  /** the rate the WAV declares (cosmetic: the build doesn't read it) */
+  wavRate: number | null;
+  /** the rate GAX2 plays it at (gGaxPeriodTable / 2048), Hz */
+  rate: number;
+  fixedPitch: boolean;
+  /** the shortest sample its instrument's loop and start can take */
+  minLength: number;
+}
+
+/** A sample of the music pool (samples/NN.wav) and what plays it. */
+export interface MusicSample {
+  index: number;
+  path: string;
+  length: number;
+  rate: number;
+  minLength: number;
+  instruments: number[];
+  songs: string[];
+}
+
+/** GET /api/projects/ID/music: the songs, the screens' and themes' songs, the sound effects, the samples. */
+export interface MusicView {
+  songs: MusicSongInfo[];
+  screens: { screen: string; song: string; comment?: string }[];
+  themes: { constant: string; name: string; song: string }[];
+  sfx: MusicSfx[];
+  sfxNoneComment: string;
+  sfxSlots: MusicSfxSlot[];
+  samples: MusicSample[];
+  /** the new instruments, instruments/<name>.json */
+  instruments: { name: string; file: string; data: Record<string, unknown> }[];
+  mixRates: number[];
+  limits: { maxIndex: number; maxSampleLength: number; romSfxSlots: number };
+  files: { manifest: string; music: string; sfxTable: string; levels: string };
+}
+
+/** GAX2's tables (lib/gax/data/gax_tables.c). */
+export interface MusicTables {
+  /** gGaxPeriodTable: Hz * 2048 per 1/32 semitone */
+  period: number[];
+  /** gGaxVibratoTable */
+  vibrato: number[];
+  /** gGaxMixRates' rates */
+  mixRates: number[];
+}
+
+/** struct GaxInstrumentRow: a wave row of an instrument. */
+export interface MusicWaveRow {
+  sweep: number;
+  pingPong: number;
+  start: number;
+  sweepMin: number;
+  sweepMax: number;
+  sweepLen: number;
+  sweepStep: number;
+  sweepRate: number;
+  tune: number;
+}
+
+/** struct GaxEnvelope (0xff: no sustain or loop point). */
+export interface MusicEnvelope {
+  sustain: number;
+  loopStart: number;
+  loopEnd: number;
+  points: { pos: number; slope: number; value: number }[];
+}
+
+/** struct GaxChannelInstrument. */
+export interface MusicInstrument {
+  empty: number;
+  waveIdx: number[];
+  vibratoDelay: number;
+  vibratoDepth: number;
+  vibratoSpeed: number;
+  rows: MusicWaveRow[];
+  envelope: MusicEnvelope | null;
+  seqSpeed: number;
+  /** struct GaxInstrumentSeqEntry: fx are `cmd << 8 | param` */
+  seq: { note: number; fixedPitch: number; wave: number; fx: number[] }[];
+}
+
+/** A pool of instruments and samples (the music's or the sound effects'). */
+export interface MusicPoolData {
+  /** by number; null where there is none */
+  instruments: (MusicInstrument | null)[];
+  /** sample number -> [offset, length] in `samples` */
+  waves: Record<string, [number, number]>;
+  /** base64: the samples, signed 8-bit */
+  samples: string;
+}
+
+/** GET /api/projects/ID/music/pool: what the player needs besides a song. */
+export interface MusicPool {
+  tables: MusicTables;
+  music: MusicPoolData;
+  /** the sound-effect set, its song header's volume and voice types */
+  sfx: MusicPoolData & { volume: number; voiceTypes: number };
+  /** a new sound effect's instrument number, by instruments/<name>.json's name */
+  sfxSlots: Record<string, number>;
+}
+
+/** GET/POST /api/projects/ID/music/song: a song as GAX2_init sees it (GaxSongData, its channels' data). */
+export interface MusicSong {
+  key: string;
+  id: number;
+  channelCount: number;
+  patternRows: number;
+  orderCount: number;
+  loopOrder: number;
+  /** Q8 */
+  volume: number;
+  mixRate: number;
+  numSfx: number;
+  halfRateFx: number;
+  /** the mixer's data: the channels mixed before the echo, then three taps' {delay ms, gain} */
+  dsp: number[];
+  /** base64: the packed pattern streams */
+  patterns: string;
+  /** each channel's order list: [the pattern's offset in `patterns`, transpose] */
+  orders: [number, number][][];
+}
+
+/** A cell edit of a song's XM: [note, instrument, volume column, effect, parameter]. */
+export interface MusicCellEdit {
+  pattern: number;
+  row: number;
+  channel: number;
+  cell: [number, number, number, number, number];
+}
+
+/** GET /api/projects/ID/music/patterns: a song's XM for the pattern view. */
+export interface MusicPatterns {
+  key: string;
+  rom: boolean;
+  name: string;
+  channels: number;
+  /** each XM pattern's rows */
+  rows: number[];
+  /** base64 per pattern: 5 bytes a cell, row by row */
+  cells: string[];
+  order: number[];
+  restart: number;
+  speed: number;
+  bpm: number;
+  /** the XM's instruments: their names and the pool instrument an `Instrument N` is */
+  instruments: { name: string; pool: number | null }[];
+  /** order position p plays XM pattern playOrder[p] */
+  playOrder: number[];
+  loopOrder: number;
+  /** a ROM song's: the pattern group of each channel's order position (one group, one copy) */
+  groups?: number[][];
+  transposes?: number[][];
+  /** the groups whose ROM bytes are kept while their notes and instruments are the ROM's */
+  recorded?: number[];
+}
+
+/** POST /api/projects/ID/music/import's answer: a WAV made into a GAX2 sample. */
+export interface MusicImport {
+  /** base64: an 8-bit mono WAV */
+  wav: string;
+  length: number;
+  rate: number;
+  source: { channels: number; bits: number; rate: number; float: boolean };
+  peak: number;
+  clipped: number;
+  how: string;
+}
+
+/** POST /api/projects/ID/music/save: the music editor's edits, saved together. */
+export interface MusicSave {
+  sfxTable?: SfxTable;
+  music?: Music;
+  /** THEME_<NAME> -> song key */
+  themes?: Record<string, string>;
+  songComments?: Record<string, string>;
+  newSongs?: { key: string; xm: string; comment?: string }[];
+  removeSongs?: string[];
+  patterns?: Record<string, MusicCellEdit[]>;
+  /** samples/NN.wav or sfx_samples/NN.wav -> base64 8-bit mono WAV */
+  samples?: Record<string, string>;
+  /** new sound-effect instruments: instruments/<name>.json and sfx_samples/<name>.wav */
+  newInstruments?: { name: string; wav: string; rate?: number; volume?: number; comment?: string }[];
+}
+
 /** A JSON Schema, as the backend serves it. */
 export type JsonSchema = Record<string, unknown>;
 
@@ -495,6 +731,42 @@ export class EditorClient {
   /** Saves the cutscene editor's edits together (cutscenes.json, the text, the pictures): all, or none. */
   saveCutscenes(id: string, body: CutscenesSave): Promise<SaveResult> {
     return this.request("POST", this.project(id, "cutscenes/save"), body);
+  }
+
+  /** The songs, what plays them, the sound effects and the samples. */
+  music(id: string): Promise<MusicView> {
+    return this.request("GET", this.project(id, "music"));
+  }
+
+  /** GAX2's tables and the two pools of instruments and samples, for the player. */
+  musicPool(id: string): Promise<MusicPool> {
+    return this.request("GET", this.project(id, "music/pool"));
+  }
+
+  /** A song as the build builds it; with `edits`, as it would build them (unsaved cell edits). */
+  musicSong(id: string, key: string, edits?: MusicCellEdit[]): Promise<MusicSong> {
+    if (edits?.length) return this.request("POST", this.project(id, "music/song"), { key, edits });
+    return this.request("GET", this.project(id, "music/song"), undefined, { key });
+  }
+
+  /** A song's XM: its patterns' cells, order list and instruments. */
+  musicPatterns(id: string, key: string): Promise<MusicPatterns> {
+    return this.request("GET", this.project(id, "music/patterns"), undefined, { key });
+  }
+
+  /** A WAV (base64) made into a GAX2 sample: mono, 8-bit, at `rate` (the WAV's own by default). */
+  importSample(id: string, wav: string, rate?: number): Promise<MusicImport> {
+    return this.request("POST", this.project(id, "music/import"), rate === undefined ? { wav } : { wav, rate });
+  }
+
+  /** A file of the game's directory as it is (a sample's WAV: games/xs/sound/...). */
+  raw(id: string, path: string): Promise<ArrayBuffer> {
+    return this.requestBytes(this.project(id, "raw"), { path });
+  }
+
+  /** Saves the music editor's edits together (the tables, the songs, the samples): all, or none. */
+  saveMusic(id: string, body: MusicSave): Promise<SaveResult> {
+    return this.request("POST", this.project(id, "music/save"), body);
   }
 
   /** A sprite bank's frame as a PNG (index 0 transparent), in an OBJ palette or its own. */
