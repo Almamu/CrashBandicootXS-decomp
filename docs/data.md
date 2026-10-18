@@ -944,6 +944,9 @@ with the size the data gives it.
 
 #### A new cutscene
 
+The cutscene editor does steps 1 to 4 ([editors.md, "The cutscene
+editor"](./editors.md#the-cutscene-editor)); by hand:
+
 1. **The picture**, if it is a new one: a 240x160 8bpp PNG with its
    256-colour palette in `games/xs/graphics/cutscenes/` (`24_<what>.png`), and a
    manifest entry with no `rom`, its `class` and `"object":

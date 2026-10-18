@@ -108,9 +108,10 @@ run `make`; `make compare` then fails, as it should.
 
 These are code, or not built yet:
 
-- **Editors.** There is no level or cutscene editor yet (#1167). What
-  one will build on is here: the data files' JSON Schemas, the tools'
-  `--json` errors and `make data-check`, [editors.md](./editors.md).
+- **Editors.** The level editor and the cutscene editor (`make editor`,
+  [editors.md](./editors.md)) edit a mod's tree (`build/mods/<name>`, as
+  `make mod` makes it) as they edit the game's; the music editor is still
+  to come (#1167).
 - **New behaviour.** A new actor kind, boss kind, power, category type or
   entity type is code: the data reaches what the existing kinds draw and
   where they spawn, not what they do (levels.md, "Category sprite
