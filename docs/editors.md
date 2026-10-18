@@ -176,8 +176,12 @@ meaning. Without `--json` every command prints what it always has.
    animation tables), the bosses, what clearing a level does, the
    level-select worlds, the save's layout, the tile set order; the
    graphics manifest (`gfx_manifest.py check`); the cutscenes; the song
-   table, the screens' music and the sound effects; the text (`text.py
-   check`).
+   table, the screens' music and the sound effects; the music block and
+   the sound-effect set built as `tools/gax_audio.py` and
+   `tools/sfx_table.py` build them, into a temporary folder (`music-build`,
+   `sfx-build`: every song encoded from its XM, the new instruments, the
+   samples' WAVs, the limits of "GAX2's limits" in
+   [audio.md](./audio.md#gax2s-limits)); the text (`text.py check`).
 
 It prints each problem and `data-check: xs OK`, or the error count and
 exit status 1. A check that stops at its first problem (most of the
@@ -582,6 +586,13 @@ dependency), listens on **127.0.0.1 only**, and serves:
 | `GET /api/projects/ID/cutscenes/picture?path=cutscenes/P.png` | a cutscene picture: its width and height (u32 LE), its 256 colours (u16 LE), then a byte a pixel; gzipped when asked |
 | `POST /api/projects/ID/cutscenes/import` `{png, palette?}` | a PNG (base64) made into a cutscene picture, on its own colours or mapped to `palette`: `{width, height, palette, pixels, colours, exact, how}`; 422 if it isn't 240x160 |
 | `POST /api/projects/ID/cutscenes/save` `{cutscenes?, pages?, pictures?, newPictures?}` | saves the cutscene editor's edits, all or none (below) |
+| `GET /api/projects/ID/music` | the music editor's view (`crashdata.audio.edit.view`): `{songs, screens, themes, sfx, sfxNoneComment, sfxSlots, samples, instruments, mixRates, limits, files}` (the song table, each song's XM in brief and what plays it: the level themes, the screens, the cutscene slides; the screens' and themes' songs; the sound-effect table with where each name is used, code and cutscenes; the sound-effect set's instruments and the rate each plays its sample at; the music pool's samples, what plays them and the shortest sample their loops take; the new instruments); 404 for a game whose sound isn't data (N-Tranced) |
+| `GET /api/projects/ID/music/pool` | what the music editor's player needs besides a song (`player_pool`): GAX2's tables (`lib/gax/data/gax_tables.c`: gGaxPeriodTable, gGaxVibratoTable, the mix rates), the music pool's and the sound-effect set's instruments as `struct GaxChannelInstrument` (the new songs' and sound effects' new instruments too) and their samples, `{tables, music, sfx, sfxSlots}`; gzipped when asked |
+| `GET /api/projects/ID/music/song?key=K` | a song as `tools/gax_audio.py` builds it (`player_song`), as GAX2_init sees it: its `GaxSongData` fields, the mixer's echo taps (`dsp`), the packed pattern streams (`patterns`, base64) and each channel's order list (`orders`: `[offset in patterns, transpose]`) |
+| `POST /api/projects/ID/music/song` `{key, edits}` | the same, built with unsaved cell edits of its XM (`edits` as the save's `patterns`) |
+| `GET /api/projects/ID/music/patterns?key=K` | a song's XM for the pattern view: `{rows, cells, channels, order, playOrder, loopOrder, instruments, groups?, transposes?, recorded?}` (each pattern's cells, 5 bytes a cell, base64; for a ROM song, which order positions share a stored pattern) |
+| `POST /api/projects/ID/music/import` `{wav, rate?}` | a WAV (base64: PCM 8 to 32-bit or 32-bit float, any channels) made into a GAX2 sample, mixed to mono, resampled to `rate` (linearly) and rounded to 8 bits: `{wav, length, rate, source, peak, clipped, how}` |
+| `POST /api/projects/ID/music/save` `{sfxTable?, music?, themes?, songComments?, newSongs?, removeSongs?, patterns?, samples?, newInstruments?}` | saves the music editor's edits, all or none (below) |
 
 A path is from the project's tree's root (`games/xs/data/levels/levels.json`),
 and must be in the project's `games/<game>/`, with no `..`; a file the
@@ -648,6 +659,53 @@ and when they change the model's checks are run with the text's
 encoding and font checks), so a save the build or `make text-check` would
 refuse is put back.
 
+**Saving the music** (`music/save`, `crashdata.audio.edit.plan_save`) is
+the same transaction over the sound's files (`games/xs/sound/`) and
+levels.json. `sfxTable` is sfx_table.json's new value, `music`
+music.json's (the screens are the code's, `SCREEN_SONG_<SCREEN>`: only
+their songs change), `themes` `{THEME_<NAME>: song}` (levels.json's
+themes' `"song"`), `songComments` `{song: comment}` (the song table's),
+`newSongs` `[{key, xm, comment}]` (an XM, base64, written as
+`songs/<key>.xm` and added at the song table's end: `SONG_<KEY>` is the
+next id, [audio.md, "Adding a song"](./audio.md#adding-a-song)),
+`removeSongs` (a new song taken out of the song table; its XM stays, and
+no table entry builds it), `patterns` `{song: [{pattern, row, channel,
+cell: [note, instrument, volume, effect, parameter]}]}` (cell edits of
+the song's XM), `samples` `{"samples/NN.wav" or "sfx_samples/NN.wav":
+base64 WAV}` (new sounds for the tree's samples, 8-bit mono as
+`music/import` gives them) and `newInstruments` `[{name, wav, rate?,
+volume?, comment?}]` (`instruments/<name>.json` with its WAV,
+`sfx_samples/<name>.wav`, for a new sound effect: an entry's
+`"instrument"`, [audio.md, "Adding a sound
+effect"](./audio.md#adding-a-sound-effect)). Before anything is written,
+the editor's own checks: the sound effects' names (one entry a name, and
+every `SFX_<NAME>` the code or a cutscene names kept), slots (the set's
+1-87) and instruments, the volumes; the screens' and themes' songs (in
+the song table); a new song's key and XM; that a ROM song stays in the
+table and a removed song isn't played; each cell (bytes, an instrument
+the module has); a sample's WAV (8-bit mono) and length, at least what
+the loops and starts of the instruments that play it reach. A refusal's
+diagnostics point into sfx_table.json (`/entries/12/slot_id`),
+music.json, levels.json or gax_manifest.json (`/song_table`).
+
+A cell edit of a XM is written there alone: the pattern it is in is
+packed again (the way the songs' XMs pack theirs: every pattern of the
+tree's songs packs back to its own bytes), the other patterns and the
+instruments keep theirs. A ROM song stores a pattern once for the order
+positions and channels that play the same notes (`pattern_groups`, with
+their transposes): an edit of one cell is made in each of them (the note
+moved by their transposes), as the ROM would share it, and the edited
+group's recorded bytes (`pattern_group_bytes`, which the build keeps
+while a pattern's notes and instruments are the ROM's, docs/audio.md
+"Build pipeline") leave the manifest, so the build packs that pattern
+from the XM, its effects and volumes too, and what the XM can't say
+(GAX2's alternating speeds, its finer volume slides) is the XM's there.
+After the files are in place the model's checks build the music and the
+sound effects (`music-build`, `sfx-build`: a XM the encoder refuses, a
+WAV, an instrument), and every file goes back on a new error. A value
+saved unchanged writes nothing, a XM whose cells come out the same and a
+WAV with the same bytes aren't written.
+
 **Who can call it.** Besides listening on 127.0.0.1, the server answers
 only requests whose `Host` is its own (`127.0.0.1:PORT` or
 `localhost:PORT`: another site can't reach it under its own name), from
@@ -704,7 +762,17 @@ cutscene picture saved back unchanged with nothing written (`git diff
 picture imported as a new one and another replaced) that data-check and
 the text's checks pass, which `CRASH_EDITOR_TEST_BUILD=1` also builds, the
 cutscene save's refusals; crashdata's gettext writer giving back every
-entry of both games' text files), and a smoke test of
+entry of both games' text files; the sound-effect table, the screens'
+and themes' songs, every cell of every song's XM and every sample saved
+back unchanged with nothing written (`git diff --exit-code`), in XS's
+tree and in the sample mod's (applied to a scratch folder), an edit in a
+scratch copy (a sound effect's volume and priority, a new one with its
+own sample imported from a WAV, a sound-effect sample replaced, the
+title screen's and a theme's song, a note of a shared ROM pattern) that
+data-check passes and `CRASH_EDITOR_TEST_BUILD=1` builds, the music
+save's refusals, every pattern of the songs' XMs packed back to its own
+bytes, each song's patterns as the build lays them out), and a smoke
+test of
 `tools/editor_server.py` as `make editor` runs it, through the typed
 client.
 

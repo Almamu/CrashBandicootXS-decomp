@@ -470,8 +470,12 @@ def _read_pattern_rows(buf, pos, num_rows, num_channels):
     return rows, pos
 
 
-def read_xm(path):
-    buf = open(path, 'rb').read()
+def read_xm(path, buf=None):
+    """An XM's module: its patterns, order list and instruments. buf: its
+    bytes, when they aren't the file's (path is then only its name)."""
+    if buf is None:
+        with open(path, 'rb') as f:
+            buf = f.read()
     if buf[:17] != b'Extended Module: ':
         raise ValueError(f"{path}: not an XM file")
     name = buf[17:37].split(b'\x00')[0].decode('latin-1').strip()
@@ -788,6 +792,42 @@ def link_instruments(alloc, instruments_by_index, samples_by_index, dedup_sample
     return instrument_set_addr, sample_table_addr
 
 
+def pack_groups(song, instruments_by_index):
+    """Each pattern group's packed bytes, {group: bytes}: the group's first
+    member built from its XM column, or the ROM's recorded bytes when its
+    notes and instruments are those (see NOTE in link())."""
+    group_packed = {}
+    for ch in song.channels:
+        for i, p in enumerate(ch.patterns):
+            gid = ch.pattern_groups[i]
+            if gid in group_packed:
+                continue
+            original = song.pattern_group_bytes.get(gid)
+            if original is not None and (
+                _note_instrument_timeline(unpack_pattern(original), instruments_by_index)
+                == _note_instrument_timeline(p, instruments_by_index)
+            ):
+                group_packed[gid] = original
+            else:
+                group_packed[gid] = p.pack()
+    return group_packed
+
+
+def song_sequence(song, instruments_by_index):
+    """A song's patterns as link() lays them out: (the packed pattern
+    streams, each group once in `pattern_group_order`; for each channel its
+    order list, [(the pattern's offset in the streams, transpose)]), which
+    is GaxSongData.patterns and each channel handler's GaxOrderEntry list."""
+    group_packed = pack_groups(song, instruments_by_index)
+    streams, offsets = bytearray(), {}
+    for gid in song.pattern_group_order:
+        offsets[gid] = len(streams)
+        streams += group_packed[gid]
+    orders = [[(offsets[gid], ch.pattern_headers[i][0]) for i, gid in enumerate(ch.pattern_groups)]
+              for ch in song.channels]
+    return bytes(streams), orders
+
+
 def link(instruments_by_index, songs, samples_by_index, header_prefix):
     alloc = Allocator(MUSIC_SYMBOL, header_prefix)
 
@@ -821,20 +861,7 @@ def link(instruments_by_index, songs, samples_by_index, header_prefix):
         # version - this is what makes an unedited song rebuild identical to
         # the original ROM. Any actual edit is detected by content and falls
         # back to the freshly-encoded bytes.
-        group_packed = {}
-        for ch in song.channels:
-            for i, p in enumerate(ch.patterns):
-                gid = ch.pattern_groups[i]
-                if gid in group_packed:
-                    continue
-                original = song.pattern_group_bytes.get(gid)
-                if original is not None and (
-                    _note_instrument_timeline(unpack_pattern(original), instruments_by_index)
-                    == _note_instrument_timeline(p, instruments_by_index)
-                ):
-                    group_packed[gid] = original
-                else:
-                    group_packed[gid] = p.pack()
+        group_packed = pack_groups(song, instruments_by_index)
 
         # Groups must be allocated in the order they physically appear in the
         # original data (captured once from the ROM), not in channel/pattern
@@ -1806,9 +1833,11 @@ def block_songs(manifest):
     return keys + [t['song'] for t in manifest['song_table'] if t['song'] not in keys]
 
 
-def build(manifest_path, songs_dir, samples_dir, out_path, layout_path=None, header_path=None):
-    manifest = schemas.load(manifest_path)
-
+def load_songs(manifest, songs_dir, samples_dir, xms=None):
+    """The music pool and the songs in the music block's order: (the pool,
+    with the new songs' new instruments appended; the songs' keys; their
+    Songs). xms: {key: read_xm's value} to use in place of a song's XM
+    file (an editor's unsaved edits)."""
     instruments, samples = load_pool(manifest, samples_dir)
     # the new songs' new instruments are appended to it
     pool = Pool(manifest, instruments, samples, 'the music pool')
@@ -1817,11 +1846,19 @@ def build(manifest_path, songs_dir, samples_dir, out_path, layout_path=None, hea
     songs = []
     for key in keys:
         xm_path = os.path.join(songs_dir, f"{key}.xm")
-        xm = read_xm(xm_path)
+        xm = xms[key] if xms and key in xms else read_xm(xm_path)
         if key in manifest['songs']:
             songs.append(rom_song(manifest['songs'][key], xm, instruments))
         else:
             songs.append(new_song(key, xm_path, xm, pool))
+    return pool, keys, songs
+
+
+def build(manifest_path, songs_dir, samples_dir, out_path, layout_path=None, header_path=None):
+    manifest = schemas.load(manifest_path)
+
+    pool, keys, songs = load_songs(manifest, songs_dir, samples_dir)
+    instruments, samples = pool.instruments, pool.samples
     pool.report()
 
     default = default_song(manifest['default_song'])
@@ -1855,3 +1892,18 @@ SFX_MANIFEST = os.path.join(SOUND_DIR, 'gax_sfx_manifest.json')
 MUSIC_JSON = os.path.join(SOUND_DIR, 'music.json')
 SFX_SAMPLES_DIR = os.path.join(SOUND_DIR, 'sfx_samples')
 SFX_TABLE = os.path.join(SOUND_DIR, 'sfx_table.json')
+
+
+def use_game(game):
+    """Work on the sound of `game`'s tree (a crashdata.common.game.Game:
+    its root; the sound is XS's, games/xs/sound/). The tools run in the
+    tree they build, whose root these paths are by default; an editor
+    working on another tree (a mod's) binds them to it."""
+    global ROOT, SOUND_DIR, INSTRUMENTS_DIR, SFX_MANIFEST, MUSIC_JSON, SFX_SAMPLES_DIR, SFX_TABLE
+    ROOT = os.path.abspath(game.root)
+    SOUND_DIR = os.path.join(ROOT, 'games', 'xs', 'sound')
+    INSTRUMENTS_DIR = os.path.join(SOUND_DIR, 'instruments')
+    SFX_MANIFEST = os.path.join(SOUND_DIR, 'gax_sfx_manifest.json')
+    MUSIC_JSON = os.path.join(SOUND_DIR, 'music.json')
+    SFX_SAMPLES_DIR = os.path.join(SOUND_DIR, 'sfx_samples')
+    SFX_TABLE = os.path.join(SOUND_DIR, 'sfx_table.json')

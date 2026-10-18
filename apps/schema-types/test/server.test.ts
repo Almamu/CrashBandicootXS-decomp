@@ -71,6 +71,24 @@ describe.skipIf(!url)("the backend", () => {
     expect((e as { status: number }).status).toBe(404);
   });
 
+  it("opens the music for the music editor, and saves it unchanged without writing it", async () => {
+    const v = await c.music("xs");
+    expect(v.songs[0]!.constant).toBe("SONG_JUNGLE");
+    expect(v.sfx.length).toBeGreaterThan(90);
+    const pool = await c.musicPool("xs");
+    expect(pool.tables.period).toHaveLength(0xef4);
+    const song = await c.musicSong("xs", "jungle");
+    expect(song.orders).toHaveLength(4);
+    const p = await c.musicPatterns("xs", "jungle");
+    expect(p.cells).toHaveLength(p.rows.length);
+    const wav = new Uint8Array(await c.raw("xs", "games/xs/sound/sfx_samples/01.wav"));
+    expect(String.fromCharCode(...wav.slice(0, 4))).toBe("RIFF");
+    const r = await c.saveMusic("xs", { themes: Object.fromEntries(v.themes.map((t) => [t.constant, t.song])) });
+    expect(r.saved).toEqual([]);
+    const e = await c.music("n2").catch((x: unknown) => x);
+    expect((e as { status: number }).status).toBe(404);
+  });
+
   it("gives data-check's report", async () => {
     const r = await c.check("xs", { text: false });
     expect(r.version).toBe(1);

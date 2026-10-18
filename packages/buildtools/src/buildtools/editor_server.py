@@ -26,8 +26,10 @@ API (all JSON; docs/editors.md has each one's fields):
     GET  /api/projects/ID/preview.png      a headless preview's picture (?shot=N: a cutscene's, frame N's)
 
 and the level editor's rooms (room, room/layer, room/tiles, room/save,
-sprite) and the cutscene editor's cutscenes (cutscenes,
-cutscenes/picture, cutscenes/import, cutscenes/save): docs/editors.md.
+sprite), the cutscene editor's cutscenes (cutscenes,
+cutscenes/picture, cutscenes/import, cutscenes/save) and the music
+editor's songs and sound effects (music, music/pool, music/song,
+music/patterns, music/import, music/save): docs/editors.md.
 
 A save writes each file as crashdata.editing.render gives it (the tool's
 writer, or the file's own layout: a value the file has gives back its
@@ -72,6 +74,7 @@ from crashdata import editing, schemas
 from crashdata import levels as L
 from crashdata.levels import room_edit
 from crashdata.cutscenes import edit as cutscene_edit
+from crashdata.audio import edit as music_edit
 from crashdata.common import diagnostics as D
 from crashdata.common import jsonfmt
 from crashdata.common.game import GAMES, ROOT, Game
@@ -250,6 +253,7 @@ class Server:
         game = Game(project.game, project.root)
         files = ([p for p, _ in schemas.files(game, project.root)] + sorted(game.levels_dir.glob("*/*/*.png"))
                  + sorted((game.graphics_dir / "cutscenes").glob("*.png")) + sorted(game.text_dir.glob("*.po*"))
+                 + sorted(game.sound_dir.glob("*/*.xm")) + sorted(game.sound_dir.glob("*/*.wav"))
                  + [p for p in [project.root / "cxx_symbols.txt"] if p.is_file()])
         for p in files:
             st = p.stat()
@@ -527,6 +531,93 @@ class Server:
                 raise
             text = any(x is not None and x[0].startswith("games/%s/text/" % project.game) for x in staged)
             return self._commit(project, staged, text=text)
+
+    # -- the music editor ------------------------------------------------------
+
+    @contextlib.contextmanager
+    def music_errors(self):
+        try:
+            yield
+        except music_edit.EditError as e:
+            raise HttpError(422, str(e), e.diagnostics)
+        except D.DataError as e:
+            raise HttpError(422, str(e), _diags(e.diagnostics, None))
+        except SystemExit as e:
+            raise HttpError(422, str(e.code if e.code is not None else e))
+
+    def music_game(self, project):
+        game = Game(project.game, project.root)
+        if not music_edit.available(game):
+            raise HttpError(404, "%s's sound isn't data yet (no games/%s/sound/)" % (GAMES[project.game], project.game))
+        return game
+
+    def music(self, project):
+        game = self.music_game(project)
+        with self.music_errors():
+            return music_edit.view(game)
+
+    def music_pool(self, project):
+        game = self.music_game(project)
+        with self.music_errors():
+            return music_edit.player_pool(game)
+
+    def music_song(self, project, key, edits=None):
+        game = self.music_game(project)
+        if not isinstance(key, str) or not key:
+            raise HttpError(400, "which song? (?key=KEY, or {\"key\": KEY, \"edits\": [...]})")
+        with self.music_errors():
+            return music_edit.player_song(game, key, edits)
+
+    def music_patterns(self, project, key):
+        game = self.music_game(project)
+        with self.music_errors():
+            return music_edit.patterns(game, key or "")
+
+    def music_import(self, project, body):
+        self.music_game(project)
+        wav = body.get("wav")
+        if not isinstance(wav, str):
+            raise HttpError(400, "give the sound as {\"wav\": base64, \"rate\": Hz}")
+        try:
+            data = base64.b64decode(wav, validate=True)
+        except ValueError:
+            raise HttpError(400, "the sound isn't base64")
+        with self.music_errors():
+            return music_edit.import_wav(data, body.get("rate"))
+
+    def save_music(self, project, body):
+        """The music editor's save, all or none (crashdata.audio.edit.plan_save):
+        the sound-effect table, the screens' and themes' songs, the song
+        table, the songs' cells, the samples and new instruments; then the
+        model's checks, which build the music and the sound effects as the
+        build does (data-check's music-build and sfx-build)."""
+        game = self.music_game(project)
+        if not isinstance(body, dict):
+            raise HttpError(400, "give the edits as an object")
+        with project.lock:
+            with self.music_errors():
+                plan = music_edit.plan_save(game, body)
+            # a new instrument's folder (games/xs/sound/instruments/: the ROM has none)
+            made = []
+            for rel, _ in plan["json"] + plan["bytes"]:
+                d = (project.root / rel).parent
+                if d.resolve().is_relative_to(game.sound_dir.resolve()) and not d.exists():
+                    d.mkdir(parents=True)
+                    made.append(d)
+            staged = []
+            try:
+                for rel, value in plan["json"]:
+                    staged.append(self._stage_json(project, rel, value))
+                for rel, data in plan["bytes"]:
+                    p, _ = self.resolve(project, rel, data_file=False)
+                    staged.append(self._stage_bytes(rel, p, data))
+                return self._commit(project, staged)
+            except BaseException:
+                self._unstage(staged)
+                for d in reversed(made):
+                    if d.is_dir() and not any(d.iterdir()):
+                        d.rmdir()
+                raise
 
     # -- the level editor: rooms ---------------------------------------------
 
@@ -910,6 +1001,21 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return self._send(200, app.cutscene_import(project, self._body()))
         if (method, what) == ("POST", "cutscenes/save"):
             return self._send(200, app.save_cutscenes(project, self._body()))
+        if (method, what) == ("GET", "music"):
+            return self._send(200, app.music(project), compress=True)
+        if (method, what) == ("GET", "music/pool"):
+            return self._send(200, app.music_pool(project), compress=True)
+        if (method, what) == ("GET", "music/song"):
+            return self._send(200, app.music_song(project, query.get("key", "")), compress=True)
+        if (method, what) == ("POST", "music/song"):
+            body = self._body()
+            return self._send(200, app.music_song(project, body.get("key"), body.get("edits")), compress=True)
+        if (method, what) == ("GET", "music/patterns"):
+            return self._send(200, app.music_patterns(project, query.get("key", "")), compress=True)
+        if (method, what) == ("POST", "music/import"):
+            return self._send(200, app.music_import(project, self._body()))
+        if (method, what) == ("POST", "music/save"):
+            return self._send(200, app.save_music(project, self._body()))
         raise HttpError(404, "no API %s %s" % (method, "/".join(parts)))
 
     def _static(self, path):
