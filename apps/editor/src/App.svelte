@@ -3,6 +3,7 @@
   import Diagnostics from "./components/Diagnostics.svelte";
   import FileBrowser from "./components/FileBrowser.svelte";
   import FileEditor from "./components/FileEditor.svelte";
+  import CutsceneEditor from "./components/cutscene/CutsceneEditor.svelte";
   import LevelEditor from "./components/level/LevelEditor.svelte";
   import Preview from "./components/Preview.svelte";
   import ProjectPicker from "./components/ProjectPicker.svelte";
@@ -11,10 +12,12 @@
 
   let previewOpen = $state(false);
   let checkText = $state(true);
-  // the level editor, or the data files' forms
-  let mode = $state<"levels" | "files">(new URLSearchParams(location.hash.slice(1)).get("mode") === "files" ? "files" : "levels");
+  // the level editor, the cutscene editor, or the data files' forms
+  type Mode = "levels" | "cutscenes" | "files";
+  const asked = new URLSearchParams(location.hash.slice(1)).get("mode");
+  let mode = $state<Mode>(asked === "files" || asked === "cutscenes" ? asked : "levels");
 
-  function setMode(m: "levels" | "files") {
+  function setMode(m: Mode) {
     mode = m;
     history.replaceState(null, "", hashWith("mode", m));
   }
@@ -35,6 +38,7 @@
     <ProjectPicker />
     <div class="modes" role="tablist" aria-label="editor">
       <button role="tab" aria-selected={mode === "levels"} class:on={mode === "levels"} onclick={() => setMode("levels")}>Level editor</button>
+      <button role="tab" aria-selected={mode === "cutscenes"} class:on={mode === "cutscenes"} onclick={() => setMode("cutscenes")}>Cutscenes</button>
       <button role="tab" aria-selected={mode === "files"} class:on={mode === "files"} onclick={() => setMode("files")}>Data files</button>
     </div>
     <div class="spacer"></div>
@@ -56,6 +60,8 @@
   </div>
   {#if mode === "levels"}
     <main class="levels"><LevelEditor /></main>
+  {:else if mode === "cutscenes"}
+    <main class="levels"><CutsceneEditor /></main>
   {:else}
     <main>
       <aside><FileBrowser /></aside>

@@ -20,7 +20,8 @@ The second half is the editor itself (#1167 stages 4 to 6): a web app in
 `apps/` ("Running the editor", "The TypeScript workspace") on a small
 local server, crashdata over HTTP ("The editor's backend"), the same
 app as a desktop program, no browser needed ("The desktop app"), and in
-it the level editor ("The level editor").
+it the level editor ("The level editor") and the cutscene editor ("The
+cutscene editor").
 
 Nothing here changes what the build makes: both ROMs and both .map files
 are the same with or without it.
@@ -262,8 +263,8 @@ Working on the editor itself:
     pnpm typecheck && pnpm lint && pnpm test # what CI runs (apps.yml), with pnpm gen:check
     make editor-test                         # all of it, and the backend's Python tests
 
-What the editor does (its header's tabs: "Level editor", below, and
-"Data files", stage 4's forms):
+What the editor does (its header's tabs: "Level editor" and "Cutscenes",
+below, and "Data files", stage 4's forms):
 
 - **Projects**: XS, N-Tranced, or a mod. A mod is a script
   ([modding.md](./modding.md), "Writing a mod"), so the editor edits the
@@ -290,8 +291,8 @@ What the editor does (its header's tabs: "Level editor", below, and
   a level from levels.json and one of its rooms, headless (a picture
   after N frames) or in the PC port's window.
 
-The level editor is stage 6's first part; the cutscene and music editors
-are next.
+The level editor and the cutscene editor are stage 6's first two parts;
+the music editor is next.
 
 ## The level editor
 
@@ -408,6 +409,147 @@ exist), resizing a room, the room record's `kind` and `blend` (in the
 "Data files" tab's form of room.json), drawing new tiles, adding a
 collision value to the legend, and naming N-Tranced's records (their
 views aren't known yet: they are edited as words).
+
+## The cutscene editor
+
+The "Cutscenes" tab (#1167 stage 6) edits the cutscenes
+([data.md, "Cutscenes"](./data.md#cutscenes)): their slides, each a
+slide record (a picture, timing, fades, a music cue, a sound effect) and
+maybe a page of text in the six languages. It saves them back to
+`games/xs/data/cutscenes.json`, the text's files (`games/xs/text/crashxs.pot`
+and the five `.po`, [text.md](./text.md)) and the pictures
+(`games/xs/graphics/cutscenes/`, their manifest entries) through the backend,
+which checks a save like any other, the text's checks too, and keeps all
+of it or none.
+
+**The cutscenes** are the left column, in id order (PlayCutscene's
+argument), each with what plays it: code that names its constant, a
+level's `"on_clear"` (levels.json) that names its id or constant; "nothing
+plays it" for the two the ROM never plays. "New cutscene…" adds one at the
+end (its constant, `CUTSCENE_<NAME>`; its first slide shows the selected
+slide's record, without text): something has to play it, a level's
+`"on_clear"`. Only the last cutscene can be deleted, and only when nothing
+plays it: a cutscene's id is its place, which levels.json and the code
+name.
+
+**The timeline** along the top is the cutscene's slides in order, each a
+thumbnail of its picture and its first screen of text. Drag a slide, or
+◀ ▶, to move it; "Add" puts a new slide after the selected one (a copy of
+its record, with a new page of text: "..." in every language), "Duplicate"
+the same record and a copy of its page, "Delete" deletes it (a cutscene
+keeps one slide or more). ⇄ marks a record other slides show too, ∅ a
+slide without text, and a time its wait.
+
+**The slide view** draws the slide the way the game does (the PC port's
+pictures, pixel for pixel, below): the picture in Mode 4 (its 256 colours,
+at the screen's top left), and a screen of the text over it in the small
+font, as `CutscenePlayer::Run` draws it: `DrawWrappedText` a word at a
+time into the text box (228x30 pixels at (7, 126): three 9-pixel lines),
+a word that doesn't fit on the line on the next, and what doesn't fit in
+three lines after a key press; each glyph an OBJ of the font's sheet
+(`fonts/small.png`, its own 16 colours) at its record's Y offset, a
+character the font lacks drawn as its first glyph ("a"), an earlier glyph
+in front where two overlap (OAM's order). ◀ ▶ (or the arrow keys) step
+through the screens as A does, into the next slide; the language and the
+zoom are below it. The colours are the hardware's (`c << 3 | c >> 2`). The
+editor and crashdata.cutscenes.edit (the backend's, which `tools/preview.py`
+counts the key presses with) are the same algorithm; the fades (the
+slide's brightness fading in from black or white, out after it) aren't
+drawn, the panel names them.
+
+**The text** under the view is the slide's page: its strings, a key
+press between them, each in the six languages side by side (English is
+the template's `msgid`, the others each `.po`'s `msgstr`; ticks hide
+languages). Each is checked as it is typed, as the save and `make
+text-check` check it: in the game's encoding (Latin-1, Windows-1252's œ),
+every character in the small font (lower case, digits, A B L R for the
+buttons, its punctuation and accents), not empty (where a translation
+keeps the English, it is the English: "= en"). Under each: its screens
+(key presses) and its widest line of the box's 228 pixels; a newline (the
+game wraps the words itself, and a newline isn't counted as a line: the
+box can overflow) and a word wider than the box are warnings. ↑ ↓ move a
+string, + adds one after it ("..."), × deletes it. A page other slides
+show too (cutscene 10 shows cutscene 9's) is edited for them all, unless
+"Give this one its own copy". A new page is
+`cutscene<NN>.page<P>` (NN the cutscene's id, P the first number free)
+and its strings go into the template and every `.po` after the last
+cutscene entry, with the template's comments.
+
+**The record** (the right column) is the slide's `struct cutscene_slide`:
+which record the slide shows, its name; the picture (any cutscene picture
+of the manifest); the wait (WaitForKeyPress's frames, 60 a second: 0
+waits for a key) and the keys (A goes on, Start skips the slides that
+also take keys); the fade in (from black or white) and out (none, to black
+or white); the music cue (a song of the song table, SONG_*), "fade the
+music out after it", the sound effect (SFX_*, or none) and "stop the
+sound after it" (`rearm_sfx`: EndSlide's StopSfx). A record several
+slides show is edited for all of them (the panel lists them), unless "Give
+this one its own copy". A record or page no slide shows any more is
+deleted with the last slide that showed it (the build refuses an unused
+one).
+
+**Pictures.** "Import a PNG" takes a 240x160 picture (another size is
+refused, with its size: crop or scale it first) and makes it a cutscene
+picture through the backend (`crashdata.cutscenes.edit.import_picture`):
+on *its own colours* an indexed PNG keeps its palette and pixels, any
+other is reduced to the GBA's 15-bit colours, exactly when it has 256 of
+them or fewer, else to 256 by median cut (no dithering); on *this
+picture's colours* each pixel is the nearest of the slide's picture's 256.
+The result is shown, then "Replace" puts it in the picture (every slide
+that shows it), or "As a new picture" adds it to the manifest
+(`cutscenes/NN_<name>.png`, NN after the last; its class
+`CutscenePictureNN`, defined with the ROM's in `cutscene_pictures`, and its
+two lines of cxx_symbols.txt's graphics classes block, as
+[data.md, "A new cutscene"](./data.md#a-new-cutscene) asks) and the slide
+shows it (through its own record if others show its record).
+
+Every change is a step of the undo stack (Ctrl+Z, Ctrl+Shift+Z or Ctrl+Y;
+typing in one field is one step), which also says whether the cutscenes
+are as saved. Ctrl+S saves. The page's address remembers the cutscene,
+the slide and the language (`#mode=cutscenes&cutscene=1&slide=3&lang=fr`).
+
+**Saving** sends one request with what changed since the cutscenes were
+opened or last saved (`POST .../cutscenes/save`, "The editor's backend"):
+cutscenes.json's value, the pages that changed (`null`: a page that goes),
+the pictures whose pixels or colours changed, the new pictures. Nothing
+else is written, and a file whose bytes come out the same isn't written:
+cutscenes.json keeps its layout (a new slide is written like its
+siblings); in the text's files only the entries that change are written
+again, as msgcat writes them (`crashdata.text.po`: gettext's wrapping at
+79 columns, which gives back every entry of XS's files byte for byte), the
+others keep their bytes; a picture is written only when its pixels or its
+colours change (a new palette alone replaces its PLTE chunk), as
+crashdata's writers write one. The checks: the slides' records, pictures,
+songs and sound effects, the pages' strings (the encoding, the font), then
+the model's (`data-check`) and, when the text changes, the text's
+(`text-check`: msgfmt, msgcmp, the generator's), every file put back on a
+new error.
+
+**Play this cutscene** runs `tools/preview.py --cutscene` ("Preview") in
+the language shown: in the desktop app the PC port's window opens and the
+game plays the cutscene at boot (then boots on); in the browser it runs
+headless and shows a picture before each key press. It builds the saved
+data.
+
+**Checked against the game.** The PC port played the cutscenes headless
+(A every 60 frames) and the editor (headless Chromium) showed the same
+slides: the intro's fourth slide in French, the new game's sixth in German
+and eighth in English, the legal notice, the mega-mix ending's second in
+Italian, the Neo Cortex ending's sixth in Dutch, the 100% ending's second
+in Spanish and N. Gin's in English: every pixel the same colour (5 bits a
+channel), the picture and every glyph. So were an edit's (in a scratch
+copy of the tree: a string added to N. Gin's page, a new slide with a new
+picture imported from an RGB PNG and its own page, in English and
+French), which data-check, text-check and the build passed.
+
+**Not yet / not here:** the credits (`credits.json`, a scrolling stream of
+lines, logos and font switches, not slides: its text is the `credits.*`
+entries, edited in the "Data files" tab and the `.po` files); the fades
+drawn in the view; drawing a picture (import one); a slide's sound and
+music heard in the editor ("Play this cutscene" plays them); `rom_order`
+(kept as it is; a new cutscene goes after the ROM's); N-Tranced's
+cutscenes, which aren't data yet (games/n2/data has no cutscenes.json:
+the tab says so).
 
 ## The editor's backend
 
@@ -548,7 +690,10 @@ CI (`.github/workflows/apps.yml`) runs `pnpm gen:check`, `pnpm typecheck`
 (tsc, svelte-check), `pnpm lint` (ESLint), `pnpm test` (vitest: the
 generation, the client, the globs and pointers, the editor's schema
 helpers, the level editor's coordinates and parallax, undo stack,
-painting, entity order and links, palette rule and record views),
+painting, entity order and links, palette rule and record views; the
+cutscene editor's text (the encoding, the font, the screens of XS's own
+pages as crashdata gives them, glyph for glyph), rendering, timeline
+edits and their rules, undo stack and save body),
 `pnpm build`, the backend's Python tests (every data file of both games
 written back unchanged, a change in the tool's layout, the refusals, the
 token; every room of both games opened and saved back unchanged through
