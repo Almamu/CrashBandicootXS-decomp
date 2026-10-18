@@ -15,7 +15,9 @@
  *   the first block (a song at another rate is resampled to it, nearest
  *   sample); the file starts at the first block;
  * - to a SHA-1 of every block's bytes and rate, which HostAudioEnd prints
- *   with the count (`audio BLOCKS HASH`): the headless runs' check. */
+ *   with the count (`audio BLOCKS HASH`): the headless runs' check.
+ * --gax-trace has no VBlanks: HostAudioWavBlock writes each block GAX_play
+ * mixed to --wav's file, as it comes. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -142,6 +144,14 @@ void HostAudioVBlank(void)
     if (!gHostOptions.headless) {
         HostFrontendAudio(sBlock, sBlockLen, sRate);
     }
+}
+
+void HostAudioWavBlock(void)
+{
+    if (sMixed && gHostOptions.wav != NULL) {
+        WavWrite(sBlock, sBlockLen, sRate);
+    }
+    sMixed = 0;
 }
 
 int HostAudioTakeBlock(const s8 **buf, u32 *n, u32 *rate)

@@ -358,7 +358,11 @@ sound-effect set (`gGaxSfxData`, `--sfx`: 88 instruments and 87
 samples, `games/xs/sound/gax_sfx_manifest.json` + `games/xs/sound/sfx_samples/*.wav`) and
 the music block (`gGaxMusicData`). Each is a `.bin` and a `.s` that
 incbins it with the pointers as relocations, so the blocks can move
-(docs/shifting.md). See docs/audio.md.
+(docs/shifting.md). See docs/audio.md. The music editor
+([editors.md, "The music editor"](./editors.md#the-music-editor)) plays
+both as the build makes them and edits their sources: the sound-effect
+table, the screens' and themes' songs, the songs' XM cells, the samples;
+`make data-check` builds both blocks (`music-build`, `sfx-build`).
 
 ### Sprite banks (`gSpriteBankTable`)
 

@@ -579,6 +579,18 @@ music. The whole boot's sound is mGBA's sample for sample for its first
 effect. CI replays tests/boot_gax.trace (1634 blocks) and compares the
 host boot's calls with it.
 
+With `--wav FILE`, `--gax-trace` also writes each block `GAX_play` mixes
+to FILE, so a trace written by hand renders a song or a sound effect as
+the host's GAX2 mixes it, without the game: `tools/gax_render.py`
+writes the trace (the song started as `AudioContext::StartSong` starts
+it, the music volume, `PlaySfx`'s `GAX_fx_ex` and `GAX_set_fx_volume`, a
+`GAX_play` a frame) and runs it. It is what the music editor's own GAX2
+is checked against ([editors.md, "The music
+editor"](./editors.md#the-music-editor)): `tools/gax_render.py check`
+renders `apps/editor/test/gax_reference.json`'s songs and sound effects
+and checks their SHA-1s (host.yml, "Check the music editor's
+reference").
+
 **The save** (eeprom.c). `--save FILE` reads FILE at the game's first
 EEPROMConfigure (if it exists) and writes it back whole at the VBlank
 after the game writes the EEPROM, and at the end. The buffer holds the

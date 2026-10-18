@@ -94,6 +94,8 @@ u16 HostFrontendKeys(void);
  * the audio hash; at the end, `audio BLOCKS HASH`. */
 void HostAudioVBlank(void);
 void HostAudioEnd(void);
+/* --gax-trace's --wav: the block GAX_play just mixed to the file (gax_trace.c). */
+void HostAudioWavBlock(void);
 /* The block mixed last, if one was since the last call (gax_trace.c). */
 int HostAudioTakeBlock(const s8 **buf, u32 *n, u32 *rate);
 /* --gax-trace FILE: GAX2 replays the GBA's calls and compares its blocks

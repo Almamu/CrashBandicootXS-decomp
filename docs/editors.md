@@ -20,8 +20,8 @@ The second half is the editor itself (#1167 stages 4 to 6): a web app in
 `apps/` ("Running the editor", "The TypeScript workspace") on a small
 local server, crashdata over HTTP ("The editor's backend"), the same
 app as a desktop program, no browser needed ("The desktop app"), and in
-it the level editor ("The level editor") and the cutscene editor ("The
-cutscene editor").
+it the level editor ("The level editor"), the cutscene editor ("The
+cutscene editor") and the music editor ("The music editor").
 
 Nothing here changes what the build makes: both ROMs and both .map files
 are the same with or without it.
@@ -267,8 +267,8 @@ Working on the editor itself:
     pnpm typecheck && pnpm lint && pnpm test # what CI runs (apps.yml), with pnpm gen:check
     make editor-test                         # all of it, and the backend's Python tests
 
-What the editor does (its header's tabs: "Level editor" and "Cutscenes",
-below, and "Data files", stage 4's forms):
+What the editor does (its header's tabs: "Level editor", "Cutscenes"
+and "Music", below, and "Data files", stage 4's forms):
 
 - **Projects**: XS, N-Tranced, or a mod. A mod is a script
   ([modding.md](./modding.md), "Writing a mod"), so the editor edits the
@@ -295,8 +295,8 @@ below, and "Data files", stage 4's forms):
   a level from levels.json and one of its rooms, headless (a picture
   after N frames) or in the PC port's window.
 
-The level editor and the cutscene editor are stage 6's first two parts;
-the music editor is next.
+The level editor, the cutscene editor and the music editor are stage
+6's three parts.
 
 ## The level editor
 
@@ -555,6 +555,145 @@ music heard in the editor ("Play this cutscene" plays them); `rom_order`
 cutscenes, which aren't data yet (games/n2/data has no cutscenes.json:
 the tab says so).
 
+## The music editor
+
+The "Music" tab (#1167 stage 6) plays the songs and the sound effects
+the way the game's GAX2 mixes them and edits what they are made of
+([audio.md](./audio.md)): the songs' XMs (`games/xs/sound/songs/`), the
+song table and what plays each song (`gax_manifest.json`'s `song_table`,
+`music.json`, levels.json's themes), the sound-effect table
+(`sfx_table.json`) and the samples (`samples/`, `sfx_samples/`, new
+instruments in `instruments/`). It saves through the backend, which
+checks a save like any other, builds the music and the sound effects as
+the build does, and keeps all of it or none ("Saving the music", in "The
+editor's backend").
+
+**The player.** The editor has its own GAX2
+(`apps/editor/src/lib/music/gax.ts`): lib/gax's replay and mixer
+function for function (the Info handler's rows and orders, each
+channel's pattern rows, instrument sequence, envelope, vibrato, sweep and
+portamento, the resampler with its half-rate mode, the echo, the downmix
+to 8 bits) with the integer widths and truncations of the C and of the
+ARM routines as `platform/pc/src/gax_dsp.c` writes them. It plays what
+the backend gives it, as `tools/gax_audio.py` builds it: a song's
+`GaxSongData`, order lists and packed patterns (the ROM's recorded bytes
+where the build keeps them) and the two pools' instruments and samples
+(`music/song`, `music/pool`), starting the song as `StartSong` does (3
+sound-effect voices) and mixing a frame's block at a time, which the
+page queues on the browser's audio at the song's mix rate. Nothing is
+taken from the ROM.
+
+**Checked against the game.** The PC port's GAX2 is lib/gax's matched C,
+block for block mGBA's ([platforms.md, "The
+sound"](./platforms.md)); `crashbandicootxs_pc --gax-trace TRACE --wav
+OUT` replays a trace written for it (`tools/gax_render.py`: the song
+started as StartSong starts it, `GAX_set_music_volume`, the sound
+effects' `GAX_fx_ex` and `GAX_set_fx_volume`, a `GAX_play` a frame) and
+writes what it mixes. Against it the editor's player mixed every one of
+the 19 songs for 3 minutes (10,800 frames, 2.85 to 7.6 million samples
+each) with every sample the same; two songs at the game's duck volumes
+(192, 128) for a minute; sound effects over a level song (half-rate
+voices), a menu song and the 42 kHz title cheat, with and without their
+music, and all 87 of the set's instruments one after the other: every
+sample the same. The page itself, in headless Chromium (each buffer it
+queued captured): jungle, a sound effect, an edited cell played before
+saving against the PC port built from the saved edit, a sound-effect
+sample replaced by an imported WAV and a new sound effect with its own
+sample, both before saving, against the PC port of the saved tree: every
+sample the same. CI keeps it so: `apps/editor/test/gax_reference.json`
+has the SHA-1s of every song's first 1200 frames and three sound-effect
+sequences as the PC port mixes them, which the player's test checks and
+host.yml renders again with the PC port (`tools/gax_render.py check`).
+
+**Songs.** The left column's first tab is the song table, in song id
+order (`SONG_<KEY>`), each with what plays it: a level theme, a screen,
+a cutscene slide. The middle is the selected song's patterns: the order
+list along the top (a ROM song's order position p plays its XM pattern
+p, a new song's its order list's; the position it loops back to is
+marked), the pattern as rows of cells, note, instrument, volume column
+and effect, as a tracker writes them. ▶ Play plays the song from its
+start (or from the position shown, ▶ From N, or a double click on a
+position: GAX2 has no seek, so the frames before it are mixed and
+dropped), the row playing marked and followed ("follow"); "volume" is
+`GAX_set_music_volume`, the game's duck volume (255 full), and the
+toolbar gives how long the song plays before it loops. "Save as WAV"
+writes the song as the PC port's `--wav` does: 8-bit mono at its mix
+rate.
+
+**Cells.** A cell selected (the mouse, the arrow keys; Page Up and Down
+change the order position) is edited on the right: its note (C-4, C#4,
+=== key off), instrument (the XM's: `Instrument N` is the pool's N),
+volume column, effect and parameter; Delete clears it. What GAX2 makes
+of it is shown as the build makes it (crashdata.audio.gax's XM import):
+the note, the one effect of the row (1xx, 2xx, 3xx, Cxx, Dxx, EDx, Fxx
+under 0x20, else the volume column's), and what the build drops (another
+effect, a second effect in the volume column), marked in the pattern
+too. A ROM song stores a channel's pattern once for every order position
+(and channel) that plays the same notes: the panel says which, and an
+edit is made in all of them, as the save writes it (with their
+transposes). Such a pattern plays the ROM's own bytes while its notes and
+instruments are the ROM's, which the XM can only approximate (GAX2's
+alternating speeds, its finer volume slides); an edit makes the build
+pack it from the XM, and the edited song plays as the build will build
+it (`POST music/song` with the edits): an edit is heard before it is
+saved. A new song needs saving (the build makes it) before it plays.
+
+**Where songs play.** The right column also has every screen's song
+(music.json: the title, the level select, the credits, the bonus rooms,
+the invincibility drums, ...) and every level theme's (levels.json), any
+song of the table; a cutscene slide's song is the Cutscenes tab's.
+"Import an XM as a new song…" adds one at the table's end (its key, its
+comment: `SONG_<KEY>`, the next id, docs/audio.md "Adding a song"); the
+save builds it, so an XM GAX2 can't play is refused with the encoder's
+reason. A new song nothing plays can be taken out of the table again; the
+ROM's stay.
+
+**Sound effects.** The second tab is the sound-effect table, in id order.
+The middle shows the selected effect's sample and plays it as `PlaySfx`
+does: its instrument on a voice through `GAX_fx_ex` with its priority,
+`GAX_set_fx_volume` with its volume, over a song chosen for its mix rate
+and half-rate voices (the level songs'), its music muted unless "with its
+music"; "Play the WAV" plays the file as it is. On the right its entry:
+its name (locked when the code or a cutscene names `SFX_<NAME>`), the
+slot of the set or the new instrument it plays, priority, volume (8.8;
+`PlaySfx` gives the voice at most 255) and comment, and where it is
+named. "Replace it with a WAV" gives its slot a new sample, resampled to
+the rate the slot plays at (gGaxPeriodTable / 2048: 8002.6 Hz for every
+slot of the ROM), so it keeps its pitch; every effect on that slot plays
+it. "New sound effect…" adds an entry at the end, on a slot or with its
+own sample from a WAV (`instruments/<name>.json` and
+`sfx_samples/<name>.wav`, docs/audio.md "Adding a sound effect"), which
+plays before it is saved as the build will make it; the last entry can
+be deleted when nothing names it.
+
+**Samples.** The third tab lists the music pool's samples (with the
+instruments and songs that play each) and the sound-effect set's, each
+drawn and played; a new sound for one comes from a WAV (any PCM or
+32-bit float, mixed to mono, resampled to the rate asked for, 8 bits:
+`music/import`), at least as long as its instruments' starts and loops
+reach (the save refuses a shorter one). A music sample's WAV rate is
+cosmetic: an instrument plays it at the note's pitch with its own tune.
+
+Every change is a step of the undo stack (Ctrl+Z, Ctrl+Shift+Z or
+Ctrl+Y); Ctrl+S saves, space plays and stops. The page's address keeps
+the song (`#mode=music&song=jungle`).
+
+**Not yet / not here:** the XM's structure (adding or removing patterns,
+rows or channels, the order list, the speed): a ROM song's is the
+manifest's recorded scaffold (its pattern sharing, transposes and order
+count), which the build keeps to give back the ROM's bytes, and a new
+song's is its XM's, written in a tracker; a new song's settings
+(`songs/<key>.json`); the instruments themselves (a ROM instrument's
+envelope, sequence, loop and tune are records of the manifest, edited in
+the "Data files" tab; a new song's own XM instruments come from its XM);
+a new sample added to the music pool (a sample is replaced; a new song
+brings its own in its XM or as `instruments/<name>.json`); playing an
+unsaved new song; the game's timing around the sound (fades, ducks,
+sound effects as the gameplay triggers them: the player plays a song or
+one sound effect, with the music volume asked for); GAX2's jingle player
+and low-pass filter, which the game doesn't use; N-Tranced's sound,
+which isn't data yet (no `games/n2/sound/`: the tab says so).
+
 ## The editor's backend
 
 `tools/editor_server.py` (`buildtools.editor_server`, with
@@ -751,7 +890,13 @@ helpers, the level editor's coordinates and parallax, undo stack,
 painting, entity order and links, palette rule and record views; the
 cutscene editor's text (the encoding, the font, the screens of XS's own
 pages as crashdata gives them, glyph for glyph), rendering, timeline
-edits and their rules, undo stack and save body),
+edits and their rules, undo stack and save body; the music editor's GAX2
+against the PC port's (`gax_reference.json`: every song's first 1200
+frames and three sound-effect sequences, sample for sample, on the data
+crashdata gives), the XM cells and what the build makes of them
+(crashdata's own mapping), a shared ROM pattern's edit as the save
+writes it, a new sound effect's instrument as the build makes it, the
+save body),
 `pnpm build`, the backend's Python tests (every data file of both games
 written back unchanged, a change in the tool's layout, the refusals, the
 token; every room of both games opened and saved back unchanged through
