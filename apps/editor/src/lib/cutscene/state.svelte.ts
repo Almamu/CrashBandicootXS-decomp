@@ -5,7 +5,7 @@
 // and saving it all back through the backend's cutscene save, which checks
 // it like any save (and the text's checks) and keeps it all or none.
 import { ApiError, type CutsceneImport, type CutscenesView } from "@crash/schema-types";
-import { assetUrl, client, desktop } from "../api.ts";
+import { assetUrl, client, desktop, hashWith } from "../api.ts";
 import { editor } from "../state.svelte.ts";
 import { Snapshots } from "./history.ts";
 import * as M from "./model.ts";
@@ -219,10 +219,8 @@ class CutsceneEditorState {
     this.slide = si;
     this.string = 0;
     this.screen = 0;
-    const q = new URLSearchParams(location.hash.slice(1));
-    q.set("cutscene", String(this.cutscene));
-    q.set("slide", String(si));
-    window.history.replaceState(null, "", `#${q}`);
+    window.history.replaceState(null, "", hashWith("cutscene", String(this.cutscene)));
+    window.history.replaceState(null, "", hashWith("slide", String(si)));
   }
 
   // -- the text as the game shows it ---------------------------------------------------------
