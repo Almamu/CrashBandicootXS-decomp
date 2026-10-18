@@ -13,7 +13,8 @@ on (#1167 stage 3, #1093 part 1):
 - **`make data-check`**: every check of the data, without building
   ("Checking the data");
 - **named room parameters** in room.json ("Named room parameters");
-- **a preview**: the PC port started at a level's room ("Preview").
+- **a preview**: the PC port started at a level's room, or playing a
+  cutscene ("Preview").
 
 The second half is the editor itself (#1167 stages 4 to 6): a web app in
 `apps/` ("Running the editor", "The TypeScript workspace") on a small
@@ -221,6 +222,26 @@ mGBA comparisons use.
   index and constant, the room's index and entry, the command and the
   pictures written.
 
+**A cutscene** plays the same way, without a level:
+
+    make preview CUTSCENE=CUTSCENE_INTRO LANGUAGE=fr          # in a window
+    make preview CUTSCENE=1 PREVIEW_ARGS="--headless --screens shots"
+    python3 tools/preview.py --cutscene CUTSCENE [--language LANG] [--headless] [--every N] ...
+
+`--cutscene` (an id, or a constant: `CUTSCENE_INTRO` or `INTRO`) makes
+the boot play that cutscene in place of the legal notice, in `--language`
+(en, fr, de, es, it or nl, or 0-5; English by default), then boot on (the
+logos, the language select, ...). It is the PC port's `--cutscene N
+--language L` (platform/pc/src/cutscene_pick.c: the link wraps
+`LevelState::PlayBootCutscene`, as level_pick.c wraps the level select;
+nothing in the game changes). In a window the keyboard plays it; headless,
+A is pressed every `--every` frames (60) and the picture before each
+press is kept, one a screen of text (a slide without text is one), as
+many as the cutscene's text needs in that language
+(`crashdata.cutscenes.edit.cutscene_steps`, which counts them as the game
+does) and one more. `--json`'s `"preview"` has the cutscene, its
+constant, the language, the key presses and the pictures.
+
 For a mod, `make preview MOD=...` applies it to `MOD_TREE`
 (`build/mods/<name>`) and runs the tool there, building the mod's own PC
 port; an editor working on a mod's tree runs `tools/preview.py` in it.
@@ -415,6 +436,10 @@ dependency), listens on **127.0.0.1 only**, and serves:
 | `GET /api/projects/ID/room/tiles?path=ROOM&layer=L` | a BG layer's tile set as the build makes it: `{tileset, bpp, count, tiles, banks, cells}` (tiles: 64 bytes each, base64; cells: the layer's, u16 LE, base64) |
 | `GET /api/projects/ID/sprite?bank=N&frame=K[&palette=P]` | a sprite bank's frame as a PNG, index 0 transparent, in OBJ palette P or its own |
 | `POST /api/projects/ID/room/save` `{path, room?, layers?, collision?, palette?}` | saves a room's edits, all or none (below) |
+| `GET /api/projects/ID/cutscenes` | the cutscene editor's view (`crashdata.cutscenes.edit.view`): `{cutscenes, pictures, pages, pageOrder, languages, songs, sfx, font, box, screen, encoding, references, numberFields}` (cutscenes.json's value, the manifest's cutscene pictures, every page's strings in the six languages, the song and sound-effect names, the small font's characters, metrics, glyph pixels and colours, the text box, what plays each cutscene); 404 for a game whose cutscenes aren't data (N-Tranced) |
+| `GET /api/projects/ID/cutscenes/picture?path=cutscenes/P.png` | a cutscene picture: its width and height (u32 LE), its 256 colours (u16 LE), then a byte a pixel; gzipped when asked |
+| `POST /api/projects/ID/cutscenes/import` `{png, palette?}` | a PNG (base64) made into a cutscene picture, on its own colours or mapped to `palette`: `{width, height, palette, pixels, colours, exact, how}`; 422 if it isn't 240x160 |
+| `POST /api/projects/ID/cutscenes/save` `{cutscenes?, pages?, pictures?, newPictures?}` | saves the cutscene editor's edits, all or none (below) |
 
 A path is from the project's tree's root (`games/xs/data/levels/levels.json`),
 and must be in the project's `games/<game>/`, with no `..`; a file the
@@ -457,6 +482,29 @@ write the picture as crashdata's writers do (`write_layer_png`'s
 settings, `collision.write_image`). The new files are checked by the
 model's checks (data-check reads the pictures: their palettes, the
 collision image's size and colours) and all go back on an error.
+
+**Saving the cutscenes** (`cutscenes/save`, `crashdata.cutscenes.edit.plan_save`)
+is the same transaction over cutscenes.json, the text's files, the
+pictures, and for a new picture the manifest and cxx_symbols.txt (the one
+file outside `games/<game>/` a save writes: its graphics classes block's
+two lines for the picture's class, which `gfx_manifest.py check` holds
+equal to what `gfx_manifest.py symbols` writes). `cutscenes` is
+cutscenes.json's new value (the steps above), `pages` the pages whose
+strings change (`{"cutscene01.page0": [{"en", "fr", "de", "es", "it",
+"nl"}, ...]}`, `null` for a page that goes), `pictures` the pictures whose
+pixels or colours change (`{"cutscenes/12_coco_on_screen.png": {"palette":
+[256 BGR555], "pixels": base64 of 240x160 bytes}}`), `newPictures` the new
+ones (`[{"path": "cutscenes/24_lab.png", "about", "palette", "pixels"}]`).
+Before anything is written, the editor's own checks: each slide's record,
+picture, song (SONG_*, the song table's) and sound effect (SFX_*), each
+page shown by a slide and each slide's page there, each string in every
+language, in the encoding and the font; a refusal's diagnostics point into
+cutscenes.json (`/slides/0/song`) or at a string (`/cutscene01.page0/0/de`,
+file `text`). The text's files are edited in place (`crashdata.text.po`),
+and when they change the model's checks are run with the text's
+(`data_check.py --json`, text included: msgfmt, msgcmp, the generator's
+encoding and font checks), so a save the build or `make text-check` would
+refuse is put back.
 
 **Who can call it.** Besides listening on 127.0.0.1, the server answers
 only requests whose `Host` is its own (`127.0.0.1:PORT` or
@@ -505,7 +553,13 @@ painting, entity order and links, palette rule and record views),
 written back unchanged, a change in the tool's layout, the refusals, the
 token; every room of both games opened and saved back unchanged through
 the room API, a room edit saved and put back, the tile set drawing the
-layer's picture, the room save's refusals), and a smoke test of
+layer's picture, the room save's refusals; every cutscene, page and
+cutscene picture saved back unchanged with nothing written (`git diff
+--exit-code`), an edit in a scratch copy of the tree (text, timing, a
+picture imported as a new one and another replaced) that data-check and
+the text's checks pass, which `CRASH_EDITOR_TEST_BUILD=1` also builds, the
+cutscene save's refusals; crashdata's gettext writer giving back every
+entry of both games' text files), and a smoke test of
 `tools/editor_server.py` as `make editor` runs it, through the typed
 client.
 

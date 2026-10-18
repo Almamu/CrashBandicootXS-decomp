@@ -21,8 +21,13 @@ API (all JSON; docs/editors.md has each one's fields):
     PUT  /api/projects/ID/file?path=P      {"data": ...}: save one (see below)
     POST /api/projects/ID/save             {"files": [{"path", "data"}, ...]}: save several at once
     GET  /api/projects/ID/check[?text=0]   `data-check --json`'s report
-    POST /api/projects/ID/preview          {"level", "room", "headless", "frames"}: tools/preview.py
-    GET  /api/projects/ID/preview.png      a headless preview's picture
+    POST /api/projects/ID/preview          {"level", "room", "headless", "frames"} or {"cutscene", "language",
+                                           "headless"}: tools/preview.py
+    GET  /api/projects/ID/preview.png      a headless preview's picture (?shot=N: a cutscene's, frame N's)
+
+and the level editor's rooms (room, room/layer, room/tiles, room/save,
+sprite) and the cutscene editor's cutscenes (cutscenes,
+cutscenes/picture, cutscenes/import, cutscenes/save): docs/editors.md.
 
 A save writes each file as crashdata.editing.render gives it (the tool's
 writer, or the file's own layout: a value the file has gives back its
@@ -66,6 +71,7 @@ from pathlib import Path
 from crashdata import editing, schemas
 from crashdata import levels as L
 from crashdata.levels import room_edit
+from crashdata.cutscenes import edit as cutscene_edit
 from crashdata.common import diagnostics as D
 from crashdata.common import jsonfmt
 from crashdata.common.game import GAMES, ROOT, Game
@@ -97,7 +103,7 @@ class Project:
     def __init__(self, pid, kind, game, root, title, mod=None):
         self.id, self.kind, self.game, self.root, self.title, self.mod = pid, kind, game, Path(root), title, mod
         self.lock = threading.Lock()
-        self.baseline = None  # (fingerprint, the model's diagnostics)
+        self.baseline = {}  # with the text's checks or not: (fingerprint, the model's diagnostics)
 
     @property
     def applied(self):
@@ -237,21 +243,24 @@ class Server:
         return report
 
     def fingerprint(self, project):
-        """The data files' and the rooms' pictures' sizes and times: the
-        model's checks are run again when it changes."""
+        """The data files', the rooms' and cutscenes' pictures', the text's and
+        cxx_symbols.txt's sizes and times: the model's checks are run again
+        when it changes."""
         h = hashlib.sha1()
         game = Game(project.game, project.root)
-        files = [p for p, _ in schemas.files(game, project.root)] + sorted(game.levels_dir.glob("*/*/*.png"))
+        files = ([p for p, _ in schemas.files(game, project.root)] + sorted(game.levels_dir.glob("*/*/*.png"))
+                 + sorted((game.graphics_dir / "cutscenes").glob("*.png")) + sorted(game.text_dir.glob("*.po*"))
+                 + [p for p in [project.root / "cxx_symbols.txt"] if p.is_file()])
         for p in files:
             st = p.stat()
             h.update(("%s %d %d\n" % (p, st.st_mtime_ns, st.st_size)).encode())
         return h.hexdigest()
 
-    def baseline(self, project):
+    def baseline(self, project, text=False):
         fp = self.fingerprint(project)
-        if project.baseline is None or project.baseline[0] != fp:
-            project.baseline = (fp, self.model_check(project)["diagnostics"])
-        return project.baseline[1]
+        if project.baseline.get(text, (None,))[0] != fp:
+            project.baseline[text] = (fp, self.model_check(project, text)["diagnostics"])
+        return project.baseline[text][1]
 
     def save(self, project, items):
         """Save files ([(path, value)]): rendered, schema-validated, then the
@@ -315,21 +324,22 @@ class Server:
             if item is not None:
                 item[2].unlink(missing_ok=True)
 
-    def _commit(self, project, staged):
-        """Put the staged files in place and run the model's checks: an error
-        that wasn't there before puts every file back. Under project.lock."""
+    def _commit(self, project, staged, text=False):
+        """Put the staged files in place and run the model's checks (and the
+        text's, with `text`): an error that wasn't there before puts every
+        file back. Under project.lock."""
         plan = [x for x in staged if x is not None]
         if not plan:
             return {"ok": True, "saved": [], "diagnostics": []}
         try:
-            before = self.baseline(project)
+            before = self.baseline(project, text)
         except BaseException:
             self._unstage(plan)
             raise
         for _, p, tmp, _ in plan:
             os.replace(tmp, p)
         try:
-            after = self.model_check(project)["diagnostics"]
+            after = self.model_check(project, text)["diagnostics"]
         except BaseException:
             self._restore(plan)
             raise
@@ -338,7 +348,7 @@ class Server:
         if new:
             self._restore(plan)
             raise HttpError(422, "the model's checks reject it", new)
-        project.baseline = (self.fingerprint(project), after)
+        project.baseline = {text: (self.fingerprint(project), after)}
         return {"ok": True, "saved": [rel for rel, _, _, _ in plan], "diagnostics": after}
 
     @staticmethod
@@ -357,7 +367,7 @@ class Server:
                 shutil.rmtree(project.root)
             r = subprocess.run([self.python, "tools/apply_mod.py", "--json", str(project.mod), str(project.root)],
                                cwd=self.tree, capture_output=True, text=True, timeout=CHECK_TIMEOUT)
-            project.baseline = None
+            project.baseline = {}
             try:
                 report = json.loads(r.stdout)
             except json.JSONDecodeError:
@@ -367,6 +377,8 @@ class Server:
             return {"ok": True, "project": project.as_dict(self.tree), "report": report}
 
     def preview(self, project, body):
+        if body.get("cutscene") not in (None, ""):
+            return self.preview_cutscene(project, body)
         level = body.get("level")
         if not isinstance(level, (str, int)) or str(level) == "":
             raise HttpError(400, "give a level (an index, a constant, a name or a folder)")
@@ -399,6 +411,122 @@ class Server:
                                     start_new_session=True)
         return {"ok": True, "started": True, "pid": proc.pid, "command": cmd[1:],
                 "log": _shown(log, project.root)}
+
+    def preview_cutscene(self, project, body):
+        """tools/preview.py --cutscene: in the window, or headless with a
+        picture per screen (A pressed every 60 frames)."""
+        cmd = [self.python, "tools/preview.py", "--cutscene", str(body["cutscene"]), "--json"]
+        if body.get("language") not in (None, ""):
+            cmd += ["--language", str(body["language"])]
+        if body.get("noBuild"):
+            cmd.append("--no-build")
+        if not body.get("headless"):
+            log = project.root / "build" / "editor" / "preview.log"
+            log.parent.mkdir(parents=True, exist_ok=True)
+            with open(log, "w") as f:
+                proc = subprocess.Popen(cmd, cwd=project.root, stdout=f, stderr=subprocess.STDOUT,
+                                        start_new_session=True)
+            return {"ok": True, "started": True, "pid": proc.pid, "command": cmd[1:],
+                    "log": _shown(log, project.root)}
+        shots = project.root / "build" / "editor" / "cutscene"
+        if shots.exists():
+            shutil.rmtree(shots)
+        shots.mkdir(parents=True)
+        cmd += ["--headless", "--screens", str(shots)]
+        r = subprocess.run(cmd, cwd=project.root, capture_output=True, text=True, timeout=PREVIEW_TIMEOUT)
+        try:
+            report = json.loads(r.stdout)
+        except json.JSONDecodeError:
+            report = {"ok": False, "diagnostics": [], "output": r.stdout + r.stderr}
+        t = int(time.time())
+        report["images"] = ["/api/projects/%s/preview.png?shot=%s&t=%d" % (urllib.parse.quote(project.id), p.stem, t)
+                            for p in sorted(shots.glob("*.png"))]
+        report["image"] = report["images"][0] if report["images"] else None
+        return report
+
+    def preview_png(self, project, shot=None):
+        if shot is None:
+            p = project.root / "build" / "editor" / "preview.png"
+        elif re.fullmatch(r"\d{1,9}", shot):
+            p = project.root / "build" / "editor" / "cutscene" / ("%s.png" % shot)
+        else:
+            raise HttpError(400, "a shot is a frame number")
+        if not p.is_file():
+            raise HttpError(404, "no preview picture yet")
+        return p.read_bytes()
+
+    # -- the cutscene editor ---------------------------------------------------
+
+    @contextlib.contextmanager
+    def cutscene_errors(self):
+        try:
+            yield
+        except cutscene_edit.EditError as e:
+            raise HttpError(422, str(e), e.diagnostics)
+        except D.DataError as e:
+            raise HttpError(422, str(e), _diags(e.diagnostics, None))
+        except SystemExit as e:
+            raise HttpError(422, str(e.code if e.code is not None else e))
+
+    def cutscene_game(self, project):
+        game = Game(project.game, project.root)
+        if not cutscene_edit.available(game):
+            raise HttpError(404, "%s's cutscenes aren't data yet (no games/%s/data/cutscenes.json)"
+                            % (GAMES[project.game], project.game))
+        return game
+
+    def cutscenes(self, project):
+        game = self.cutscene_game(project)
+        with self.cutscene_errors():
+            return cutscene_edit.view(game)
+
+    def cutscene_picture(self, project, path):
+        """A cutscene picture: its width and height (u32 LE), its 256
+        colours (u16 LE, BGR555), then a byte a pixel."""
+        game = self.cutscene_game(project)
+        with self.cutscene_errors():
+            w, h, pal, px = cutscene_edit.picture(game, path or "")
+        return struct.pack("<II256H", w, h, *pal) + px
+
+    def cutscene_import(self, project, body):
+        self.cutscene_game(project)
+        png = body.get("png")
+        if not isinstance(png, str):
+            raise HttpError(400, "give the picture as {\"png\": base64}")
+        try:
+            data = base64.b64decode(png, validate=True)
+        except ValueError:
+            raise HttpError(400, "the picture isn't base64")
+        with self.cutscene_errors():
+            return cutscene_edit.import_picture(data, body.get("palette"))
+
+    def save_cutscenes(self, project, body):
+        """The cutscene editor's save, all or none (crashdata.cutscenes.edit):
+        {"cutscenes": cutscenes.json's value, "pages": {page: [{en, fr, ...}] or
+        null}, "pictures": {path: {palette, pixels}}, "newPictures": [{path,
+        about, palette, pixels}]}, each optional. The model's checks and, when
+        the text changes, the text's (msgfmt, msgcmp, the generator's)."""
+        game = self.cutscene_game(project)
+        if not isinstance(body, dict):
+            raise HttpError(400, "give the edits as an object")
+        with project.lock:
+            with self.cutscene_errors():
+                plan = cutscene_edit.plan_save(game, body)
+            staged = []
+            try:
+                for rel, value in plan["json"]:
+                    staged.append(self._stage_json(project, rel, value))
+                for rel, data in plan["bytes"]:
+                    if rel == "cxx_symbols.txt":
+                        p = project.root / rel
+                    else:
+                        p, _ = self.resolve(project, rel, data_file=False)
+                    staged.append(self._stage_bytes(rel, p, data))
+            except BaseException:
+                self._unstage(staged)
+                raise
+            text = any(x is not None and x[0].startswith("games/%s/text/" % project.game) for x in staged)
+            return self._commit(project, staged, text=text)
 
     # -- the level editor: rooms ---------------------------------------------
 
@@ -772,10 +900,16 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return self._send(200, app.sprite(project, query.get("bank"), query.get("frame"), query.get("palette")),
                               "image/png")
         if (method, what) == ("GET", "preview.png"):
-            p = project.root / "build" / "editor" / "preview.png"
-            if not p.is_file():
-                raise HttpError(404, "no preview picture yet")
-            return self._send(200, p.read_bytes(), "image/png")
+            return self._send(200, app.preview_png(project, query.get("shot")), "image/png")
+        if (method, what) == ("GET", "cutscenes"):
+            return self._send(200, app.cutscenes(project), compress=True)
+        if (method, what) == ("GET", "cutscenes/picture"):
+            return self._send(200, app.cutscene_picture(project, query.get("path", "")), "application/octet-stream",
+                              compress=True)
+        if (method, what) == ("POST", "cutscenes/import"):
+            return self._send(200, app.cutscene_import(project, self._body()))
+        if (method, what) == ("POST", "cutscenes/save"):
+            return self._send(200, app.save_cutscenes(project, self._body()))
         raise HttpError(404, "no API %s %s" % (method, "/".join(parts)))
 
     def _static(self, path):

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ApiError, EditorClient, parseRoomLayer } from "../src/client.ts";
+import { ApiError, EditorClient, parseCutscenePicture, parseRoomLayer } from "../src/client.ts";
 
 interface Call {
   url: string;
@@ -85,5 +85,16 @@ describe("EditorClient", () => {
     await c.check("n2", { text: false });
     expect(f.calls[0]!.url).toBe("/api/projects/n2/check?text=0");
     expect(c.rawUrl("xs", "games/xs/graphics/a b.png")).toBe("/api/projects/xs/raw?path=games%2Fxs%2Fgraphics%2Fa%20b.png");
+  });
+
+  it("reads a cutscene picture's colours and pixels", () => {
+    const buf = new Uint8Array(8 + 512 + 2);
+    new DataView(buf.buffer).setUint32(0, 2, true);
+    new DataView(buf.buffer).setUint32(4, 1, true);
+    new DataView(buf.buffer).setUint16(8 + 2, 0x7fff, true);
+    buf.set([1, 0], 520);
+    const p = parseCutscenePicture(buf.buffer);
+    expect([p.width, p.height, p.palette[1], [...p.pixels]]).toEqual([2, 1, 0x7fff, [1, 0]]);
+    expect(() => parseCutscenePicture(buf.buffer.slice(0, 521))).toThrow();
   });
 });

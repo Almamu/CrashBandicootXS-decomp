@@ -27,6 +27,8 @@ struct HostOptions {
     int quiet;             /* --quiet: no checkpoint lines */
     int headless;          /* --headless: no window (always, without SDL) */
     int ppuStats;          /* --ppu-stats: what the picture used, at the end */
+    s32 cutscene;          /* --cutscene N: the boot plays cutscene N (-1: no) */
+    s32 language;          /* --language L: in language L (gLanguage; -1: as it is) */
 };
 
 extern struct HostOptions gHostOptions;

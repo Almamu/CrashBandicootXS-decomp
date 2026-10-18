@@ -275,18 +275,20 @@ endif
 # the level's room in its window from the level select on;
 # PREVIEW_ARGS=--headless writes its first picture (`--out FILE`,
 # `--screens DIR`) instead (tools/preview.py, docs/editors.md "Preview").
-# With MOD, in the mod's tree, applied first.
+# With MOD, in the mod's tree, applied first. `make preview
+# CUTSCENE=CUTSCENE_INTRO [LANGUAGE=fr]` plays a cutscene at boot instead.
 LEVEL ?= 0
 ROOM ?= 0
 PREVIEW_ARGS ?=
+PREVIEW_WHAT = $(if $(CUTSCENE),--cutscene "$(CUTSCENE)" $(if $(LANGUAGE),--language "$(LANGUAGE)"),"$(LEVEL)" "$(ROOM)")
 .PHONY: preview
 preview:
 ifneq ($(filter command line environment,$(origin MOD)),)
 	rm -rf $(MOD_TREE)
 	python3 tools/apply_mod.py $(MOD) $(MOD_TREE)
-	cd $(MOD_TREE) && python3 tools/preview.py "$(LEVEL)" "$(ROOM)" $(PREVIEW_ARGS)
+	cd $(MOD_TREE) && python3 tools/preview.py $(PREVIEW_WHAT) $(PREVIEW_ARGS)
 else
-	python3 tools/preview.py "$(LEVEL)" "$(ROOM)" $(PREVIEW_ARGS)
+	python3 tools/preview.py $(PREVIEW_WHAT) $(PREVIEW_ARGS)
 endif
 
 schemas:

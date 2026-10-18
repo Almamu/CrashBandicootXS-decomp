@@ -1,8 +1,9 @@
-"""tools/preview.py: play a level's room in the PC port (#1167, docs/editors.md "Preview").
+"""tools/preview.py: play a level's room, or a cutscene, in the PC port (#1167, docs/editors.md "Preview").
 
     tools/preview.py LEVEL [ROOM] [--headless] [--frames N] [--every N]
                      [--screens DIR] [--out PNG] [--keys FILE] [--sdl 0|1]
                      [--no-build] [--json]
+    tools/preview.py --cutscene CUTSCENE [--language LANG] [--headless] [--every N] ...
 
 Builds the host executable (`make PLATFORM=pc`, build/pc/crashbandicootxs_pc,
 docs/platforms.md) from this tree's data, then runs it with a key file
@@ -24,6 +25,15 @@ build without SDL2) runs it as fast as it goes: it stops at --frames
 pictures of every --every'th frame to --screens DIR (FRAME.png) and the
 last one to --out. --json prints a report: the level and room, the
 command and the pictures.
+
+With --cutscene (an id, or a constant: CUTSCENE_INTRO or INTRO) the game
+plays that cutscene at boot, in place of the legal notice
+(platform/pc/src/cutscene_pick.c), in LANG (en, fr, de, es, it, nl or
+0-5; English by default), then boots on. In a window the keyboard plays
+it; headless, A is pressed every --every frames (60 by default) and the
+picture before each press is kept: a picture per screen of text (or
+slide without text), --frames by default as many as the cutscene's
+screens need (crashdata.cutscenes.edit.cutscene_steps).
 
 The build takes HOST_SDL from --sdl (1: with the window; 0: headless
 only; by default with the window when pkg-config finds SDL2, as
@@ -107,6 +117,43 @@ def resolve(level, room=None):
     return idx, ridx, lv["constant"], room_entries(lv)[ridx]
 
 
+LANGUAGES = ["en", "fr", "de", "es", "it", "nl"]
+
+
+def resolve_cutscene(cutscene, language):
+    """(the cutscene's id, its constant, the language's index and code)."""
+    from crashdata.common.game import Game
+    from crashdata.cutscenes import edit
+
+    game = Game("xs", ".")
+    where = "games/xs/data/cutscenes.json"
+    if not edit.available(game):
+        D.error("this tree has no %s: no cutscenes to play" % where, code="preview-cutscene")
+    cutscenes = D.read_json(edit.Files(game).cutscenes)["cutscenes"]
+    names = [c["constant"] for c in cutscenes]
+    key = str(cutscene).upper()
+    if re.fullmatch(r"\d+", key) and int(key) < len(names):
+        idx = int(key)
+    elif key in names or "CUTSCENE_" + key in names:
+        idx = names.index(key if key in names else "CUTSCENE_" + key)
+    else:
+        D.error("no cutscene %s (%s)" % (cutscene, ", ".join(names)), where, "/cutscenes", code="preview-cutscene")
+    lang = str(language or "en").lower()
+    if lang.isdigit() and int(lang) < len(LANGUAGES):
+        lang = LANGUAGES[int(lang)]
+    if lang not in LANGUAGES:
+        D.error("no language %s (%s, or 0-5)" % (language, ", ".join(LANGUAGES)), code="preview-cutscene")
+    return idx, names[idx], LANGUAGES.index(lang), lang
+
+
+def cutscene_keys(path, every, presses):
+    """A key file that presses A every `every` frames, `presses` times."""
+    lines = ["# tools/preview.py --cutscene: A every %d frames" % every]
+    for k in range(1, presses + 1):
+        lines += ["%d A" % (k * every + 1), "%d -" % (k * every + 3)]
+    Path(path).write_text("\n".join(lines) + "\n")
+
+
 def build(sdl):
     cmd = ["make", "-j%d" % (os.cpu_count() or 1), "PLATFORM=pc"] + ([] if sdl is None else ["HOST_SDL=%d" % sdl])
     sys.stdout.flush()
@@ -117,7 +164,7 @@ def build(sdl):
 
 def run():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("level", help="the level: its index, constant, name, folder, or a room folder")
+    ap.add_argument("level", nargs="?", help="the level: its index, constant, name, folder, or a room folder")
     ap.add_argument("room", nargs="?", help="the room: its index in the level's rooms, or its folder")
     ap.add_argument("--headless", action="store_true", help="no window: run, write the pictures and stop")
     ap.add_argument("--frames", type=int, help="stop after N game frames (headless: %d)" % PREVIEW_FRAME)
@@ -127,16 +174,22 @@ def run():
     ap.add_argument("--keys", default=str(KEYS), help="the key file (%s)" % KEYS)
     ap.add_argument("--sdl", type=int, choices=[0, 1], help="build with SDL2's window (1) or not (0); by default "
                                                              "with it when pkg-config finds SDL2")
+    ap.add_argument("--cutscene", help="play this cutscene at boot (an id or a CUTSCENE_* constant), not a level")
+    ap.add_argument("--language", help="with --cutscene: its text's language (en, fr, de, es, it, nl or 0-5)")
     ap.add_argument("--no-build", action="store_true", help="run the executable as it is")
     ap.add_argument("--json", action="store_true", help="print one JSON report (docs/editors.md)")
     args = ap.parse_args()
     os.chdir(ROOT)
+    headless = args.headless or bool(args.out or args.screens)
+    if args.cutscene is not None:
+        return run_cutscene(args, headless)
+    if args.level is None:
+        ap.error("give a LEVEL, or --cutscene")
     level, room, constant, entry = resolve(args.level, args.room)
     if not args.no_build:
         build(args.sdl)
     if not EXE.exists():
         D.error("no %s: build it (make PLATFORM=pc), or leave out --no-build" % EXE, code="preview-build")
-    headless = args.headless or bool(args.out or args.screens)
     cmd = [str(EXE), "--keys", args.keys, "--level", str(level), "--room", str(room)]
     pictures = []
     tmp = None
@@ -168,6 +221,50 @@ def run():
             shutil.rmtree(tmp)
             pictures = [last] if args.out else []
     RESULT.update(level=level, constant=constant, room=room, entry=entry, command=cmd, pictures=pictures)
+    return 0
+
+
+def run_cutscene(args, headless):
+    from crashdata.common.game import Game
+    from crashdata.cutscenes import edit
+
+    idx, constant, lang_index, lang = resolve_cutscene(args.cutscene, args.language)
+    steps = edit.cutscene_steps(Game("xs", "."), idx, lang)
+    if not args.no_build:
+        build(args.sdl)
+    if not EXE.exists():
+        D.error("no %s: build it (make PLATFORM=pc), or leave out --no-build" % EXE, code="preview-build")
+    cmd = [str(EXE), "--cutscene", str(idx), "--language", str(lang_index)]
+    pictures, tmp = [], None
+    if headless:
+        every = args.every or 60
+        # a slide that ignores the keys waits its own frames
+        frames = args.frames or every * (len(steps) + 1) + sum(w for _, _, k, w, b in steps if not b and k == 0)
+        screens = args.screens or tempfile.mkdtemp(prefix="preview-")
+        tmp = None if args.screens else screens
+        os.makedirs(screens, exist_ok=True)
+        keys = os.path.join(screens, "cutscene.keys")
+        cutscene_keys(keys, every, len(steps) + 1)
+        cmd += ["--keys", keys, "--headless", "--quiet", "--frames", str(frames), "--checkpoint-every", str(every),
+                "--screens", screens]
+    elif args.frames:
+        cmd += ["--frames", str(args.frames)]
+    print("preview: %s (cutscene %d) in %s, %d screens: %s" % (constant, idx, lang, len(steps), " ".join(cmd)))
+    sys.stdout.flush()
+    r = subprocess.run(cmd)
+    if r.returncode:
+        D.error("%s exited with status %d" % (EXE, r.returncode), code="preview-run")
+    if headless:
+        pictures = sorted(str(p) for p in Path(screens).glob("*.png"))
+        if not pictures:
+            D.error("no picture was written", code="preview-run")
+        if args.out:
+            shutil.copyfile(pictures[-1], args.out)
+        if tmp:
+            shutil.rmtree(tmp)
+            pictures = [args.out] if args.out else []
+    RESULT.update(cutscene=idx, constant=constant, language=lang, steps=len(steps), command=cmd,
+                  pictures=pictures)
     return 0
 
 
