@@ -1,7 +1,7 @@
 // A typed client of the editors' backend, tools/editor_server.py (#1167,
 // docs/editors.md "The editor's backend"). The browser editor calls it on
 // its own origin; the desktop app gives it the backend's URL and token.
-import type { Room, SchemaFiles, SchemaName } from "./generated/index.ts";
+import type { Cutscenes, Room, SchemaFiles, SchemaName } from "./generated/index.ts";
 
 /** One problem with the data (crashdata.common.diagnostics.Diagnostic). */
 export interface Diagnostic {
@@ -28,6 +28,8 @@ export interface PreviewReport extends Report {
   preview?: Record<string, unknown>;
   /** a headless preview's picture, on this server */
   image?: string | null;
+  /** a headless cutscene's pictures, one a key press (on this server) */
+  images?: string[];
 }
 
 export interface PreviewStarted {
@@ -40,13 +42,17 @@ export interface PreviewStarted {
 
 export interface PreviewOptions {
   /** gLevelTable's index, a constant, a name or a room folder */
-  level: string | number;
+  level?: string | number;
   /** an index in the level's "rooms" or a folder */
   room?: string | number;
   /** run headless and give back a picture, instead of opening the game's window */
   headless?: boolean;
   frames?: number;
   noBuild?: boolean;
+  /** a cutscene to play at boot instead of a level (its id or constant) */
+  cutscene?: string | number;
+  /** with `cutscene`: its text's language (en, fr, de, es, it, nl) */
+  language?: string;
 }
 
 export interface Health {
@@ -194,6 +200,107 @@ export interface RoomSave {
   collision?: [number, number, number][];
   /** 256 BGR555 entries: every layer picture's palette */
   palette?: number[];
+}
+
+/** A string of a cutscene page in the six languages (the template's msgid, each .po's msgstr). */
+export interface CutsceneString {
+  /** cutsceneNN.pageP.I */
+  key?: string;
+  en: string;
+  fr: string;
+  de: string;
+  es: string;
+  it: string;
+  nl: string;
+}
+
+/** A cutscene picture of the graphics manifest. */
+export interface CutscenePictureInfo {
+  /** from the graphics directory: cutscenes/NN_<name>.png */
+  path: string;
+  symbol: string;
+  class: string;
+  palette: string;
+  about?: string;
+  /** the ROM's (it has an address) or a new one */
+  rom: boolean;
+}
+
+/** The small font as PlayCutscene draws the text (crashdata.cutscenes.edit.font). */
+export interface CutsceneFont {
+  /** the characters (Latin-1 codes): glyph g is chars[g] */
+  chars: number[];
+  /** each glyph's advance, OBJ shape (0 8x8, 1 16x8, 2 8x16) and Y offset (OAM's 8 bits) */
+  widths: number[];
+  shapes: number[];
+  yOffsets: number[];
+  space: number;
+  lineHeight: number;
+  /** each glyph's cell, cell x cell pixels */
+  cell: number;
+  /** base64: the glyphs' cells, a byte (a colour index 0-15) a pixel */
+  glyphs: string;
+  /** its 16 colours, BGR555 */
+  palette: number[];
+}
+
+/** GET /api/projects/ID/cutscenes: the cutscenes, as the cutscene editor opens them. */
+export interface CutscenesView {
+  cutscenes: Cutscenes;
+  pictures: CutscenePictureInfo[];
+  /** every page's strings, by page key (cutsceneNN.pageP) */
+  pages: Record<string, CutsceneString[]>;
+  /** the pages in the template's order */
+  pageOrder: string[];
+  languages: { code: string; name: string }[];
+  songs: { name: string; comment: string }[];
+  sfx: { name: string; comment: string }[];
+  font: CutsceneFont;
+  /** the text box: PlayCutscene's */
+  box: { x: number; y: number; w: number; h: number };
+  screen: [number, number];
+  /** the text's encoding (Python's name: cp1252) */
+  encoding: string;
+  /** what plays each cutscene, by constant: code, levels.json's on_clear */
+  references: Record<string, string[]>;
+  /** the slide records' number fields' ranges */
+  numberFields: Record<string, [number, number]>;
+}
+
+/** A cutscene picture's data: 240x160, its 256 colours. */
+export interface CutscenePictureData {
+  width: number;
+  height: number;
+  /** 256 BGR555 entries */
+  palette: number[];
+  /** a byte a pixel */
+  pixels: Uint8Array;
+}
+
+/** POST /api/projects/ID/cutscenes/import's answer: a PNG made into a cutscene picture. */
+export interface CutsceneImport {
+  width: number;
+  height: number;
+  palette: number[];
+  /** base64, a byte a pixel */
+  pixels: string;
+  /** the colours it uses */
+  colours: number;
+  /** whether every pixel kept its colour */
+  exact: boolean;
+  /** what was done */
+  how: string;
+}
+
+/** POST /api/projects/ID/cutscenes/save: the cutscene editor's edits, saved together. */
+export interface CutscenesSave {
+  cutscenes?: Cutscenes;
+  /** pages whose strings change (null: the page goes) */
+  pages?: Record<string, Omit<CutsceneString, "key">[] | null>;
+  /** pictures whose pixels or colours change: base64 pixels */
+  pictures?: Record<string, { palette: number[]; pixels: string }>;
+  /** new pictures (their manifest entries are made) */
+  newPictures?: { path: string; about?: string; palette: number[]; pixels: string }[];
 }
 
 /** A JSON Schema, as the backend serves it. */
@@ -370,6 +477,26 @@ export class EditorClient {
     return this.request("POST", this.project(id, "room/save"), body);
   }
 
+  /** The cutscenes, their pages' text, their pictures, songs and sound effects, the font. */
+  cutscenes(id: string): Promise<CutscenesView> {
+    return this.request("GET", this.project(id, "cutscenes"));
+  }
+
+  /** A cutscene picture's colours and pixels. */
+  async cutscenePicture(id: string, path: string): Promise<CutscenePictureData> {
+    return parseCutscenePicture(await this.requestBytes(this.project(id, "cutscenes/picture"), { path }));
+  }
+
+  /** A PNG (base64) made into a cutscene picture: on its own colours, or mapped to `palette`. */
+  importCutscenePicture(id: string, png: string, palette?: number[]): Promise<CutsceneImport> {
+    return this.request("POST", this.project(id, "cutscenes/import"), palette ? { png, palette } : { png });
+  }
+
+  /** Saves the cutscene editor's edits together (cutscenes.json, the text, the pictures): all, or none. */
+  saveCutscenes(id: string, body: CutscenesSave): Promise<SaveResult> {
+    return this.request("POST", this.project(id, "cutscenes/save"), body);
+  }
+
   /** A sprite bank's frame as a PNG (index 0 transparent), in an OBJ palette or its own. */
   spriteUrl(id: string, bank: number, frame: number, palette: number | null = null): string {
     return this.url(this.project(id, "sprite"), {
@@ -395,4 +522,17 @@ export function parseRoomLayer(buf: ArrayBuffer, cells: boolean): RoomLayerData 
   }
   if (buf.byteLength !== 8 + n) throw new Error(`a layer of ${width}x${height} pixels is ${8 + n} bytes, not ${buf.byteLength}`);
   return { width, height, data: new Uint8Array(buf, 8, n) };
+}
+
+/** GET .../cutscenes/picture's answer: width and height (u32 LE), 256 colours (u16 LE), then a byte a pixel. */
+export function parseCutscenePicture(buf: ArrayBuffer): CutscenePictureData {
+  const view = new DataView(buf);
+  if (buf.byteLength < 8 + 512) throw new Error("a cutscene picture's answer is at least 520 bytes");
+  const width = view.getUint32(0, true);
+  const height = view.getUint32(4, true);
+  const palette: number[] = [];
+  for (let i = 0; i < 256; i++) palette.push(view.getUint16(8 + i * 2, true));
+  const n = width * height;
+  if (buf.byteLength !== 8 + 512 + n) throw new Error(`a picture of ${width}x${height} pixels is ${8 + 512 + n} bytes, not ${buf.byteLength}`);
+  return { width, height, palette, pixels: new Uint8Array(buf, 8 + 512, n) };
 }

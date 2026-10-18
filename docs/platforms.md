@@ -266,6 +266,7 @@ platform/pc/src/
     gax_trace.c                    --gax-trace (GAX2 replays the GBA's calls) and
                                    --gax-log (the game's calls, logged)
     level_pick.c                   --level and --room (boottest's level scripts)
+    cutscene_pick.c                --cutscene and --language (the boot plays a cutscene)
     sprite_boxes.c                 GetSpriteAttackBox and GetSpriteBodyBox's C names
                                    (STRUCT_RETURN_VIEW, below)
     libgcc.c                       __divsi3 & co. and __udivdi3, which the game and
@@ -300,7 +301,7 @@ platform/pc/tools/gax_host_data.py GAX2's song data with pointers, as C (below)
 
 **Running it.** `crashbandicootxs_pc [--headless] [--scale N] [--save
 FILE] [--wav FILE] [--frames N] [--vblanks N] [--keys FILE] [--level N
-[--room R]] [--checkpoint-every N] [--dump DIR] [--screens DIR]
+[--room R]] [--cutscene N [--language L]] [--checkpoint-every N] [--dump DIR] [--screens DIR]
 [--screenshot-at N] [--ppu-stats] [--gax-log FILE] [--quiet]`, or
 `crashbandicootxs_pc --gax-trace FILE`. In a window unless `--headless`
 (or built without SDL2): `--scale N` sizes it (3 times the GBA's by
@@ -309,7 +310,10 @@ N reads its keys under. `--save FILE` keeps the EEPROM there. `--wav
 FILE` writes the sound there (see "The sound"), in a window or headless.
 `--level N` makes the first level select pick level N (gLevelTable's
 index) and `--room R` start it in its room R, as boottest's level scripts
-do on mGBA. `tools/preview.py` (`make preview LEVEL=... ROOM=...`,
+do on mGBA. `--cutscene N` makes the boot play cutscene N (a CUTSCENE_* id) in
+place of the legal notice, in language L with `--language L` (0 English
+... 5 Dutch), then boot on (the cutscene editor's "Play this cutscene",
+`tools/preview.py --cutscene`). `tools/preview.py` (`make preview LEVEL=... ROOM=...`,
 [editors.md](./editors.md), "Preview") builds the port and runs it with
 them and `platform/pc/preview.keys`, which reaches the level select. At the end it prints `audio BLOCKS HASH`: how many blocks
 GAX2 mixed and a SHA-1 of them.

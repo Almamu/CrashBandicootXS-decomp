@@ -913,9 +913,9 @@ ROM's bytes:
   palette), `wait` (WaitForKeyPress's frame count), `fade` and
   `fade_after` (BrightnessFade::Start's flags as the slide starts and
   after it, -1 none), `buttons` (1: a key press goes on, and SkipSlides
-  skips it), `duck_music` (FadeOutMusic after it), `rearm_sfx` (play the
-  sound again after it), `song` (the music cue, a `SONG_*` constant of
-  `constants/songs.h`) and `sfx` (a `SFX_*` constant, `SFX_NONE` for
+  skips it), `duck_music` (FadeOutMusic after it), `rearm_sfx` (stop the
+  sound effect after it: EndSlide's StopSfx), `song` (the music cue, a
+  `SONG_*` constant of `constants/songs.h`) and `sfx` (a `SFX_*` constant, `SFX_NONE` for
   none). `song` is a constant's name for now; once the songs have names
   of their own (#1091), it can take one.
 - **`rom_order`**, the order the ROM stores two of the tables in: each

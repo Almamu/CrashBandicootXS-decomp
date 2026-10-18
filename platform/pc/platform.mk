@@ -126,6 +126,8 @@ $(HOST_LINK): $(HOST_OBJS) $(CXX_SYMBOLS) $(SYM_IWRAM) $(SYM_EWRAM) $(HOST_RENAM
 # the level and its room.
 comma := ,
 HOST_WRAPS := _ZN4Game2Ui11LevelSelect3RunEPi _ZN4Game5Level13LevelProgress10SelectRoomEv
+# --cutscene (src/cutscene_pick.c) wraps the boot's cutscene.
+HOST_WRAPS += _ZN4Game5Level10LevelState16PlayBootCutsceneEv
 # --gax-log (src/gax_trace.c) wraps GAX2's API.
 HOST_WRAPS += GAX2_init GAX_fx_ex GAX_fx GAX_fx_note GAX_stop_fx GAX_set_music_volume GAX_set_fx_volume \
 	GAX_stop GAX_pause GAX_resume GAX_play GAX_irq GAX2_jingle

@@ -59,6 +59,18 @@ describe.skipIf(!url)("the backend", () => {
     expect(r.saved).toEqual([]);
   });
 
+  it("opens the cutscenes for the cutscene editor, and saves them unchanged without writing them", async () => {
+    const v = await c.cutscenes("xs");
+    expect(v.cutscenes.cutscenes[1]!.constant).toBe("CUTSCENE_INTRO");
+    expect(v.pages["cutscene01.page0"]![0]!.en).toContain("space station");
+    const pic = await c.cutscenePicture("xs", v.pictures[0]!.path);
+    expect([pic.width, pic.height, pic.palette.length, pic.pixels.length]).toEqual([240, 160, 256, 240 * 160]);
+    const r = await c.saveCutscenes("xs", { cutscenes: v.cutscenes, pages: { "cutscene01.page0": v.pages["cutscene01.page0"]! } });
+    expect(r.saved).toEqual([]);
+    const e = await c.cutscenes("n2").catch((x: unknown) => x);
+    expect((e as { status: number }).status).toBe(404);
+  });
+
   it("gives data-check's report", async () => {
     const r = await c.check("xs", { text: false });
     expect(r.version).toBe(1);

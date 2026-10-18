@@ -71,6 +71,15 @@ jobs:
         python3 tools/preview.py snow_crash 1 --no-build --headless --out host_preview.png --json
         test -s host_preview.png
 
+    # The cutscene editor's "Play this cutscene" (docs/editors.md, "Preview"):
+    # the boot plays the intro in French, A every 60 frames, a picture before
+    # each of its 7 key presses and one after.
+    - name: Play a cutscene
+      run: |
+        python3 tools/preview.py --cutscene CUTSCENE_INTRO --language fr --no-build --headless \
+          --screens host_cutscene --json > host_cutscene.json
+        python3 -c "import json; r = json.load(open('host_cutscene.json')); assert r['ok'] and r['preview']['steps'] == 7 and len(r['preview']['pictures']) == 8, r"
+
     # Phase 6: GAX2 on the host mixes what the GBA's mixes, byte for byte:
     # tests/boot_gax.trace is mGBA 0.10.5's trace of the game's GAX2 calls
     # and blocks in the boot (tools/boottest.py `gax-trace`), which
