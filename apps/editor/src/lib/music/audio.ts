@@ -62,6 +62,8 @@ export class Output {
         const data = buf.getChannelData(0);
         for (let k = 0; k < n; k++) {
           opts.before?.(this.frame, player);
+          // `before` may have stopped the output (a sound effect that ended)
+          if (this.ctx !== ctx) return;
           this.positions.push({ time: this.next + (k * player.frames) / player.mixRate, pos: { frame: this.frame, order: player.info.orderPos, row: player.info.row } });
           player.frame(block);
           toFloat(block, data, k * player.frames);
