@@ -101,17 +101,21 @@ run `make`; `make compare` then fails, as it should.
 | the save | grows with the levels (64 Kbit past 28), versioned by a hash of the level data | [levels.md, "The save"](./levels.md#the-save) |
 | text | every string, in six languages; the credits | [text.md](./text.md) |
 | cutscenes | slides, pictures, timing, music, text | [data.md, "Cutscenes"](./data.md#cutscenes) |
-| music | new songs from XM files, on the ROM's instruments or new ones (an XM's own samples, or WAVs); new sound effects with their own samples; which song plays where | [audio.md](./audio.md) |
+| music | new songs from XM files, on the ROM's instruments or new ones (an XM's own samples, or WAVs); new sound effects with their own samples; which song plays where; the music editor plays them and edits the tables, the songs' cells and the samples | [audio.md](./audio.md), [editors.md, "The music editor"](./editors.md#the-music-editor) |
 | graphics | the graphics of the manifest, new ones, sprite banks and frames, palettes | [graphics.md](./graphics.md) |
 
 ## What a mod can't do yet
 
 These are code, or not built yet:
 
-- **Editors.** The level editor and the cutscene editor (`make editor`,
+- **Editors.** The level, cutscene and music editors (`make editor`,
   [editors.md](./editors.md)) edit a mod's tree (`build/mods/<name>`, as
-  `make mod` makes it) as they edit the game's; the music editor is still
-  to come (#1167).
+  `make mod` makes it) as they edit the game's: the sample mod's
+  `sample_tune` plays in the music editor, its own instrument too. What
+  they don't do yet is in each editor's "Not yet"; for the music, an XM
+  is still written in a tracker (the editor edits its cells, and plays
+  them as GAX2 will), and a ROM instrument's envelope or loop is the
+  manifest's (the "Data files" tab).
 - **New behaviour.** A new actor kind, boss kind, power, category type or
   entity type is code: the data reaches what the existing kinds draw and
   where they spawn, not what they do (levels.md, "Category sprite

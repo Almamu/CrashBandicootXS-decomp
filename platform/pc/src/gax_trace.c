@@ -20,7 +20,11 @@
  *
  * Replayed here through the platform's GAX2, each block is the GBA's or
  * not: the run prints `gax-trace BLOCKS EXACT` and the first block that
- * differs, and fails if one does. It takes the game's timing out of the
+ * differs, and fails if one does. With --wav FILE each block GAX_play
+ * mixes goes to FILE too, so a trace written by hand (an init, plays, no
+ * blocks to compare) renders a song or a sound effect as the host's GAX2
+ * mixes it: what the music editor's player is checked against
+ * (docs/editors.md, "The music editor"). It takes the game's timing out of the
  * comparison (the host's frames take no time, so a load takes fewer
  * VBlanks than on the GBA, and the music and the sound effects meet at
  * other points): what is left is the engine, sample for sample.
@@ -287,6 +291,7 @@ void HostGaxTrace(const char *path)
                 sHeader.filter = a[1];
             }
             GAX_play();
+            HostAudioWavBlock();
         } else if (strcmp(op, "irq") == 0) {
             GAX_irq();
         } else if (strcmp(op, "block") == 0 &&
@@ -315,6 +320,9 @@ void HostGaxTrace(const char *path)
     }
     fclose(f);
     printf("gax-trace %u %u (%u without a block)\n", blocks, exact, unmixed);
+    if (gHostOptions.wav != NULL) {
+        HostAudioEnd();
+    }
     fflush(stdout);
-    exit(blocks != 0 && exact == blocks ? 0 : 1);
+    exit((blocks != 0 || gHostOptions.wav != NULL) && exact == blocks ? 0 : 1);
 }

@@ -5,6 +5,7 @@
   import FileEditor from "./components/FileEditor.svelte";
   import CutsceneEditor from "./components/cutscene/CutsceneEditor.svelte";
   import LevelEditor from "./components/level/LevelEditor.svelte";
+  import MusicEditor from "./components/music/MusicEditor.svelte";
   import Preview from "./components/Preview.svelte";
   import ProjectPicker from "./components/ProjectPicker.svelte";
   import { desktop, hashWith } from "./lib/api.ts";
@@ -12,10 +13,10 @@
 
   let previewOpen = $state(false);
   let checkText = $state(true);
-  // the level editor, the cutscene editor, or the data files' forms
-  type Mode = "levels" | "cutscenes" | "files";
+  // the level editor, the cutscene editor, the music editor, or the data files' forms
+  type Mode = "levels" | "cutscenes" | "music" | "files";
   const asked = new URLSearchParams(location.hash.slice(1)).get("mode");
-  let mode = $state<Mode>(asked === "files" || asked === "cutscenes" ? asked : "levels");
+  let mode = $state<Mode>(asked === "files" || asked === "cutscenes" || asked === "music" ? asked : "levels");
 
   function setMode(m: Mode) {
     mode = m;
@@ -39,6 +40,7 @@
     <div class="modes" role="tablist" aria-label="editor">
       <button role="tab" aria-selected={mode === "levels"} class:on={mode === "levels"} onclick={() => setMode("levels")}>Level editor</button>
       <button role="tab" aria-selected={mode === "cutscenes"} class:on={mode === "cutscenes"} onclick={() => setMode("cutscenes")}>Cutscenes</button>
+      <button role="tab" aria-selected={mode === "music"} class:on={mode === "music"} onclick={() => setMode("music")}>Music</button>
       <button role="tab" aria-selected={mode === "files"} class:on={mode === "files"} onclick={() => setMode("files")}>Data files</button>
     </div>
     <div class="spacer"></div>
@@ -62,6 +64,8 @@
     <main class="levels"><LevelEditor /></main>
   {:else if mode === "cutscenes"}
     <main class="levels"><CutsceneEditor /></main>
+  {:else if mode === "music"}
+    <main class="levels"><MusicEditor /></main>
   {:else}
     <main>
       <aside><FileBrowser /></aside>

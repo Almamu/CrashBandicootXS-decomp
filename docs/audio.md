@@ -174,6 +174,13 @@ the song data's structures with pointers converted to the host's layout
 from the .s relocations tools/gax_audio.py writes. Its mixed blocks are
 the GBA's, byte for byte.
 
+The music editor ([editors.md, "The music
+editor"](./editors.md#the-music-editor)) has a third GAX2, in
+TypeScript, which plays the songs and sound effects from this data as
+the build makes it, sample for sample the PC port's; it edits the song
+table, the screens' and themes' songs, the songs' XM cells, the
+sound-effect table and the samples.
+
 ## Engine API names
 
 The engine's entry points carry Shin'en's own GAX2 API names (an exception

@@ -94,6 +94,14 @@ jobs:
           --gax-log host_boot_gax.trace --wav host_boot.wav
         python3 tools/boottest.py gax-calls platform/pc/tests/boot_gax.trace host_boot_gax.trace
 
+    # The music editor's GAX2 (apps/editor/src/lib/music/gax.ts) is checked
+    # against apps/editor/test/gax_reference.json (apps.yml, pnpm test): each
+    # song's first 1200 frames and three sound-effect sequences as this
+    # GAX2 mixes them (--gax-trace --wav). Rendered again here, so the
+    # reference stays the PC port's.
+    - name: Check the music editor's reference
+      run: python3 tools/gax_render.py check
+
     # Phase 4: the window, with SDL's dummy video and audio drivers: paced
     # to the GBA's 59.73 frames a second, 300 game frames (about 400
     # VBlanks) take some 7 s.
