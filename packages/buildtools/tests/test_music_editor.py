@@ -141,6 +141,12 @@ class Music(Backend):
         body["songSettings"] = {s["key"]: {f: s["settings"].get(f) for f in (rom if s["rom"] else ("title", "artist")
                                                                               + rom)} for s in v["songs"]}
         body["sfxInstruments"] = {str(i["index"]): i["record"] for i in v["sfxInstruments"] if i["index"]}
+        # every song's own XM instruments' fields, as they are
+        for s in v["songs"]:
+            own = {str(n): i["own"]["spec"] for n, i in enumerate(self.patterns(s["key"], game)["instruments"], 1)
+                   if "own" in i}
+            if own:
+                body.setdefault("xmInstruments", {})[s["key"]] = own
         return body
 
 
@@ -310,6 +316,14 @@ class Reading(Music):
                 "<7I", 4, 500, 8, 0, 0, 0, 0))}}}, None),
             ({"songSettings": {"jungle": {"title": "a title"}}}, None),
             ({"sfxInstruments": {"9": dict(v["sfxInstruments"][9]["record"], unknown12=[0] * 12)}}, None),
+            # the sound-effect set: a new instrument that isn't the next, a new sample that isn't, one a sound
+            # effect plays taken out, a sample an instrument plays taken out
+            ({"sfxInstruments": {"90": v["sfxInstruments"][9]["record"]}}, None),
+            ({"newSfxSamples": {"99": b64(short)}}, None),
+            ({"deleteSfxInstruments": [9]}, None),
+            ({"deleteSfxSamples": [9]}, None),
+            # a ROM song's XM instruments are the pool's, not its own
+            ({"xmInstruments": {"drums": {"1": {"volume": 10}}}}, None),
         ]:
             st, r = self.call("POST", "/api/projects/xs/music/save", body)
             self.assertEqual(st, 422, (list(body), r))
@@ -357,6 +371,11 @@ class Mod(unittest.TestCase):
         v = self.view()
         song = next(s for s in v["songs"] if s["key"] == "sample_tune")
         self.assertFalse(song["rom"])
+        # its own instrument, "sample lead" (its first: the second is the pool's Instrument 2)
+        self.assertEqual(song["xm"]["own"], [1])
+        lead = self.patterns("sample_tune")["instruments"][0]["own"]
+        self.assertEqual((lead["spec"]["volume"], lead["spec"]["loop"], lead["length"], lead["spec"]["envelope"]
+                          ["sustain"]), (48, "forward", 256, 2))
         self.assertIn("THEME_SAMPLE", [u["name"] for u in song["uses"]])
         st, raw = self.get_bytes("/api/projects/xs/music/song?key=sample_tune")
         self.assertEqual(st, 200, raw[:300])
@@ -525,13 +544,54 @@ class Scratch(unittest.TestCase):
         sfx_rec["samples"][0]["pitch"] += 96
         sfx_rec["envelope"] = {"sustain": None, "loop_start": None, "loop_end": None,
                                "points": [{"x": 0, "y": 255}, {"x": 12, "y": 60}, {"x": 40, "y": 0}]}
+        # the sound-effect set: a new sample (a chirp, at the set's rate) and a new instrument, the set's next,
+        # playing it with an envelope, which a new sound effect plays; instrument 19, which none plays, taken out
+        top_sfx = max(int(k) for k in sfx_m["instruments"])
+        nxt_sfx = max(int(k) for k in sfx_m["samples"]) + 1
+        st, imp4 = self.call("POST", "/api/projects/xs/music/import", {"wav": b64(wav(
+            [0.7 * (1 - i / 3000) * math.sin(2 * math.pi * (300 + i / 10) * i / 8000) for i in range(3000)], 8003))})
+        self.assertEqual(st, 200, imp4)
+        chirp = json.loads(json.dumps(v["instrumentTemplates"]["sfxBlank"]))
+        chirp["sample_indices"][0] = nxt_sfx
+        chirp["envelope"]["points"] = [{"x": 0, "y": 200}, {"x": 30, "y": 255}, {"x": 90, "y": 0}]
+        table["entries"].append({"slot_id": top_sfx + 1, "pitch_offset": 0, "volume": 256, "name": "TEST_CHIRP",
+                                 "comment": "the music editor's new sound-effect instrument"})
+        sfx_edits = {"sfxInstruments": {"31": sfx_rec, str(top_sfx + 1): chirp},
+                     "newSfxSamples": {str(nxt_sfx): imp4["wav"]}, "deleteSfxInstruments": [19]}
+        st, sfx_pool = self.call("POST", "/api/projects/xs/music/pool", sfx_edits)
+        self.assertEqual(st, 200, sfx_pool)
+        self.assertEqual((len(sfx_pool["sfx"]["instruments"]), sfx_pool["sfx"]["instruments"][top_sfx + 1]["waveIdx"],
+                          sfx_pool["sfx"]["instruments"][19]["empty"]), (top_sfx + 2, [nxt_sfx, 0, 0, 0], 1))
+        # a new song of one note on its own XM instrument (tools/gax_render.py own_note_xm), the instrument
+        # edited: louder, a new envelope, an auto-vibrato
+        from buildtools import gax_render as R
+
+        own_song = {"key": R.OWN_SONG, "xm": b64(R.own_note_xm()), "comment": "the music editor's own instrument"}
+        new_song.append(own_song)
+        st, own_p = self.call("POST", "/api/projects/xs/music/patterns", {"key": R.OWN_SONG, "xm": own_song["xm"]})
+        self.assertEqual(st, 200, own_p)
+        own = dict(own_p["instruments"][0]["own"]["spec"], volume=56, vibrato={"depth": 9, "rate": 20},
+                   envelope={"points": [[0, 64], [8, 30], [30, 0]], "sustain": 1, "loop_start": None,
+                             "loop_end": None})
+        xm_instruments = {R.OWN_SONG: {"1": own}}
+        st, own_pool = self.call("POST", "/api/projects/xs/music/pool", {"newSongs": new_song,
+                                                                         "xmInstruments": xm_instruments})
+        self.assertEqual(st, 200, own_pool)
+        own_ins = own_pool["music"]["instruments"][own_pool["xmPool"][R.OWN_SONG][0]]
+        self.assertEqual((own_ins["vibratoDepth"], own_ins["vibratoSpeed"], own_ins["seq"][0]["fx"][0]),
+                         (9, 5, 12 << 8 | 224))
         body = {"sfxTable": table, "music": music, "themes": {"THEME_SNOW": "jungle"},
                 "patterns": {"jungle": edits}, "songComments": {"jungle": "the jungle theme's, edited"},
                 "samples": {"sfx_samples/09.wav": imp2["wav"]}, "structures": structures, "newSongs": new_song,
                 "newInstruments": [{"name": "test_beep", "wav": imp["wav"]}], **pool_edits,
-                "songInstruments": song_instruments, "songSettings": settings,
-                "sfxInstruments": {"31": sfx_rec}}
+                "songInstruments": song_instruments, "songSettings": settings, **sfx_edits,
+                "xmInstruments": xm_instruments}
         body["patterns"]["intro"] = intro_cell
+        # the music pool as the whole edit plays it unsaved: own_note's instrument after the others, on its own
+        # sample after the new one
+        st, full_pool = self.call("POST", "/api/projects/xs/music/pool", body)
+        self.assertEqual(st, 200, full_pool)
+        own_ins = full_pool["music"]["instruments"][full_pool["xmPool"][R.OWN_SONG][0]]
         st, r = self.call("POST", "/api/projects/xs/music/save", body)
         self.assertEqual(st, 200, r)
         self.assertFalse([d for d in r["diagnostics"] if d["severity"] == "error"], r)
@@ -541,7 +601,13 @@ class Scratch(unittest.TestCase):
             SOUND + "/sfx_table.json", SOUND + "/songs/jungle.xm", SOUND + "/songs/drums.xm",
             SOUND + "/songs/main_menu_japan.xm", SOUND + "/songs/test_song.xm",
             SOUND + "/songs/intro.xm", SOUND + "/songs/test_song.json", SOUND + "/gax_sfx_manifest.json",
-            SOUND + "/samples/%02d.wav" % nxt, SOUND + "/samples/%02d.wav" % gone]))
+            SOUND + "/samples/%02d.wav" % nxt, SOUND + "/samples/%02d.wav" % gone,
+            SOUND + "/songs/%s.xm" % R.OWN_SONG, SOUND + "/sfx_samples/%02d.wav" % nxt_sfx]))
+        # the set's new instrument and sample, the one taken out; the own instrument as edited, played as before
+        sfx_m1 = json.loads((sound / "gax_sfx_manifest.json").read_text())
+        self.assertEqual((sfx_m1["instruments"][str(top_sfx + 1)]["sample_indices"][0], sfx_m1["samples"][
+            str(nxt_sfx)], sfx_m1["instruments"]["19"]["byte_00"]), (nxt_sfx, {"has_data": True}, 1))
+        self.assertEqual(self.patterns(R.OWN_SONG)["instruments"][0]["own"]["spec"], own)
         self.assertFalse((sound / "samples" / ("%02d.wav" % gone)).exists())
         m1 = json.loads((sound / "gax_manifest.json").read_text())
         self.assertNotIn(str(gone), m1["samples"])
@@ -560,7 +626,8 @@ class Scratch(unittest.TestCase):
         self.assertEqual(self.patterns("intro")["instruments"][-1], {"name": "Instrument %d" % new_ins,
                                                                       "pool": new_ins})
         st, raw = self.get_bytes("/api/projects/xs/music/pool")
-        self.assertEqual(json.loads(raw)["music"]["instruments"], pool["music"]["instruments"])
+        # the pool as played before the save, then own_note's own instrument
+        self.assertEqual(json.loads(raw)["music"]["instruments"], pool["music"]["instruments"] + [own_ins])
         # read back: the player plays the saved edit, the shared positions too
         self.assertEqual(self.song("jungle")["patterns"], preview["patterns"])
         # the structures as they played before the save, the ROM songs without their scaffold
@@ -580,9 +647,13 @@ class Scratch(unittest.TestCase):
         v2 = self.view()
         self.assertEqual(v2["screens"][0]["song"], "credits")
         self.assertEqual(next(t for t in v2["themes"] if t["constant"] == "THEME_SNOW")["song"], "jungle")
-        self.assertEqual(v2["sfx"][-1]["constant"], "SFX_TEST_BEEP")
+        self.assertEqual([e["constant"] for e in v2["sfx"][-2:]], ["SFX_TEST_BEEP", "SFX_TEST_CHIRP"])
         st, raw = self.get_bytes("/api/projects/xs/music/pool")
-        self.assertEqual(json.loads(raw)["sfxSlots"], {"test_beep": 88})
+        saved_pool = json.loads(raw)
+        # the new sound effect's own instrument after the set's (its new one, 88, too)
+        self.assertEqual(saved_pool["sfxSlots"], {"test_beep": top_sfx + 2})
+        self.assertEqual(saved_pool["sfx"]["instruments"][top_sfx + 1], sfx_pool["sfx"]["instruments"][top_sfx + 1])
+        self.assertEqual(saved_pool["music"]["instruments"][saved_pool["xmPool"][R.OWN_SONG][0]], own_ins)
         # only the edited pattern's bytes are new: the others are the ROM's
         self.assertEqual(changed_groups(self.tree, "jungle"), {p["groups"][0][0]})
         st, rep = self.call("GET", "/api/projects/xs/check?text=0")
@@ -593,10 +664,11 @@ class Scratch(unittest.TestCase):
                                text=True)
             self.assertEqual(b.returncode, 0, b.stdout[-3000:] + b.stderr[-3000:])
             self.assertTrue((self.tree / "crashbandicootxs.gba").is_file())
-            # the new sound effect's id (0x63) and the table's new length
+            # the new sound effects' ids (0x63, 0x64) and the table's new length
             sfx_h = (self.tree / "build/include/constants/sfx.h").read_text()
             self.assertIn("#define SFX_TEST_BEEP 0x63", sfx_h)
-            self.assertIn("#define SFX_COUNT 100", sfx_h)
+            self.assertIn("#define SFX_TEST_CHIRP 0x64", sfx_h)
+            self.assertIn("#define SFX_COUNT 101", sfx_h)
 
 
 if __name__ == "__main__":

@@ -29,6 +29,7 @@ import argparse
 import base64
 import hashlib
 import json
+import math
 import os
 import re
 import shutil
@@ -132,6 +133,33 @@ def note_xm(instrument, note=NOTE, hold=NOTE_HOLD, rows=NOTE_ROWS):
     return head + pattern + ins
 
 
+# A new song's own XM instrument (docs/audio.md, "From the XM"): own_note, a song of one note on an XM instrument
+# with its own sample (own_xm_instrument), which the editor then edits (its sound, loop, tune, envelope, vibrato).
+OWN_SONG = "own_note"
+
+
+def own_xm_instrument(name=b"own lead", length=400):
+    """An XM instrument with its own sample, as a tracker writes one: 8-bit, `length` samples of a buzz looped
+    forward over its second half, volume 48, a volume envelope of 4 points with a sustain point, no vibrato."""
+    wave_ = bytes(round(60 * math.sin(2 * math.pi * i / 50) + (20 if i % 50 < 25 else -20)) & 0xFF
+                  for i in range(length))
+    deltas = bytes((v - p) & 0xFF for v, p in zip(wave_, b"\0" + wave_))
+    env = [(0, 64), (4, 48), (16, 36), (40, 0)]
+    head = struct.pack("<I22sBHI", 263, name.ljust(22, b"\0"), 0, 1, 40) + bytes(96)
+    head += b"".join(struct.pack("<HH", x, y) for x, y in env).ljust(48, b"\0") + bytes(48)
+    head += bytes([len(env), 0, 2, 0, 0, 0, 0, 0, 1 | 2, 0, 0, 0, 0, 0]) + bytes(4)
+    sample = struct.pack("<IIIBbBBbB22s", length, length // 2, length // 2, 48, 0, 1, 0x80, 0, 0, b"buzz")
+    return head.ljust(263, b"\0") + sample + deltas
+
+
+def own_note_xm(note=NOTE, hold=NOTE_HOLD, rows=NOTE_ROWS):
+    """note_xm's song, its note on its own instrument (own_xm_instrument) instead of the pool's."""
+    buf = note_xm(0, note, hold, rows)
+    head = bytearray(buf[:buf.index(b"Instrument 0") - 4])  # the module and its pattern, before the instrument
+    head[17:37] = OWN_SONG.encode().ljust(20, b"\0")
+    return bytes(head) + own_xm_instrument()
+
+
 def edited_body(root):
     """The music editor's edits of the reference's edited songs, as a save
     sends them (the tree at root's XMs, unedited, are their base):
@@ -156,7 +184,15 @@ def edited_body(root):
     - warp_room's settings: mix rate 26760 Hz, volume 300, its sound
       effects at half rate and longer echo taps;
     - the sound-effect set's instrument 31 retuned with a new envelope
-      (EDITED_SFX plays it)."""
+      (EDITED_SFX plays it);
+    - own_note, a new song of one note on its own XM instrument
+      (own_note_xm), the instrument edited: a new sound (a square at
+      12000 Hz, C-4 tuned to play it there) looped ping-pong, its volume,
+      a new envelope with a loop, and an auto-vibrato;
+    - the sound-effect set's new instruments: 88, a blank one (the set's
+      one rate) on a new sample 88 (a decaying chirp) with an envelope,
+      and 89, a copy of instrument 9 tuned down 2 semitones (EDITED_SFX
+      plays both)."""
     from crashdata.audio import edit as E
 
     songs = os.path.join(root, "games", "xs", "sound", "songs")
@@ -214,6 +250,23 @@ def edited_body(root):
     s31["samples"][0]["pitch"] += 96
     s31["envelope"] = {"sustain": None, "loop_start": None, "loop_end": None,
                        "points": [{"x": 0, "y": 255}, {"x": 12, "y": 60}, {"x": 40, "y": 0}]}
+    # own_note's own instrument: a square at 12000 Hz (C-4 plays it there: relative note 6, finetune 32),
+    # ping-pong looped, at volume 40, a new envelope looping between its points 1 and 2, and an auto-vibrato
+    square = [(40 if (i // 15) % 2 else -40) for i in range(1200)]
+    own = {"sample": 0, "volume": 40, "relative_note": 6, "finetune": 32, "loop": "pingpong", "loop_start": 300,
+           "loop_end": 900, "envelope": {"points": [[0, 64], [6, 40], [18, 56], [48, 0]], "sustain": 2,
+                                         "loop_start": 1, "loop_end": 2},
+           "vibrato": {"depth": 10, "rate": 22}, "wav": E._b64(E.wav_bytes(square, 12000))}
+    # the sound-effect set's new sample 88 (a decaying chirp at the set's rate) and new instruments 88 (blank, on
+    # it, with an envelope) and 89 (instrument 9 tuned down 2 semitones)
+    nxt_sfx = max(int(k) for k in sfx["samples"]) + 1
+    chirp = [round(90 * (1 - i / 3000) * math.sin(2 * math.pi * (300 + i / 10) * i / 8000)) for i in range(3000)]
+    s88 = P.blank_sfx_instrument(nxt_sfx)
+    s88["envelope"] = {"sustain": None, "loop_start": None, "loop_end": None,
+                       "points": [{"x": 0, "y": 200}, {"x": 30, "y": 255}, {"x": 90, "y": 0}]}
+    s89 = json.loads(json.dumps(sfx["instruments"]["9"]))
+    s89["samples"][0]["pitch"] -= 64
+    top_sfx = max(int(k) for k in sfx["instruments"])
     return {
         "structures": {"drums": st, "main_menu_japan": japan},
         "patterns": {"jungle": [{"pattern": 0, "row": 0, "channel": 0, "cell": [14, 1, 0, 7, 0x64]},
@@ -223,18 +276,22 @@ def edited_body(root):
         "newSamples": {str(nxt): E._b64(E.wav_bytes([b - 256 if b > 127 else b for b in buzz], 16000))},
         "deleteSamples": [gone],
         "songInstruments": {"cutscenes": [new]},
-        "newSongs": [{"key": NOTE_SONG, "xm": E._b64(note_xm(new)), "comment": "the music editor's note test"}],
+        "newSongs": [{"key": NOTE_SONG, "xm": E._b64(note_xm(new)), "comment": "the music editor's note test"},
+                     {"key": OWN_SONG, "xm": E._b64(own_note_xm()), "comment": "the music editor's own instrument"}],
         "songSettings": {"warp_room": {"sample_rate": 26760, "volume": 300, "half_rate_fx": 1,
                                        "mixer_data_bytes": list(struct.pack("<7I", 4, 45, 9, 25, 5, 30, 0))}},
-        "sfxInstruments": {"31": s31},
+        "xmInstruments": {OWN_SONG: {"1": own}},
+        "sfxInstruments": {"31": s31, str(top_sfx + 1): s88, str(top_sfx + 2): s89},
+        "newSfxSamples": {str(nxt_sfx): E._b64(E.wav_bytes(chirp, 8003))},
     }
 
 
 # the edited tree's sound effects: instrument 31 (edited) and 9 (as it was) over jungle, its music muted, and over
-# warp_room (edited settings) with its music
+# warp_room (edited settings) with its music; the set's new instruments 88 and 89 over jungle, muted
 EDITED_SFX = [
     {"song": "jungle", "musicVolume": 0, "frames": 300, "events": [[10, 31, 0, 0, 255], [150, 9, 1, 0, 255]]},
     {"song": "warp_room", "frames": 400, "events": [[30, 31, 0, 0, 200], [200, 31, 1, 0, 255]]},
+    {"song": "jungle", "musicVolume": 0, "frames": 300, "events": [[10, 88, 0, 0, 255], [160, 89, 1, 0, 230]]},
 ]
 
 

@@ -1,17 +1,18 @@
 <script lang="ts">
-  // The selected sample (the music pool's samples/NN.wav or a sound-effect
-  // slot's sfx_samples/NN.wav): its sound, what plays it, and a new sound
-  // for it from a WAV (made 8-bit mono at a rate by the backend).
+  // The selected sample (the music pool's samples/NN.wav or the
+  // sound-effect set's sfx_samples/NN.wav): its sound, what plays it, and a
+  // new sound for it from a WAV (made 8-bit mono at a rate by the backend).
   import { music as mu } from "../../lib/music/state.svelte.ts";
   import Waveform from "./Waveform.svelte";
 
   let { part }: { part: "sound" | "record" } = $props();
 
   const pool = $derived(mu.view?.samples.find((s) => s.path === mu.sample));
-  const added = $derived(mu.poolSamples.find((s) => s.path === mu.sample && s.added));
-  const slot = $derived(mu.view?.sfxSlots.find((s) => s.path === mu.sample));
+  const added = $derived(mu.poolSamples.find((s) => s.path === mu.sample && s.added) ?? mu.sfxSamples.find((s) => s.path === mu.sample && s.added));
+  const sfxSample = $derived(mu.view?.sfxSamples.find((s) => s.path === mu.sample));
+  const slot = $derived(mu.sfxSlotList.find((s) => s.path === mu.sample));
   const sound = $derived(mu.sample ? mu.sound(mu.sample) : null);
-  const minLength = $derived(pool?.minLength ?? slot?.minLength ?? 1);
+  const minLength = $derived(pool?.minLength ?? sfxSample?.minLength ?? 1);
   const defaultRate = $derived(slot ? Math.round(slot.rate) : (pool?.rate ?? 15769));
   let rate = $derived(defaultRate);
   let fileInput = $state<HTMLInputElement>();
@@ -32,7 +33,7 @@
   <div class="empty"><p>Pick a sample on the left.</p></div>
 {:else if part === "sound"}
   <div class="sound">
-    <h2>{mu.sample}{mu.state.samples[mu.sample] ? " (replaced, not saved)" : ""}</h2>
+    <h2>{mu.sample}{mu.state.samples[mu.sample] ? " (replaced, not saved)" : added ? " (new, not saved)" : ""}</h2>
     <Waveform data={sound?.data ?? null} label="{mu.sample}'s waveform" />
     <p class="hint">{sound ? `${sound.data.length} samples, the WAV declares ${sound.rate} Hz` : "reading…"}</p>
     <div class="row">
@@ -46,7 +47,7 @@
 {:else}
   <div class="panel">
     <section>
-      {#if pool || added}
+      {#if pool || (added && mu.sample.startsWith("samples/"))}
         {@const idx = pool?.index ?? added!.index}
         {@const who = mu.sampleUsers(idx)}
         <h3>Sample {idx} of the music pool{added ? " (new, not saved)" : ""}</h3>
@@ -54,11 +55,14 @@
           Played by instruments {who.join(", ") || "none"}{pool ? ` in ${pool.songs.join(", ") || "no song"}` : ""}. Its WAV's rate is cosmetic (the build doesn't read it): an instrument plays it at the note's pitch, with its own tune (the Instruments tab gives a wave row its sample).
         </p>
         <button disabled={who.length > 0} title={who.length ? `instruments ${who.join(", ")} play it` : "take it out of the music pool (samples/NN.wav and the manifest's entry)"} onclick={() => mu.deletePoolSample(idx)}>Delete this sample</button>
-      {:else if slot}
-        <h3>Sound-effect slot {slot.slot}</h3>
+      {:else if sfxSample || added}
+        {@const idx = sfxSample?.index ?? added!.index}
+        {@const who = mu.sfxSampleUsers(idx)}
+        <h3>Sample {idx} of the sound-effect set{added ? " (new, not saved)" : ""}</h3>
         <p class="hint">
-          GAX2 plays it at one rate, {slot.rate} Hz (its instrument's fixed pitch). Played by {mu.state.sfx.entries.filter((e) => (e as { slot_id?: number }).slot_id === slot.slot).map((e) => `SFX_${e.name}`).join(", ") || "no sound effect"}.
+          Played by instruments {who.join(", ") || "none"} of the set{slot ? `; GAX2 plays it at one rate, ${slot.rate} Hz (slot ${slot.slot}'s fixed pitch), for ${mu.slotUsers(slot.slot).join(", ") || "no sound effect"}` : ""}. The Instruments tab gives a new instrument of the set its sample.
         </p>
+        <button disabled={who.length > 0} title={who.length ? `instruments ${who.join(", ")} play it` : "take it out of the sound-effect set (sfx_samples/NN.wav and the manifest's entry)"} onclick={() => mu.deleteSfxSample(idx)}>Delete this sample</button>
       {/if}
       <p class="hint">Its instruments' starts and loops reach sample {minLength}: a new sound must be at least that long.</p>
     </section>

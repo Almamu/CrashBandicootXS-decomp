@@ -14,6 +14,7 @@
   import SfxPanel from "./SfxPanel.svelte";
   import SamplePanel from "./SamplePanel.svelte";
   import InstrumentPanel from "./InstrumentPanel.svelte";
+  import XmInstrumentPanel from "./XmInstrumentPanel.svelte";
 
   $effect(() => {
     void mu.syncProject(editor.projectId, !!editor.project?.ready);
@@ -55,7 +56,7 @@
       e.preventDefault();
       if (mu.playing) mu.stop();
       else if (mu.kind === "sfx") void mu.playSfx();
-      else if (mu.kind === "instrument") void (mu.instrumentPool === "sfx" ? mu.playSfxInstrument(mu.instrument) : mu.playInstrument(mu.instrument, 49, 16));
+      else if (mu.kind === "instrument") void (mu.instrumentPool === "sfx" ? mu.playSfxInstrument(mu.instrument) : mu.instrumentPool === "xm" ? mu.playOwn(mu.xmSong, mu.instrument, 49, 16) : mu.playInstrument(mu.instrument, 49, 16));
       else void mu.playSong();
     }
   }
@@ -127,7 +128,7 @@
         {:else if mu.kind === "sfx"}
           <SfxPanel part="sound" />
         {:else}
-          {#if mu.kind === "instrument"}<InstrumentPanel part="sound" />{:else}<SamplePanel part="sound" />{/if}
+          {#if mu.kind === "instrument"}{#if mu.instrumentPool === "xm"}<XmInstrumentPanel part="sound" />{:else}<InstrumentPanel part="sound" />{/if}{:else}<SamplePanel part="sound" />{/if}
         {/if}
       </div>
     </section>
@@ -137,7 +138,7 @@
       {:else if mu.kind === "sfx"}
         <SfxPanel part="record" />
       {:else}
-        {#if mu.kind === "instrument"}<InstrumentPanel part="record" />{:else}<SamplePanel part="record" />{/if}
+        {#if mu.kind === "instrument"}{#if mu.instrumentPool === "xm"}<XmInstrumentPanel part="record" />{:else}<InstrumentPanel part="record" />{/if}{:else}<SamplePanel part="record" />{/if}
       {/if}
     </aside>
   </div>

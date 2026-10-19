@@ -1,6 +1,7 @@
 <script lang="ts">
-  // An instrument's volume envelope (GaxEnvelope): its points, volume
-  // 0-255 over ticks, the sustain point and the loop marked. A point is
+  // An instrument's volume envelope (GaxEnvelope; an XM instrument's,
+  // volume 0-64, with top 64): its points, volume 0-255 over ticks, the
+  // sustain point and the loop marked. A point is
   // dragged (the first stays at tick 0, the others between their
   // neighbours), a click on the line adds one, a double click on a point
   // takes it out; each change is given to `onchange` when the drag ends.
@@ -13,6 +14,8 @@
     loopEnd,
     onchange,
     height = 180,
+    top = 255,
+    scale = "GAX2's",
   }: {
     points: M.EnvPoint[];
     sustain: number | null;
@@ -20,6 +23,9 @@
     loopEnd: number | null;
     onchange: (points: M.EnvPoint[], label: string) => void;
     height?: number;
+    /** the highest volume, and whose scale it is */
+    top?: number;
+    scale?: string;
   } = $props();
 
   let width = $state(600);
@@ -30,14 +36,14 @@
   const maxX = $derived(Math.max(16, ...shown.map((p) => p.x)) * 1.1);
   const pad = 8;
   const sx = (x: number) => pad + (x / maxX) * (width - 2 * pad);
-  const sy = (y: number) => height - pad - (y / 255) * (height - 2 * pad);
+  const sy = (y: number) => height - pad - (y / top) * (height - 2 * pad);
   const path = $derived(shown.map((p, i) => `${i ? "L" : "M"}${sx(p.x).toFixed(1)},${sy(p.y).toFixed(1)}`).join(" ") + (shown.length ? ` L${sx(maxX).toFixed(1)},${sy(shown[shown.length - 1]!.y).toFixed(1)}` : ""));
 
   function at(e: PointerEvent): M.EnvPoint {
     const r = svg!.getBoundingClientRect();
     const x = Math.round(((e.clientX - r.left - pad) / (width - 2 * pad)) * maxX);
-    const y = Math.round(((height - pad - (e.clientY - r.top)) / (height - 2 * pad)) * 255);
-    return { x: Math.max(0, x), y: Math.max(0, Math.min(255, y)) };
+    const y = Math.round(((height - pad - (e.clientY - r.top)) / (height - 2 * pad)) * top);
+    return { x: Math.max(0, x), y: Math.max(0, Math.min(top, y)) };
   }
 
   function down(e: PointerEvent, i: number) {
@@ -84,7 +90,7 @@
 <div class="env" bind:clientWidth={width}>
   <svg bind:this={svg} {width} {height} role="img" aria-label="the volume envelope" onpointerdown={add} onpointermove={move} onpointerup={up}>
     <rect x="0" y="0" {width} {height} class="bg" />
-    {#each [64, 128, 192] as v (v)}<line x1={pad} x2={width - pad} y1={sy(v)} y2={sy(v)} class="grid" />{/each}
+    {#each [top / 4, top / 2, (top * 3) / 4] as v (v)}<line x1={pad} x2={width - pad} y1={sy(v)} y2={sy(v)} class="grid" />{/each}
     {#if loopStart !== null && loopEnd !== null && shown[loopStart] && shown[loopEnd]}
       <rect x={sx(shown[loopStart]!.x)} y={pad} width={Math.max(2, sx(shown[loopEnd]!.x) - sx(shown[loopStart]!.x))} height={height - 2 * pad} class="loop" />
     {/if}
@@ -98,7 +104,7 @@
       </circle>
     {/each}
   </svg>
-  <p class="hint">Drag a point; click the graph to add one, double-click a point to take it out. Volume 0-255 (GAX2's), ticks of 1/60 s; {#if sustain !== null}the dashed line is the sustain point (held until the key off){:else}no sustain point: a key off cuts the note{/if}{#if loopStart !== null}, the band the loop{/if}.</p>
+  <p class="hint">Drag a point; click the graph to add one, double-click a point to take it out. Volume 0-{top} ({scale}), ticks of 1/60 s; {#if sustain !== null}the dashed line is the sustain point (held until the key off){:else}no sustain point: a key off cuts the note{/if}{#if loopStart !== null}, the band the loop{/if}.</p>
 </div>
 
 <style>

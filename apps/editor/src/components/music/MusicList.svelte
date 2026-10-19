@@ -151,21 +151,54 @@
     <p class="hint">A song's XM plays instrument N as "Instrument N"; a cell can play any of the pool's (the song's XM gets it). An instrument is shared: an edit is heard in every song that plays it.</p>
     <h3>The sound-effect set's instruments</h3>
     <ol>
-      {#each mu.view?.sfxInstruments ?? [] as ins (ins.index)}
-        {@const r = mu.record(ins.index, "sfx")!}
-        {@const named = mu.state.sfx.entries.filter((e) => (e as { slot_id?: number }).slot_id === ins.index).map((e) => e.name ?? "?")}
-        {#if !r.byte_00}
+      {#each mu.sfxList as ins (ins.index)}
+        {@const r = ins.record}
+        {@const named = mu.slotUsers(ins.index)}
+        {#if ins.index !== 0 && (!r.byte_00 || ins.deleted)}
           <li>
-            <button class:on={mu.instrumentPool === "sfx" && mu.instrument === ins.index} onclick={() => ((mu.instrumentPool = "sfx"), (mu.instrument = ins.index))} title={named.length ? `SFX_${named.join(", SFX_")}` : "no sound effect plays it"}>
+            <button class:on={mu.instrumentPool === "sfx" && mu.instrument === ins.index} onclick={() => ((mu.instrumentPool = "sfx"), (mu.instrument = ins.index))} title={named.length ? named.join(", ") : "no sound effect plays it"}>
               <span class="id">{String(ins.index).padStart(2, "0")}</span>
-              <span class="name">sample {r.sample_indices[0]}{mu.state.sfxInstruments[String(ins.index)] ? " *" : ""}{named.length ? ` · ${named[0]}` : ""}</span>
+              <span class="name">{ins.deleted ? "(taken out)" : `sample ${r.sample_indices[0] || "none"}`}{ins.added ? " (new)" : mu.state.sfxInstruments[String(ins.index)] ? " *" : ""}{named.length ? ` · ${named[0]!.slice(4)}` : ""}</span>
               <span class="count">{named.length}</span>
             </button>
           </li>
         {/if}
       {/each}
     </ol>
-    <p class="hint">Slot N of a sound effect (sfx_table.json's slot_id) is the set's instrument N (gax_sfx_manifest.json): an edit is heard in every sound effect on it.</p>
+    {@const sfxSel = mu.instrumentPool === "sfx" ? mu.sfxList.find((i) => i.index === mu.instrument) : undefined}
+    {@const sfxWhy = mu.cannotDeleteSfxInstrument(mu.instrument)}
+    <div class="row">
+      <button onclick={() => mu.newSfxInstrument(null, "blank")} title="a new instrument at the end of the set, as the ROM's are: one wave row with no sample yet, at the set's one rate ({mu.view?.sfxRate} Hz, a fixed pitch)">New</button>
+      <button disabled={!sfxSel || !!sfxSel.record.byte_00} onclick={() => sfxSel && mu.newSfxInstrument({ copy: sfxSel.record }, `a copy of ${sfxSel.index}`)} title="a new instrument of the set, a copy of the one selected">Copy</button>
+      <label class="hint" title="a new instrument playing a sample of the set at its one rate ({mu.view?.sfxRate} Hz)">
+        from sample
+        <select value="" onchange={(e) => {
+          const v = Number(e.currentTarget.value);
+          e.currentTarget.value = "";
+          if (v) mu.newSfxInstrument({ sample: v }, `sample ${v}`);
+        }}>
+          <option value="">…</option>
+          {#each mu.sfxSamples as s (s.index)}<option value={s.index}>{s.index}{s.added ? " (new)" : ""}</option>{/each}
+        </select>
+      </label>
+      <button disabled={mu.instrumentPool !== "sfx" || !!sfxWhy} title={mu.instrumentPool !== "sfx" ? "" : (sfxWhy ?? "take it out of the set: the set's last goes, another becomes the empty instrument (the slots after it stay)")} onclick={() => mu.deleteSfxInstrument(mu.instrument)}>Delete</button>
+    </div>
+    <p class="hint">Slot N of a sound effect (sfx_table.json's slot_id) is the set's instrument N (gax_sfx_manifest.json): an edit is heard in every sound effect on it. A new one is the set's next slot (88 for the first), which a sound effect then plays.</p>
+    <h3>The songs' own instruments</h3>
+    {#if mu.ownList.length}
+      <ol>
+        {#each mu.ownList as it (`${it.song}:${it.n}`)}
+          <li>
+            <button class:on={mu.instrumentPool === "xm" && mu.xmSong === it.song && mu.instrument === it.n} onclick={() => mu.selectOwn(it.song, it.n)} title="{it.song}'s XM instrument {it.n}, made into a new pool instrument by the build">
+              <span class="id">{String(it.n).padStart(2, "0")}</span>
+              <span class="name">{it.song} · {it.name || "(no name)"}{mu.state.xmInstruments[it.song]?.[String(it.n)] ? " *" : ""}</span>
+              <span class="count"></span>
+            </button>
+          </li>
+        {/each}
+      </ol>
+    {/if}
+    <p class="hint">A new song's XM instruments that aren't "Instrument N" (or an instruments/&lt;name&gt;.json's): the build makes each a new pool instrument from its sample and envelopes. {mu.ownList.length ? "" : "No song has one."}</p>
   {:else}
     <h3>The music pool</h3>
     <ol>
@@ -194,16 +227,29 @@
     </div>
     <h3>The sound-effect set</h3>
     <ol>
-      {#each mu.view?.sfxSlots ?? [] as s (s.path)}
+      {#each mu.sfxSamples as s (s.path)}
+        {@const who = mu.sfxSampleUsers(s.index)}
         <li>
-          <button class:on={mu.sample === s.path} onclick={() => (mu.sample = s.path)} title="slot {s.slot}, at {s.rate} Hz">
-            <span class="id">{String(s.slot).padStart(2, "0")}</span>
-            <span class="name">{s.path}{mu.state.samples[s.path] ? " *" : ""}</span>
+          <button class:on={mu.sample === s.path} onclick={() => (mu.sample = s.path)} title={who.length ? `instruments ${who.join(", ")}` : "no instrument plays it"}>
+            <span class="id">{String(s.index).padStart(2, "0")}</span>
+            <span class="name">{s.path}{mu.state.samples[s.path] || s.added ? " *" : ""}{who.length ? "" : " (unused)"}</span>
             <span class="count">{s.length}</span>
           </button>
         </li>
       {/each}
     </ol>
+    <div class="row">
+      <label class="hint" title="resampled to the set's one rate, {mu.view?.sfxRate} Hz, which its new instruments play a sample at">
+        New sample from a WAV…
+        <input type="file" accept=".wav" onchange={async (e) => {
+          const f = e.currentTarget.files?.[0];
+          e.currentTarget.value = "";
+          if (!f || !mu.view) return;
+          const s = await mu.importWav(f, Math.round(mu.view.sfxRate));
+          if (s) mu.addSfxSample(s);
+        }} />
+      </label>
+    </div>
   {/if}
 </nav>
 

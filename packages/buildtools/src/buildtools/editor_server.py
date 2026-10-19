@@ -579,8 +579,9 @@ class Server:
         """The songs' unsaved edits a player request carries (newSongs,
         structures, patterns, settings, the pools' edits:
         music_edit.unsaved_songs)."""
-        keys = ("newSongs", "songInstruments", "structures", "patterns", "songSettings", "instruments", "samples",
-                "newSamples", "deleteSamples", "deleteInstruments", "sfxInstruments")
+        keys = ("newSongs", "songInstruments", "xmInstruments", "structures", "patterns", "songSettings",
+                "instruments", "samples", "newSamples", "deleteSamples", "deleteInstruments", "sfxInstruments",
+                "newSfxSamples", "deleteSfxSamples", "deleteSfxInstruments")
         return {k: body[k] for k in keys if k in body} if body else {}
 
     def music_pool(self, project, body=None):

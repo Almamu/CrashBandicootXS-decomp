@@ -17,13 +17,13 @@
   let { part }: { part: "sound" | "record" } = $props();
 
   const n = $derived(mu.instrument);
-  const pool = $derived(mu.instrumentPool);
+  const pool = $derived(mu.instrumentPool === "sfx" ? "sfx" : "music");
   const sfx = $derived(pool === "sfx");
   const rec = $derived(mu.record(n, pool));
-  const listed = $derived(sfx ? undefined : mu.poolList.find((i) => i.index === n));
+  const listed = $derived((sfx ? mu.sfxList : mu.poolList).find((i) => i.index === n));
   const edited = $derived(!!(sfx ? mu.state.sfxInstruments : mu.state.instruments)[String(n)]);
   const songs = $derived(sfx ? [] : mu.instrumentSongs(n));
-  const sfxNames = $derived(sfx ? mu.state.sfx.entries.filter((e) => (e as { slot_id?: number }).slot_id === n).map((e) => `SFX_${e.name ?? "?"}`) : []);
+  const sfxNames = $derived(sfx ? mu.slotUsers(n) : []);
   const samples = $derived(sfx ? mu.sfxSamples : mu.poolSamples);
   const marks = $derived(rec ? M.envMarks(rec) : { sustain: null, loopStart: null, loopEnd: null });
   const points = $derived(rec ? M.envPoints(rec) : []);
@@ -91,7 +91,7 @@
   <div class="sound">
     <h2>{sfx ? "Sound-effect instrument" : "Instrument"} {n}{listed?.added ? " (new, not saved)" : listed?.deleted ? " (taken out, not saved)" : edited ? " (edited, not saved)" : ""}</h2>
     {#if sfx}
-      <p class="hint">Slot {n} of the sound-effect set: {sfxNames.length ? `played by ${sfxNames.join(", ")}` : "no entry of the table plays it"}. A sound effect plays it at its fixed pitch on a voice, as PlaySfx does.</p>
+      <p class="hint">{listed?.deleted ? "Taken out: it becomes the empty instrument (the set's last ones leave the set)." : `Slot ${n} of the sound-effect set: ${sfxNames.length ? `played by ${sfxNames.join(", ")}` : "no entry of the table plays it"}. A sound effect plays it at its fixed pitch on a voice, as PlaySfx does.`}</p>
     {:else}
       <p class="hint">{listed?.deleted ? "Taken out: it becomes the empty instrument (the pool's last ones leave the pool)." : rec.byte_00 ? "The empty instrument: a note on it plays nothing." : `Named "Instrument ${n}" in ${songs.length ? songs.join(", ") : "no song's XM"}.`}</p>
     {/if}
@@ -117,7 +117,7 @@
       {#if mu.playing === "instrument"}
         <button class="primary" onclick={() => mu.stop()}>■ Stop</button>
       {:else if sfx}
-        <button class="primary" disabled={!!problem} onclick={() => mu.playSfxInstrument(n)} title="as PlaySfx plays a sound effect on it: GAX_fx_ex on voice 0, priority 0, volume 1.0, over the song chosen in the Sound effects tab ({mu.sfxSong})">▶ Play it</button>
+        <button class="primary" disabled={!!problem || !!listed?.deleted} onclick={() => mu.playSfxInstrument(n)} title="as PlaySfx plays a sound effect on it: GAX_fx_ex on voice 0, priority 0, volume 1.0, over the song chosen in the Sound effects tab ({mu.sfxSong})">▶ Play it</button>
       {:else}
         <button class="primary" disabled={!!problem || !!listed?.deleted} onclick={() => mu.playInstrument(n, note, Math.max(1, hold))} title="the note on one channel, as a song plays it (GAX2, the pool with the unsaved edits)">▶ Play the note</button>
       {/if}
