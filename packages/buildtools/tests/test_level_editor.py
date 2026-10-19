@@ -469,6 +469,184 @@ class Tiles(LevelEditor):
                 p.write_bytes(b)
 
 
+MT_ROOM = "games/xs/data/levels/air_supply/main"
+MT_DIR = ROOT / "games/xs/data/levels/metatiles"
+MT_FILE = MT_DIR / "gUnderwaterBgTiles.json"
+
+
+class MetaTiles(LevelEditor):
+    """Meta-tiles (docs/editors.md, "Meta-tiles"): detected in a tile set's
+    rooms, kept in their file, stamped into a picture and saved with the
+    room, all or none; a save that changes nothing writes nothing."""
+
+    def setUp(self):
+        self.assertFalse(MT_DIR.exists(), "the tree has meta-tiles: the tests would change them")
+
+    def tearDown(self):
+        if MT_DIR.exists():
+            for p in MT_DIR.iterdir():
+                p.unlink()
+            MT_DIR.rmdir()
+
+    def cells(self, room, layer):
+        st, t = self.call("GET", "/api/projects/xs/room/tiles?path=%s&layer=%s" % (room, layer))
+        self.assertEqual(st, 200, t)
+        data = base64.b64decode(t["cells"])
+        return t, struct.unpack("<%dH" % (len(data) // 2), data)
+
+    def test_detect(self):
+        st, r = self.call("POST", "/api/projects/xs/room/metatiles/detect", {"path": MT_ROOM, "layer": "bg2"})
+        self.assertEqual(st, 200, r)
+        self.assertEqual((r["tileset"], r["bpp"], r["scope"]), ("gUnderwaterBgTiles", 4, "set"))
+        self.assertTrue(r["candidates"])
+        t, here = self.cells(MT_ROOM, "bg2")
+        W = 20 * 16  # bg2: 20 chunks of 16 cells across
+        seen = 0
+        for c in r["candidates"]:
+            w, h = c["size"]
+            for name, x, y, flip, shift in c["at"]:
+                if name != "air_supply/main/bg2":
+                    continue
+                # the repeat's cells are the block's, flipped as a whole, banks shifted
+                for j in range(h):
+                    for i in range(w):
+                        tile, f, bank = c["cells"][j * w + i]
+                        v = here[(y + (h - 1 - j if flip & 2 else j)) * W + x + (w - 1 - i if flip & 1 else i)]
+                        if tile:
+                            self.assertEqual(v, tile | (f ^ flip) << 10 | (bank + shift) << 12, (c["size"], x, y))
+                        else:
+                            self.assertEqual(v & 0x3FF, 0)
+                seen += 1
+        self.assertTrue(seen)
+        st, r2 = self.call("POST", "/api/projects/xs/room/metatiles/detect",
+                           {"path": MT_ROOM, "layer": "bg2", "scope": "room"})
+        self.assertEqual((st, r2["scope"]), (200, "room"), r2)
+        for c in r2["candidates"]:
+            self.assertEqual({n.rsplit("/", 1)[0] for n in c["rooms"]}, {"air_supply/main"})
+        for body, status in [({"layer": "collision"}, 400), ({"scope": "level"}, 400)]:
+            st, e = self.call("POST", "/api/projects/xs/room/metatiles/detect", dict({"path": MT_ROOM, "layer": "bg2"},
+                                                                                     **body))
+            self.assertEqual(st, status, e)
+        self.assertFalse(MT_DIR.exists())
+
+    def test_stamp_save_and_unchanged(self):
+        """A meta-tile made of a detected block, stamped flipped and in other
+        banks into BG2 and saved with its file: the picture has the cells
+        (the build reads them back as the tiles, flips and banks the stamp
+        names), the file is the editor's value; saved again unchanged,
+        nothing is written."""
+        from PIL import Image
+
+        from crashdata.levels import metatiles as M
+
+        files = {p: p.read_bytes() for p in (ROOT / MT_ROOM).iterdir()}
+        try:
+            st, lib = self.call("GET", "/api/projects/xs/room/metatiles?path=%s&layer=bg2" % MT_ROOM)
+            self.assertEqual(st, 200, lib)
+            self.assertEqual((lib["tileset"], lib["exists"], lib["data"]),
+                             ("gUnderwaterBgTiles", False, {"metatiles": [], "tiles": []}))
+            self.assertEqual(lib["path"], "games/xs/data/levels/metatiles/gUnderwaterBgTiles.json")
+            st, r = self.call("POST", "/api/projects/xs/room/metatiles/detect", {"path": MT_ROOM, "layer": "bg2"})
+            t, here = self.cells(MT_ROOM, "bg2")
+            tiles = base64.b64decode(t["tiles"])
+            c = next(c for c in r["candidates"] if max(b for _, _, b in c["cells"]) < 15)
+            used = sorted({tile for tile, _, _ in c["cells"]})
+            doc = {"metatiles": [{"name": "Rocks", "size": c["size"],
+                                  "cells": [[used.index(tile), f, b] for tile, f, b in c["cells"]]}],
+                   "tiles": [M.tile_hex(tiles[k * 64:(k + 1) * 64], 4) for k in used]}
+            stamp = M.stamp(doc, 0, flip=1, shift=1)
+            w, h = c["size"]
+            at = (3, 5)
+            cells = [[at[0] + x, at[1] + y, base64.b64encode(px).decode()] for x, y, px in stamp]
+            st, s = self.call("POST", "/api/projects/xs/room/save", {
+                "path": MT_ROOM, "layers": {"bg2": cells}, "metatiles": {"gUnderwaterBgTiles": doc}})
+            self.assertEqual(st, 200, s)
+            self.assertEqual(sorted(s["saved"]), sorted([MT_ROOM + "/bg2.png", lib["path"]]))
+            self.assertFalse([d for d in s["diagnostics"] if d["severity"] == "error"])
+            self.assertEqual(json.loads(MT_FILE.read_text()), doc)
+            # the picture: the stamped cells' pixels, the rest as it was
+            with Image.open(ROOT / MT_ROOM / "bg2.png") as a, Image.open(io.BytesIO(files[ROOT / MT_ROOM / "bg2.png"])) as o:
+                new, old = a.tobytes(), o.tobytes()
+                self.assertEqual(a.getpalette(), o.getpalette())
+                PW = a.size[0]
+            want = bytearray(old)
+            for x, y, px in stamp:
+                for row in range(8):
+                    o0 = ((at[1] + y) * 8 + row) * PW + (at[0] + x) * 8
+                    want[o0:o0 + 8] = px[row * 8:row * 8 + 8]
+            self.assertEqual(new, bytes(want))
+            # read back by the build: each cell the stamp's tile, flip and bank
+            t2, here2 = self.cells(MT_ROOM, "bg2")
+            tiles2 = base64.b64decode(t2["tiles"])
+            W = PW // 8
+            for j in range(h):
+                for i in range(w):
+                    tile, f, bank = c["cells"][j * w + i]
+                    v = here2[(at[1] + j) * W + at[0] + (w - 1 - i)]
+                    if tile:
+                        self.assertEqual(tiles2[(v & 0x3FF) * 64:(v & 0x3FF) * 64 + 64], tiles[tile * 64:tile * 64 + 64])
+                        self.assertEqual((v >> 10 & 3, v >> 12), (f ^ 1, bank + 1))
+            # detected again, the stamp is a repeat of the block: flipped, in other banks
+            st, r = self.call("POST", "/api/projects/xs/room/metatiles/detect",
+                              {"path": MT_ROOM, "layer": "bg2", "scope": "room"})
+            self.assertEqual(st, 200, r)
+            found = [a for c2 in r["candidates"] if c2["size"] == c["size"] and c2["shifted"]
+                     for a in c2["at"] if a[:3] == ["air_supply/main/bg2", at[0], at[1]]]
+            self.assertTrue(found, "a bank-shifted, flipped repeat is the same meta-tile")
+            self.assertEqual([abs(a[4]) for a in found][0], 1)
+            # unchanged: the same meta-tiles, the same cells, nothing at all
+            before = {p: p.read_bytes() for p in (ROOT / MT_ROOM).iterdir()}
+            before[MT_FILE] = MT_FILE.read_bytes()
+            for body in ({"path": MT_ROOM, "layers": {"bg2": cells}, "metatiles": {"gUnderwaterBgTiles": doc}},
+                         {"path": MT_ROOM}):
+                st, s = self.call("POST", "/api/projects/xs/room/save", body)
+                self.assertEqual((st, s.get("saved")), (200, []), s)
+            for p, b in before.items():
+                self.assertEqual(p.read_bytes(), b, p)
+            st, lib = self.call("GET", "/api/projects/xs/room/metatiles?path=%s&layer=bg3" % MT_ROOM)
+            self.assertEqual((st, lib["exists"], lib["data"]), (200, True, doc))
+        finally:
+            for p, b in files.items():
+                p.write_bytes(b)
+
+    def test_refused(self):
+        """A meta-tiles file the schema or the model refuses, or of a set the
+        room doesn't name: nothing is written, no folder is left."""
+        files = {p: p.read_bytes() for p in (ROOT / MT_ROOM).iterdir()}
+        ok = {"metatiles": [{"name": "a", "size": [1, 1], "cells": [[0, 0, 0]]}], "tiles": ["0" * 64]}
+        try:
+            mixed = base64.b64encode(bytes([16] * 32 + [32] * 32)).decode()
+            for libs, layers, status in [
+                ({"gUnderwaterBgTiles": {"metatiles": [{"name": "", "size": [1, 1], "cells": [[0, 0, 0]]}],
+                                         "tiles": ["0" * 64]}}, None, 422),           # the schema: no name
+                ({"gUnderwaterBgTiles": dict(ok, tiles=["0" * 128])}, None, 422),    # an 8bpp tile in a 4bpp set
+                ({"gUnderwaterBgTiles": dict(ok, tiles=[])}, None, 422),             # a cell of no tile
+                ({"gUnderwaterBgTiles": dict(ok, metatiles=[{"name": "a", "size": [1, 1],
+                                                             "cells": [[0, 4, 0]]}])}, None, 422),  # flip 4
+                ({"gUnderwaterBg0Tiles": {"metatiles": [{"name": "a", "size": [2, 1], "cells": [[0, 0, 0]]}],
+                                          "tiles": ["0" * 128]}}, None, 422),        # 1 cell of a 2x1 one
+                ({"gSnowBgTiles": ok}, None, 400),                                    # not the room's
+                ({"gUnderwaterBgTiles": ok}, {"bg2": [[0, 0, mixed]]}, 422),          # the picture refused
+                ("gUnderwaterBgTiles", None, 400),
+            ]:
+                body = {"path": MT_ROOM, "metatiles": libs}
+                if layers:
+                    body["layers"] = layers
+                st, r = self.call("POST", "/api/projects/xs/room/save", body)
+                self.assertEqual(st, status, (libs, r))
+                self.assertFalse(MT_DIR.exists(), libs)
+            for p, b in files.items():
+                self.assertEqual(p.read_bytes(), b, p)
+            # data-check refuses a file of a set no room names
+            MT_DIR.mkdir()
+            (MT_DIR / "gNoSuchTiles.json").write_text(json.dumps(ok))
+            st, r = self.call("GET", "/api/projects/xs/check?text=0")
+            self.assertTrue([d for d in r["diagnostics"] if d["code"] == "metatiles"], r)
+        finally:
+            for p, b in files.items():
+                p.write_bytes(b)
+
+
 class Legend(LevelEditor):
     """A cell value added to the collision legend (room/legend), painted and
     read back as the build reads the collision images."""

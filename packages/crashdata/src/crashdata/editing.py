@@ -2,8 +2,8 @@
 
 render(path, value) is what an editor writes back to one of the data
 files the schemas describe: the tool's own writer where the file is in
-that writer's layout (crashdata.levels' room.json and levels.json, the
-graphics manifest's sheet.json), which is what the tool would write;
+that writer's layout (crashdata.levels' room.json, levels.json and the
+meta-tiles files, the graphics manifest's sheet.json), which is what the tool would write;
 otherwise the file's own layout (crashdata.common.jsonfmt.dumps_like).
 Either way a value the file already has gives back the file's bytes.
 """
@@ -24,6 +24,11 @@ def _levels(v):
     return levels.levels_json_text(v)
 
 
+def _metatiles(v):
+    from crashdata.levels import metatiles
+    return metatiles.text(v)
+
+
 def _indent2(v):
     return json.dumps(v, indent=2) + "\n"
 
@@ -33,6 +38,7 @@ WRITERS = {
     "room.schema.json": _room,
     "levels.schema.json": _levels,
     "sprite_sheet.schema.json": _indent2,
+    "metatiles.schema.json": _metatiles,
 }
 
 
