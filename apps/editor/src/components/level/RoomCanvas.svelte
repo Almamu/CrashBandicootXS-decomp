@@ -28,6 +28,7 @@
   } from "../../lib/level/coords.ts";
   import { pixelOf, pixelTable } from "../../lib/level/palette.ts";
   import type { CellChange } from "../../lib/level/paint.ts";
+  import { stampStep } from "../../lib/level/metatiles.ts";
   import {
     BACKDROP,
     BLEND_FIRST,
@@ -343,16 +344,35 @@
 
   function paintTarget(cam: Point): { origin: Point; cols: number; rows: number } | null {
     if (level.tool === "collision" && level.collision) return { origin: { x: 0, y: 0 }, cols: level.collision.cols, rows: level.collision.rows };
-    if (level.tool === "tile") {
+    if (level.tool === "tile" || level.tool === "meta") {
       const l = level.layers[level.paintLayer];
       if (l) return { origin: origin(level.paintLayer, cam), cols: l.width / CELL, rows: l.height / CELL };
     }
     return null;
   }
 
+  function outline(ctx: CanvasRenderingContext2D, t: { origin: Point }, r: { x: number; y: number; w: number; h: number }, colour: string, dash: number[] = []) {
+    const a = toScreen(view, t.origin.x + r.x * CELL, t.origin.y + r.y * CELL);
+    ctx.strokeStyle = colour;
+    ctx.lineWidth = 2;
+    ctx.setLineDash(dash);
+    ctx.strokeRect(a.x, a.y, r.w * CELL * view.zoom, r.h * CELL * view.zoom);
+    ctx.setLineDash([]);
+    ctx.lineWidth = 1;
+  }
+
   function drawCursor(ctx: CanvasRenderingContext2D, cam: Point) {
     const t = paintTarget(cam);
     if (!t) return;
+    if (level.tool === "meta") {
+      // a detected block's repeats here, the selection, the meta-tile under the cursor
+      for (const r of level.metaHighlight) outline(ctx, t, r, "#ff9800");
+      const sel = drag?.kind === "rect" ? rectOf(drag.from, drag.to) : level.metaSelection;
+      if (sel) outline(ctx, t, sel, "#ffffff", [5, 3]);
+      const m = level.metaBrush();
+      if (hoverCell && drag?.kind !== "rect") outline(ctx, t, { x: hoverCell.x, y: hoverCell.y, w: m?.w ?? 1, h: m?.h ?? 1 }, "#00e5ff");
+      return;
+    }
     const cells: Point[] = drag?.kind === "rect" ? rectCells(drag.from, drag.to) : hoverCell ? [hoverCell] : [];
     if (!cells.length) return;
     const xs = cells.map((c) => c.x);
@@ -372,8 +392,26 @@
     | { kind: "pan"; sx: number; sy: number; vx: number; vy: number }
     | { kind: "entity"; id: number; dx: number; dy: number; x: number; y: number; moved: boolean }
     | { kind: "stroke"; last: Point; tiles: CellChange<Uint8Array>[]; values: CellChange<number>[]; layer: BgName }
-    | { kind: "rect"; from: Point; to: Point };
+    | { kind: "rect"; from: Point; to: Point }
+    | { kind: "stamp"; start: Point; done: Set<string>; tiles: CellChange<Uint8Array>[]; layer: BgName; name: string };
   let drag: Drag | null = null;
+
+  function rectOf(a: Point, b: Point) {
+    const x = Math.min(a.x, b.x);
+    const y = Math.min(a.y, b.y);
+    return { x, y, w: Math.abs(a.x - b.x) + 1, h: Math.abs(a.y - b.y) + 1 };
+  }
+
+  /** The Meta-tile tool's stamp at a drag's cell: the start, and every whole meta-tile's step from it. */
+  function stampAt(d: Extract<Drag, { kind: "stamp" }>, c: Point) {
+    const m = level.metaBrush();
+    if (!m) return;
+    const p = stampStep(d.start, c, m.w, m.h);
+    const key = `${p.x},${p.y}`;
+    if (d.done.has(key)) return;
+    d.done.add(key);
+    d.tiles.push(...level.stampMeta(p));
+  }
   let space = false;
 
   function local(e: MouseEvent): Point {
@@ -412,6 +450,23 @@
     }
     if (e.button !== 0) return;
     const tool = level.tool;
+    if (tool === "meta") {
+      const c = cellUnder(w);
+      if (!c) return;
+      if (e.shiftKey) drag = { kind: "rect", from: c, to: c };
+      else {
+        const problem = level.stampProblem();
+        if (problem) {
+          editor.error = problem;
+          return;
+        }
+        const d: Drag = { kind: "stamp", start: c, done: new Set(), tiles: [], layer: level.paintLayer, name: level.metaBrush()!.name };
+        drag = d;
+        stampAt(d, c);
+      }
+      redraw();
+      return;
+    }
     if (tool === "tile" || tool === "collision") {
       const c = cellUnder(w);
       if (!c) return;
@@ -464,7 +519,7 @@
     hoverCell = c;
     onhover?.({ world: { x: Math.floor(w.x), y: Math.floor(w.y) }, cell: c });
     if (!drag) {
-      if (level.tool === "tile" || level.tool === "collision") redraw();
+      if (level.tool === "tile" || level.tool === "collision" || level.tool === "meta") redraw();
       return;
     }
     if (drag.kind === "pan") {
@@ -484,6 +539,8 @@
       drag.last = c;
     } else if (drag.kind === "rect" && c) {
       drag.to = c;
+    } else if (drag.kind === "stamp" && c) {
+      stampAt(drag, c);
     }
     redraw();
   }
@@ -493,6 +550,8 @@
     drag = null;
     if (!d) return;
     if (d.kind === "entity" && d.moved) level.moveEntity(d.id, d.x, d.y);
+    else if (d.kind === "stamp") level.commitTiles(d.layer, d.tiles, `Stamp ${d.name}`);
+    else if (d.kind === "rect" && level.tool === "meta") level.metaSelection = rectOf(d.from, d.to);
     else if (d.kind === "stroke") {
       if (level.tool === "tile") level.commitTiles(d.layer, d.tiles);
       else level.commitCollision(d.values);
@@ -571,6 +630,9 @@
     void level.tool;
     void level.parallax;
     void level.collisionOpacity;
+    void level.metaPick;
+    void level.metaSelection;
+    void level.metaHighlight;
     void JSON.stringify(level.show);
     void view;
     void cw;
@@ -598,7 +660,7 @@
 
 <svelte:window {onkeydown} {onkeyup} />
 
-<div class="host" bind:this={host} class:paint={level.tool === "tile" || level.tool === "collision"}>
+<div class="host" bind:this={host} class:paint={level.tool === "tile" || level.tool === "collision" || level.tool === "meta"}>
   <canvas
     bind:this={canvas}
     {onpointerdown}

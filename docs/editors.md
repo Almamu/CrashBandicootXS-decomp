@@ -363,9 +363,10 @@ the camera, and the world point and cell under the cursor.
 
 **Tools** (their keys): **Select** (V) selects an entity and drags it
 (Shift: in steps of 8); **Add** (A) places an entity of the type chosen;
-**Link** (L) links two crates, the lower one first; **Tiles** (T) and
-**Collision** (C) paint. Delete deletes the entity selected, Escape
-deselects, Ctrl+Z undoes, Ctrl+Shift+Z or Ctrl+Y redoes, Ctrl+S saves.
+**Link** (L) links two crates, the lower one first; **Tiles** (T),
+**Meta-tiles** (M) and **Collision** (C) paint. Delete deletes the entity
+selected, Escape deselects (and drops the Meta-tiles tool's selection),
+Ctrl+Z undoes, Ctrl+Shift+Z or Ctrl+Y redoes, Ctrl+S saves.
 Every change is a step of the undo stack (a drag, a field, a stroke, a
 colour; 500 of them), which also says whether the room is as saved.
 
@@ -517,6 +518,31 @@ from its own corner). The biggest sets take half a minute (gTempleBgTiles,
 gSpaceBgTiles), most a few seconds; the answer is kept until a room
 changes. XS's sets have no block repeated in other banks; flipped repeats
 are common.
+
+**The Meta-tiles tab** (the Meta-tiles tool, M) has the paint layer's
+set's meta-tiles, each drawn in the room's palette, its name (edit it to
+rename it) and its size, and a × to delete it; one whose tile no room
+draws any more says so (a stamp adds it to the set again). Click one to
+pick it, then click on the room to stamp it with its top left at the
+cell, or drag to stamp it again a whole meta-tile on (a grid from the
+first stamp); the cursor shows its size. **flip X**, **flip Y** stamp it
+flipped as a whole, **banks** shifts every cell's bank (a stamp that
+would take one outside 0-15 is refused), **keep under blank** leaves
+the cells under its blank cells as they are. Shift and drag selects
+cells; **New meta-tile** makes one of them: each cell's tile and flips
+as the set reads it back (a block no tile is yet: its own pixels) and its
+bank. **Find recurring blocks** runs the detection on every room of the
+set or on this room (as saved): each block it offers says how often it
+recurs, how many of its repeats are flipped or in other banks, and the
+cells its repeats draw; **Show** outlines its repeats in this layer,
+**Accept** (or **Accept all**) makes it a meta-tile, **Dismiss** drops it.
+
+Every change is an undo step: a stamp or a drag of stamps, a meta-tile
+made, accepted, renamed or deleted. The meta-tiles are saved with the
+room (Save, `room/save`'s `metatiles`): a set's file is written only when
+its meta-tiles differ from the file's (read as the editor writes it), so
+a room saved without meta-tile edits writes none; the stamped cells are
+the picture's, written as any painted cell.
 
 **Collision.** The Collision tab paints the collision layer's cells with
 a value of the legend (one 8x8 cell of BG0's each; click, drag, Shift and

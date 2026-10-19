@@ -59,6 +59,22 @@ describe.skipIf(!url)("the backend", () => {
     expect(r.saved).toEqual([]);
   });
 
+  it("gives a tile set's meta-tiles and the blocks that recur, writing nothing", async () => {
+    const path = "games/xs/data/levels/air_supply/main";
+    const m = await c.roomMetatiles("xs", path, "bg2");
+    expect(m.tileset).toBe("gUnderwaterBgTiles");
+    expect(m.path).toBe("games/xs/data/levels/metatiles/gUnderwaterBgTiles.json");
+    expect(Array.isArray(m.data.metatiles)).toBe(true);
+    const d = await c.detectMetatiles("xs", { path, layer: "bg2", scope: "room" });
+    expect([d.tileset, d.bpp, d.scope]).toEqual(["gUnderwaterBgTiles", 4, "room"]);
+    expect(d.candidates.length).toBeGreaterThan(0);
+    const k = d.candidates[0]!;
+    expect(k.cells).toHaveLength(k.size[0] * k.size[1]);
+    // the library as it is: nothing written
+    const r = await c.saveRoom("xs", { path, metatiles: m.exists ? { [m.tileset]: m.data } : {} });
+    expect(r.saved).toEqual([]);
+  }, 120_000);
+
   it("opens the cutscenes for the cutscene editor, and saves them unchanged without writing them", async () => {
     const v = await c.cutscenes("xs");
     expect(v.cutscenes.cutscenes[1]!.constant).toBe("CUTSCENE_INTRO");

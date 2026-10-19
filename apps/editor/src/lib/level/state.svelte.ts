@@ -3,7 +3,7 @@
 // palette), what is shown, the tool, the undo stack, and saving it all back
 // through the backend's room save (crashdata.levels.room_edit), which checks
 // it like any save and keeps it all or none.
-import type { Diagnostic, EntityTypeInfo, LegendEntry, NewRoom, ResizeReport, Room, RoomEdges, RoomSave, RoomTiles, RoomView, TileRedraw } from "@crash/schema-types";
+import type { Diagnostic, EntityTypeInfo, LegendEntry, MetatileCandidate, MetatileDetection, NewRoom, ResizeReport, Room, RoomEdges, RoomSave, RoomTiles, RoomView, TileRedraw } from "@crash/schema-types";
 
 type RoomSaveDiagnostics = Diagnostic[];
 import { client } from "../api.ts";
@@ -32,6 +32,7 @@ import {
   type TileBrush,
 } from "./paint.ts";
 import type { Point } from "./coords.ts";
+import { badShift, freeName, fromCandidate, fromCells, readFile, stamp, writeFile, type MetaTile, type StampOptions } from "./metatiles.ts";
 import type { RoomRecord } from "./room.ts";
 import { addEntity, addLink, deleteEntity, deleteLink, moveEntity, newRecord, ownRecord, type Entity, type ParamRecord } from "./entities.ts";
 
@@ -39,7 +40,7 @@ export type BgName = "bg0" | "bg1" | "bg2" | "bg3";
 export type LayerName = BgName | "collision";
 export const BG_NAMES: BgName[] = ["bg0", "bg1", "bg2", "bg3"];
 
-export type Tool = "select" | "add" | "link" | "tile" | "collision";
+export type Tool = "select" | "add" | "link" | "tile" | "meta" | "collision";
 
 export interface TileSet {
   name: string;
@@ -55,6 +56,25 @@ export interface TileSet {
   limit: number;
   /** the tiles of the set as the build made it; those after are new ones drawn here */
   built: number;
+}
+
+/** A tile set's meta-tiles (docs/editors.md, "Meta-tiles"): its file, the meta-tiles now and as saved. */
+export interface MetaLibrary {
+  tileset: string;
+  /** games/<game>/data/levels/metatiles/<tile set>.json */
+  path: string;
+  bpp: 4 | 8;
+  list: MetaTile[];
+  /** the file's value as the editor writes it, as last read or saved: a save sends the list only when it differs */
+  saved: string;
+}
+
+/** A rectangle of cells. */
+export interface CellRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
 }
 
 /** A room of the level table, for the navigation. */
@@ -150,6 +170,18 @@ class LevelEditorState {
   collisionOpacity = $state(0.55);
   /** the link tool's first entity */
   linkFrom = $state<number | null>(null);
+
+  /** the meta-tiles of the room's tile sets, by tile set (or why they didn't load) */
+  metaLibs = $state.raw<Partial<Record<string, MetaLibrary | string>>>({});
+  /** the meta-tile the Meta-tile tool stamps: its index in the paint layer's set's list */
+  metaPick = $state<number | null>(null);
+  metaStamp = $state<StampOptions>({ flip: 0, shift: 0, skipBlank: false });
+  /** the cells a shift-drag of the Meta-tile tool selected (to make a meta-tile of) */
+  metaSelection = $state<CellRect | null>(null);
+  /** the paint layer's cells to outline (a detected block's repeats here) */
+  metaHighlight = $state.raw<CellRect[]>([]);
+  /** the last detection of the paint layer's set, by tile set */
+  detections = $state.raw<Partial<Record<string, MetatileDetection | string>>>({});
 
   get dirty(): boolean {
     void this.hv;
@@ -258,6 +290,11 @@ class LevelEditorState {
     this.tileSets = {};
     this.selected = null;
     this.linkFrom = null;
+    this.metaLibs = {};
+    this.metaPick = null;
+    this.metaSelection = null;
+    this.metaHighlight = [];
+    this.detections = {};
     this.history.clear();
     this.bump();
   }
@@ -670,6 +707,13 @@ class LevelEditorState {
       if (cells.length) layers[n] = cells.map(([x, y, px]) => [x, y, base64(px)]);
     }
     if (Object.keys(layers).length) body.layers = layers;
+    const metatiles: NonNullable<RoomSave["metatiles"]> = {};
+    for (const lib of Object.values(this.metaLibs)) {
+      if (!lib || typeof lib === "string") continue;
+      const doc = writeFile(lib.list, lib.bpp);
+      if (JSON.stringify(doc) !== lib.saved) metatiles[lib.tileset] = doc;
+    }
+    if (Object.keys(metatiles).length) body.metatiles = metatiles;
     const c = this.collision;
     if (c) {
       const out: [number, number, number][] = [];
@@ -701,6 +745,10 @@ class LevelEditorState {
       }
       // painted tiles may be new to the set's order: fetch it again when needed
       if (body.layers) this.tileSets = {};
+      for (const [name, doc] of Object.entries(body.metatiles ?? {})) {
+        const lib = this.metaLibs[name];
+        if (lib && typeof lib !== "string") this.metaLibs = { ...this.metaLibs, [name]: { ...lib, saved: JSON.stringify(doc) } };
+      }
       this.history.markSaved();
       this.bump();
       const errors = r.diagnostics.filter((d) => d.severity === "error").length;
@@ -712,6 +760,151 @@ class LevelEditorState {
         at: new Date(),
       };
     });
+  }
+
+  // -- meta-tiles (docs/editors.md, "Meta-tiles") -----------------------------------------
+
+  /** The paint layer's tile set's name. */
+  paintSetName(): string | null {
+    return this.view?.layers[this.paintLayer]?.tileset ?? null;
+  }
+
+  /** The meta-tiles of the paint layer's set, when they have loaded. */
+  metaLib(): MetaLibrary | null {
+    const name = this.paintSetName();
+    const lib = name ? this.metaLibs[name] : undefined;
+    return lib && typeof lib !== "string" ? lib : null;
+  }
+
+  /** The meta-tile picked to stamp. */
+  metaBrush(): MetaTile | null {
+    const lib = this.metaLib();
+    return lib && this.metaPick !== null ? (lib.list[this.metaPick] ?? null) : null;
+  }
+
+  /** The meta-tiles of a BG layer's set, read once (its file; none while there is none). */
+  async loadMetatiles(layer: BgName): Promise<MetaLibrary | null> {
+    const name = this.view?.layers[layer]?.tileset;
+    if (!this.view || !name) return null;
+    const have = this.metaLibs[name];
+    if (have && typeof have !== "string") return have;
+    const path = this.view.path;
+    this.metaLibs = { ...this.metaLibs, [name]: "loading" };
+    try {
+      const r = await client.roomMetatiles(editor.projectId, path, layer);
+      if (this.view?.path !== path) return null;
+      const bpp = layer === "bg0" ? 8 : 4;
+      const list = readFile(r.data);
+      const lib: MetaLibrary = { tileset: name, path: r.path, bpp, list, saved: JSON.stringify(writeFile(list, bpp)) };
+      this.metaLibs = { ...this.metaLibs, [name]: lib };
+      return lib;
+    } catch (e) {
+      this.metaLibs = { ...this.metaLibs, [name]: e instanceof Error ? e.message : String(e) };
+      return null;
+    }
+  }
+
+  /** Replaces the paint layer's set's meta-tiles (an edit, undoable). */
+  private setMetaList(label: string, list: MetaTile[], pick: number | null = this.metaPick): void {
+    const lib = this.metaLib();
+    if (!lib) return;
+    const name = lib.tileset;
+    const before = lib.list;
+    const pickBefore = this.metaPick;
+    const put = (l: MetaTile[], p: number | null) => {
+      const cur = this.metaLibs[name];
+      if (cur && typeof cur !== "string") this.metaLibs = { ...this.metaLibs, [name]: { ...cur, list: l } };
+      this.metaPick = p;
+    };
+    put(list, pick);
+    this.record({ label, undo: () => put(before, pickBefore), redo: () => put(list, pick) });
+  }
+
+  /** Adds a meta-tile to the paint layer's set's (its name made unique), and picks it. */
+  addMetaTile(m: MetaTile, label = `New meta-tile ${m.name}`): void {
+    const lib = this.metaLib();
+    if (!lib) return;
+    const named = { ...m, name: freeName(lib.list, m.name.trim() || "Meta-tile") };
+    this.setMetaList(label, [...lib.list, named], lib.list.length);
+  }
+
+  renameMetaTile(i: number, name: string): void {
+    const lib = this.metaLib();
+    const m = lib?.list[i];
+    if (!lib || !m || !name.trim() || name.trim() === m.name) return;
+    const list = [...lib.list];
+    list[i] = { ...m, name: name.trim() };
+    this.setMetaList(`Rename meta-tile ${m.name}`, list);
+  }
+
+  deleteMetaTile(i: number): void {
+    const lib = this.metaLib();
+    const m = lib?.list[i];
+    if (!lib || !m) return;
+    const pick = this.metaPick === i ? null : this.metaPick !== null && this.metaPick > i ? this.metaPick - 1 : this.metaPick;
+    this.setMetaList(`Delete meta-tile ${m.name}`, lib.list.filter((_, k) => k !== i), pick);
+  }
+
+  /** A meta-tile of the cells selected (the paint layer's), added and picked. */
+  metaFromSelection(name: string): boolean {
+    const r = this.metaSelection;
+    const set = this.paintSet();
+    const layer = this.layers[this.paintLayer];
+    if (!r || !set || !layer || !this.metaLib()) return false;
+    this.addMetaTile(fromCells(layer, r.x, r.y, r.w, r.h, set.index, set.tiles, set.bpp, name));
+    return true;
+  }
+
+  /** A detected block made a meta-tile of the paint layer's set's. */
+  acceptCandidate(c: MetatileCandidate, name: string): boolean {
+    const set = this.paintSet();
+    if (!set || !this.metaLib()) return false;
+    this.addMetaTile(fromCandidate(c, set.tiles, name), `Accept the detected ${c.size.join("x")} block`);
+    return true;
+  }
+
+  /** Several detected blocks made meta-tiles at once: one undo step. */
+  acceptCandidates(cs: { c: MetatileCandidate; name: string }[]): void {
+    const set = this.paintSet();
+    const lib = this.metaLib();
+    if (!set || !lib || !cs.length) return;
+    const list = [...lib.list];
+    for (const { c, name } of cs) list.push({ ...fromCandidate(c, set.tiles, name), name: freeName(list, name) });
+    this.setMetaList(`Accept ${cs.length} detected blocks`, list, this.metaPick);
+  }
+
+  /** Finds the blocks that recur in the paint layer's set's rooms ("set") or in this room ("room"): saved data only. */
+  async detect(scope: "set" | "room"): Promise<MetatileDetection | null> {
+    const name = this.paintSetName();
+    const path = this.view?.path;
+    if (!name || !path) return null;
+    const layer = this.paintLayer;
+    const r = await editor.run(`Finding the blocks that recur in ${scope === "set" ? `${name}'s rooms` : path} (the biggest sets take half a minute)`, () =>
+      client.detectMetatiles(editor.projectId, { path, layer, scope }),
+    );
+    if (r && this.view?.path === path) this.detections = { ...this.detections, [name]: r };
+    return r ?? null;
+  }
+
+  /** Why the picked meta-tile can't be stamped as asked, or null. */
+  stampProblem(): string | null {
+    const m = this.metaBrush();
+    const lib = this.metaLib();
+    if (!m || !lib) return "Pick a meta-tile first";
+    const bad = badShift(m, this.metaStamp.shift, lib.bpp);
+    return bad.length ? `Shifted by ${this.metaStamp.shift}, its banks would be ${bad.join(", ")}: a bank is 0-15` : null;
+  }
+
+  /** Stamps the picked meta-tile with its top left at a cell of the paint layer: the changes, applied (a stroke gathers them). */
+  stampMeta(at: Point): CellChange<Uint8Array>[] {
+    const layer = this.layers[this.paintLayer];
+    const m = this.metaBrush();
+    const lib = this.metaLib();
+    if (!layer || !m || !lib) return [];
+    const changes = stamp(layer, at, m, this.metaStamp, lib.bpp);
+    for (const c of changes) this.touched[this.paintLayer]!.add(c.index);
+    this.damaged(this.paintLayer, changes);
+    return changes;
   }
 
   // -- rooms: new, deleted, resized (crashdata.levels.room_ops) ------------------------

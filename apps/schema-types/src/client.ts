@@ -1,7 +1,7 @@
 // A typed client of the editors' backend, tools/editor_server.py (#1167,
 // docs/editors.md "The editor's backend"). The browser editor calls it on
 // its own origin; the desktop app gives it the backend's URL and token.
-import type { Cutscenes, GaxManifestDefs, Instrument, Music, Room, SchemaFiles, SchemaName, SfxTable } from "./generated/index.ts";
+import type { Cutscenes, GaxManifestDefs, Instrument, Metatiles, Music, Room, SchemaFiles, SchemaName, SfxTable } from "./generated/index.ts";
 
 /** One problem with the data (crashdata.common.diagnostics.Diagnostic). */
 export interface Diagnostic {
@@ -214,7 +214,44 @@ export interface TileRedraw {
   layers: Record<string, number>;
 }
 
-/** POST /api/projects/ID/room/save: a room's edits, saved together. */
+/** GET /api/projects/ID/room/metatiles: the meta-tiles of a BG layer's tile set (docs/editors.md, "Meta-tiles"). */
+export interface RoomMetatiles {
+  tileset: string;
+  /** its file, games/<game>/data/levels/metatiles/<tile set>.json */
+  path: string;
+  exists: boolean;
+  /** its value; no meta-tiles while there is no file */
+  data: Metatiles;
+}
+
+/** A block that recurs in a tile set's rooms (crashdata.levels.metatiles.detect). */
+export interface MetatileCandidate {
+  /** [width, height] in cells */
+  size: [number, number];
+  /** row by row: [the set's tile number, flip (1 X, 2 Y), bank], as its most common repeat has it */
+  cells: [number, number, number][];
+  /** its repeats that don't overlap, in every room */
+  count: number;
+  /** of them, flipped as a whole; in other banks */
+  flipped: number;
+  shifted: number;
+  /** "<level>/<slot>/<layer>": its repeats there */
+  rooms: Record<string, number>;
+  /** its repeats (up to 200): ["<level>/<slot>/<layer>", x, y (the top left cell), flip, bank shift] */
+  at: [string, number, number, number, number][];
+  /** the cells its repeats draw beyond the first (repeats - 1 times its cells that aren't blank) */
+  score: number;
+}
+
+/** POST /api/projects/ID/room/metatiles/detect: the blocks that recur, best first. */
+export interface MetatileDetection {
+  tileset: string;
+  bpp: 4 | 8;
+  /** "set": every room whose layers name the tile set; "room": the room's layers */
+  scope: "set" | "room";
+  candidates: MetatileCandidate[];
+}
+
 /** A new room (crashdata.levels.room_ops.new_room). */
 export interface NewRoom {
   /** the room it is made from (its folder, from the levels' directory or the tree's root) */
@@ -269,6 +306,8 @@ export interface RoomSave {
   collision?: [number, number, number][];
   /** 256 BGR555 entries: every layer picture's palette */
   palette?: number[];
+  /** the meta-tiles files of the room's tile sets, by tile set */
+  metatiles?: Record<string, Metatiles>;
 }
 
 /** A string of a cutscene page in the six languages (the template's msgid, each .po's msgstr). */
@@ -944,6 +983,16 @@ export class EditorClient {
   /** Adds a cell value to the collision legend (`name`: its bits spelled out by default); saved, checked. */
   addLegendValue(id: string, body: { value: number; colour: string; name?: string }): Promise<SaveResult & { legend: LegendEntry[] }> {
     return this.request("POST", this.project(id, "room/legend"), body);
+  }
+
+  /** The meta-tiles of the tile set a room's BG layer names. */
+  roomMetatiles(id: string, path: string, layer: string): Promise<RoomMetatiles> {
+    return this.request("GET", this.project(id, "room/metatiles"), undefined, { path, layer });
+  }
+
+  /** The blocks that recur in the rooms of a BG layer's tile set (`scope` "set"), or in the room's layers ("room"). */
+  detectMetatiles(id: string, body: { path: string; layer: string; scope?: "set" | "room" }): Promise<MetatileDetection> {
+    return this.request("POST", this.project(id, "room/metatiles/detect"), body);
   }
 
   /** A picture (PNG, base64) as a BG layer's cells in the room's palette (`banks`: BG1-3's to use). */
