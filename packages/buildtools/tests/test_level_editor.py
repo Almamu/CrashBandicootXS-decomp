@@ -78,6 +78,8 @@ class Reading(LevelEditor):
                    if isinstance(v["room"]["params"][e["param"]], dict)}
         self.assertEqual(layouts.get("POWERS"), "hint_text")
         self.assertEqual(layouts.get("BASIC_CRATE"), "n2_crate")
+        trigger = next(v["room"]["params"][e["param"]] for e in v["room"]["entities"] if e["type"] == 106)
+        self.assertEqual(trigger, {"layout": "cutscene_trigger", "flags": ["LOCK_CAMERA"], "cutscene": 1})
 
     def test_layers_and_cells(self):
         _, v = self.call("GET", "/api/projects/xs/room?path=" + ROOM)

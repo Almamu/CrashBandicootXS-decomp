@@ -54,7 +54,7 @@
     {"layout": "platform_group", "flags": [], "type": 1, "dist_x": 10, "dist_y": 0, "dir_x": 0, "dir_y": 0, "flag": 0, "group": 2},
     {"layout": "n2_crate", "flags": ["TRIAL_KIND"], "options": [], "unk_02": 0, "trial_kind": "BASIC_CRATE", "param6": 0, "param7": 0},
     {"layout": "n2_outline_crate", "flags": ["TRIAL_KIND", "UNK6"], "options": [], "unk_02": 0, "trial_kind": "BASIC_CRATE", "group": 0, "step": 0, "solid_kind": "LIFE_CRATE"},
-    [1, 4],
+    {"layout": "trap_group", "flags": ["ALWAYS_ACTIVE"], "group": 4},
     {"layout": "n2_crate", "flags": ["TRIAL_KIND"], "options": [], "unk_02": 0, "trial_kind": "IRON_CRATE", "param6": 0, "param7": 0}
   ],
   "links": [

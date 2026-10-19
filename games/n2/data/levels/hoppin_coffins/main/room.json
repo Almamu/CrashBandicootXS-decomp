@@ -52,10 +52,10 @@
     {"layout": "n2_crate", "flags": ["TRIAL_KIND"], "options": [], "unk_02": 0, "trial_kind": "TIME_CRATE_2", "param6": 2, "param7": 0},
     {"layout": "patrol", "flags": [], "range_x": 35},
     {"layout": "n2_crate", "flags": ["TRIAL_KIND"], "options": [], "unk_02": 0, "trial_kind": "BASIC_CRATE", "param6": 0, "param7": 0},
-    [0, 5],
+    {"layout": "trap_group", "flags": [], "group": 5},
     {"layout": "flags", "flags": [], "extra": [1, 0, 0, 0, 0, 0]},
-    [0, 6],
-    [0, 6]
+    {"layout": "trap_group", "flags": [], "group": 6},
+    {"layout": "trap_group", "flags": [], "group": 6}
   ],
   "links": [
     [12, 11],

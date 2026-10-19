@@ -30,7 +30,10 @@ export type ParamRecord =
   | ParamWidth
   | ParamPathPoint
   | ParamPath
-  | ParamHintText;
+  | ParamHintText
+  | ParamTrapGroup
+  | ParamCarrierPath
+  | ParamCutsceneTrigger;
 
 /**
  * games/<game>/data/levels/<level>/<slot>/room.json (docs/levels.md, "Sources and build")
@@ -919,6 +922,66 @@ export interface ParamHintText {
     | "ASSIST_CHECKPOINT"
   )[];
   text?: number;
+  /**
+   * the record's words past the view, which nothing names yet
+   *
+   * @minItems 1
+   */
+  extra?: [number, ...number[]];
+}
+/**
+ * N-Tranced's type 73: always active, starts triggered, and the 1-based group it joins (0: none)
+ */
+export interface ParamTrapGroup {
+  layout: "trap_group";
+  /**
+   * the byte's bits, by name
+   */
+  flags?: ("ALWAYS_ACTIVE" | "STARTS_TRIGGERED" | "BIT2" | "BIT3" | "BIT4" | "BIT5" | "BIT6" | "BIT7")[];
+  group?: number;
+  /**
+   * the record's words past the view, which nothing names yet
+   *
+   * @minItems 1
+   */
+  extra?: [number, ...number[]];
+}
+/**
+ * N-Tranced's type 92: the path it carries Crash along (the path table at 0x020001C8; its flags aren't read)
+ */
+export interface ParamCarrierPath {
+  layout: "carrier_path";
+  /**
+   * the byte's bits, by name
+   */
+  flags?: (
+    | "EXIT_MIRROR"
+    | "FLIP_X"
+    | "FLIP_Y"
+    | "UNK3"
+    | "UNK4"
+    | "TRIAL_KIND"
+    | "ASSIST_AKU_AKU"
+    | "ASSIST_CHECKPOINT"
+  )[];
+  path?: number;
+  /**
+   * the record's words past the view, which nothing names yet
+   *
+   * @minItems 1
+   */
+  extra?: [number, ...number[]];
+}
+/**
+ * N-Tranced's type 106: the cutscene it plays (sub_08043A20) and whether it locks the camera first
+ */
+export interface ParamCutsceneTrigger {
+  layout: "cutscene_trigger";
+  /**
+   * the byte's bits, by name
+   */
+  flags?: ("BIT0" | "BIT1" | "BIT2" | "LOCK_CAMERA" | "BIT4" | "BIT5" | "BIT6" | "BIT7")[];
+  cutscene?: number;
   /**
    * the record's words past the view, which nothing names yet
    *

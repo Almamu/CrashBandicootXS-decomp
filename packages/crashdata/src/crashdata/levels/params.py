@@ -7,7 +7,7 @@ through one of the views of engine/include/game/level/level_data.h's
 crate.hpp's `struct crate_placement`. In room.json a record is either
 
 - its 32-bit words, `[0, 327707]`: the raw form, for a record whose
-  meaning isn't known (N-Tranced's, a record no entity uses, one that
+  meaning isn't known (a record no entity uses, one that
   entities of two views share);
 - or the view's fields by name, `{"layout": "crate", "flags":
   ["TRIAL_KIND"], "options": [], "unk_02": 0, "trial_kind": "TIME_CRATE_3",
@@ -50,11 +50,21 @@ OPTION_BITS = ["ASSIST_LIFE", "SLOT_MYSTERY", "SLOT_LIFE", "SLOT_TNT", "BIT4", "
 N2_CRATE_FLAG_BITS = ["BIT0", "FLIP_X", "FLIP_Y", "UNK3", "UNK4", "TRIAL_KIND", "UNK6", "ASSIST_AKU_AKU"]
 N2_CRATE_OPTION_BITS = ["ASSIST_CHECKPOINT", "ASSIST_LIFE", "SLOT_MYSTERY", "SLOT_LIFE", "SLOT_TNT",
                         "BIT5", "BIT6", "BIT7"]
+# N-Tranced's type 73's flags (sub_0801ED08): bit 0 sets the sprite's +0x18
+# bit 4 (always active), bit 1 starts its controller triggered
+# (sub_08014090: state 4, +0x1C set). Its other bits aren't read.
+N2_TRAP_FLAG_BITS = ["ALWAYS_ACTIVE", "STARTS_TRIGGERED", "BIT2", "BIT3", "BIT4", "BIT5", "BIT6", "BIT7"]
+# N-Tranced's type 106's flags (sub_0801FF2C): bit 3 (its controller's
+# +0x10) locks the camera (its mode 3) once Crash is in the trigger's box
+# and plays the cutscene when he is off screen (IsSpriteObjOnScreen);
+# without it the cutscene plays as he enters. Its other bits aren't read.
+N2_CUTSCENE_FLAG_BITS = ["BIT0", "BIT1", "BIT2", "LOCK_CAMERA", "BIT4", "BIT5", "BIT6", "BIT7"]
 
 # A field: (name, byte offset, kind). The kinds: a struct format letter
 # (B, b, H, h, I, i: u8, s8, u16, s16, u32, s32), "flags"/"options" (a byte as
 # the list of its bits' names; "n2_crate_flags"/"n2_crate_options",
-# N-Tranced's crates') or "entity" (an s16 entity type: its name in
+# N-Tranced's crates', "n2_trap_flags"/"n2_cutscene_flags" its types 73's
+# and 106's) or "entity" (an s16 entity type: its name in
 # entity_types.json, or its number).
 _FLAGS = ("flags", 0, "flags")
 _CRATE = [_FLAGS, ("options", 1, "options"), ("unk_02", 2, "H"), ("trial_kind", 4, "entity"),
@@ -144,13 +154,24 @@ N2_LAYOUTS = {
              "about": "N-Tranced's path follower: the path it follows"},
     "hint_text": {"fields": [_FLAGS, ("text", 4, "b")], "size": 5,
                   "about": "N-Tranced's power hint: its UI text (0x7A + text)"},
+    "trap_group": {"fields": [("flags", 0, "n2_trap_flags"), ("group", 4, "i")], "size": 8,
+                   "about": "N-Tranced's type 73: always active, starts triggered, and the 1-based group it "
+                            "joins (0: none)"},
+    "carrier_path": {"fields": [_FLAGS, ("path", 4, "i")], "size": 8,
+                     "about": "N-Tranced's type 92: the path it carries Crash along (the path table at "
+                              "0x020001C8; its flags aren't read)"},
+    "cutscene_trigger": {"fields": [("flags", 0, "n2_cutscene_flags"), ("cutscene", 4, "b")], "size": 5,
+                         "about": "N-Tranced's type 106: the cutscene it plays (sub_08043A20) and whether it "
+                                  "locks the camera first"},
 }
 LAYOUTS.update(N2_LAYOUTS)
 
 _FMT = {"B": "<B", "b": "<b", "H": "<H", "h": "<h", "I": "<I", "i": "<i", "flags": "<B", "options": "<B",
-        "n2_crate_flags": "<B", "n2_crate_options": "<B", "entity": "<h"}
+        "n2_crate_flags": "<B", "n2_crate_options": "<B", "n2_trap_flags": "<B", "n2_cutscene_flags": "<B",
+        "entity": "<h"}
 _BITS = {"flags": FLAG_BITS, "options": OPTION_BITS, "n2_crate_flags": N2_CRATE_FLAG_BITS,
-         "n2_crate_options": N2_CRATE_OPTION_BITS}
+         "n2_crate_options": N2_CRATE_OPTION_BITS, "n2_trap_flags": N2_TRAP_FLAG_BITS,
+         "n2_cutscene_flags": N2_CUTSCENE_FLAG_BITS}
 
 
 def _size(kind):

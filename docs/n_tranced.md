@@ -425,10 +425,9 @@ set only where the disassembly shows what the spawner reads (#1167). Its
 spawners find a record as XS's do (the level at `0x02000E64`: `+8` the
 offsets, `+0xC` the records), so `tools/levels.py --levels-dir
 games/n2/data/levels name-params` named 1,229 of its 1,268 records, every
-one giving back its words (the ROM is the same). The rest stay words: 15
-of types 73, 92 and 106 (what they read isn't known: 73's flags bit 0 is
-"always active" and bit 1 "starts triggered", not XS's bits), and 24 that
-no entity uses.
+one giving back its words (the ROM is the same), and the 15 of types 73,
+92 and 106 once their spawners were read (`trap_group`, `carrier_path`,
+`cutscene_trigger` below). The other 24 stay words: no entity uses them.
 
 | view | types | what the asm shows |
 |---|---|---|
@@ -442,6 +441,9 @@ no entity uses.
 | `width` | 72 | +4 its box's width (`+0x20`, SetEntitySize's layout) |
 | `path_point`, `path` | 83, 88 | a path's points (`ldrsb` +4 the path, `ldrb` +5 what a follower does there: 1 reverse, 2 stop, `ldrsb` +6 the point) into the path table at `0x020001C8`; 88 follows path +4 |
 | `hint_text` | 105 (powers) | `ldrb` +4 + 0x7A: its UI text (GetUiText) |
+| `trap_group` | 73 (a trap, bank 37) | `sub_0801ED08`: +4 the 1-based group, into the sprite's `+0x10` and joined (`sub_08025DD0`) when not 0, as `group`'s; but its flags are its own: bit 0 sets the sprite's `+0x18` bit 4 (always active), bit 1 starts its controller (`sub_0801409C`) triggered (`sub_08014090`: state 4, `+0x1C` set) |
+| `carrier_path` | 92 (bank 39, rocket_and_portals; the volcano levels) | `sub_08020504`: `ldr` +4 into its controller's (`sub_0801B328`) `+0x18`, `+0x1C` (the point) 0. Its update (`0x0801B064`) takes Crash when he touches it and carries him along path `+0x18`'s points (the path table at `0x020001C8`, as `path_point`'s: `0xC0` a path, `0xC` a point, the count at `+0x3C0`), then lets go (effects 0x26 and 0x20, sound 0x3B) and goes back to its start. The flags aren't read |
+| `cutscene_trigger` | 106 (bank 0, crash; island_intro's one) | `sub_0801FF2C`: spawned only out of a bonus round, while bit 0 of the level's save word (`PackSaveData`'s `+4 + 4 *` the level, `sub_08022C00`) is clear; flags bit 3 into its controller's (`sub_0801B808`) `+0x10`, `ldrsb` +4 its `+0x14`. Its update (`0x0801B690`) plays cutscene `+0x14` (`sub_08043A20`, XS's `PlayCutscene`: the slides of entry `+0x14` of the table at `0x081E443C`) when Crash enters a 128x200 box over it; with bit 3 it first locks the camera (`gCamera +0x14` = 3; walking back left of it unlocks it) and plays it once Crash is off screen (`IsSpriteObjOnScreen`, the sprite's virtual `+0x34`). Then it removes itself |
 
 The crates' bit names are `crashdata.levels.params`' `N2_CRATE_FLAG_BITS`
 and `N2_CRATE_OPTION_BITS` (`BIT0`, `FLIP_X`, `FLIP_Y`, `UNK3`, `UNK4`,
@@ -450,6 +452,13 @@ and `N2_CRATE_OPTION_BITS` (`BIT0`, `FLIP_X`, `FLIP_Y`, `UNK3`, `UNK4`,
 The slot faces' names assume N-Tranced's faces 1, 2 and 4 are XS's.
 `trial_kind` 27 (`TNT_CRATE` in N-Tranced's types) is the ROM's "a basic
 crate", as XS's 0x1B.
+
+Types 73's and 106's flag bits are `N2_TRAP_FLAG_BITS` (`ALWAYS_ACTIVE`,
+`STARTS_TRIGGERED`, `BIT2`-`BIT7`) and `N2_CUTSCENE_FLAG_BITS` (`BIT0`-`BIT2`,
+`LOCK_CAMERA`, `BIT4`-`BIT7`); the bits named `BITn` aren't read. 92's,
+whose flags aren't read, keeps XS's names (all its records' are 0). Which
+cutscene island_intro's trigger plays (1) isn't named: N-Tranced's
+cutscenes have no ids yet.
 
 ## Graphics (#1115)
 
