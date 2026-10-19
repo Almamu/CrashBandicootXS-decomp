@@ -485,10 +485,29 @@ export interface MusicCellEdit {
   cell: [number, number, number, number, number];
 }
 
+/** An XM's structure, as a save or a player request sends it: its channels, patterns, order list, restart position and speed. */
+export interface MusicStructure {
+  channels: number;
+  /** cells: base64, 5 bytes a cell, row by row */
+  patterns: { rows: number; cells: string }[];
+  order: number[];
+  restart: number;
+  speed: number;
+}
+
+/** The songs' unsaved edits a player request carries (POST music/song, music/pool): played as the build would build them. */
+export interface MusicUnsaved {
+  newSongs?: { key: string; xm: string }[];
+  structures?: Record<string, MusicStructure>;
+  patterns?: Record<string, MusicCellEdit[]>;
+}
+
 /** GET /api/projects/ID/music/patterns: a song's XM for the pattern view. */
 export interface MusicPatterns {
   key: string;
   rom: boolean;
+  /** a ROM song that keeps the scaffold the ROM recorded (its pattern sharing, transposes): `groups`, `transposes` */
+  scaffold?: boolean;
   name: string;
   channels: number;
   /** each XM pattern's rows */
@@ -530,6 +549,8 @@ export interface MusicSave {
   songComments?: Record<string, string>;
   newSongs?: { key: string; xm: string; comment?: string }[];
   removeSongs?: string[];
+  /** a song's XM with a new structure (a ROM song's scaffold then leaves the manifest) */
+  structures?: Record<string, MusicStructure>;
   patterns?: Record<string, MusicCellEdit[]>;
   /** samples/NN.wav or sfx_samples/NN.wav -> base64 8-bit mono WAV */
   samples?: Record<string, string>;
@@ -737,18 +758,20 @@ export class EditorClient {
   }
 
   /** GAX2's tables and the two pools of instruments and samples, for the player. */
-  musicPool(id: string): Promise<MusicPool> {
+  musicPool(id: string, unsaved?: MusicUnsaved): Promise<MusicPool> {
+    if (unsaved && Object.keys(unsaved).length) return this.request("POST", this.project(id, "music/pool"), unsaved);
     return this.request("GET", this.project(id, "music/pool"));
   }
 
-  /** A song as the build builds it; with `edits`, as it would build them (unsaved cell edits). */
-  musicSong(id: string, key: string, edits?: MusicCellEdit[]): Promise<MusicSong> {
-    if (edits?.length) return this.request("POST", this.project(id, "music/song"), { key, edits });
+  /** A song as the build builds it; with `edits` (unsaved cell edits) or `unsaved` (the songs' unsaved edits), as it would build them. */
+  musicSong(id: string, key: string, edits?: MusicCellEdit[], unsaved?: MusicUnsaved): Promise<MusicSong> {
+    if (edits?.length || (unsaved && Object.keys(unsaved).length)) return this.request("POST", this.project(id, "music/song"), { ...unsaved, key, ...(edits?.length ? { edits } : {}) });
     return this.request("GET", this.project(id, "music/song"), undefined, { key });
   }
 
-  /** A song's XM: its patterns' cells, order list and instruments. */
-  musicPatterns(id: string, key: string): Promise<MusicPatterns> {
+  /** A song's XM: its patterns' cells, order list and instruments; `xm` (base64): an unsaved new song's. */
+  musicPatterns(id: string, key: string, xm?: string): Promise<MusicPatterns> {
+    if (xm !== undefined) return this.request("POST", this.project(id, "music/patterns"), { key, xm });
     return this.request("GET", this.project(id, "music/patterns"), undefined, { key });
   }
 

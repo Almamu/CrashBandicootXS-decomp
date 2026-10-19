@@ -20,6 +20,10 @@ def song_info():
             "num_fx_channels": S.integer(S.U16), "half_rate_fx": S.integer(S.U16)}
 
 
+# a ROM song's structure, part of its scaffold (crashdata.audio.gax.SCAFFOLD)
+STRUCTURE = ("num_channels", "num_rows_per_pattern", "num_patterns_per_channel", "loop_point")
+
+
 def instrument():
     sample = S.obj({"byte_02": S.integer(S.U8), "is_bidirectional": S.boolean(),
                     "start_position": S.integer(S.S32), "loop_start": S.integer(S.S32),
@@ -51,7 +55,9 @@ def gax_manifest():
         "pattern_groups": S.array(S.array(S.integer(0, 0xFFFF))),
         "title": S.string(), "artist": S.string(), "title_bytes": B64,
         "pattern_group_order": S.array(S.integer(0, 0xFFFF)), "channel_order": S.array(S.integer(0, 0xFFFF)),
-    }), required=list(song_info()) + ["mixer_data_bytes", "title", "artist"])
+    }), required=[f for f in song_info() if f not in STRUCTURE] + ["mixer_data_bytes", "title", "artist"],
+        description="a ROM song: its settings and, while it keeps it, the scaffold the ROM recorded (its "
+                    "structure, pattern sharing and layout); a song without it is built from its XM")
     root = S.obj({
         "instruments": S.obj(pattern_properties={INDEX_KEY: S.ref("instrument")},
                              description="the ROM's instrument pool, by index"),

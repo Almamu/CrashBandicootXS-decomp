@@ -6,6 +6,7 @@ made into GAX2 samples.
 
     python3 -m unittest discover -s packages/crashdata/tests
 """
+import base64
 import hashlib
 import io
 import json
@@ -108,6 +109,77 @@ class Patterns(unittest.TestCase):
             ((15, 0x80, 0x30), (12, 0x80)),     # a BPM: the volume column's
         ]:
             self.assertEqual(G._xm_effect_to_gax(e, p, v), want, (e, p, v))
+
+    def test_a_structure_written_back_unchanged_is_the_xm(self):
+        for p in sorted((SOUND / "songs").glob("*.xm")):
+            buf = p.read_bytes()
+            self.assertEqual(E.xm_with_structure(buf, E.structure(buf)), buf, p.name)
+
+    def test_a_structure(self):
+        """A new structure: an order position, a shorter pattern, a channel,
+        the speed. The XM reads back as it says; the other patterns and the
+        instruments keep their bytes."""
+        buf = (SOUND / "songs" / "drums.xm").read_bytes()
+        st = E.structure(buf)
+        ch = st["channels"]
+        cells = base64.b64decode(st["patterns"][1]["cells"])
+        st["patterns"].append({"rows": 8, "cells": base64.b64encode(cells[:8 * ch * 5]).decode()})
+        st["order"] = [0, len(st["patterns"]) - 1] + st["order"][1:]
+        st["restart"], st["speed"] = 2, 5
+        new = E.xm_with_structure(buf, st)
+        xm = G.read_xm("drums.xm", new)
+        self.assertEqual((xm["order"], xm["restart"], xm["tempo"]), (st["order"], 2, 5))
+        self.assertEqual(len(xm["patterns"][-1]), 8)
+        old, after = E.XmLayout(buf), E.XmLayout(new)
+        for i in range(len(old.patterns)):
+            self.assertEqual(E.unpack_cells(new, after, i), E.unpack_cells(buf, old, i), i)
+        self.assertEqual(new[after.end:], buf[old.end:])
+        # a channel more: every pattern's cells widen
+        wide = dict(st, channels=ch + 1, patterns=[
+            {"rows": p["rows"], "cells": base64.b64encode(b"".join(
+                base64.b64decode(p["cells"])[r * ch * 5:(r + 1) * ch * 5] + bytes(5) for r in range(p["rows"]))).decode()}
+            for p in st["patterns"]])
+        self.assertEqual(G.read_xm("drums.xm", E.xm_with_structure(buf, wide))["num_channels"], ch + 1)
+        for bad in (dict(st, order=[]), dict(st, order=[99]), dict(st, restart=99), dict(st, speed=0),
+                    dict(st, channels=ch + 1), dict(st, patterns=[{"rows": 0, "cells": ""}])):
+            self.assertRaises(E.EditError, E.xm_with_structure, buf, bad)
+
+    def test_a_rom_song_without_its_scaffold(self):
+        """A ROM song whose structure changes loses its scaffold
+        (descaffolded) and is built from its XM like a new song, with its
+        settings; one that keeps it must fit it."""
+        game = Game("xs", ROOT)
+        buf = (SOUND / "songs" / "jungle.xm").read_bytes()
+        st = E.structure(buf)
+        st["order"].insert(3, 0)
+        song = E.player_song(game, "jungle", unsaved={"structures": {"jungle": st}})
+        before = E.player_song(game, "jungle")
+        self.assertEqual((song["orderCount"], before["orderCount"]), (29, 28))
+        self.assertEqual((song["mixRate"], song["volume"], song["dsp"]), (before["mixRate"], before["volume"],
+                                                                           before["dsp"]))
+        m = E.descaffolded(MANIFEST, "jungle")
+        self.assertFalse(G.scaffolded(m["songs"]["jungle"]))
+        self.assertTrue(G.scaffolded(MANIFEST["songs"]["jungle"]))
+        self.assertIsNone(G.scaffold_misfit(MANIFEST["songs"]["jungle"], G.read_xm("jungle", buf)))
+        self.assertIn("order list", G.scaffold_misfit(MANIFEST["songs"]["jungle"],
+                                                      G.read_xm("jungle", E.xm_with_structure(buf, st))))
+        # every ROM song builds from its XM without its scaffold
+        for key in MANIFEST["songs"]:
+            m = E.descaffolded(m, key)
+        pool, keys, songs = G.load_songs(m, str(SOUND / "songs"), str(SOUND / "samples"))
+        for key, s in zip(keys, songs):
+            self.assertEqual(s.info.num_patterns_per_channel, MANIFEST["songs"][key]["num_patterns_per_channel"], key)
+            self.assertEqual(s.info.loop_point, MANIFEST["songs"][key]["loop_point"], key)
+
+    def test_an_unsaved_new_song(self):
+        game = Game("xs", ROOT)
+        xm = base64.b64encode((SOUND / "songs" / "drums.xm").read_bytes()).decode()
+        unsaved = {"newSongs": [{"key": "a_new_one", "xm": xm}]}
+        song = E.player_song(game, "a_new_one", unsaved=unsaved)
+        self.assertEqual((song["id"], song["channelCount"]), (len(MANIFEST["song_table"]), 3))
+        p = E.patterns(game, "a_new_one", xm)
+        self.assertEqual((p["rom"], p["channels"]), (False, 3))
+        self.assertRaises(E.EditError, E.player_song, game, "jungle", None, {"newSongs": [{"key": "jungle", "xm": xm}]})
 
     def test_the_songs_patterns_are_the_builds(self):
         pool, keys, songs = G.load_songs(MANIFEST, str(SOUND / "songs"), str(SOUND / "samples"))

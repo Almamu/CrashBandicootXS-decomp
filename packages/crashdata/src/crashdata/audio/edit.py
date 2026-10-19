@@ -180,14 +180,18 @@ def _pool_struct(instruments, samples, dedup):
             "waves": waves, "samples": _b64(blob)}
 
 
-def player_pool(game):
+def player_pool(game, unsaved=None):
     """GAX2's tables, the music pool (with the new songs' new
     instruments) and the sound-effect set (with the new sound effects'),
-    and the voices' song header: what the player needs besides a song."""
+    and the voices' song header: what the player needs besides a song.
+    unsaved: the songs' unsaved edits (unsaved_songs), whose new
+    instruments are in the pool as the build would add them."""
     files = Files(game)
     with bound(game):
         manifest = D.read_json(files.manifest)
-        pool, _, _ = G.load_songs(manifest, str(files.songs), str(files.samples))
+        manifest, xms = unsaved_songs(files, manifest, unsaved or {})
+        xms = {k: _read_xm_bytes(files.songs / ("%s.xm" % k), v) for k, v in xms.items()}
+        pool, _, _ = G.load_songs(manifest, str(files.songs), str(files.samples), xms)
         sfx, slots = G.sfx_pool()
         sfx_manifest = D.read_json(files.sfx_manifest)
     info = sfx_manifest["song_info"]
@@ -216,26 +220,86 @@ def song_struct(song, instruments):
     }
 
 
-def player_song(game, key, edits=None):
-    """Song `key` (gax_manifest.json's song_table) as tools/gax_audio.py
-    builds it; edits: unsaved cell edits of its XM (plan_save's
-    "patterns"), played as the build would build them."""
+def player_song(game, key, edits=None, unsaved=None):
+    """Song `key` (gax_manifest.json's song_table, or an unsaved new
+    song's) as tools/gax_audio.py builds it; edits: unsaved cell edits of
+    its XM (plan_save's "patterns"); unsaved: the songs' unsaved edits
+    (unsaved_songs), played as the build would build them."""
     files = Files(game)
+    unsaved = dict(unsaved or {})
+    if edits:
+        unsaved["patterns"] = dict(unsaved.get("patterns") or {}, **{key: edits})
     with bound(game):
         manifest = D.read_json(files.manifest)
+        manifest, xms = unsaved_songs(files, manifest, unsaved)
         keys = [t["song"] for t in manifest["song_table"]]
         if key not in keys:
             raise EditError("%s isn't a song of the song table" % key)
-        xms = None
-        if edits:
-            xm, manifest, _ = edited_song(files, manifest, key, edits)
-            xms = {key: _read_xm_bytes(files.songs / ("%s.xm" % key), xm)}
+        xms = {k: _read_xm_bytes(files.songs / ("%s.xm" % k), v) for k, v in xms.items()}
         pool, order, songs = G.load_songs(manifest, str(files.songs), str(files.samples), xms)
         song = songs[order.index(key)]
         out = song_struct(song, pool.instruments)
     out["key"] = key
     out["id"] = keys.index(key)
     return out
+
+
+def unsaved_songs(files, manifest, body):
+    """The songs as unsaved edits make them: (the manifest, {key: the XM's
+    bytes} of the songs they change). body, each part optional, as
+    plan_save's: "newSongs" [{key, xm}] (at the song table's end),
+    "structures" {key: structure()} (a ROM song whose structure changes
+    loses its scaffold: descaffolded) and "patterns" {key: cell edits}."""
+    manifest = json.loads(json.dumps(manifest))
+    keys = [t["song"] for t in manifest["song_table"]]
+    xms = {}
+    for i, ns in enumerate(body.get("newSongs") or []):
+        where = "newSongs/%d" % i
+        key = ns.get("key") if isinstance(ns, dict) else None
+        if not isinstance(key, str) or not NAME.match(key) or key in keys or key in manifest["songs"]:
+            raise EditError("%s: %r isn't a new song's key (lower case letters, digits and _, a key no song "
+                            "has)" % (where, key))
+        data = _b64decode(ns.get("xm"), where)
+        _read_xm_bytes(files.songs / ("%s.xm" % key), data)
+        manifest["song_table"].append({"song": key, "comment": ns.get("comment") or ""})
+        keys.append(key)
+        xms[key] = data
+    return apply_song_edits(files, manifest, keys, xms, body)
+
+
+def _xm_now(files, xms, key, what):
+    if key in xms:
+        return xms[key]
+    path = files.songs / ("%s.xm" % key)
+    if not path.is_file():
+        raise EditError("%s: songs/%s.xm isn't a file" % (what, key))
+    return path.read_bytes()
+
+
+def apply_song_edits(files, manifest, keys, xms, body):
+    """body's "structures", then its "patterns", on the XMs (xms: the
+    new songs' bytes, the others are the files'). Returns (the manifest,
+    {key: XM bytes} of the songs that change)."""
+    structures = body.get("structures") or {}
+    if not isinstance(structures, dict):
+        raise EditError("structures: {song: {channels, patterns, order, restart, speed}}")
+    for key, st in structures.items():
+        if key not in keys:
+            raise EditError("structures: %s isn't a song of the song table" % key)
+        buf = _xm_now(files, xms, key, "structures")
+        new = xm_with_structure(buf, st, "songs/%s.xm" % key)
+        if new != buf:
+            xms[key] = new
+            manifest = descaffolded(manifest, key)
+    for key, edits in (body.get("patterns") or {}).items():
+        if key not in keys:
+            raise EditError("patterns: %s isn't a song of the song table" % key)
+        if key in structures:
+            raise EditError("patterns: %s's cells are in its structure" % key)
+        new, manifest, changed = edited_song(files, manifest, key, edits, _xm_now(files, xms, key, "patterns"))
+        if changed:
+            xms[key] = new
+    return manifest, xms
 
 
 def _read_xm_bytes(path, data):
@@ -363,6 +427,104 @@ def xm_with_cells(buf, edits, where="xm"):
     return bytes(out), changed
 
 
+# What an XM's structure can be (FT2's limits; GAX2's speed is a byte, a
+# speed effect's under 0x20)
+MAX_CHANNELS = 32
+MAX_PATTERNS = 256
+MAX_ROWS = 256
+MAX_ORDER = 256
+MAX_SPEED = 31
+
+
+def structure(buf):
+    """An XM's structure as the editor edits it: {channels, patterns:
+    [{rows, cells}] (cells base64, 5 bytes a cell, row by row), order,
+    restart, speed}."""
+    layout = XmLayout(buf)
+    song_length, restart = struct.unpack_from("<HH", buf, 64)
+    return {"channels": layout.channels,
+            "patterns": [{"rows": p[2], "cells": _b64(unpack_cells(buf, layout, i))}
+                         for i, p in enumerate(layout.patterns)],
+            "order": list(buf[80:80 + song_length]), "restart": restart,
+            "speed": struct.unpack_from("<H", buf, 76)[0]}
+
+
+def xm_with_structure(buf, st, where="xm"):
+    """The XM's bytes with a new structure (structure()'s form): its
+    channels, patterns, order list, restart position and speed; its
+    header's other fields and its instruments as they are. A pattern whose
+    cells and rows are the old pattern's of that number keeps its bytes."""
+    if not isinstance(st, dict):
+        raise EditError("%s: a structure is {channels, patterns, order, restart, speed}" % where)
+    layout = XmLayout(buf)
+    header_size = struct.unpack_from("<I", buf, 60)[0]
+    instruments = struct.unpack_from("<H", buf, 72)[0]
+
+    def whole(v, lo, hi, what):
+        if isinstance(v, bool) or not isinstance(v, int) or not lo <= v <= hi:
+            raise EditError("%s: %s %r (%d-%d)" % (where, what, v, lo, hi))
+        return v
+
+    channels = whole(st.get("channels"), 1, MAX_CHANNELS, "channels")
+    pats = st.get("patterns")
+    if not isinstance(pats, list) or not 1 <= len(pats) <= MAX_PATTERNS:
+        raise EditError("%s: 1-%d patterns" % (where, MAX_PATTERNS))
+    order = st.get("order")
+    if not isinstance(order, list) or not 1 <= len(order) <= min(MAX_ORDER, header_size - 20):
+        raise EditError("%s: the order list has 1-%d positions" % (where, min(MAX_ORDER, header_size - 20)))
+    for i, p in enumerate(order):
+        whole(p, 0, len(pats) - 1, "order position %d's pattern" % i)
+    restart = whole(st.get("restart"), 0, len(order) - 1, "restart position")
+    speed = whole(st.get("speed"), 1, MAX_SPEED, "speed")
+    head = bytearray(buf[:60 + header_size])
+    struct.pack_into("<HHHH", head, 64, len(order), restart, channels, len(pats))
+    struct.pack_into("<H", head, 76, speed)
+    head[80:60 + header_size] = bytes(order) + bytes(60 + header_size - 80 - len(order))
+    out = head
+    for i, p in enumerate(pats):
+        here = "%s: pattern %d" % (where, i)
+        if not isinstance(p, dict):
+            raise EditError("%s: {rows, cells}" % here)
+        rows = whole(p.get("rows"), 1, MAX_ROWS, "pattern %d's rows" % i)
+        cells = _b64decode(p.get("cells"), here)
+        if len(cells) != rows * channels * CELL:
+            raise EditError("%s: %d rows of %d channels are %d bytes of cells, not %d"
+                            % (here, rows, channels, rows * channels * CELL, len(cells)))
+        for k in range(0, len(cells), CELL):
+            c = cells[k:k + CELL]
+            check_cell(list(c), instruments, "%s, row %d, channel %d" % (here, k // CELL // channels,
+                                                                         k // CELL % channels))
+        if i < len(layout.patterns) and channels == layout.channels and rows == layout.patterns[i][2] \
+                and cells == unpack_cells(buf, layout, i):
+            start, hlen, _, packed = layout.patterns[i]
+            out += buf[start:start + hlen + packed]
+            continue
+        data = pack_cells(cells)
+        if len(data) > 0xFFFF:
+            raise EditError("%s packs to %d bytes (an XM pattern holds 65535)" % (here, len(data)))
+        if i < len(layout.patterns):
+            start, hlen = layout.patterns[i][:2]
+            ph = bytearray(buf[start:start + hlen])
+            struct.pack_into("<HH", ph, 5, rows, len(data))
+        else:
+            ph = struct.pack("<IBHH", 9, 0, rows, len(data))
+        out += ph + data
+    out += buf[layout.end:]
+    return bytes(out)
+
+
+def descaffolded(manifest, key):
+    """The manifest with ROM song `key`'s scaffold taken out (gax.SCAFFOLD:
+    it is then built from its XM, with its settings), or as it is."""
+    sm = manifest["songs"].get(key)
+    if sm is None or not G.scaffolded(sm):
+        return manifest
+    manifest = json.loads(json.dumps(manifest))
+    for f in G.SCAFFOLD:
+        manifest["songs"][key].pop(f, None)
+    return manifest
+
+
 def shared_cells(sm, pi, ch):
     """A ROM song's pattern sharing: (order position, channel, transpose
     difference) of every pattern stored once with channel `ch`'s at order
@@ -382,6 +544,8 @@ def expand_edits(manifest, key, edits, instruments, current=None):
     its ROM pattern shares its bytes with (the note moved by their
     transposes)."""
     sm = manifest["songs"].get(key)
+    if sm is not None and not G.scaffolded(sm):
+        sm = None  # built from its XM: no patterns shared
     out = []
     if not isinstance(edits, list):
         raise EditError("%s: the edits are [{pattern, row, channel, cell}]" % key)
@@ -407,13 +571,13 @@ def expand_edits(manifest, key, edits, instruments, current=None):
     return out
 
 
-def edited_song(files, manifest, key, edits):
+def edited_song(files, manifest, key, edits, buf=None):
     """A song's XM bytes after cell edits; the build packs an edited
     pattern from its cells as it packs every other (the XM says all a
     pattern's bytes hold, crashdata.audio.gax._xm_effect_to_gax). Returns
     (XM bytes, the manifest, the XM patterns that changed)."""
-    path = files.songs / ("%s.xm" % key)
-    buf = path.read_bytes()
+    if buf is None:
+        buf = (files.songs / ("%s.xm" % key)).read_bytes()
     instruments = struct.unpack_from("<H", buf, 72)[0]
     layout, cache = XmLayout(buf), {}
 
@@ -430,30 +594,37 @@ def edited_song(files, manifest, key, edits):
     return new, manifest, changed
 
 
-def patterns(game, key):
+def patterns(game, key, xm=None):
     """A song's XM for the pattern view: its patterns' cells (base64, 5
     bytes a cell, row by row), rows, order list, instruments and, for a
     ROM song, its pattern sharing and transposes. Order position p plays
     XM pattern playOrder[p] (a ROM song's p, a new song's its order
-    list's)."""
+    list's). xm: an unsaved new song's XM (base64), whose key no song has."""
     files = Files(game)
     manifest = D.read_json(files.manifest)
-    if key not in [t["song"] for t in manifest["song_table"]]:
-        raise EditError("%s isn't a song of the song table" % key)
     path = files.songs / ("%s.xm" % key)
-    buf = path.read_bytes()
+    if xm is not None:
+        if not isinstance(key, str) or not NAME.match(key) or key in [t["song"] for t in manifest["song_table"]]:
+            raise EditError("%r isn't a new song's key" % (key,))
+        buf = _b64decode(xm, "xm")
+        manifest["songs"].pop(key, None)
+    elif key not in [t["song"] for t in manifest["song_table"]]:
+        raise EditError("%s isn't a song of the song table" % key)
+    else:
+        buf = path.read_bytes()
     layout = XmLayout(buf)
     xm = _read_xm_bytes(path, buf)
     sm = manifest["songs"].get(key)
     out = {
-        "key": key, "rom": sm is not None, "name": xm["name"], "channels": layout.channels,
+        "key": key, "rom": sm is not None, "scaffold": sm is not None and G.scaffolded(sm), "name": xm["name"],
+        "channels": layout.channels,
         "rows": [p[2] for p in layout.patterns],
         "cells": [_b64(unpack_cells(buf, layout, i)) for i in range(len(layout.patterns))],
         "order": xm["order"], "restart": xm["restart"], "speed": xm["tempo"], "bpm": xm["bpm"],
         "instruments": [{"name": xi["name"], "pool": idx} for xi, idx in zip(xm["instruments"],
                                                                               xm["gax_instrument_indices"])],
     }
-    if sm is not None:
+    if out["scaffold"]:
         out["groups"] = sm["pattern_groups"]
         out["transposes"] = sm["channel_transposes"]
         out["playOrder"] = list(range(sm["num_patterns_per_channel"]))
@@ -769,6 +940,9 @@ def plan_save(game, body):
       table's end (songs/<key>.xm);
     - "removeSongs": [song key], new songs taken out of the song table
       (their XM stays, unbuilt);
+    - "structures": {song key: structure()}: a song's XM with new
+      patterns, rows, channels, order list, restart position or speed
+      (a ROM song then loses its scaffold: descaffolded);
     - "patterns": {song key: [{"pattern", "row", "channel", "cell"}]},
       cell edits of the songs' XMs;
     - "samples": {"samples/NN.wav" or "sfx_samples/NN.wav": base64 WAV},
@@ -790,6 +964,7 @@ def plan_save(game, body):
     sfx_ins = {int(n) for n in D.read_json(files.sfx_manifest)["instruments"]}
 
     # the song table: comments, new songs, songs taken out
+    new_xms = {}
     for key, comment in (body.get("songComments") or {}).items():
         if key not in keys:
             raise EditError("songComments: %s isn't a song of the song table" % key)
@@ -810,7 +985,7 @@ def plan_save(game, body):
             continue
         data = _b64decode(ns.get("xm"), where)
         _read_xm_bytes(files.songs / ("%s.xm" % key), data)
-        out_bytes.append((files.rel(files.songs / ("%s.xm" % key)), data))
+        new_xms[key] = data
         entry = {"song": key, "comment": ns.get("comment") or "a new song (the music editor's)"}
         manifest["song_table"].append(entry)
         keys.append(key)
@@ -825,17 +1000,10 @@ def plan_save(game, body):
         del manifest["song_table"][i]
         del keys[i]
 
-    # pattern edits
-    xm_out = {}
-    for key, edits in (body.get("patterns") or {}).items():
-        if key not in keys:
-            raise EditError("patterns: %s isn't a song of the song table" % key)
-        if not (files.songs / ("%s.xm" % key)).is_file():
-            raise EditError("patterns: songs/%s.xm isn't a file (save the new song first)" % key)
-        xm, manifest, changed = edited_song(files, manifest, key, edits)
-        if changed:
-            xm_out[key] = xm
-            out_bytes.append((files.rel(files.songs / ("%s.xm" % key)), xm))
+    # the songs' structures and cells (a new song's too)
+    manifest, xms = apply_song_edits(files, manifest, keys, dict(new_xms), body)
+    for key, data in xms.items():
+        out_bytes.append((files.rel(files.songs / ("%s.xm" % key)), data))
 
     # what names a song: the themes, the screens, the cutscenes
     levels = D.read_json(files.levels) if files.levels.is_file() else None

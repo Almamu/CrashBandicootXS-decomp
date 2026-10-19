@@ -8,9 +8,9 @@
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { delimiter, join } from "node:path";
 import { describe, expect, it } from "vitest";
-import type { MusicInstrument, MusicPatterns, MusicPool, MusicSong, MusicView } from "@crash/schema-types";
+import type { MusicInstrument, MusicPatterns, MusicPool, MusicSong, MusicStructure, MusicView } from "@crash/schema-types";
 import { GaxPlayer, decodePool } from "../src/lib/music/gax.ts";
 import * as M from "../src/lib/music/model.ts";
 
@@ -20,7 +20,7 @@ const ROOT = join(__dirname, "..", "..", "..");
 function python<T>(code: string): T {
   const out = execFileSync("python3", ["-c", `import json, sys\nfrom crashdata.audio import edit as E\nfrom crashdata.audio import gax as G\nfrom crashdata.common.game import Game\ng = Game("xs", ".")\n${code}`], {
     cwd: ROOT,
-    env: { ...process.env, PYTHONPATH: join(ROOT, "packages", "crashdata", "src") },
+    env: { ...process.env, PYTHONPATH: [join(ROOT, "packages", "crashdata", "src"), join(ROOT, "packages", "buildtools", "src")].join(delimiter) },
     maxBuffer: 256 * 1024 * 1024,
     encoding: "utf8",
   });
@@ -31,6 +31,7 @@ interface Reference {
   frames: number;
   songs: Record<string, string>;
   sfx: { song: string; musicVolume?: number; frames: number; events: [number, number, number, number, number][]; sha1: string }[];
+  edited?: { songs: Record<string, string> };
 }
 
 const ref = JSON.parse(readFileSync(join(__dirname, "gax_reference.json"), "utf8")) as Reference;
@@ -66,6 +67,22 @@ describe("the player", () => {
         p.frame(out.subarray(f * p.frames, (f + 1) * p.frames));
       }
       expect([s.song, sha1(out)]).toEqual([s.song, s.sha1]);
+    }
+  });
+
+  it("mixes the edited songs, played before they are saved, as the PC port built from the saved edits", () => {
+    // tools/gax_render.py edited_body: a ROM song restructured, cells with alternating speeds and GAX2's own
+    // slides, a channel more, ...; the backend builds them unsaved (POST music/song, music/pool with the edits)
+    const songs = Object.keys(ref.edited!.songs);
+    const edited = python<{ pool: MusicPool; songs: Record<string, MusicSong> }>(
+      `from buildtools import gax_render as R\nb = R.edited_body(".")\nprint(json.dumps({"pool": E.player_pool(g, b), "songs": {k: E.player_song(g, k, unsaved=b) for k in ${JSON.stringify(songs)}}}))`,
+    );
+    for (const [key, digest] of Object.entries(ref.edited!.songs)) {
+      const p = new GaxPlayer(edited.pool.tables, decodePool(edited.pool.music), decodePool(edited.pool.sfx), edited.songs[key]!);
+      const got = sha1(p.render(ref.frames));
+      expect([key, got]).toEqual([key, digest]);
+      // and they are edited: not the song as it was
+      expect(got).not.toBe(ref.songs[key]);
     }
   });
 
@@ -126,6 +143,51 @@ describe("the cells", () => {
     // an edit that changes nothing changes nothing
     const same = M.cellAt(base, got.p.channels, 0, 0, 0);
     expect(M.editedCells(got.p, base, { [M.cellKey(0, 0, 0)]: same }).every((c, i) => c === base[i] || Buffer.from(c).equals(Buffer.from(base[i]!)))).toBe(true);
+  });
+});
+
+describe("a song's structure", () => {
+  const drums = python<{ p: MusicPatterns; st: MusicStructure }>(`buf = open("games/xs/sound/songs/drums.xm", "rb").read()\nprint(json.dumps({"p": E.patterns(g, "drums"), "st": E.structure(buf)}))`);
+  const base = M.structureOf(drums.p, M.decodeCells(drums.p));
+
+  it("is the XM's (crashdata.audio.edit.structure)", () => {
+    expect(M.structureBody(base)).toEqual(drums.st);
+  });
+
+  it("is edited and undone", () => {
+    const ch = M.removeChannel(M.addChannel(base, 1), 1);
+    expect(M.sameStructure(ch, base)).toBe(true);
+    expect(M.addChannel(base).channels).toBe(base.channels + 1);
+    const rows = M.deleteRow(M.insertRow(base, 1, 4), 1, 4);
+    expect(M.sameStructure(rows, base)).toBe(true);
+    expect(M.insertRow(base, 1, 4).patterns[1]!.rows).toBe(base.patterns[1]!.rows + 1);
+    expect(M.setRows(base, 1, 8).patterns[1]!.cells.length).toBe(8 * base.channels * M.CELL);
+    const ord = M.removeOrder(M.insertOrder(base, 1, 0), 1);
+    expect(M.sameStructure(ord, base)).toBe(true);
+    // the loop point stays on the position it marks
+    expect(M.insertOrder(base, 0, 0).restart).toBe(base.restart + 1);
+    const moved = M.moveOrder(base, base.restart, 0);
+    expect([moved.restart, moved.order[0]]).toEqual([0, base.order[base.restart]]);
+  });
+
+  it("loses a pattern with the positions that play it, the later ones renumbered", () => {
+    const s = M.duplicatePattern(base, 2);
+    const n = s.patterns.length - 1;
+    const t = M.insertOrder(s, 0, n);
+    const d = M.deletePattern(t, 0);
+    expect(d.patterns.length).toBe(t.patterns.length - 1);
+    expect(d.order).toEqual(t.order.filter((p) => p !== 0).map((p) => (p > 0 ? p - 1 : p)));
+    expect(() => M.deletePattern({ ...base, patterns: [base.patterns[0]!] }, 0)).toThrow();
+    expect(() => M.setSpeed(base, 0)).toThrow();
+  });
+
+  it("is what a save and the player send", () => {
+    const st = M.setSpeed(base, 4);
+    const s0: M.EditState = { ...M.initialState({ themes: [], songs: [] } as unknown as MusicView, { entries: [] } as never, { screen_music: [] }) };
+    const s1 = { ...s0, structures: { drums: st } };
+    expect(M.saveBody(s0, s1).structures?.drums?.speed).toBe(4);
+    expect(M.saveBody(s1, s1).structures).toBeUndefined();
+    expect(M.unsavedBody(s1).structures?.drums).toEqual(M.structureBody(st));
   });
 });
 

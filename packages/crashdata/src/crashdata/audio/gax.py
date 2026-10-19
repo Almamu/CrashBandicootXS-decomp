@@ -1495,10 +1495,52 @@ def write_song_table(manifest_path, path):
         f.write('\n'.join(out))
 
 
-def rom_song(sm, xm, instruments):
+# A ROM song's recorded scaffold (gax_manifest.json's `songs`): its
+# structure (channels, rows, order positions, loop point), how its patterns
+# are shared and laid out, and its transposes. A song without it (one the
+# music editor changed the structure of) is built from its XM like a new
+# song, with the manifest's settings (SCAFFOLD_SETTINGS, title_bytes).
+SCAFFOLD = ('num_channels', 'num_rows_per_pattern', 'num_patterns_per_channel', 'loop_point', 'num_items',
+            'channel_transposes', 'pattern_groups', 'pattern_group_order', 'channel_order')
+SCAFFOLD_SETTINGS = ('title', 'artist', 'volume', 'ushort_0a', 'sample_rate', 'num_fx_channels', 'half_rate_fx',
+                     'mixer_data_bytes')
+
+
+def scaffolded(sm):
+    """Whether a ROM song keeps its recorded scaffold."""
+    return 'pattern_groups' in sm
+
+
+def scaffold_misfit(sm, xm):
+    """Why an XM doesn't fit its ROM song's scaffold (None if it does): the
+    scaffold plays XM pattern p at order position p, all of one length,
+    from speed 6, looping to its loop point."""
+    n = sm['num_patterns_per_channel']
+    if xm['num_channels'] != sm['num_channels']:
+        return f"{xm['num_channels']} channels, the scaffold's {sm['num_channels']}"
+    if xm['order'] != list(range(n)):
+        return f"its order list isn't the scaffold's 0-{n - 1}"
+    if len(xm['patterns']) < n:
+        return f"{len(xm['patterns'])} patterns, the scaffold's {n}"
+    rows = sorted({len(xm['patterns'][p]) for p in range(n)} - {sm['num_rows_per_pattern']})
+    if rows:
+        return f"patterns of {', '.join(map(str, rows))} rows, the scaffold's {sm['num_rows_per_pattern']}"
+    if xm['restart'] != sm['loop_point']:
+        return f"restart position {xm['restart']}, the scaffold's loop point {sm['loop_point']}"
+    if xm['tempo'] != 6:
+        return f"speed {xm['tempo']}: the scaffold's songs start at GAX2's 6 (their first rows set theirs)"
+    return None
+
+
+def rom_song(sm, xm, instruments, where='the XM'):
     """A song of the ROM: its patterns from the XM, laid out with the
     scaffold the manifest recorded (pattern sharing and order, channel
     order, transposes, title bytes), so it rebuilds byte for byte."""
+    why = scaffold_misfit(sm, xm)
+    if why:
+        sys.exit(f"{where} doesn't fit the scaffold gax_manifest.json records for it: {why}. Take its "
+                 f"{', '.join(SCAFFOLD)} out of the manifest's song, and it is built from the XM like a new "
+                 "song (the music editor does when it changes a song's structure)")
     song = Song(sm, num_items=sm['num_items'], unk_ptr=0)
     used_indices = xm['gax_instrument_indices']
 
@@ -1608,9 +1650,9 @@ def new_song_instruments(xm, order_rows, pool, fail):
 
         if name.startswith('Instrument ') and name[len('Instrument '):].isdigit():
             idx = int(name[len('Instrument '):])
-            if not 0 < idx < pool.rom_instruments:
-                bad(f"there is no Instrument {idx}: the pool's instruments are 1-{pool.rom_instruments - 1} "
-                    f"({pool.label}); give a new instrument another name")
+            if not 0 <= idx < pool.rom_instruments:
+                bad(f"there is no Instrument {idx}: the pool's instruments are 0-{pool.rom_instruments - 1} "
+                    f"({pool.label}, 0 the empty one); give a new instrument another name")
             out[n - 1] = idx
             continue
         if named_instrument(name):
@@ -1653,9 +1695,11 @@ def set_effect(rows, row, effect, param, why, fail):
     fail(f"{why}, but row {row} has an effect on every channel (a GAX2 row has one)")
 
 
-def new_song(key, xm_path, xm, pool):
+def new_song(key, xm_path, xm, pool, rom=None):
     """A song with no ROM history: its scaffold derived from the XM, with
-    the settings of the optional games/xs/sound/songs/<key>.json next to it.
+    the settings of the optional games/xs/sound/songs/<key>.json next to it
+    (rom: a ROM song's manifest entry without its scaffold, whose settings
+    and title bytes are its).
 
     - one GAX2 channel per XM channel, in order;
     - one order position per entry of the XM's order list (a channel's
@@ -1677,7 +1721,10 @@ def new_song(key, xm_path, xm, pool):
 
     settings = dict(NEW_SONG_DEFAULTS)
     json_path = os.path.splitext(xm_path)[0] + '.json'
-    if os.path.exists(json_path):
+    if rom is not None:
+        # a ROM song without its scaffold: the manifest's settings
+        settings.update({f: rom[f] for f in SCAFFOLD_SETTINGS if f in rom})
+    elif os.path.exists(json_path):
         given = schemas.load(json_path)
         unknown = sorted(set(given) - set(NEW_SONG_DEFAULTS))
         if unknown:
@@ -1743,11 +1790,13 @@ def new_song(key, xm_path, xm, pool):
         'num_rows_per_pattern': num_rows,
         'num_patterns_per_channel': len(order),
         'loop_point': xm['restart'],
-        'ushort_0a': 0,
+        'ushort_0a': settings.get('ushort_0a', 0),
         'title': settings['title'] or xm['name'] or key,
     }
     for field in ('artist', 'volume', 'sample_rate', 'num_fx_channels', 'half_rate_fx', 'mixer_data_bytes'):
         entry[field] = settings[field]
+    if rom is not None and 'title_bytes' in rom:
+        entry['title_bytes'] = rom['title_bytes']
     need = work_size(num_channels, settings['sample_rate'], settings['half_rate_fx'], settings['mixer_data_bytes'])
     if need > GAX_WORK_SIZE:
         fail(f"GAX2 needs {need:#x} bytes of work RAM for {num_channels} channels at {settings['sample_rate']} Hz "
@@ -1792,8 +1841,10 @@ def load_songs(manifest, songs_dir, samples_dir, xms=None):
     for key in keys:
         xm_path = os.path.join(songs_dir, f"{key}.xm")
         xm = xms[key] if xms and key in xms else read_xm(xm_path)
-        if key in manifest['songs']:
-            songs.append(rom_song(manifest['songs'][key], xm, instruments))
+        if key in manifest['songs'] and scaffolded(manifest['songs'][key]):
+            songs.append(rom_song(manifest['songs'][key], xm, instruments, os.path.relpath(xm_path, ROOT)))
+        elif key in manifest['songs']:
+            songs.append(new_song(key, xm_path, xm, pool, manifest['songs'][key]))
         else:
             songs.append(new_song(key, xm_path, xm, pool))
     return pool, keys, songs

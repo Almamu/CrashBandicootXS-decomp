@@ -556,22 +556,28 @@ class Server:
         with self.music_errors():
             return music_edit.view(game)
 
-    def music_pool(self, project):
+    @staticmethod
+    def music_unsaved(body):
+        """The songs' unsaved edits a player request carries (newSongs,
+        structures, patterns: music_edit.unsaved_songs)."""
+        return {k: body[k] for k in ("newSongs", "structures", "patterns") if k in body} if body else {}
+
+    def music_pool(self, project, body=None):
         game = self.music_game(project)
         with self.music_errors():
-            return music_edit.player_pool(game)
+            return music_edit.player_pool(game, self.music_unsaved(body))
 
-    def music_song(self, project, key, edits=None):
+    def music_song(self, project, key, edits=None, body=None):
         game = self.music_game(project)
         if not isinstance(key, str) or not key:
             raise HttpError(400, "which song? (?key=KEY, or {\"key\": KEY, \"edits\": [...]})")
         with self.music_errors():
-            return music_edit.player_song(game, key, edits)
+            return music_edit.player_song(game, key, edits, self.music_unsaved(body))
 
-    def music_patterns(self, project, key):
+    def music_patterns(self, project, key, xm=None):
         game = self.music_game(project)
         with self.music_errors():
-            return music_edit.patterns(game, key or "")
+            return music_edit.patterns(game, key or "", xm)
 
     def music_import(self, project, body):
         self.music_game(project)
@@ -1007,11 +1013,16 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return self._send(200, app.music_pool(project), compress=True)
         if (method, what) == ("GET", "music/song"):
             return self._send(200, app.music_song(project, query.get("key", "")), compress=True)
+        if (method, what) == ("POST", "music/pool"):
+            return self._send(200, app.music_pool(project, self._body()), compress=True)
         if (method, what) == ("POST", "music/song"):
             body = self._body()
-            return self._send(200, app.music_song(project, body.get("key"), body.get("edits")), compress=True)
+            return self._send(200, app.music_song(project, body.get("key"), body.get("edits"), body), compress=True)
         if (method, what) == ("GET", "music/patterns"):
             return self._send(200, app.music_patterns(project, query.get("key", "")), compress=True)
+        if (method, what) == ("POST", "music/patterns"):
+            body = self._body()
+            return self._send(200, app.music_patterns(project, body.get("key"), body.get("xm")), compress=True)
         if (method, what) == ("POST", "music/import"):
             return self._send(200, app.music_import(project, self._body()))
         if (method, what) == ("POST", "music/save"):

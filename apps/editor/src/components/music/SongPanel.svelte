@@ -8,10 +8,11 @@
 
   const info = $derived(mu.songInfo);
   const entry = $derived(mu.songs.find((s) => s.key === mu.song));
-  const x = $derived(mu.patterns[mu.song]);
+  const x = $derived(mu.songView);
   const p = $derived(x?.p);
   const xmPattern = $derived(p ? (p.playOrder[mu.order] ?? 0) : 0);
-  const cell = $derived(p && mu.cells && mu.cell ? M.cellAt(mu.cells, p.channels, xmPattern, mu.cell.row, mu.cell.channel) : null);
+  const inside = $derived(!!p && !!mu.cell && mu.cell.row < (p.rows[xmPattern] ?? 0) && mu.cell.channel < p.channels);
+  const cell = $derived(p && x && mu.cell && inside ? M.cellAt(x.cells, p.channels, xmPattern, mu.cell.row, mu.cell.channel) : null);
   const notes = $derived(cell ? M.cellNotes(cell) : null);
   const shared = $derived(p && mu.cell ? M.sharedCells(p, mu.order, mu.cell.channel).filter(([pj, cj]) => pj !== mu.order || cj !== mu.cell!.channel) : []);
   const uses = $derived(mu.usesOf(mu.song));
