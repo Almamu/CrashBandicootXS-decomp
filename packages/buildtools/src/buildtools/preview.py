@@ -13,10 +13,11 @@ make the game start LEVEL in its room ROOM.
 
 LEVEL is gLevelTable's index, a level's constant (LEVEL_JUNGLE_JAM or
 JUNGLE_JAM), its name ("jungle jam") or folder (jungle_jam), or a room
-folder (snow_crash/part2: its level, and the room). ROOM is the index in
-the level's "rooms" (the rooms it plays in order; 0 by default) or one of
-them by folder. A level's bonus and gem-path rooms aren't in "rooms":
-they are entered from the level, not started.
+folder (snow_crash/part2 or jungle_jam/bonus: its level, and the room).
+ROOM is the index in the level's "rooms" (the rooms it plays in order; 0
+by default) or one of them by folder, or "bonus" or "gem_path": the
+level's bonus or gem-path room, which the game enters from the level and
+the PC port's `--room bonus|gem-path` (level_pick.c) starts in.
 
 In a window (an executable built with SDL2) the game runs paced, and the
 keyboard and gamepad play it from the level select on. --headless (or a
@@ -69,13 +70,28 @@ def norm(s):
     return re.sub(r"[^a-z0-9]+", "_", str(s).lower()).strip("_")
 
 
+# A level's rooms that aren't in its "rooms": levels.json's key, and the
+# PC port's --room for it (level_pick.c)
+EXTRA_ROOMS = {"bonus": "bonus", "gem_path": "gem-path"}
+
+
 def room_entries(lv):
     return [r if isinstance(r, str) else "stage %s" % r.get("stage", r) for r in lv["rooms"]]
 
 
+def extra_room(lv, room):
+    """The key of `lv`'s extra room that `room` names ("bonus", "gem_path",
+    "gem-path" or its folder), or None."""
+    key = norm(room)
+    for k in EXTRA_ROOMS:
+        if lv.get(k) and (key == k or room == lv[k]):
+            return k
+    return None
+
+
 def resolve(level, room=None):
-    """(level index, room index, the level's constant, the room) of the
-    arguments, or a DataError."""
+    """(level index, room: its index in "rooms" or "bonus"/"gem_path", the
+    level's constant, the room) of the arguments, or a DataError."""
     lvs = levels()
     where = "games/xs/data/levels/levels.json"
     idx, ridx = None, None
@@ -95,13 +111,18 @@ def resolve(level, room=None):
             if "/" in str(level) and level in lv["rooms"]:
                 idx, ridx = i, lv["rooms"].index(level)
                 break
+            if "/" in str(level) and extra_room(lv, level):
+                idx, ridx = i, extra_room(lv, level)
+                break
         if idx is None:
-            extra = [lv["constant"] for lv in lvs if level in (lv.get("bonus"), lv.get("gem_path"))]
-            hint = (" (%s's bonus or gem-path room: those are entered from the level, not started)" % extra[0]
-                    if extra else "")
-            D.error("no level %s%s" % (level, hint), where, "/levels", code="preview-level")
+            D.error("no level %s" % level, where, "/levels", code="preview-level")
     lv = lvs[idx]
-    if room is not None:
+    if room is not None and extra_room(lv, room):
+        ridx = extra_room(lv, room)
+    elif room is not None and norm(room) in EXTRA_ROOMS:
+        D.error("%s has no %s room" % (lv["constant"], norm(room).replace("_", "-")), where, "/levels/%d" % idx,
+                code="preview-room")
+    elif room is not None:
         if re.fullmatch(r"\d+", str(room)):
             ridx = int(room)
         elif room in lv["rooms"]:
@@ -109,6 +130,8 @@ def resolve(level, room=None):
         else:
             D.error("%s plays no room %s (its rooms: %s)" % (lv["constant"], room, ", ".join(room_entries(lv))),
                     where, "/levels/%d/rooms" % idx, code="preview-room")
+    if ridx in EXTRA_ROOMS:
+        return idx, ridx, lv["constant"], lv[ridx]
     ridx = ridx or 0
     if not 0 <= ridx < len(lv["rooms"]):
         D.error("%s has %d rooms (0-%d): %s" % (lv["constant"], len(lv["rooms"]), len(lv["rooms"]) - 1,
@@ -190,7 +213,7 @@ def run():
         build(args.sdl)
     if not EXE.exists():
         D.error("no %s: build it (make PLATFORM=pc), or leave out --no-build" % EXE, code="preview-build")
-    cmd = [str(EXE), "--keys", args.keys, "--level", str(level), "--room", str(room)]
+    cmd = [str(EXE), "--keys", args.keys, "--level", str(level), "--room", str(EXTRA_ROOMS.get(room, room))]
     pictures = []
     tmp = None
     if headless:
@@ -202,7 +225,7 @@ def run():
                 "--screens", screens]
     elif args.frames:
         cmd += ["--frames", str(args.frames)]
-    print("preview: %s, room %d (%s): %s" % (constant, room, entry, " ".join(cmd)))
+    print("preview: %s, room %s (%s): %s" % (constant, room, entry, " ".join(cmd)))
     sys.stdout.flush()
     r = subprocess.run(cmd)
     if r.returncode:

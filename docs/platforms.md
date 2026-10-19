@@ -306,7 +306,7 @@ platform/pc/tools/gax_host_data.py GAX2's song data with pointers, as C (below)
 
 **Running it.** `crashbandicootxs_pc [--headless] [--scale N] [--save
 FILE] [--wav FILE] [--frames N] [--vblanks N] [--keys FILE] [--level N
-[--room R]] [--cutscene N [--language L]] [--checkpoint-every N] [--dump DIR] [--screens DIR]
+[--room R|bonus|gem-path]] [--cutscene N [--language L]] [--checkpoint-every N] [--dump DIR] [--screens DIR]
 [--screenshot-at N] [--ppu-stats] [--gax-log FILE] [--quiet]`, or
 `crashbandicootxs_pc --gax-trace FILE`. In a window unless `--headless`
 (or built without SDL2): `--scale N` sizes it (3 times the GBA's by
@@ -315,7 +315,9 @@ N reads its keys under. `--save FILE` keeps the EEPROM there. `--wav
 FILE` writes the sound there (see "The sound"), in a window or headless.
 `--level N` makes the first level select pick level N (gLevelTable's
 index) and `--room R` start it in its room R, as boottest's level scripts
-do on mGBA. `--cutscene N` makes the boot play cutscene N (a CUTSCENE_* id) in
+do on mGBA; `--room bonus` and `--room gem-path` start it in its bonus or
+gem-path room (level_pick.c: the room block's `EnterBonusRoom` or
+`EnterGemPathRoom` after the first `SelectRoom`). `--cutscene N` makes the boot play cutscene N (a CUTSCENE_* id) in
 place of the legal notice, in language L with `--language L` (0 English
 ... 5 Dutch), then boot on (the cutscene editor's "Play this cutscene",
 `tools/preview.py --cutscene`). `tools/preview.py` (`make preview LEVEL=... ROOM=...`,

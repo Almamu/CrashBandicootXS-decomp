@@ -209,11 +209,25 @@ mGBA comparisons use.
 
 - **LEVEL** is gLevelTable's index, a level's constant (`LEVEL_JUNGLE_JAM`
   or `JUNGLE_JAM`), its name (`"jungle jam"`), its folder (`jungle_jam`)
-  or one of its room folders (`snow_crash/part2`: the level and the room).
+  or one of its room folders (`snow_crash/part2`: the level and the room;
+  `jungle_jam/bonus`: the level and its bonus room).
 - **ROOM** is the index in the level's `"rooms"` (0 by default), or one of
-  them by folder: a stage (`{"stage": ...}`) is a room too. A bonus or
-  gem-path room isn't in `"rooms"` (the level enters it, it isn't
-  started), so it can't be previewed on its own.
+  them by folder: a stage (`{"stage": ...}`) is a room too. `bonus` and
+  `gem_path` (or their folders) are the level's bonus and gem-path rooms,
+  which aren't in `"rooms"`: the game enters them from the level (the "?"
+  platform, the gem path), so the PC port's `--room bonus` or `--room
+  gem-path` starts them instead. The level's first room is picked as
+  usual, then the room block's own `EnterBonusRoom` or `EnterGemPathRoom`
+  makes the extra room the one played (level_pick.c). The game isn't in
+  its bonus round or on its gem path then (the platform sets that): the
+  player starts at the room's start marker without the warp-in, and the
+  room's exit goes on to the level's first room. Ace of space's gem path,
+  the one `HOVER` room (room 16), stops the PC port on its first frame
+  however it is entered: the hover controller writes its camera lead's
+  speed before making the lead, and the lead is a sprite with no bank
+  that the sprite code reads through NULL in several places; on the GBA
+  those land in the BIOS area. The port doesn't cover that yet
+  ([platforms.md](./platforms.md), "Seams").
 - **In a window** the game runs paced from the level select on, and the
   keyboard or a gamepad plays it (Esc quits, F12 takes a screenshot).
 - **Headless** (`--headless`, `--out`, `--screens`, or an executable
@@ -403,8 +417,9 @@ pictures byte for byte), so a change shows only where it is.
 
 **Play this room** runs `tools/preview.py` at the room ("Preview"): in
 the desktop app the PC port's window opens, in the browser it runs
-headless and shows the room after 700 frames. It builds the saved data;
-a bonus or gem-path room can't be started on its own.
+headless and shows the room after 700 frames. It builds the saved data.
+A bonus or gem-path room starts as the level's (`ROOM=bonus` or
+`gem_path`, "Preview"); a room no level plays can't be started.
 
 **Not yet:** making a new room (a copy of a room's folder with its own
 symbols, listed in levels.json: [levels.md, "Adding a

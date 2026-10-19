@@ -231,5 +231,27 @@ class Saving(LevelEditor):
                 p.write_bytes(b)
 
 
+class PreviewRooms(unittest.TestCase):
+    """tools/preview.py's LEVEL and ROOM: a level's bonus and gem-path rooms
+    by name or folder (the PC port's --room bonus|gem-path)."""
+
+    def test_extra_rooms(self):
+        from buildtools import preview
+        from crashdata import levels as L
+        from crashdata.common.game import Game
+
+        L.use_game(Game("xs", ROOT))
+        jj = next(i for i, lv in enumerate(preview.levels()) if lv["name"] == "jungle jam")
+        self.assertEqual(preview.resolve("jungle_jam/bonus")[:2], (jj, "bonus"))
+        self.assertEqual(preview.resolve("jungle jam", "bonus")[:2], (jj, "bonus"))
+        self.assertEqual(preview.resolve("jungle_jam", "jungle_jam/bonus")[1], "bonus")
+        self.assertEqual(preview.resolve("snow_crash", "gem_path")[1:], ("gem_path", "LEVEL_SNOW_CRASH",
+                                                                       "snow_crash/gem_path"))
+        self.assertEqual(preview.resolve("snow_crash", "gem-path")[1], "gem_path")
+        self.assertEqual(preview.resolve("snow_crash/part2")[1], 2)
+        with self.assertRaises(SystemExit):
+            preview.resolve("jungle_jam", "gem_path")  # jungle jam has no gem path
+
+
 if __name__ == "__main__":
     unittest.main()

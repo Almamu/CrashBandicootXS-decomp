@@ -124,7 +124,7 @@
         <button onclick={() => canvas?.zoomBy(2)} title="zoom in">+</button>
         <button onclick={() => canvas?.fitRoom()} title="the whole room">Fit</button>
         <span class="spacer"></span>
-        <button disabled={!playable || play?.running} title={playable ? `run the PC port at this room (level ${entry?.level}, room ${entry?.room})` : "a bonus or gem-path room can't be previewed on its own (the level enters it)"} onclick={runPreview}>Play this room</button>
+        <button disabled={!playable || play?.running} title={playable ? `run the PC port at this room (level ${entry?.level}, room ${entry?.room})` : "a room no level plays can't be started: make it a level's room, bonus or gem-path room first"} onclick={runPreview}>Play this room</button>
         <button disabled={!level.dirty || !!editor.busy} onclick={() => level.revert()}>Revert</button>
         <button class="primary" disabled={!level.dirty || !!editor.busy} onclick={() => level.save()} title="save (ctrl+s): checked like any save, all or nothing">Save</button>
       </div>

@@ -272,15 +272,17 @@ else
 endif
 
 # `make preview LEVEL=jungle_jam [ROOM=0]` builds the PC port and plays
-# the level's room in its window from the level select on;
+# the level's room in its window from the level select on (ROOM=bonus or
+# ROOM=gem_path: its bonus or gem-path room; LEVEL may be a room's folder,
+# jungle_jam/bonus);
 # PREVIEW_ARGS=--headless writes its first picture (`--out FILE`,
 # `--screens DIR`) instead (tools/preview.py, docs/editors.md "Preview").
 # With MOD, in the mod's tree, applied first. `make preview
 # CUTSCENE=CUTSCENE_INTRO [LANGUAGE=fr]` plays a cutscene at boot instead.
 LEVEL ?= 0
-ROOM ?= 0
+ROOM ?=
 PREVIEW_ARGS ?=
-PREVIEW_WHAT = $(if $(CUTSCENE),--cutscene "$(CUTSCENE)" $(if $(LANGUAGE),--language "$(LANGUAGE)"),"$(LEVEL)" "$(ROOM)")
+PREVIEW_WHAT = $(if $(CUTSCENE),--cutscene "$(CUTSCENE)" $(if $(LANGUAGE),--language "$(LANGUAGE)"),"$(LEVEL)" $(if $(ROOM),"$(ROOM)"))
 .PHONY: preview
 preview:
 ifneq ($(filter command line environment,$(origin MOD)),)
