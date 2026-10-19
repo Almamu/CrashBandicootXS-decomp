@@ -4,7 +4,7 @@
  * (docs/platforms.md); it is not part of any build.
  *
  *     mgba_screens ROM KEYS FRAMES EVERY DIR [--save FILE]
- *                  [--level ADDRESS N [--room ADDRESS R]]
+ *                  [--level ADDRESS N [--room ADDRESS R | --extra-room ADDRESS RETURN ENTER]]
  *
  * KEYS is a key file expanded to lines `FRAME KEYS` (KEYS a number, the
  * active-high bits of REG_KEYINPUT), as boottest.py reads platform/pc's.
@@ -26,7 +26,15 @@
  * call of LevelSelectLoop) r0, the level chosen, becomes N; at the first
  * stop at the room's ADDRESS (SelectRoom) after that, the roomIndex at r0
  * + 4 becomes R. They are breakpoints of mGBA's debugger, which runs the
- * CPU an instruction at a time, more slowly. */
+ * CPU an instruction at a time, more slowly.
+ *
+ * --extra-room is the host's --room bonus and --room gem-path: the first
+ * SelectRoom (ADDRESS) after the level is picked runs as the game's, and
+ * when it returns to UpdateGameFrame (RETURN, boottest gives the address
+ * after its call) the room block it was called on (its r0, kept at
+ * ADDRESS) goes to ENTER (EnterBonusRoom or EnterGemPathRoom), which
+ * returns to RETURN again with SelectRoom's result put back in r0: the
+ * call level_pick.c's wrapper makes after SelectRoom's. */
 
 #include <fcntl.h>
 #include <stdarg.h>
@@ -40,6 +48,7 @@
 #include <mgba/core/log.h>
 #include <mgba/debugger/debugger.h>
 #include <mgba/internal/arm/arm.h>
+#include <mgba/internal/arm/isa-inlines.h>
 #include <mgba-util/vfs.h>
 
 #define WIDTH  240
@@ -88,6 +97,13 @@ static u32 sRoomAddress;
 static s32 sRoom = -1;
 static int sLevelPicked;
 static int sRoomPicked;
+
+/* --extra-room: 1 once SelectRoom is entered, 2 while ENTER runs, 3 done. */
+static u32 sExtraReturn;
+static u32 sExtraEnter;
+static int sExtraState;
+static u32 sExtraSelf;
+static u32 sExtraResult;
 
 /* mGBA's log (the BIOS calls, ...) isn't wanted. */
 static void Log(struct mLogger *logger, int category, enum mLogLevel level, const char *format,
@@ -176,7 +192,23 @@ static void Entered(struct mDebugger *debugger, enum mDebuggerEntryReason reason
             cpu->gprs[0] = sLevel;
         } else if (info->address == sRoomAddress && sLevelPicked && !sRoomPicked) {
             sRoomPicked = 1;
-            sCore->busWrite32(sCore, cpu->gprs[0] + 4, sRoom);
+            if (sExtraEnter != 0) {
+                sExtraState = 1;
+                sExtraSelf = cpu->gprs[0];
+            } else {
+                sCore->busWrite32(sCore, cpu->gprs[0] + 4, sRoom);
+            }
+        } else if (info->address == sExtraReturn && sExtraState == 1) {
+            /* SelectRoom returned: call ENTER(self), back to RETURN (Thumb) */
+            sExtraState = 2;
+            sExtraResult = cpu->gprs[0];
+            cpu->gprs[0] = sExtraSelf;
+            cpu->gprs[ARM_LR] = sExtraReturn | 1;
+            cpu->gprs[ARM_PC] = sExtraEnter;
+            ThumbWritePC(cpu);
+        } else if (info->address == sExtraReturn && sExtraState == 2) {
+            sExtraState = 3;
+            cpu->gprs[0] = sExtraResult;
         }
     }
     debugger->state = DEBUGGER_RUNNING;
@@ -235,6 +267,12 @@ int main(int argc, char **argv)
             sRoomAddress = strtoul(argv[i + 1], NULL, 0);
             sRoom = strtol(argv[i + 2], NULL, 0);
             i += 2;
+        } else if (strcmp(argv[i], "--extra-room") == 0 && i + 3 < argc) {
+            sRoomAddress = strtoul(argv[i + 1], NULL, 0);
+            sExtraReturn = strtoul(argv[i + 2], NULL, 0);
+            sExtraEnter = strtoul(argv[i + 3], NULL, 0);
+            sRoom = 0;
+            i += 3;
         } else {
             argc = 0;
         }
@@ -242,7 +280,8 @@ int main(int argc, char **argv)
     if (argc < 6) {
         fprintf(
             stderr,
-            "usage: %s ROM KEYS FRAMES EVERY DIR [--save FILE] [--level ADDRESS N [--room ADDRESS R]]\n",
+            "usage: %s ROM KEYS FRAMES EVERY DIR [--save FILE]\n"
+            "       [--level ADDRESS N [--room ADDRESS R | --extra-room ADDRESS RETURN ENTER]]\n",
             argv[0]);
         return 2;
     }
@@ -295,6 +334,9 @@ int main(int argc, char **argv)
         Break(sLevelAddress);
         if (sRoom >= 0) {
             Break(sRoomAddress);
+        }
+        if (sExtraEnter != 0) {
+            Break(sExtraReturn);
         }
         sDebugger.state = DEBUGGER_RUNNING;
     }

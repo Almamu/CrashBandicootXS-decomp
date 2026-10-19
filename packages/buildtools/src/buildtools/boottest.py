@@ -5,9 +5,10 @@ docs/shifting.md) can be compared run against run.
 
     tools/boottest.py run ROM.gba ROM.elf [--script NAME ... | --keys FILE --frames N]
                       [--dump DIR] [--out LOG.json]
-    tools/boottest.py host EXE --keys FILE --frames N [--level N [--room R]] [--dump DIR] [--screens DIR]
+    tools/boottest.py host EXE --keys FILE --frames N [--level N [--room R|bonus|gem-path]] [--dump DIR]
+                      [--screens DIR]
                       [--out LOG.json]
-    tools/boottest.py screens ROM.gba --keys FILE --frames N [--elf ROM.elf --level N [--room R]]
+    tools/boottest.py screens ROM.gba --keys FILE --frames N [--elf ROM.elf --level N [--room R|bonus|gem-path]]
                       [--screens DIR] [--save FILE] [--out LOG.json]
     tools/boottest.py compare A.json B.json
     tools/boottest.py diff-screens REFERENCE_DIR DIR
@@ -59,7 +60,11 @@ of a `host` log against them, and `diff-screens` compares the PNGs of two
 directories pixel by pixel (those in the first). --level and --room pick
 the level (and its first room) at the first level select, as the level
 scripts do: on the host with its own --level and --room, on libmgba with
-breakpoints at the addresses ROM.elf gives. --save keeps mGBA's EEPROM in
+breakpoints at the addresses ROM.elf gives. --room bonus and --room
+gem-path start the level in its bonus or gem-path room, as the host's
+(platform/pc/src/level_pick.c): on libmgba, after the first SelectRoom
+returns to UpdateGameFrame, a call of EnterBonusRoom or EnterGemPathRoom
+on its room block (mgba_screens.c's --extra-room). --save keeps mGBA's EEPROM in
 a file, the image the host's --save writes.
 
 `gax-trace` plays a key file on libmgba with platform/pc/tools/
@@ -503,6 +508,15 @@ def mgba_prefix(given):
     return prefix
 
 
+# --room's extra rooms, entered by the room block's method of that name.
+EXTRA_ROOMS = {"bonus": "EnterBonusRoom", "gem-path": "EnterGemPathRoom"}
+
+
+def room_arg(v):
+    """--room: a room index, or one of EXTRA_ROOMS."""
+    return v if v in EXTRA_ROOMS else int(v)
+
+
 def run_screens(rom, keys, frames, timeout, prefix, every=CHECKPOINT_EVERY, screens=None, elf=None,
                 level=None, room=None, save=None):
     """Plays a key file on libmgba with platform/pc/tools/mgba_screens.c
@@ -513,7 +527,11 @@ def run_screens(rom, keys, frames, timeout, prefix, every=CHECKPOINT_EVERY, scre
             raise SystemExit("--level needs --elf (the ROM's ELF, for the addresses)")
         syms, romdata = read_elf(elf)
         extra += ["--level", hex(call_return(romdata, syms["RunLevelSelect"], syms["LevelSelectLoop"])), str(level)]
-        if room is not None:
+        if room in EXTRA_ROOMS:
+            # UpdateGameFrame's call of SelectRoom is 0x606 bytes in
+            ret = call_return(romdata, syms["UpdateGameFrame"], syms["SelectRoom"], 0x1000)
+            extra += ["--extra-room", hex(syms["SelectRoom"]), hex(ret), hex(syms[EXTRA_ROOMS[room]])]
+        elif room is not None:
             extra += ["--room", hex(syms["SelectRoom"]), str(room)]
     pc = os.path.join(ROOT, "platform", "pc")
     lib = next((os.path.join(prefix, d) for d in ("lib", "lib64")
@@ -706,7 +724,7 @@ def main():
     h.add_argument("--dump")
     h.add_argument("--screens", help="write each checkpoint's picture to this directory")
     h.add_argument("--level", type=int, help="the level the first level select picks")
-    h.add_argument("--room", type=int, help="with --level: the room it starts in")
+    h.add_argument("--room", type=room_arg, help="with --level: the room it starts in (or bonus, gem-path)")
     h.add_argument("--every", type=int, default=CHECKPOINT_EVERY)
     h.add_argument("--out")
     h.add_argument("--timeout", type=float, default=600)
@@ -717,7 +735,7 @@ def main():
     sc.add_argument("--screens", help="write each checkpoint's picture to this directory")
     sc.add_argument("--elf", help="the ROM's ELF (for --level's and --room's addresses)")
     sc.add_argument("--level", type=int, help="the level the first level select picks")
-    sc.add_argument("--room", type=int, help="with --level: the room it starts in")
+    sc.add_argument("--room", type=room_arg, help="with --level: the room it starts in (or bonus, gem-path)")
     sc.add_argument("--save", help="keep mGBA's EEPROM in this file")
     sc.add_argument("--every", type=int, default=CHECKPOINT_EVERY)
     sc.add_argument("--mgba", help="mGBA's install prefix (default: the `mgba` on the PATH)")

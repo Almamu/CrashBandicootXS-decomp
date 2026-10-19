@@ -35,6 +35,8 @@ extern unsigned char gHostVram[HOST_VRAM_SIZE];
 extern unsigned char gHostOam[HOST_OAM_SIZE];
 /* What a NULL_READ of a NULL pointer reads (gba/defines.h): zeros. */
 extern unsigned char gHostNullPage[HOST_NULL_PAGE_SIZE];
+/* Where a NULL_WRITE through a NULL pointer writes (gba/defines.h): never read. */
+extern unsigned char gHostNullSink[HOST_NULL_PAGE_SIZE];
 
 /* DmaSet: writes the channel's registers and, for an immediate transfer,
  * does it at once (platform/pc/src/dma.c). */

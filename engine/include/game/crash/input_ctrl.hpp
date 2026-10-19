@@ -85,7 +85,12 @@ public:
 
     /* QueueMotionX/QueueMotionY and the camera lead's speed as Update and
      * the state methods have them inlined: the value is computed before
-     * the stores. */
+     * the stores. Update sets the lead's speed before the state method,
+     * so on the ride's first frame StateStart hasn't made the lead yet,
+     * and once the room's exit is requested the lead is gone
+     * (`cameraLead` 0): the ROM writes through NULL, which the GBA's BIOS
+     * area ignores (NULL_WRITE; #1093, Ace of Space's gem path crashed
+     * the host). */
     void QueueNowX(u8 entry)
     {
         motionXPending = 1;
@@ -98,7 +103,7 @@ public:
     }
     void SetLeadSpeed(s32 speed)
     {
-        cameraLead->targetOffset = speed;
+        NULL_WRITE(cameraLead)->targetOffset = speed;
     }
 };
 

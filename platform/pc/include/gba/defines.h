@@ -26,6 +26,12 @@
 #undef NULL_READ
 #define NULL_READ(p) ((p) != 0 ? (p) : (__typeof__(p))gHostNullPage)
 
+/* A NULL pointer the ROM writes through (gba/defines.h) writes the host's
+ * sink page instead, where the GBA's BIOS area ignores the write; the
+ * zeroed page stays zero. */
+#undef NULL_WRITE
+#define NULL_WRITE(p) ((p) != 0 ? (p) : (__typeof__(p))gHostNullSink)
+
 /* A free of the ROM's own data (gba/defines.h): its writes would fault
  * in the host's read-only data, so it is skipped. The heaps are in
  * gHostEwram and gHostIwram, in that order in one block (memory.S). */

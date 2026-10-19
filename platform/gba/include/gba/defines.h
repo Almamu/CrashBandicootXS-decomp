@@ -39,6 +39,14 @@
 // (#1093, docs/platforms.md).
 #define NULL_READ(p) (p)
 
+// NULL_WRITE(p): a struct pointer that the ROM writes through while it
+// can still be NULL (the hover controller sets its camera lead's speed
+// on the room's first frame, before it creates the lead). On the GBA the
+// write lands in the BIOS area, which ignores it; a platform where a NULL
+// write faults points it at memory of its own, apart from NULL_READ's so
+// that the reads still see zeros (#1093, docs/platforms.md).
+#define NULL_WRITE(p) (p)
+
 // MEM_FREE_LOST(p): nonzero when mem_free(p) has no effect on the GBA for
 // want of RAM to write to. The ROM frees a room's asset even when it is
 // the ROM's own data (LevelLayers' destructor, an `||` where `&&` was
