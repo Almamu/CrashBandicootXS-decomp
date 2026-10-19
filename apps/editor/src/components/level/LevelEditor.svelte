@@ -8,6 +8,7 @@
   import CollisionPanel from "./CollisionPanel.svelte";
   import EntityPanel from "./EntityPanel.svelte";
   import LevelNav from "./LevelNav.svelte";
+  import MetaTilePanel from "./MetaTilePanel.svelte";
   import PalettePanel from "./PalettePanel.svelte";
   import RoomPanel from "./RoomPanel.svelte";
   import RoomCanvas from "./RoomCanvas.svelte";
@@ -16,7 +17,7 @@
   let canvas = $state<RoomCanvas>();
   let cam = $state({ x: 0, y: 0 });
   let hover = $state<{ world: { x: number; y: number }; cell: { x: number; y: number } | null } | null>(null);
-  let panel = $state<"entity" | "tiles" | "collision" | "palette" | "room">("entity");
+  let panel = $state<"entity" | "tiles" | "meta" | "collision" | "palette" | "room">("entity");
   let play = $state<{ running: boolean; text: string; ok: boolean; image?: string | null } | null>(null);
 
   const TOOLS: { id: Tool; label: string; key: string; title: string }[] = [
@@ -24,6 +25,7 @@
     { id: "add", label: "Add", key: "a", title: "click to add an entity of the type chosen" },
     { id: "link", label: "Link", key: "l", title: "click a crate, then the crate on top of it" },
     { id: "tile", label: "Tiles", key: "t", title: "paint a BG layer with its tile set's tiles" },
+    { id: "meta", label: "Meta-tiles", key: "m", title: "stamp blocks of a tile set's cells; shift-drag to select cells to make one of" },
     { id: "collision", label: "Collision", key: "c", title: "paint the collision layer's cells" },
   ];
 
@@ -39,10 +41,11 @@
     level.tool = t;
     level.linkFrom = null;
     if (t === "tile") panel = "tiles";
+    else if (t === "meta") panel = "meta";
     else if (t === "collision") {
       panel = "collision";
       level.show.collision = true;
-    } else if (panel === "tiles" || panel === "collision") panel = "entity";
+    } else if (panel === "tiles" || panel === "meta" || panel === "collision") panel = "entity";
   }
 
   async function runPreview() {
@@ -84,6 +87,7 @@
       } else if (e.key === "Escape") {
         level.selected = null;
         level.linkFrom = null;
+        level.metaSelection = null;
       } else {
         const tool = TOOLS.find((x) => x.key === e.key.toLowerCase());
         if (tool) setTool(tool.id);
@@ -171,6 +175,7 @@
       <div class="tabs" role="tablist">
         <button class:on={panel === "entity"} onclick={() => (panel = "entity")}>Entities</button>
         <button class:on={panel === "tiles"} onclick={() => setTool("tile")}>Tiles</button>
+        <button class:on={panel === "meta"} onclick={() => setTool("meta")}>Meta-tiles</button>
         <button class:on={panel === "collision"} onclick={() => setTool("collision")}>Collision</button>
         <button class:on={panel === "palette"} onclick={() => (panel = "palette")}>Palette</button>
         <button class:on={panel === "room"} onclick={() => (panel = "room")} title="the room's record: its kind and blend">Room</button>
@@ -178,6 +183,7 @@
       <div class="panel">
         {#if panel === "entity"}<EntityPanel oncentre={(x, y) => canvas?.centreOn(x, y)} />
         {:else if panel === "tiles"}<TilePanel />
+        {:else if panel === "meta"}<MetaTilePanel />
         {:else if panel === "collision"}<CollisionPanel />
         {:else if panel === "palette"}<PalettePanel />
         {:else}<RoomPanel />{/if}
