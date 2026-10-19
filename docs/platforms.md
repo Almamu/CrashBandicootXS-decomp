@@ -289,8 +289,9 @@ platform/pc/tests/boot.keys        the headless boot's input (CI)
 platform/pc/tests/boot_mgba.json   mGBA's log of it (boottest.py), what CI compares
 platform/pc/tests/intro.keys       the boot to New Game and the whole intro cutscene
 platform/pc/tests/link.keys        the save menu's "load link game", with no cable, aborted
+platform/pc/tests/bonus.keys       a new game into Jungle Jam's bonus round and out again
 platform/pc/tests/*_mgba_screens.json
-                                   the hashes of mGBA's pictures for the three (boottest.py
+                                   the hashes of mGBA's pictures for the four (boottest.py
                                    `screens`), what CI compares the PPU's with
 platform/pc/tests/screens/         some of mGBA's pictures of the boot, as PNGs
 platform/pc/tests/boot_gax.trace   mGBA's trace of GAX2 in the boot (boottest.py
@@ -442,6 +443,7 @@ same key file, each frame's picture compared (`--every 1`):
 | boot.keys, `--level` 6, 14 (Rocket Racket, Blimp Bonanza: jetpack) | 960 each | 927 each |
 | boot.keys, `--level` 21 (N. Gin: jetpack) | 960 | 943 |
 | link.keys (the save menu's "load link game" with no cable, aborted) | 1000 | 1000 |
+| bonus.keys (a new game, Jungle Jam into its bonus round and out) | 5000 | 4997 |
 
 The pictures that differ are of the CPU's time, not the PPU's: the host's
 game takes no time, the GBA's does. Frame 512 is the first after the
@@ -455,7 +457,9 @@ The 9 frames of the 20000-frame run (6513, 6531, 6600, 6693, 8369, 8387,
 same part of the level) differ only in their top 2 to 49 lines, at the
 background's scrolling edge, and the next frame is the same again: a
 tear, the GBA's game still writing VRAM while the top lines are drawn,
-where the host's game takes no time.
+where the host's game takes no time. bonus.keys' 3 (1804, 1885, 1912,
+Jungle Jam's first room, by its waterfall) are tears too, in their top 8
+to 45 lines; CI compares every 10th frame of it, none of them.
 Every other frame is pixel for pixel mGBA's. A save made with the same
 keys is mGBA's .sav byte for byte but for one padding byte of the slot
 record (stack garbage) and so the checksum.
@@ -719,8 +723,11 @@ original's own bugs:
 - `NULL_READ(p)`: the ROM reads through a pointer while it can still be
   NULL. The level's first SetCheckpointAtPlayer (bonus_round.cpp) reads
   the room (`room.cat`) and the player (`gPlayer`) before either exists;
-  on the GBA the reads land in the BIOS area. The pc platform points a
-  NULL one at a zeroed page (gHostNullPage).
+  on the GBA the reads land in the BIOS area. ExtraLife::Create's
+  ClampFrame (pickups.hpp) reads the new extra life's animation through
+  its bank before DropExtraLife sets it: the bank's `anims` through
+  NULL, then `frameCount` through what that gave, two NULL_READs. The
+  pc platform points a NULL one at a zeroed page (gHostNullPage).
 - `MEM_FREE_LOST(p)`: LevelLayers' destructor frees the room's asset
   even when it is the ROM's own data (`assetOwned != 0 || asset !=
   NULL`). On the GBA mem_free's writes land in the ROM, which ignores
@@ -779,6 +786,12 @@ and maps unchanged):
     gPlayer is NULL;
   - STRUCT_RETURN_VIEW in dingodile.cpp (the bosses crashed in
     GetSpriteAttackBox).
+- Breaking a life crate (a crash on the host, found in Jungle Jam's
+  bonus round; tests/bonus.keys):
+  - NULL_READ twice in ClampFrame (pickups.hpp), ExtraLife::Create's,
+    before DropExtraLife gives the extra life its bank. On the GBA the
+    value it reads is overwritten by DropExtraLife's StartAnim, and
+    bonus.keys plays the same on mGBA as on the host.
 - Phase 6 (GAX2 compiled for the host):
   - GaxPlayerState's `mixBuf`, `echoBuf` and `echoTaps` and
     GaxMixerHandler's `mixBuf` (gax_internal.h), addresses kept as
@@ -804,6 +817,12 @@ and tests/boot_mgba_screens.json, every frame).
 **Not done yet:** the gamepad mapping is built but untested with a real
 pad (the tests had none). The link is stubbed by decision ("The link
 cable" above), not left to do.
+Ace of Space's gem path, the one HOVER room, still stops on its first
+frame: InputCtrl::Update writes the camera lead's speed before
+StateStart creates the lead (a NULL write, which the GBA's BIOS area
+ignores), and the lead, a Sprite with no bank, is animated and collided
+every frame (Sprite::AdvanceAnim, GetFrame, the collision code), with
+what the GBA reads through its NULL bank.
 `sprintf` stays as it is (it hands `vsprintf` the stack's slots, see
 above; renamed GameSprintf, and never called).
 Other ABI differences that a later phase may meet: the `asm("CName")`
