@@ -100,7 +100,9 @@ struct aabb Sprite::GetAnimHitbox()
 
 /* The current frame's attack box (GetSpriteFrame; the layout type in the
  * high nibble of its first piece byte picks the record) at the sprite's
- * position, mirrored. */
+ * position, mirrored. The camera lead has no bank (AdvanceAnim), so its
+ * frame's `pieces` are a NULL_READ (GetFrame's NULL_READs give a zeroed
+ * frame: type 0, its boxes 0 wide). */
 struct aabb Sprite::GetAttackBox()
 {
     struct aabb box;
@@ -111,7 +113,7 @@ struct aabb Sprite::GetAttackBox()
     s32 px, py;
 
     info = (const struct sprite_frame_3box *)GetFrame();
-    switch ((u8)(info->frame.pieces[0] >> 4)) {
+    switch ((u8)(NULL_READ(info->frame.pieces)[0] >> 4)) {
     case 0:
     case 3:
     case 4:
@@ -149,7 +151,8 @@ struct aabb Sprite::GetAttackBox()
     return box;
 }
 
-/* The current frame's body box, the same way: box[0], or none. */
+/* The current frame's body box, the same way: box[0], or none (the
+ * camera lead's `pieces` a NULL_READ, as there). */
 struct aabb Sprite::GetBodyBox()
 {
     struct aabb box;
@@ -160,7 +163,7 @@ struct aabb Sprite::GetBodyBox()
     s32 px, py;
 
     info = (const struct sprite_frame_3box *)GetFrame();
-    switch ((u8)(info->frame.pieces[0] >> 4)) {
+    switch ((u8)(NULL_READ(info->frame.pieces)[0] >> 4)) {
     case 0:
     case 2:
     case 3:
@@ -328,7 +331,13 @@ s32 Sprite::OverlapsRect(struct aabb *region)
 /* One tick of the animation timer while `animating`: `stepTimer` counts
  * up to the animation's `duration`, then the next step; after the last
  * step it starts over, and unless the animation loops, `animDone` is
- * set. */
+ * set.
+ *
+ * The hover rides' camera lead (CameraLead, level_select.hpp) is a moving
+ * sprite with no bank, animated every frame all the same: the ROM reads
+ * its `anims` through a NULL bank (the BIOS area's open-bus value) and
+ * the animation through that, so both are NULL_READs (#1093: Ace of
+ * Space's gem path crashed the host). */
 void Sprite::AdvanceAnim()
 {
     if (animating) {
@@ -336,7 +345,7 @@ void Sprite::AdvanceAnim()
         s32 step;
         const struct sprite_anim *anims;
 
-        if (timer < bank->anims[tag].duration)
+        if (timer < NULL_READ(NULL_READ(bank)->anims)[tag].duration)
             stepTimer = timer + 1;
         else {
             stepTimer = 0;
@@ -344,7 +353,7 @@ void Sprite::AdvanceAnim()
         }
 
         step = frame;
-        anims = bank->anims;
+        anims = NULL_READ(NULL_READ(bank)->anims);
         if (step >= anims[tag].frameCount) {
             frame = 0;
             stepTimer = 0;

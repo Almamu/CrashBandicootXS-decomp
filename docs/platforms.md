@@ -100,9 +100,10 @@ A port is a `platform/<name>/` with:
    `memcpy`/`memset`. It may also set another `DISPLAY_WIDTH` x
    `DISPLAY_HEIGHT` (docs/screen.md; `make screen-check` builds the game
    at 426x240) and make `OAM_X`/`OAM_Y` no-ops for wider OAM fields.
-   `IWRAM_DATA`/`EWRAM_DATA` can be empty. `NULL_READ` and
-   `MEM_FREE_LOST` cover two of the original's bugs that the GBA's
-   hardware makes harmless (a read through NULL, a free of ROM data);
+   `IWRAM_DATA`/`EWRAM_DATA` can be empty. `NULL_READ`, `NULL_WRITE`
+   and `MEM_FREE_LOST` cover the original's bugs that the GBA's
+   hardware makes harmless (a read or a write through NULL, a free of
+   ROM data);
    a port where those fault defines them (see `platform/pc/`).
    `STRUCT_RETURN_VIEW` names the function a struct-returning view of a
    method's C name calls, for an ABI that returns small structs in
@@ -244,8 +245,8 @@ platform/pc/include/gba/*.h        the GBA's headers, included by relative path,
                                    REG_BASE, EWRAM_START, IWRAM_START, PLTT, VRAM, OAM
                                    on host arrays, DmaSet a call, REG_KEYINPUT a call,
                                    LAYOUT_ASSERT empty, IWRAM_DATA/EWRAM_DATA empty,
-                                   NULL_READ, MEM_FREE_LOST, STRUCT_RETURN_VIEW
-                                   (below)
+                                   NULL_READ, NULL_WRITE, MEM_FREE_LOST,
+                                   STRUCT_RETURN_VIEW (below)
 platform/pc/include/agb_syscall.h  the GBA's prototypes
 platform/pc/src/
     memory.S                       the host memory (gba/host.h), in the GBA's order
@@ -290,8 +291,10 @@ platform/pc/tests/boot_mgba.json   mGBA's log of it (boottest.py), what CI compa
 platform/pc/tests/intro.keys       the boot to New Game and the whole intro cutscene
 platform/pc/tests/link.keys        the save menu's "load link game", with no cable, aborted
 platform/pc/tests/bonus.keys       a new game into Jungle Jam's bonus round and out again
+platform/pc/tests/gem_path.keys    Ace of Space's gem path (--level 11 --room gem-path): its
+                                   hover ride, steered until a nitro, then on foot
 platform/pc/tests/*_mgba_screens.json
-                                   the hashes of mGBA's pictures for the four (boottest.py
+                                   the hashes of mGBA's pictures for the five (boottest.py
                                    `screens`), what CI compares the PPU's with
 platform/pc/tests/screens/         some of mGBA's pictures of the boot, as PNGs
 platform/pc/tests/boot_gax.trace   mGBA's trace of GAX2 in the boot (boottest.py
@@ -444,6 +447,7 @@ same key file, each frame's picture compared (`--every 1`):
 | boot.keys, `--level` 21 (N. Gin: jetpack) | 960 | 943 |
 | link.keys (the save menu's "load link game" with no cable, aborted) | 1000 | 1000 |
 | bonus.keys (a new game, Jungle Jam into its bonus round and out) | 5000 | 4997 |
+| gem_path.keys, `--level 11 --room gem-path` (Ace of Space's hover ride, then on foot) | 1400 | 1400 |
 
 The pictures that differ are of the CPU's time, not the PPU's: the host's
 game takes no time, the GBA's does. Frame 512 is the first after the
@@ -717,7 +721,7 @@ line. clang has no such option: with `HOST_CC=clang HOST_CXX=clang++`
 everything compiles, but those three are missing at the link. No
 `-Werror`: the build's warnings are the GBA's.
 
-**Seams** (gba/defines.h, each nothing on the GBA). Two for the
+**Seams** (gba/defines.h, each nothing on the GBA). Three for the
 original's own bugs:
 
 - `NULL_READ(p)`: the ROM reads through a pointer while it can still be
@@ -727,7 +731,22 @@ original's own bugs:
   ClampFrame (pickups.hpp) reads the new extra life's animation through
   its bank before DropExtraLife sets it: the bank's `anims` through
   NULL, then `frameCount` through what that gave, two NULL_READs. The
-  pc platform points a NULL one at a zeroed page (gHostNullPage).
+  hover rides' camera lead (CameraLead, which InputCtrl::StateStart
+  makes) is a moving sprite with no bank at all, animated and touched
+  against the player each frame like any other: Sprite::AdvanceAnim
+  and GetFrame read its animation and frame through the NULL bank, and
+  GetAttackBox and GetBodyBox the frame's first piece. The pc platform
+  points a NULL one at a zeroed page (gHostNullPage): an animation of
+  no steps and no duration, and a frame of layout type 0 whose boxes
+  are 0 wide, which touch nothing.
+- `NULL_WRITE(p)`: the ROM writes through a pointer while it can still
+  be NULL. InputCtrl::Update sets the camera lead's target offset
+  (SetLeadSpeed, input_ctrl.hpp) each frame of a hover ride, before
+  the state method: on the ride's first frame StateStart hasn't made
+  the lead yet, and after the room's exit is requested the lead is
+  gone (`cameraLead` 0). On the GBA the write lands in the BIOS area,
+  which ignores it. The pc platform points a NULL one at a page of its
+  own (gHostNullSink), apart from gHostNullPage, which stays zeroed.
 - `MEM_FREE_LOST(p)`: LevelLayers' destructor frees the room's asset
   even when it is the ROM's own data (`assetOwned != 0 || asset !=
   NULL`). On the GBA mem_free's writes land in the ROM, which ignores
@@ -792,6 +811,15 @@ and maps unchanged):
     before DropExtraLife gives the extra life its bank. On the GBA the
     value it reads is overwritten by DropExtraLife's StartAnim, and
     bonus.keys plays the same on mGBA as on the host.
+- Ace of Space's gem path, the one HOVER room (a crash on its first
+  frame; tests/gem_path.keys):
+  - NULL_WRITE in InputCtrl::SetLeadSpeed (input_ctrl.hpp), the camera
+    lead's target offset written before StateStart makes the lead and
+    after the room's exit drops it;
+  - NULL_READ in Sprite::AdvanceAnim and GetFrame (the bank, its
+    `anims` and `frames`, the animation's `seq` and the frame), and in
+    GetAttackBox and GetBodyBox (the frame's `pieces`): the camera lead
+    has no bank. The ride plays the same on mGBA as on the host.
 - Phase 6 (GAX2 compiled for the host):
   - GaxPlayerState's `mixBuf`, `echoBuf` and `echoTaps` and
     GaxMixerHandler's `mixBuf` (gax_internal.h), addresses kept as
@@ -817,12 +845,6 @@ and tests/boot_mgba_screens.json, every frame).
 **Not done yet:** the gamepad mapping is built but untested with a real
 pad (the tests had none). The link is stubbed by decision ("The link
 cable" above), not left to do.
-Ace of Space's gem path, the one HOVER room, still stops on its first
-frame: InputCtrl::Update writes the camera lead's speed before
-StateStart creates the lead (a NULL write, which the GBA's BIOS area
-ignores), and the lead, a Sprite with no bank, is animated and collided
-every frame (Sprite::AdvanceAnim, GetFrame, the collision code), with
-what the GBA reads through its NULL bank.
 `sprintf` stays as it is (it hands `vsprintf` the stack's slots, see
 above; renamed GameSprintf, and never called).
 Other ABI differences that a later phase may meet: the `asm("CName")`

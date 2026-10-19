@@ -193,16 +193,18 @@ const u8 *Sprite::GetTileBase()
 
 /* The current frame: the animation's `seq` entry for the current step,
  * as an index into the bank's `frames`. When a non-looping animation is
- * done, it holds on the last step. */
+ * done, it holds on the last step. The camera lead has no bank
+ * (Sprite::AdvanceAnim), so the bank, the animation's `seq` and the frame
+ * are NULL_READs (#1093). */
 const struct sprite_frame *Sprite::GetFrame()
 {
-    const struct sprite_anim *rec = &bank->anims[tag];
+    const struct sprite_anim *rec = &NULL_READ(NULL_READ(bank)->anims)[tag];
 
     if (animDone != 0 && !(rec->flags & SPRITE_ANIM_LOOP)) {
         frame = rec->frameCount - 1;
         stepTimer = rec->duration;
     }
-    return bank->frames[rec->seq[frame]];
+    return NULL_READ(NULL_READ(NULL_READ(bank)->frames)[NULL_READ(rec->seq)[frame]]);
 }
 
 /* The OBJ priority: layer 0's BG priority (BGnCNT bits 0-1), one higher

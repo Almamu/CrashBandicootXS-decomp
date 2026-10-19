@@ -41,4 +41,12 @@ REGION(gHostOam, HOST_OAM_SIZE)
 gHostNullPage:
     .zero HOST_NULL_PAGE_SIZE
 
+/* Not the GBA's either: where a NULL_WRITE pointer writes when it is NULL. */
+    .balign 64
+    .globl gHostNullSink
+    .type gHostNullSink, @object
+    .size gHostNullSink, HOST_NULL_PAGE_SIZE
+gHostNullSink:
+    .zero HOST_NULL_PAGE_SIZE
+
     .section .note.GNU-stack,"",@progbits
