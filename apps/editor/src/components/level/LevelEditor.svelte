@@ -285,6 +285,7 @@
   }
   .tabs {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.2rem;
     padding: 0.4rem;
     border-bottom: 1px solid var(--line);

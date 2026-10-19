@@ -332,7 +332,9 @@ records stay raw words) and a mod's tree's open the same way.
 - the BG layers back to front by priority (room.json's `cnt`, BGnCNT's
   priority bits; at one priority the lower BG is in front), from their
   pictures: BG0's index 0 and BG1-3's colour 0 of every bank are
-  transparent, palette entry 0 is the backdrop;
+  transparent, and the backdrop is black (`LoadRoom` sets
+  `BACKDROP_COLOR` to 0 after copying the room's palette, so its entry 0
+  is never shown);
 - each layer scrolled by its parallax factor for the camera, the 240x160
   screen at the view's centre kept inside the room's scrollable size
   (`size_tiles`): a layer is shifted by `camera - camera * scale / 256`

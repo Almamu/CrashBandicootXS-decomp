@@ -37,7 +37,7 @@
       </div>
     </div>
   </div>
-  <p class="muted small">BG0 draws with all 256 (8bpp); a BG1-3 cell with one bank of 16 (its colour 0 is transparent, entry 0 is the backdrop). Rooms that share a tile set may have different palettes: the pictures keep indices, not colours.</p>
+  <p class="muted small">BG0 draws with all 256 (8bpp); a BG1-3 cell with one bank of 16 (its colour 0 is transparent; entry 0 is never shown: the room sets the backdrop black). Rooms that share a tile set may have different palettes: the pictures keep indices, not colours.</p>
 </div>
 
 <style>

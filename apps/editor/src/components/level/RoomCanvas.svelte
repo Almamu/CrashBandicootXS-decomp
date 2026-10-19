@@ -26,9 +26,10 @@
     type Point,
     type View,
   } from "../../lib/level/coords.ts";
-  import { pixelOf, pixelTable, toRgb } from "../../lib/level/palette.ts";
+  import { pixelOf, pixelTable } from "../../lib/level/palette.ts";
   import type { CellChange } from "../../lib/level/paint.ts";
   import {
+    BACKDROP,
     BLEND_FIRST,
     BLEND_SECOND,
     TiledBitmap,
@@ -165,9 +166,9 @@
     if (!v) return;
     const z = view.zoom;
     const tl = toScreen(view, 0, 0);
-    // the backdrop: palette entry 0, behind every layer
-    const [r, g, b] = toRgb(level.palette[0] ?? 0);
-    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    // the backdrop, behind every layer: black (LoadRoom sets BACKDROP_COLOR to 0
+    // after the room's palette, so its entry 0 is never shown)
+    ctx.fillStyle = "#000";
     ctx.fillRect(tl.x, tl.y, roomSize.pw * z, roomSize.ph * z);
     const cam = camera();
     oncamera?.(cam);
@@ -233,8 +234,7 @@
     const bctx = blendCanvas.getContext("2d");
     if (!bctx) return;
     const img = bctx.createImageData(w, h);
-    const backdrop = pixelTable([level.palette[0] ?? 0])[0]!;
-    compositeBlend(layers, backdrop, blend, roomSize.pw, roomSize.ph, x0, y0, step, w, h, new Uint32Array(img.data.buffer));
+    compositeBlend(layers, BACKDROP, blend, roomSize.pw, roomSize.ph, x0, y0, step, w, h, new Uint32Array(img.data.buffer));
     bctx.putImageData(img, 0, 0);
     const s = toScreen(view, x0, y0);
     ctx.drawImage(blendCanvas, s.x, s.y, w * step * view.zoom, h * step * view.zoom);

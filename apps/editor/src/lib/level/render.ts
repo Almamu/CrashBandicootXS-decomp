@@ -143,6 +143,9 @@ export interface Blend {
   evb: number;
 }
 
+/** The backdrop: black, as a pixel (LoadRoom sets BACKDROP_COLOR to 0 after the room's palette: its entry 0 is never shown). */
+export const BACKDROP = 0xff000000;
+
 /** BLDCNT's targets for a room's blend (SetupRoomBlend): BG3 first, BG0-2 (and the sprites) second. */
 export const BLEND_FIRST: Record<string, boolean> = { bg3: true };
 export const BLEND_SECOND: Record<string, boolean> = { bg0: true, bg1: true, bg2: true };
