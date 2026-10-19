@@ -13,6 +13,7 @@ import type { GaxSfxManifest } from "./gax_sfx_manifest.ts";
 import type { GraphicsManifest } from "./graphics_manifest.ts";
 import type { Instrument } from "./instrument.ts";
 import type { Levels } from "./levels.ts";
+import type { Metatiles } from "./metatiles.ts";
 import type { Music } from "./music.ts";
 import type { PaletteHighBits } from "./palette_high_bits.ts";
 import type { Room } from "./room.ts";
@@ -45,6 +46,8 @@ export type { Instrument } from "./instrument.ts";
 export type * as InstrumentDefs from "./instrument.ts";
 export type { Levels } from "./levels.ts";
 export type * as LevelsDefs from "./levels.ts";
+export type { Metatiles } from "./metatiles.ts";
+export type * as MetatilesDefs from "./metatiles.ts";
 export type { Music } from "./music.ts";
 export type * as MusicDefs from "./music.ts";
 export type { PaletteHighBits } from "./palette_high_bits.ts";
@@ -77,6 +80,7 @@ export interface SchemaFiles {
   "graphics_manifest.schema.json": GraphicsManifest;
   "instrument.schema.json": Instrument;
   "levels.schema.json": Levels;
+  "metatiles.schema.json": Metatiles;
   "music.schema.json": Music;
   "palette_high_bits.schema.json": PaletteHighBits;
   "room.schema.json": Room;
@@ -103,6 +107,7 @@ export const SCHEMA_NAMES = [
   "graphics_manifest.schema.json",
   "instrument.schema.json",
   "levels.schema.json",
+  "metatiles.schema.json",
   "music.schema.json",
   "palette_high_bits.schema.json",
   "room.schema.json",
@@ -127,6 +132,7 @@ export const FILE_MATCH: Readonly<Record<SchemaName, readonly string[]>> = {
   "graphics_manifest.schema.json": ["games/*/graphics/manifest.json"],
   "instrument.schema.json": ["games/*/sound/instruments/*.json"],
   "levels.schema.json": ["games/*/data/levels/levels.json"],
+  "metatiles.schema.json": ["games/*/data/levels/metatiles/*.json"],
   "music.schema.json": ["games/*/sound/music.json"],
   "palette_high_bits.schema.json": ["games/*/graphics/logos/*_high.json"],
   "room.schema.json": ["games/*/data/levels/*/*/room.json"],

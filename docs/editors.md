@@ -43,6 +43,7 @@ of data file, and `index.json`, which files each one describes:
 | `sprite_bank.schema.json`, `sprite_sheet.schema.json`, `palette_high_bits.schema.json` | a sprite bank's `bank.json`, a framed sheet's `sheet.json`, `logos/universal_high.json` |
 | `gax_manifest.schema.json`, `gax_sfx_manifest.schema.json`, `music.schema.json`, `sfx_table.schema.json` | `games/*/sound/`'s manifests and tables |
 | `song_settings.schema.json`, `instrument.schema.json` | a new song's `songs/<key>.json`, a new instrument's `instruments/<name>.json` |
+| `metatiles.schema.json` | `games/*/data/levels/metatiles/<tile set>.json`, the level editor's meta-tiles ("Meta-tiles") |
 
 `index.json` is `{"schemas": [{"schema": NAME, "fileMatch": [GLOB, ...]}]}`,
 the globs from the tree's root, as an editor's JSON settings take them
@@ -445,6 +446,77 @@ and counts the new tiles the room's changes add; the save makes the sets
 the painted layers name as the build will and refuses one past its limit,
 or a BG0 screen with more than 512 different tiles (the tile slot pool's
 VRAM slots).
+
+**Meta-tiles.** A meta-tile is a block of a tile set's cells, W x H
+(up to 32 x 32), each cell a tile, its flips and (BG1-3) its palette bank:
+a brush that stamps the whole block. The game has none: a layer's cells
+go straight into the screen block (`BgLayer::DrawRow`), and the only
+block its level data has is the chunk, 16x8 cells per layer, which the
+build makes from the pictures and doesn't share between layers or rooms
+([levels.md, "The level asset"](./levels.md#the-level-asset)). So the
+meta-tiles are the editor's own data, a file per tile set,
+`games/<game>/data/levels/metatiles/<tile set>.json`
+(`metatiles.schema.json`, `crashdata.levels.metatiles`), which the build
+doesn't read: the ROM and the save version (which hashes levels.json and
+the room.json files only) are the same with or without them, and
+`make data-check` checks them (the schema; the file names a set the rooms
+use, its tiles are of the set's depth, a meta-tile's cells are its size
+and name its tiles, a BG0 set's banks are 0).
+
+```json
+{
+ "metatiles": [
+  {"name": "Rock ledge", "size": [2, 1], "cells": [
+   [0, 0, 3], [0, 1, 3]
+  ]}
+ ],
+ "tiles": [
+  "0000111100002222..."
+ ]
+}
+```
+
+A cell is `[tile, flip, bank]`: an index into `"tiles"`, the flip (1 X, 2
+Y, a cell's bits) and the bank (0-15; 0 on a BG0 set), row by row.
+`"tiles"` are the pixels of the tiles the meta-tiles draw, as the set has
+them (unflipped): a hex digit a pixel on a BG1-3 set (0-15, the bank
+apart), two on a BG0 one. A meta-tile names its tiles by their pixels,
+not by their numbers in the set, which a new tile in an earlier room
+changes (levels.md, "Tile sets"): the editor finds each tile's number
+again, and a tile no room draws any more is still drawn (it is a new tile
+again once stamped). Stamped, a meta-tile is cells of the layer's
+picture like any other painting, BG1-3's `bank * 16 + p` for all 64
+pixels of a cell, so what the build reads back is the tiles, flips and
+banks the meta-tile names (flipped as a whole, each cell's flips turn
+too; shifted, every bank moves by the same amount, 0-15).
+
+**Detecting them** (`room/metatiles/detect`, `metatiles.detect`) looks
+for the blocks of cells, up to 16 x 16, that recur in the rooms whose
+layers name the set (or in one room's), as the build reads the pictures:
+
+- a repeat flipped as a whole, or with all of its banks shifted by one
+  amount, is a repeat of the same block (stamped flipped, or in other
+  banks); a symmetric tile's cells match under its flips;
+- only the maximal blocks: one whose every repeat goes on with the same
+  cells on a side is part of a bigger block, which is offered instead. A
+  block doesn't end in a blank row or column, and one that is mostly a
+  fill of one tile (all but a quarter of its cells) isn't offered;
+- layers that are the same picture (a room copied) are searched once, and
+  their repeats count in each room;
+- ranked by the cells its repeats draw beyond its first (the repeats that
+  don't overlap, times its cells that aren't blank), then by size; a
+  block whose repeats mostly lie on a better one's is left out, and at
+  most 48 are offered. Each comes with its repeats (where, flipped, in
+  which banks) and the rooms they are in.
+
+It is a search with shortcuts, not every block: a piece of a pattern that
+repeats (a wall, a sky: repeats that mostly overlap each other) isn't
+grown into the pattern's bigger blocks, nor is a block whose every repeat
+has the same cells on its left or above it (the bigger block is found
+from its own corner). The biggest sets take half a minute (gTempleBgTiles,
+gSpaceBgTiles), most a few seconds; the answer is kept until a room
+changes. XS's sets have no block repeated in other banks; flipped repeats
+are common.
 
 **Collision.** The Collision tab paints the collision layer's cells with
 a value of the legend (one 8x8 cell of BG0's each; click, drag, Shift and
@@ -1017,8 +1089,10 @@ dependency), listens on **127.0.0.1 only**, and serves:
 | `POST /api/projects/ID/room/import` `{path, layer, png, palette?, banks?}` | a picture (base64 PNG) as the layer's cells in the room's palette (`room_edit.import_tiles`): `{cols, rows, cells, stats}` (cells: base64, 64 indices each; stats: blank, the set's tiles, flipped, new, the set's count and limit) |
 | `POST /api/projects/ID/room/redraw` `{path, layer, tile, pixels, was}` | redraws a tile of the layer's set in every room that names it (`room_edit.redraw_tile`; pixels and was: base64 of 64 pixels, 4bpp 0-15; was: the tile as the editor shows it), every changed picture saved together and checked (below), all or none; `report`: `{tileset, tile, cells, layers}` (the cells redrawn, by `<level>/<slot>/<layer>`) |
 | `POST /api/projects/ID/room/legend` `{value, colour, name?}` | adds a cell value to the collision legend (`room_edit.legend_with`: new, in a colour of its own, of a terrain type gTerrainTypes has or the legend's values do; `name` the bits spelled out by default), saved and checked; the answer's `legend` is the legend as the room's `legend` |
+| `GET /api/projects/ID/room/metatiles?path=ROOM&layer=L` | the meta-tiles of the layer's tile set ("Meta-tiles"): `{tileset, path, exists, data}` (`path` its file, `data` its value, `{"metatiles": [], "tiles": []}` while there is none) |
+| `POST /api/projects/ID/room/metatiles/detect` `{path, layer, scope?}` | the blocks that recur in the rooms of the layer's set (`scope` `"set"`, the default) or in the room's layers of it (`"room"`) (`metatiles.detect`): `{tileset, bpp, scope, candidates: [{size, cells, count, flipped, shifted, rooms, at, score}]}`, cached until the data changes; nothing is written |
 | `GET /api/projects/ID/sprite?bank=N&frame=K[&palette=P]` | a sprite bank's frame as a PNG, index 0 transparent, in OBJ palette P or its own |
-| `POST /api/projects/ID/room/save` `{path, room?, layers?, collision?, palette?}` | saves a room's edits, all or none (below) |
+| `POST /api/projects/ID/room/save` `{path, room?, layers?, collision?, palette?, metatiles?}` | saves a room's edits, all or none (below) |
 | `POST /api/projects/ID/room/new` `{from, folder, empty?, size?, attach?}` | makes a room (`room_ops.new_room`): a copy of `from`, or an empty one laid out like it, `size` cells; `attach` `{level, as: "rooms" \| "bonus" \| "gem_path", index?}`; the answer's `report`: its number, symbols, warnings; `path` |
 | `POST /api/projects/ID/room/delete` `{path}` | deletes a room no level plays (`room_ops.delete_room`) |
 | `POST /api/projects/ID/room/resize` `{path, edges: {left, right, top, bottom}, check?}` | resizes a room (`room_ops.resize_room`); `report`: the sizes before and after, each layer's move and cut cells, the entities and links cut, warnings; with `check` nothing is written |
@@ -1070,7 +1144,10 @@ steps above), `layers` the painted cells of each BG layer (`{"bg1": [[cx,
 cy, base64 of the cell's 64 palette indices], ...]}`; a BG1-3 cell's
 pixels must be of one bank), `collision` the collision cells (`[[cx, cy,
 value], ...]`, a value of the legend) and `palette` the room's 256
-colours, which every layer picture gets. A picture whose pixels and
+colours, which every layer picture gets; `metatiles` the meta-tiles
+files of the room's tile sets (`{"gJungleBgTiles": its value}`, the
+steps above; the `metatiles/` folder is made if need be, and goes again
+on a refusal). A picture whose pixels and
 palette come out as they were isn't written; one with a new palette only
 gets its PLTE chunk replaced (the pixels' bytes stay); painted cells
 write the picture as crashdata's writers do (`write_layer_png`'s

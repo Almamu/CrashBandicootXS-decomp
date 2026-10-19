@@ -304,6 +304,26 @@ def tileset_order():
                       description="games/<game>/data/levels/tileset_order.json (docs/levels.md, \"Tile sets\")")
 
 
+def metatiles():
+    from crashdata.levels import metatiles as M
+    # (the model checks a cell's flip, 0-3, and bank, 0-15: a tuple's items
+    # of one schema give the editors' types a [number, number, number])
+    cell = S.array(S.integer(0, 0xFFFF), length=3,
+                   description="[tile: an index into \"tiles\", flip: 1 X, 2 Y, palette bank: 0 on a BG0 set]")
+    metatile = S.obj({"name": S.string(min_length=1),
+                      "size": S.array(S.integer(1, M.MAX_SIZE), length=2, description="[width, height] in cells"),
+                      "cells": S.array(cell, min_items=1, description="row by row")}, required="all")
+    root = S.obj({
+        "metatiles": S.array(metatile),
+        "tiles": S.array(S.string(r"^([0-9a-f]{64}|[0-9a-f]{128})$"),
+                         description="the tiles' 64 pixels as the set has them: a hex digit a pixel (BG1-3, 0-15), "
+                                     "two (BG0)"),
+    }, required="all")
+    return S.document("metatiles.schema.json", "A tile set's meta-tiles (the level editor's)", root,
+                      description="games/<game>/data/levels/metatiles/<tile set>.json (docs/editors.md, "
+                                  "\"Meta-tiles\"): the level editor's own data, which the build doesn't read")
+
+
 # The files of the level data: schema name -> (builder, the files' globs
 # under the game's levels directory)
 SCHEMAS = {
@@ -315,4 +335,5 @@ SCHEMAS = {
     "crate_kinds": (crate_kinds, ["crate_kinds.json"]),
     "collision_legend": (collision_legend, ["collision_legend.json"]),
     "tileset_order": (tileset_order, ["tileset_order.json"]),
+    "metatiles": (metatiles, ["metatiles/*.json"]),
 }

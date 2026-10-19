@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Almamu/CrashBandicootXS-decomp/raw/main/packages/crashdata/schemas/metatiles.schema.json",
+  "title": "A tile set's meta-tiles (the level editor's)",
+  "description": "games/<game>/data/levels/metatiles/<tile set>.json (docs/editors.md, \"Meta-tiles\"): the level editor's own data, which the build doesn't read",
+  "type": "object",
+  "properties": {
+    "metatiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "size": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32
+            },
+            "minItems": 2,
+            "maxItems": 2,
+            "description": "[width, height] in cells"
+          },
+          "cells": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 65535
+              },
+              "minItems": 3,
+              "maxItems": 3,
+              "description": "[tile: an index into \"tiles\", flip: 1 X, 2 Y, palette bank: 0 on a BG0 set]"
+            },
+            "minItems": 1,
+            "description": "row by row"
+          }
+        },
+        "required": [
+          "name",
+          "size",
+          "cells"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "tiles": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^([0-9a-f]{64}|[0-9a-f]{128})$"
+      },
+      "description": "the tiles' 64 pixels as the set has them: a hex digit a pixel (BG1-3, 0-15), two (BG0)"
+    }
+  },
+  "required": [
+    "metatiles",
+    "tiles"
+  ],
+  "additionalProperties": false
+}

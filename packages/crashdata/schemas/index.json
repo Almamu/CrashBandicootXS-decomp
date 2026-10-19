@@ -68,6 +68,12 @@
       ]
     },
     {
+      "schema": "metatiles.schema.json",
+      "fileMatch": [
+        "games/*/data/levels/metatiles/*.json"
+      ]
+    },
+    {
       "schema": "music.schema.json",
       "fileMatch": [
         "games/*/sound/music.json"

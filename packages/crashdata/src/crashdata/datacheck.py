@@ -7,8 +7,8 @@ For a game (XS or N-Tranced) in a tree (this one, or a mod's copy):
    rooms (their pictures' palettes, entity types, entity order, parameter
    indices, links), the level table, themes, actor categories, spawn
    lists, animation tables, bosses, what clearing a level does, the
-   level-select worlds; the graphics manifest (`gfx_manifest.py check`);
-   the cutscenes; the music and sound-effect tables; the text
+   level-select worlds, the level editor's meta-tiles; the graphics
+   manifest (`gfx_manifest.py check`); the cutscenes; the music and sound-effect tables; the text
    (`text.py check`, which needs gettext's msgfmt and msgcmp).
 
 Each check runs on its own, so one failing doesn't hide the others; a
@@ -72,6 +72,9 @@ def level_checks(game, root):
         ]
     if L.TILESET_ORDER_JSON.exists():
         checks.append(("tilesets", L.load_tileset_order))
+    from crashdata.levels import metatiles as M
+    if (L.LEVELS_DIR / M.DIR_NAME).is_dir():
+        checks.append(("metatiles", M.check))
     return checks
 
 

@@ -404,6 +404,13 @@ game's, such as N-Tranced's `games/n2/data/levels/`, docs/n_tranced.md):
   size of the BG0 picture, each cell an 8x8 block, `gridWidth * 128` by
   `gridHeight * 64` pixels, coloured by the legend below (see "Collision
   layers").
+- `metatiles/<tile set>.json`, if any: the level editor's meta-tiles of a
+  BG tile set, blocks of cells to stamp ([editors.md,
+  "Meta-tiles"](./editors.md#the-level-editor)). They are the editor's: nothing
+  of the build reads them (the ROM and the save version are the same with
+  or without them), and the game has no such blocks. Its only block of
+  cells is the chunk (16x8 cells, "The level asset"), which the build cuts
+  each layer into and keeps once per layer, not shared by layers or rooms.
 
 Everything else is derived again: the BG tile sets and the cells (from
 the pictures, see "Tile sets"), the chunk set and grid,

@@ -26,7 +26,8 @@ API (all JSON; docs/editors.md has each one's fields):
     GET  /api/projects/ID/preview.png      a headless preview's picture (?shot=N: a cutscene's, frame N's)
 
 and the level editor's rooms (room, room/layer, room/tiles, room/save,
-room/new, room/delete, room/resize, room/import, room/redraw, room/legend, sprite), the cutscene
+room/new, room/delete, room/resize, room/import, room/redraw, room/legend, room/metatiles,
+room/metatiles/detect, sprite), the cutscene
 editor's cutscenes (cutscenes, cutscenes/picture, cutscenes/import, cutscenes/save) and the music
 editor's songs and sound effects (music, music/pool, music/song,
 music/patterns, music/import, music/save): docs/editors.md.
@@ -72,7 +73,7 @@ from pathlib import Path
 
 from crashdata import editing, schemas
 from crashdata import levels as L
-from crashdata.levels import collision as collision_bmp, room_edit, room_ops
+from crashdata.levels import collision as collision_bmp, metatiles, room_edit, room_ops
 from crashdata.cutscenes import edit as cutscene_edit
 from crashdata.audio import edit as music_edit
 from crashdata.common import diagnostics as D
@@ -142,6 +143,7 @@ class Server:
         self.python = python
         self.projects = {}
         self.tile_cache = {}  # (project, tile set): (fingerprint, {(room, layer): the answer})
+        self.metatile_cache = {}  # (project, tile set, room or None): (fingerprint, detect()'s answer)
         for name, title in GAMES.items():
             self.projects[name] = Project(name, "game", name, self.tree, title)
         mods = self.tree / "mods"
@@ -757,7 +759,9 @@ class Server:
         (crashdata.levels.room_edit): {"path": its folder, "room":
         room.json's value, "layers": {"bg1": [[cx, cy, base64 of the 64
         pixels], ...]}, "collision": [[cx, cy, value], ...], "palette": [256
-        BGR555 entries]}, each but "path" optional."""
+        BGR555 entries], "metatiles": {a tile set of its BG layers: its
+        meta-tiles file's value (docs/editors.md, "Meta-tiles")}}, each but
+        "path" optional."""
         rel = body.get("path")
         if not isinstance(rel, str):
             raise HttpError(400, "give the room's folder as \"path\"")
@@ -770,13 +774,25 @@ class Server:
         collision = body.get("collision") or []
         if not isinstance(collision, list):
             raise HttpError(400, "\"collision\" is [[cx, cy, value], ...]")
+        libraries = body.get("metatiles") or {}
+        if not isinstance(libraries, dict):
+            raise HttpError(400, "\"metatiles\" is {tile set: its meta-tiles file's value}")
         with project.lock:
-            staged = []
+            staged, made = [], []
             try:
                 if "room" in body:
                     staged.append(self._stage_json(project, rel + "/room.json", body["room"]))
                 with self.levels(project):
                     room = D.read_json(d / "room.json")
+                    named = {layer.get("tileset") for n, layer in room["layers"].items() if n in room_edit.BG_LAYERS}
+                    for symbol, doc in libraries.items():
+                        if symbol not in named:
+                            raise HttpError(400, "the room has no BG layer of the tile set %r" % symbol)
+                        p = metatiles.path_for(symbol).resolve()
+                        if not p.parent.is_dir():
+                            p.parent.mkdir()
+                            made.append(p.parent)
+                        staged.append(self._stage_json(project, _rel(p, project), doc))
                     for lname in layers:
                         if lname not in room_edit.BG_LAYERS or lname not in room["layers"]:
                             raise HttpError(400, "the room has no BG layer %r" % lname)
@@ -792,11 +808,15 @@ class Server:
                         _, p, info = self.room_layer(project, d, "collision")
                         data = room_edit.patch_collision(p, info, collision)
                         staged.append(self._stage_bytes(_rel(p, project), p, data))
+                sets = {room["layers"][n]["tileset"] for n in layers if n in room["layers"]}
+                return self._commit(project, staged,
+                                    check=(lambda: self.tileset_check(project, d, sets)) if sets else None)
             except BaseException:
                 self._unstage(staged)
+                for x in made:  # the meta-tiles' folder a refused save made
+                    if x.is_dir() and not any(x.iterdir()):
+                        x.rmdir()
                 raise
-            sets = {room["layers"][n]["tileset"] for n in layers if n in room["layers"]}
-            return self._commit(project, staged, check=(lambda: self.tileset_check(project, d, sets)) if sets else None)
 
     def tileset_check(self, project, room_dir, sets):
         """After a room's painted cells are in place: the tile sets they name
@@ -876,6 +896,42 @@ class Server:
                                                               base64.b64decode(tiles["tiles"]), body.get("banks"))
         stats.update(setCount=tiles["count"], limit=tiles["limit"])
         return {"cols": cols, "rows": rows, "cells": base64.b64encode(cells).decode("ascii"), "stats": stats}
+
+    def room_metatiles(self, project, rel, lname):
+        """GET room/metatiles: the meta-tiles of the tile set a BG layer
+        names (crashdata.levels.metatiles): {tileset, path: its file,
+        exists, data: its value (no file yet: no meta-tiles)}."""
+        d, _ = self.room_dir(project, rel)
+        with self.levels(project):
+            _, _, info = self.room_layer(project, d, lname)
+            if info["tileset"] is None:
+                raise HttpError(400, "%s has no tile set" % lname)
+            p = metatiles.path_for(info["tileset"]).resolve()
+            data = L.read_json(p) if p.is_file() else {"metatiles": [], "tiles": []}
+            return {"tileset": info["tileset"], "path": _rel(p, project), "exists": p.is_file(), "data": data}
+
+    def detect_metatiles(self, project, body):
+        """POST room/metatiles/detect {"path", "layer", "scope": "set" (every
+        room whose layers name the layer's tile set, the default) or
+        "room"}: the blocks that recur there (metatiles.detect), cached
+        until a room's data changes. Nothing is written."""
+        d, key = self.room_dir(project, body.get("path"))
+        lname = body.get("layer")
+        if lname not in room_edit.BG_LAYERS:
+            raise HttpError(400, "detect the meta-tiles of a BG layer's set (bg0-bg3)")
+        scope = body.get("scope") or "set"
+        if scope not in ("set", "room"):
+            raise HttpError(400, "\"scope\" is \"set\" or \"room\"")
+        with self.levels(project):
+            _, _, info = self.room_layer(project, d, lname)
+            symbol = info["tileset"]
+            fp = self.fingerprint(project)
+            ck = (project.id, symbol, key if scope == "room" else None)
+            cache = self.metatile_cache.get(ck)
+            if cache is None or cache[0] != fp:
+                cache = (fp, metatiles.detect(symbol, rooms={key} if scope == "room" else None))
+                self.metatile_cache[ck] = cache
+            return dict(cache[1], scope=scope)
 
     # -- the level editor: new, deleted and resized rooms ---------------------
 
@@ -1188,6 +1244,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return self._send(200, app.redraw_tile(project, self._body()))
         if (method, what) == ("POST", "room/legend"):
             return self._send(200, app.add_legend(project, self._body()))
+        if (method, what) == ("GET", "room/metatiles"):
+            return self._send(200, app.room_metatiles(project, query.get("path", ""), query.get("layer", "")))
+        if (method, what) == ("POST", "room/metatiles/detect"):
+            return self._send(200, app.detect_metatiles(project, self._body()), compress=True)
         if (method, what) == ("POST", "room/import"):
             return self._send(200, app.import_tiles(project, self._body()))
         if (method, what) == ("POST", "room/new"):
