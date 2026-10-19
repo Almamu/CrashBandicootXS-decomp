@@ -1,7 +1,7 @@
 // A typed client of the editors' backend, tools/editor_server.py (#1167,
 // docs/editors.md "The editor's backend"). The browser editor calls it on
 // its own origin; the desktop app gives it the backend's URL and token.
-import type { Cutscenes, Music, Room, SchemaFiles, SchemaName, SfxTable } from "./generated/index.ts";
+import type { Cutscenes, GaxManifestDefs, Music, Room, SchemaFiles, SchemaName, SfxTable } from "./generated/index.ts";
 
 /** One problem with the data (crashdata.common.diagnostics.Diagnostic). */
 export interface Diagnostic {
@@ -386,6 +386,8 @@ export interface MusicView {
   samples: MusicSample[];
   /** the new instruments, instruments/<name>.json */
   instruments: { name: string; file: string; data: Record<string, unknown> }[];
+  /** the music pool's instruments: their gax_manifest.json records, and the songs whose XMs name them (`Instrument N`) */
+  poolInstruments: { index: number; record: GaxManifestDefs.Instrument; songs: string[] }[];
   mixRates: number[];
   limits: { maxIndex: number; maxSampleLength: number; romSfxSlots: number };
   files: { manifest: string; music: string; sfxTable: string; levels: string };
@@ -496,10 +498,22 @@ export interface MusicStructure {
 }
 
 /** The songs' unsaved edits a player request carries (POST music/song, music/pool): played as the build would build them. */
-export interface MusicUnsaved {
+export interface MusicUnsaved extends MusicPoolEdits {
   newSongs?: { key: string; xm: string }[];
   structures?: Record<string, MusicStructure>;
   patterns?: Record<string, MusicCellEdit[]>;
+}
+
+/** The music pool's edits (a save's, a player request's): instruments' records, new samples, samples taken out. */
+export interface MusicPoolEdits {
+  /** instrument number -> its gax_manifest.json record (its envelope, vibrato, wave rows, sequence edited) */
+  instruments?: Record<string, GaxManifestDefs.Instrument>;
+  /** samples/NN.wav, sfx_samples/NN.wav -> base64 8-bit mono WAV: a sample's new sound */
+  samples?: Record<string, string>;
+  /** NN (the pool's next numbers) -> base64 8-bit mono WAV: new samples, samples/NN.wav */
+  newSamples?: Record<string, string>;
+  /** samples no instrument plays, taken out */
+  deleteSamples?: number[];
 }
 
 /** GET /api/projects/ID/music/patterns: a song's XM for the pattern view. */
@@ -541,7 +555,7 @@ export interface MusicImport {
 }
 
 /** POST /api/projects/ID/music/save: the music editor's edits, saved together. */
-export interface MusicSave {
+export interface MusicSave extends MusicPoolEdits {
   sfxTable?: SfxTable;
   music?: Music;
   /** THEME_<NAME> -> song key */

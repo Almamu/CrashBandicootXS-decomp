@@ -688,6 +688,21 @@ id stays, and it stays one of the ROM's songs (it can't leave the song
 table). Every ROM song builds this way too (a test builds them all); the
 music block is then no longer the ROM's.
 
+## Editing the pool's instruments and samples
+
+The music editor edits the music pool's instruments as their records in
+`gax_manifest.json` (docs/editors.md, "The music editor"): the vibrato,
+the four wave rows (sample, tune, start, loop or sweep), the sequence and
+the volume envelope, whose slopes it works out as the ROM's are
+(`GaxEnvelopePoint.slope`, Q8 per tick from the point before, rounded
+toward 0; two of the ROM's, between points a tick apart, are other
+values the engine doesn't use, and a point that isn't moved keeps its
+recorded one). It adds samples to the pool (`samples/NN.wav` and a
+`samples` entry, the next number) and takes out one no instrument plays
+(its WAV and its entry; the sample table keeps its place, empty, unless
+it was the last). An edited instrument or sample changes the music block
+(the ROM's bytes are then not what it builds), as a replaced sample does.
+
 ## New instruments
 
 A new song can play instruments the ROM's pool doesn't have, and a new

@@ -134,6 +134,8 @@ class Music(Backend):
             body["samples"][smp["path"]] = b64((sound / smp["path"]).read_bytes())
         for slot in v["sfxSlots"]:
             body["samples"][slot["path"]] = b64((sound / slot["path"]).read_bytes())
+        # every instrument of the music pool, its record as it is
+        body["instruments"] = {str(i["index"]): i["record"] for i in v["poolInstruments"]}
         return body
 
 
@@ -453,10 +455,34 @@ class Scratch(unittest.TestCase):
         self.assertEqual(test_preview["orderCount"], 10)
         st, pool = self.call("POST", "/api/projects/xs/music/pool", {"newSongs": new_song})
         self.assertEqual(st, 200, pool)
+        # the music pool: instrument 43's envelope and tune; a new sample (a sine imported from a 16-bit WAV)
+        # for instrument 28, looped, with a vibrato; sample 18, only 28's, taken out
+        m0 = json.loads((sound / "gax_manifest.json").read_text())
+        drum = json.loads(json.dumps(m0["instruments"]["43"]))
+        drum["envelope"] = {"sustain": None, "loop_start": None, "loop_end": None,
+                            "points": [{"x": 0, "y": 142}, {"x": 4, "y": 220}, {"x": 30, "y": 0}]}
+        drum["samples"][0]["pitch"] += 64
+        st, imp3 = self.call("POST", "/api/projects/xs/music/import", {"wav": b64(wav(
+            [0.7 * math.sin(2 * math.pi * i / 40) for i in range(4000)], 16000, 2))})
+        self.assertEqual(st, 200, imp3)
+        nxt = max(int(k) for k in m0["samples"]) + 1
+        lead = json.loads(json.dumps(m0["instruments"]["28"]))
+        gone = lead["sample_indices"][0]
+        lead["sample_indices"][0] = nxt
+        lead["samples"][0].update(byte_02=0, is_bidirectional=True, start_position=0, loop_start=400, loop_end=3600)
+        lead["vibrato_depth"], lead["vibrato_speed"] = 30, 10
+        pool_edits = {"instruments": {"43": drum, "28": lead}, "newSamples": {str(nxt): imp3["wav"]},
+                      "deleteSamples": [gone]}
+        st, pool = self.call("POST", "/api/projects/xs/music/pool", pool_edits)
+        self.assertEqual(st, 200, pool)
+        self.assertEqual(pool["music"]["instruments"][28]["waveIdx"][0], nxt)
+        self.assertEqual(pool["music"]["instruments"][28]["rows"][0]["sweepMax"], 3600)
+        st, r = self.call("POST", "/api/projects/xs/music/pool", dict(pool_edits, deleteSamples=[1]))
+        self.assertEqual(st, 422, r)  # instruments play sample 1
         body = {"sfxTable": table, "music": music, "themes": {"THEME_SNOW": "jungle"},
                 "patterns": {"jungle": edits}, "songComments": {"jungle": "the jungle theme's, edited"},
                 "samples": {"sfx_samples/09.wav": imp2["wav"]}, "structures": structures, "newSongs": new_song,
-                "newInstruments": [{"name": "test_beep", "wav": imp["wav"]}]}
+                "newInstruments": [{"name": "test_beep", "wav": imp["wav"]}], **pool_edits}
         st, r = self.call("POST", "/api/projects/xs/music/save", body)
         self.assertEqual(st, 200, r)
         self.assertFalse([d for d in r["diagnostics"] if d["severity"] == "error"], r)
@@ -464,7 +490,15 @@ class Scratch(unittest.TestCase):
             "games/xs/data/levels/levels.json", SOUND + "/gax_manifest.json", SOUND + "/instruments/test_beep.json",
             SOUND + "/music.json", SOUND + "/sfx_samples/09.wav", SOUND + "/sfx_samples/test_beep.wav",
             SOUND + "/sfx_table.json", SOUND + "/songs/jungle.xm", SOUND + "/songs/drums.xm",
-            SOUND + "/songs/main_menu_japan.xm", SOUND + "/songs/test_song.xm"]))
+            SOUND + "/songs/main_menu_japan.xm", SOUND + "/songs/test_song.xm",
+            SOUND + "/samples/%02d.wav" % nxt, SOUND + "/samples/%02d.wav" % gone]))
+        self.assertFalse((sound / "samples" / ("%02d.wav" % gone)).exists())
+        m1 = json.loads((sound / "gax_manifest.json").read_text())
+        self.assertNotIn(str(gone), m1["samples"])
+        self.assertEqual(m1["instruments"]["28"]["sample_indices"][0], nxt)
+        self.assertEqual([p["y"] for p in m1["instruments"]["43"]["envelope"]["points"]], [142, 220, 0])
+        st, raw = self.get_bytes("/api/projects/xs/music/pool")
+        self.assertEqual(json.loads(raw)["music"]["instruments"], pool["music"]["instruments"])
         # read back: the player plays the saved edit, the shared positions too
         self.assertEqual(self.song("jungle")["patterns"], preview["patterns"])
         # the structures as they played before the save, the ROM songs without their scaffold

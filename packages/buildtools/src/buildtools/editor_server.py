@@ -326,7 +326,8 @@ class Server:
     def _unstage(staged):
         for item in staged:
             if item is not None:
-                item[2].unlink(missing_ok=True)
+                if item[2] is not None:  # a file deleted has nothing staged
+                    item[2].unlink(missing_ok=True)
 
     def _commit(self, project, staged, text=False):
         """Put the staged files in place and run the model's checks (and the
@@ -341,7 +342,10 @@ class Server:
             self._unstage(plan)
             raise
         for _, p, tmp, _ in plan:
-            os.replace(tmp, p)
+            if tmp is None:  # a file the save deletes (its old bytes are kept to put back)
+                p.unlink()
+            else:
+                os.replace(tmp, p)
         try:
             after = self.model_check(project, text)["diagnostics"]
         except BaseException:
@@ -560,7 +564,8 @@ class Server:
     def music_unsaved(body):
         """The songs' unsaved edits a player request carries (newSongs,
         structures, patterns: music_edit.unsaved_songs)."""
-        return {k: body[k] for k in ("newSongs", "structures", "patterns") if k in body} if body else {}
+        keys = ("newSongs", "structures", "patterns", "instruments", "samples", "newSamples", "deleteSamples")
+        return {k: body[k] for k in keys if k in body} if body else {}
 
     def music_pool(self, project, body=None):
         game = self.music_game(project)
@@ -617,6 +622,10 @@ class Server:
                 for rel, data in plan["bytes"]:
                     p, _ = self.resolve(project, rel, data_file=False)
                     staged.append(self._stage_bytes(rel, p, data))
+                # a music pool sample taken out: nothing staged, its bytes kept to put back
+                for rel in plan.get("delete", ()):
+                    p, _ = self.resolve(project, rel, data_file=False)
+                    staged.append((rel, p, None, p.read_bytes()))
                 return self._commit(project, staged)
             except BaseException:
                 self._unstage(staged)

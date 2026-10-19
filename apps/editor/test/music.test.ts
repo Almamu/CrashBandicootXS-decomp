@@ -191,6 +191,43 @@ describe("a song's structure", () => {
   });
 });
 
+describe("the music pool's instruments", () => {
+  const view = python<MusicView>(`print(json.dumps(E.view(g)))`);
+  const rec = view.poolInstruments.find((i) => i.index === 7)!.record;
+
+  it("are shown as a tracker shows them: tune, loop", () => {
+    expect(M.tuneParts(1860)).toEqual({ note: 58, fine: 4 });
+    expect(M.tuneParts(-33)).toEqual({ note: -2, fine: 31 });
+    expect(M.loopKind(rec.samples[0]!)).toBe("pingpong");
+    const f = M.withLoop(rec.samples[0]!, "forward", 10, 20);
+    expect([M.loopKind(f), f.loop_start, f.loop_end, M.waveRowNeeds(f)]).toEqual(["forward", 10, 20, 20]);
+    expect(M.loopKind(M.withLoop(f, "none", 0, 0))).toBe("none");
+  });
+
+  it("keep their envelope's recorded slopes where the points are (the backend gives the others theirs)", () => {
+    const pts = M.envPoints(rec);
+    const same = M.withEnvelope(rec, pts, null, null, null);
+    expect(same.envelope).toEqual(rec.envelope);
+    const moved = M.withEnvelope(rec, pts.map((p, i) => (i === 1 ? { ...p, y: 100 } : p)), 1, null, null);
+    expect(moved.envelope!.sustain).toBe(1);
+    expect(M.envelopeProblem([{ x: 0, y: 0 }, { x: 0, y: 3 }])).toMatch(/after/);
+    // the backend's record of the same edit plays: its slopes are crashdata.audio.pool's
+    const back = python<{ envelope: { points: { interpolation: number }[] } }>(
+      `from crashdata.audio import pool as P\nm = json.load(open(E.Files(g).manifest))\nr = json.loads(${JSON.stringify(JSON.stringify(moved))})\nprint(json.dumps(P.edited_instrument(m["instruments"]["7"], r, {6: 20000}, "7")))`,
+    );
+    // (255 at 0, 100 at 14, 0 at 60: Q8 a tick, rounded toward 0)
+    expect(back.envelope.points.map((p) => p.interpolation)).toEqual([0, -Math.floor((155 * 256) / 14), -Math.floor((100 * 256) / 46)]);
+  });
+
+  it("play a note as a song plays it", () => {
+    const song = M.instrumentSong(7, 49, 4, 8);
+    expect(Array.from(M.fromBase64(song.patterns))).toEqual([0x00, 0x80 | 49, 7, 0xff, 3, 0x81, 0x00, 0xff, 3]);
+    const p = new GaxPlayer(data.pool.tables, decodePool(data.pool.music), decodePool(data.pool.sfx), song);
+    const out = p.render(60);
+    expect(out.some((v) => v !== 0)).toBe(true);
+  });
+});
+
 describe("the edits", () => {
   const view = python<MusicView>(`print(json.dumps(E.view(g)))`);
   const sfx = JSON.parse(readFileSync(join(ROOT, "games/xs/sound/sfx_table.json"), "utf8"));

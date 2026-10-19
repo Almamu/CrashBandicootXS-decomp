@@ -39,6 +39,7 @@ import wave
 from pathlib import Path
 
 from crashdata.audio import gax as G
+from crashdata.audio import pool as P
 from crashdata.common import diagnostics as D
 from crashdata.common.game import Game
 
@@ -189,9 +190,9 @@ def player_pool(game, unsaved=None):
     files = Files(game)
     with bound(game):
         manifest = D.read_json(files.manifest)
-        manifest, xms = unsaved_songs(files, manifest, unsaved or {})
+        manifest, xms, sample_data = unsaved_songs(files, manifest, unsaved or {})
         xms = {k: _read_xm_bytes(files.songs / ("%s.xm" % k), v) for k, v in xms.items()}
-        pool, _, _ = G.load_songs(manifest, str(files.songs), str(files.samples), xms)
+        pool, _, _ = G.load_songs(manifest, str(files.songs), str(files.samples), xms, sample_data)
         sfx, slots = G.sfx_pool()
         sfx_manifest = D.read_json(files.sfx_manifest)
     info = sfx_manifest["song_info"]
@@ -231,12 +232,12 @@ def player_song(game, key, edits=None, unsaved=None):
         unsaved["patterns"] = dict(unsaved.get("patterns") or {}, **{key: edits})
     with bound(game):
         manifest = D.read_json(files.manifest)
-        manifest, xms = unsaved_songs(files, manifest, unsaved)
+        manifest, xms, sample_data = unsaved_songs(files, manifest, unsaved)
         keys = [t["song"] for t in manifest["song_table"]]
         if key not in keys:
             raise EditError("%s isn't a song of the song table" % key)
         xms = {k: _read_xm_bytes(files.songs / ("%s.xm" % k), v) for k, v in xms.items()}
-        pool, order, songs = G.load_songs(manifest, str(files.songs), str(files.samples), xms)
+        pool, order, songs = G.load_songs(manifest, str(files.songs), str(files.samples), xms, sample_data)
         song = songs[order.index(key)]
         out = song_struct(song, pool.instruments)
     out["key"] = key
@@ -264,7 +265,86 @@ def unsaved_songs(files, manifest, body):
         manifest["song_table"].append({"song": key, "comment": ns.get("comment") or ""})
         keys.append(key)
         xms[key] = data
-    return apply_song_edits(files, manifest, keys, xms, body)
+    manifest, xms = apply_song_edits(files, manifest, keys, xms, body)
+    manifest, sample_data, _, _ = apply_pool_edits(files, manifest, body)
+    return manifest, xms, sample_data
+
+
+def _pool_sample(files, idx):
+    """The music pool's sample idx as the build reads it (gax.load_sample_wav), or None."""
+    p = files.samples / ("%02d.wav" % idx)
+    return G.load_sample_wav(str(p)) if p.is_file() else None
+
+
+def apply_pool_edits(files, manifest, body):
+    """body's edits of the music pool (each optional):
+
+    - "samples": {"samples/NN.wav": base64 WAV}, a sample's new sound (8-bit mono);
+    - "newSamples": {"NN": base64 WAV}: new samples (samples/NN.wav, the
+      manifest's `samples`), numbered after the pool's;
+    - "deleteSamples": [NN]: samples no instrument plays, taken out;
+    - "instruments": {"N": record}: instrument N's manifest record (its
+      editable fields, crashdata.audio.pool.EDITABLE).
+
+    Returns (the manifest, {sample: its signed bytes, None when it is taken
+    out}, {rel: bytes to write}, [rel to delete])."""
+    manifest = json.loads(json.dumps(manifest))
+    data, writes, deletes = {}, {}, []
+    rel = files.rel
+    for path, b64 in (body.get("samples") or {}).items():
+        m = SAMPLE_PATH.match(path or "")
+        if m and m.group(1) == "samples" and (files.sound / path).is_file():
+            data[int(m.group(2))] = sample_wav(_b64decode(b64, "samples/" + path), path)[0]
+    have = sorted(int(k) for k in manifest["samples"])
+    for i, (k, b64) in enumerate(sorted((body.get("newSamples") or {}).items(), key=lambda kv: int(kv[0])
+                                        if str(kv[0]).isdigit() else -1)):
+        where = "newSamples/%s" % k
+        want = max(have, default=0) + 1
+        if not str(k).isdigit() or int(k) != want:
+            raise EditError("%s: a new sample is the pool's next, %d" % (where, want))
+        if want > G.MAX_INDEX:
+            raise EditError("%s: an instrument names its samples by a byte (at most %d)" % (where, G.MAX_INDEX))
+        raw = _b64decode(b64, where)
+        pcm, _ = sample_wav(raw, where)
+        if len(pcm) > G.MAX_SAMPLE_LENGTH:
+            raise EditError("%s: %d samples (at most %d)" % (where, len(pcm), G.MAX_SAMPLE_LENGTH))
+        p = files.samples / ("%02d.wav" % want)
+        if p.exists():
+            raise EditError("%s: %s is there already" % (where, rel(p)))
+        manifest["samples"][str(want)] = {"has_data": True}
+        data[want] = pcm
+        writes[rel(p)] = raw
+        have.append(want)
+    lengths = {}
+    for k in manifest["samples"]:
+        d = data[int(k)] if int(k) in data else _pool_sample(files, int(k))
+        if d is not None:
+            lengths[int(k)] = len(d)
+    edits = body.get("instruments") or {}
+    if not isinstance(edits, dict):
+        raise EditError("instruments: {N: its manifest record}")
+    for n, rec in edits.items():
+        if str(n) not in manifest["instruments"]:
+            raise EditError("instruments/%s: not one of the music pool's instruments" % n)
+        try:
+            manifest["instruments"][str(n)] = P.edited_instrument(manifest["instruments"][str(n)], rec, lengths,
+                                                                  "instruments/%s" % n)
+        except P.PoolError as e:
+            raise EditError(str(e))
+    for idx in body.get("deleteSamples") or []:
+        where = "deleteSamples/%s" % idx
+        if isinstance(idx, bool) or not isinstance(idx, int) or str(idx) not in manifest["samples"]:
+            raise EditError("%s: not one of the music pool's samples" % where)
+        who = P.users(manifest["instruments"], idx)
+        if who:
+            raise EditError("%s: instruments %s play it" % (where, ", ".join(map(str, who))))
+        del manifest["samples"][str(idx)]
+        data[idx] = None
+        p = files.samples / ("%02d.wav" % idx)
+        writes.pop(rel(p), None)
+        if p.is_file():
+            deletes.append(rel(p))
+    return manifest, data, writes, deletes
 
 
 def _xm_now(files, xms, key, what):
@@ -873,6 +953,9 @@ def view(game):
             samples.append({"index": idx, "path": files.sound_rel(p), "length": len(data), "rate": rate,
                             "minLength": need, "instruments": who,
                             "songs": sorted({s for n in who for s in instrument_songs.get(n, ())})})
+        # the music pool's instruments: their records, and the songs whose XMs name them (`Instrument N`)
+        pool_instruments = [{"index": int(n), "record": rec, "songs": sorted(instrument_songs.get(int(n), ()))}
+                            for n, rec in sorted(manifest["instruments"].items(), key=lambda kv: int(kv[0]))]
         # the sound-effect set's instruments: slot N plays sample N at one rate
         slots = []
         sfx_ins = {int(n): v for n, v in sfx_manifest["instruments"].items()}
@@ -912,6 +995,7 @@ def view(game):
         "sfxSlots": slots,
         "samples": samples,
         "instruments": new_instruments,
+        "poolInstruments": pool_instruments,
         "mixRates": list(G.GAX_MIX_RATES),
         "limits": {"maxIndex": G.MAX_INDEX, "maxSampleLength": G.MAX_SAMPLE_LENGTH, "romSfxSlots": max(sfx_ins)},
         "files": {"manifest": files.rel(files.manifest), "music": files.rel(files.music),
@@ -950,7 +1034,12 @@ def plan_save(game, body):
     - "newInstruments": [{"name", "wav": base64, "rate", "volume",
       "comment"}]: instruments/<name>.json with its sample
       sfx_samples/<name>.wav, for new sound effects (an sfxTable entry's
-      "instrument")."""
+      "instrument");
+    - "instruments", "newSamples", "deleteSamples": the music pool's
+      instruments and samples (apply_pool_edits).
+
+    Returns {"json": [(rel, value)], "bytes": [(rel, bytes)], "delete":
+    [rel]}."""
     files = Files(game)
     if not available(game):
         raise EditError("%s has no games/%s/sound/: its sound isn't data yet" % (game.title, game.name))
@@ -1077,6 +1166,9 @@ def plan_save(game, body):
         new_names.add(name)
         out_bytes.append((files.rel(wav), data))
         out_json.append((files.rel(js), spec))
+    # the music pool: its instruments, new samples, samples taken out
+    manifest, _, pool_writes, pool_deletes = apply_pool_edits(files, manifest, body)
+    out_bytes += list(pool_writes.items())
     manifest_ins = {int(n): v for n, v in manifest["instruments"].items()}
     sfx_manifest_ins = {int(n): v for n, v in D.read_json(files.sfx_manifest)["instruments"].items()}
     for path, b64 in (body.get("samples") or {}).items():
@@ -1138,7 +1230,7 @@ def plan_save(game, body):
         out_json.append((m_rel, manifest))
     if diags:
         raise EditError("the music editor's checks reject it", diags)
-    return {"json": out_json, "bytes": out_bytes}
+    return {"json": out_json, "bytes": out_bytes, "delete": pool_deletes}
 
 
 def _b64decode(v, where):

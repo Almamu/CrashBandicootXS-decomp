@@ -1288,13 +1288,18 @@ def load_sample_wav(path):
     return bytes(((b - 128) & 0xFF) for b in frames)
 
 
-def load_pool(manifest, samples_dir):
+def load_pool(manifest, samples_dir, sample_data=None):
+    """The manifest's instruments and the samples its `samples` name
+    (samples_dir/NN.wav). sample_data: {index: signed 8-bit bytes} to use
+    in place of a sample's WAV (an editor's unsaved samples)."""
     instruments = {int(k): Instrument(v) for k, v in manifest['instruments'].items()}
     samples = {}
     for k in manifest['samples']:
         idx = int(k)
         wav_path = os.path.join(samples_dir, f"{idx:02d}.wav")
-        if os.path.exists(wav_path):
+        if sample_data and idx in sample_data:
+            samples[idx] = sample_data[idx]
+        elif os.path.exists(wav_path):
             samples[idx] = load_sample_wav(wav_path)
     return instruments, samples
 
@@ -1827,12 +1832,13 @@ def block_songs(manifest):
     return keys + [t['song'] for t in manifest['song_table'] if t['song'] not in keys]
 
 
-def load_songs(manifest, songs_dir, samples_dir, xms=None):
+def load_songs(manifest, songs_dir, samples_dir, xms=None, sample_data=None):
     """The music pool and the songs in the music block's order: (the pool,
     with the new songs' new instruments appended; the songs' keys; their
     Songs). xms: {key: read_xm's value} to use in place of a song's XM
-    file (an editor's unsaved edits)."""
-    instruments, samples = load_pool(manifest, samples_dir)
+    file, sample_data {index: bytes} in place of a sample's WAV (an
+    editor's unsaved edits)."""
+    instruments, samples = load_pool(manifest, samples_dir, sample_data)
     # the new songs' new instruments are appended to it
     pool = Pool(manifest, instruments, samples, 'the music pool')
 

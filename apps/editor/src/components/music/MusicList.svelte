@@ -49,6 +49,7 @@
   <div class="tabs" role="tablist">
     <button role="tab" aria-selected={mu.kind === "song"} class:on={mu.kind === "song"} onclick={() => (mu.kind = "song")}>Songs</button>
     <button role="tab" aria-selected={mu.kind === "sfx"} class:on={mu.kind === "sfx"} onclick={() => (mu.kind = "sfx")}>Sound effects</button>
+    <button role="tab" aria-selected={mu.kind === "instrument"} class:on={mu.kind === "instrument"} onclick={() => (mu.kind = "instrument")}>Instruments</button>
     <button role="tab" aria-selected={mu.kind === "sample"} class:on={mu.kind === "sample"} onclick={() => (mu.kind = "sample")}>Samples</button>
   </div>
 
@@ -114,19 +115,47 @@
         <button disabled={!!why} title={why ?? "delete the last entry (a sound effect's id is its place)"} onclick={() => mu.deleteLastSfx()}>Delete the last</button>
       </div>
     {/if}
+  {:else if mu.kind === "instrument"}
+    <h3>The music pool's instruments</h3>
+    <ol>
+      {#each mu.view?.poolInstruments ?? [] as ins (ins.index)}
+        {@const r = mu.record(ins.index)!}
+        <li>
+          <button class:on={mu.instrument === ins.index} onclick={() => (mu.instrument = ins.index)} title={ins.songs.length ? `in ${ins.songs.join(", ")}` : "no song's XM names it"}>
+            <span class="id">{String(ins.index).padStart(2, "0")}</span>
+            <span class="name">{r.byte_00 ? "(empty)" : `sample ${r.sample_indices.filter((v) => v).join(", ") || "none"}`}{mu.state.instruments[String(ins.index)] ? " *" : ""}</span>
+            <span class="count">{ins.songs.length}</span>
+          </button>
+        </li>
+      {/each}
+    </ol>
+    <p class="hint">A song's XM plays instrument N as "Instrument N". An instrument is shared: an edit is heard in every song that plays it.</p>
   {:else}
     <h3>The music pool</h3>
     <ol>
-      {#each mu.view?.samples ?? [] as s (s.path)}
+      {#each mu.poolSamples as s (s.path)}
+        {@const who = mu.sampleUsers(s.index)}
         <li>
-          <button class:on={mu.sample === s.path} onclick={() => (mu.sample = s.path)} title="{s.instruments.length} instruments, {s.songs.length} songs">
+          <button class:on={mu.sample === s.path} onclick={() => (mu.sample = s.path)} title={who.length ? `instruments ${who.join(", ")}` : "no instrument plays it"}>
             <span class="id">{String(s.index).padStart(2, "0")}</span>
-            <span class="name">{s.path}{mu.state.samples[s.path] ? " *" : ""}</span>
+            <span class="name">{s.path}{mu.state.samples[s.path] || s.added ? " *" : ""}{who.length ? "" : " (unused)"}</span>
             <span class="count">{s.length}</span>
           </button>
         </li>
       {/each}
     </ol>
+    <div class="row">
+      <label class="hint">
+        New sample from a WAV…
+        <input type="file" accept=".wav" onchange={async (e) => {
+          const f = e.currentTarget.files?.[0];
+          e.currentTarget.value = "";
+          if (!f) return;
+          const s = await mu.importWav(f);
+          if (s) mu.addPoolSample(s);
+        }} />
+      </label>
+    </div>
     <h3>The sound-effect set</h3>
     <ol>
       {#each mu.view?.sfxSlots ?? [] as s (s.path)}
@@ -147,21 +176,15 @@
     padding: 0.5rem;
   }
   .tabs {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     margin-bottom: 0.4rem;
   }
   .tabs button {
-    flex: 1;
     border-radius: 0;
-    margin-left: -1px;
+    margin: -1px 0 0 -1px;
     font-size: 0.8rem;
     padding: 0.2rem 0.3rem;
-  }
-  .tabs button:first-child {
-    border-radius: 4px 0 0 4px;
-  }
-  .tabs button:last-child {
-    border-radius: 0 4px 4px 0;
   }
   .tabs button.on {
     background: var(--accent);

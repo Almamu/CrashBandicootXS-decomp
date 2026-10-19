@@ -22,6 +22,7 @@ sys.path.insert(0, str(ROOT / "packages" / "crashdata" / "src"))
 
 from crashdata.audio import edit as E  # noqa: E402
 from crashdata.audio import gax as G  # noqa: E402
+from crashdata.audio import pool as P  # noqa: E402
 from crashdata.common.game import Game  # noqa: E402
 
 SOUND = ROOT / "games" / "xs" / "sound"
@@ -197,6 +198,69 @@ class Patterns(unittest.TestCase):
         self.assertEqual((song["id"], song["channelCount"], song["dsp"][:3]), (11, 7, [6, 25, 8]))
         t = E.tables(E.Files(game))
         self.assertEqual((len(t["period"]), t["vibrato"][16], t["mixRates"][4]), (0xEF4, 127, 15769))
+
+
+class PoolEdits(unittest.TestCase):
+    """The music pool's instruments and samples edited (crashdata.audio.pool, edit.apply_pool_edits)."""
+
+    def lengths(self):
+        return {int(k): len(G.load_sample_wav(str(SOUND / "samples" / ("%02d.wav" % int(k)))))
+                for k, v in MANIFEST["samples"].items() if v["has_data"]}
+
+    def test_every_instrument_edited_unchanged_is_itself(self):
+        lengths = self.lengths()
+        for n, rec in MANIFEST["instruments"].items():
+            self.assertEqual(P.edited_instrument(rec, json.loads(json.dumps(rec)), lengths, n), rec, n)
+            # the envelope as the editor sends it (points' ticks and volumes): the recorded slopes kept
+            if rec["envelope"]:
+                env = {k: rec["envelope"][k] for k in ("sustain", "loop_start", "loop_end")}
+                env["points"] = [{"x": p["x"], "y": p["y"]} for p in rec["envelope"]["points"]]
+                self.assertEqual(P.edited_envelope(rec["envelope"], env, n), rec["envelope"], n)
+
+    def test_an_instrument(self):
+        lengths = self.lengths()
+        rec = MANIFEST["instruments"]["7"]
+        new = json.loads(json.dumps(rec))
+        new["envelope"]["points"][1]["y"] = 100
+        new["samples"][0].update(loop_start=10, loop_end=20, is_bidirectional=False)
+        new["vibrato_depth"] = 9
+        out = P.edited_instrument(rec, new, lengths, "7")
+        pts = out["envelope"]["points"]
+        # the moved point and the one after it get their slopes; the first keeps 0
+        self.assertEqual([p["interpolation"] for p in pts], [0, P.slope(pts[0], pts[1]), P.slope(pts[1], pts[2])])
+        self.assertEqual((out["samples"][0]["loop_end"], out["vibrato_depth"], out["unknown12"]),
+                         (20, 9, rec["unknown12"]))
+        for bad in (dict(new, unknown12=[0] * 12), dict(new, nothing=1),
+                    dict(new, samples=[dict(new["samples"][0], loop_end=10 ** 7)] + new["samples"][1:]),
+                    dict(new, sample_indices=[99, 0, 0, 0]), dict(new, rows=[]),
+                    dict(new, envelope=dict(new["envelope"], points=[{"x": 3, "y": 0}]))):
+            self.assertRaises(P.PoolError, P.edited_instrument, rec, bad, lengths, "7")
+
+    def test_samples_added_and_taken_out(self):
+        files = E.Files(Game("xs", ROOT))
+        wav = base64.b64encode(E.wav_bytes([0, 40, 80, 40, 0, -40, -80, -40] * 100, 16000)).decode()
+        nxt = max(int(k) for k in MANIFEST["samples"]) + 1
+        m, data, writes, deletes = E.apply_pool_edits(files, MANIFEST, {"newSamples": {str(nxt): wav}})
+        self.assertEqual((len(data[nxt]), list(writes), deletes), (800, ["games/xs/sound/samples/%02d.wav" % nxt], []))
+        self.assertIn(str(nxt), m["samples"])
+        # one that isn't next, one an instrument plays
+        self.assertRaises(E.EditError, E.apply_pool_edits, files, MANIFEST, {"newSamples": {str(nxt + 1): wav}})
+        self.assertRaises(E.EditError, E.apply_pool_edits, files, MANIFEST, {"deleteSamples": [1]})
+        # instrument 28 given the new sample: its old one (18, only 28's) can go
+        rec = json.loads(json.dumps(MANIFEST["instruments"]["28"]))
+        old = rec["sample_indices"][0]
+        rec["sample_indices"][0] = nxt
+        rec["samples"][0].update(loop_start=0, loop_end=800, byte_02=0, start_position=0)
+        m, data, writes, deletes = E.apply_pool_edits(files, MANIFEST, {"newSamples": {str(nxt): wav},
+                                                                        "instruments": {"28": rec},
+                                                                        "deleteSamples": [old]})
+        self.assertEqual((deletes, data[old]), (["games/xs/sound/samples/%02d.wav" % old], None))
+        self.assertNotIn(str(old), m["samples"])
+        pool = E.player_pool(Game("xs", ROOT), {"newSamples": {str(nxt): wav}, "instruments": {"28": rec},
+                                                "deleteSamples": [old]})
+        self.assertEqual(pool["music"]["instruments"][28]["waveIdx"][0], nxt)
+        self.assertNotIn(old, pool["music"]["waves"])
+        self.assertEqual(pool["music"]["waves"][nxt][1], 800)
 
 
 def pcm(frames, rate, width, channels):

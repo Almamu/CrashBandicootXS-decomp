@@ -4,7 +4,9 @@
 // build makes of them (crashdata.audio.gax's XM import), a ROM song's
 // shared patterns, and the sound effects' rules. No DOM: the tests run it
 // in node.
-import type { Music, MusicCellEdit, MusicInstrument, MusicPatterns, MusicSave, MusicStructure, MusicUnsaved, MusicView, SfxTable } from "@crash/schema-types";
+import type { GaxManifestDefs, Music, MusicCellEdit, MusicInstrument, MusicPatterns, MusicSave, MusicSong, MusicStructure, MusicUnsaved, MusicView, SfxTable } from "@crash/schema-types";
+
+export type InstrumentRecord = GaxManifestDefs.Instrument;
 
 export type Cell = [number, number, number, number, number];
 export const CELL = 5;
@@ -48,6 +50,12 @@ export interface EditState {
   removeSongs: string[];
   /** song -> its new structure (its cells with it: the song has no cell edits then) */
   structures: Record<string, Structure>;
+  /** the music pool: instrument number -> its edited record (gax_manifest.json's) */
+  instruments: Record<string, InstrumentRecord>;
+  /** the music pool's new samples, by their numbers (the pool's next ones) */
+  newSamples: Record<string, SampleEdit>;
+  /** music pool samples taken out (no instrument plays them) */
+  deleteSamples: number[];
 }
 
 export function initialState(v: MusicView, sfx: SfxTable, music: Music): EditState {
@@ -62,6 +70,9 @@ export function initialState(v: MusicView, sfx: SfxTable, music: Music): EditSta
     newSongs: [],
     removeSongs: [],
     structures: {},
+    instruments: {},
+    newSamples: {},
+    deleteSamples: [],
   };
 }
 
@@ -92,6 +103,10 @@ export function saveBody(saved: EditState, now: EditState): MusicSave {
   if (now.removeSongs.length) body.removeSongs = now.removeSongs;
   const structures = Object.entries(now.structures).filter(([k, st]) => saved.structures[k] !== st);
   if (structures.length) body.structures = Object.fromEntries(structures.map(([k, st]) => [k, structureBody(st)]));
+  const instruments = Object.entries(now.instruments).filter(([k, r]) => saved.instruments[k] !== r);
+  if (instruments.length) body.instruments = Object.fromEntries(instruments);
+  if (Object.keys(now.newSamples).length) body.newSamples = Object.fromEntries(Object.entries(now.newSamples).map(([k, s]) => [k, s.wav]));
+  if (now.deleteSamples.length) body.deleteSamples = now.deleteSamples;
   return body;
 }
 
@@ -104,6 +119,12 @@ export function unsavedBody(now: EditState): MusicUnsaved {
   if (Object.keys(now.structures).length) body.structures = Object.fromEntries(Object.entries(now.structures).map(([k, st]) => [k, structureBody(st)]));
   const patterns = saveBody({ ...now, cells: {} }, now).patterns;
   if (patterns) body.patterns = patterns;
+  // the music pool's edits (a music sample's new sound too: an instrument's loop is checked against it)
+  if (Object.keys(now.instruments).length) body.instruments = now.instruments;
+  const samples = Object.entries(now.samples).filter(([p]) => p.startsWith("samples/"));
+  if (samples.length) body.samples = Object.fromEntries(samples.map(([p, s]) => [p, s.wav]));
+  if (Object.keys(now.newSamples).length) body.newSamples = Object.fromEntries(Object.entries(now.newSamples).map(([k, s]) => [k, s.wav]));
+  if (now.deleteSamples.length) body.deleteSamples = now.deleteSamples;
   return body;
 }
 
@@ -494,6 +515,103 @@ export function firstRowSpeed(s: Structure): number | null {
     if (cmd === 7) return param >> 4;
   }
   return null;
+}
+
+// -- the music pool's instruments ------------------------------------------------------------------
+
+export type WaveRow = InstrumentRecord["samples"][number];
+export type SeqStep = InstrumentRecord["rows"][number];
+export type LoopKind = "none" | "forward" | "pingpong" | "sweep";
+
+/** 0xff in an envelope's sustain or loop point: none (the manifest writes 255 or null). */
+export const NO_POINT = 0xff;
+
+/** A wave row's tune (1/32 semitones) as a tracker's relative note (semitones) and finetune (32nds, 0-31). */
+export function tuneParts(pitch: number): { note: number; fine: number } {
+  const note = Math.floor(pitch / 32);
+  return { note, fine: pitch - note * 32 };
+}
+
+export function loopKind(w: WaveRow): LoopKind {
+  if (w.byte_02) return "sweep";
+  if (w.loop_start < w.loop_end) return w.is_bidirectional ? "pingpong" : "forward";
+  return "none";
+}
+
+/** A wave row with a loop kind: none (no loop points), forward or ping-pong over [start, end). */
+export function withLoop(w: WaveRow, kind: Exclude<LoopKind, "sweep">, start: number, end: number): WaveRow {
+  if (kind === "none") return { ...w, byte_02: 0, is_bidirectional: false, loop_start: 0, loop_end: 0 };
+  return { ...w, byte_02: 0, is_bidirectional: kind === "pingpong", loop_start: start, loop_end: end };
+}
+
+/** The shortest sample a wave row can play (crashdata.audio.pool.wave_row_needs). */
+export function waveRowNeeds(w: WaveRow): number {
+  let need = w.start_position + 1;
+  if (w.loop_start < w.loop_end) need = Math.max(need, w.loop_end);
+  if (w.byte_02) need = Math.max(need, w.start_position + w.int_10, w.loop_end);
+  return need;
+}
+
+export interface EnvPoint {
+  x: number;
+  y: number;
+}
+
+/** An envelope's points as the graph draws them: ticks and volumes (0-255). */
+export function envPoints(r: InstrumentRecord): EnvPoint[] {
+  return (r.envelope?.points ?? []).map((p) => ({ x: p.x, y: p.y }));
+}
+
+const pointIndex = (v: number | null | undefined) => (v === null || v === undefined || v === NO_POINT ? null : v);
+
+/** The record with an envelope of these points (and sustain, loop: point indices or null); the backend works out
+ * the slopes (crashdata.audio.pool.edited_envelope), the player is given them by it. */
+export function withEnvelope(r: InstrumentRecord, points: EnvPoint[], sustain: number | null, loopStart: number | null, loopEnd: number | null): InstrumentRecord {
+  const old = r.envelope?.points ?? [];
+  return {
+    ...r,
+    envelope: {
+      sustain: sustain ?? (r.envelope?.sustain === NO_POINT ? NO_POINT : null),
+      loop_start: loopStart ?? (r.envelope?.loop_start === NO_POINT ? NO_POINT : null),
+      loop_end: loopEnd ?? (r.envelope?.loop_end === NO_POINT ? NO_POINT : null),
+      points: points.map((p, i) => ({ x: p.x, y: p.y, interpolation: old[i]?.x === p.x && old[i]?.y === p.y ? old[i]!.interpolation : 0, byte_05: 0, ushort_06: 0 })),
+    },
+  } as InstrumentRecord;
+}
+
+export function envMarks(r: InstrumentRecord): { sustain: number | null; loopStart: number | null; loopEnd: number | null } {
+  return { sustain: pointIndex(r.envelope?.sustain), loopStart: pointIndex(r.envelope?.loop_start), loopEnd: pointIndex(r.envelope?.loop_end) };
+}
+
+/** Why an envelope's points can't be (null if they can): the first at tick 0, the ticks increasing, volumes 0-255. */
+export function envelopeProblem(points: EnvPoint[]): string | null {
+  if (!points.length) return "an envelope has a point";
+  if (points[0]!.x !== 0) return "the first point is at tick 0";
+  for (let i = 1; i < points.length; i++) if (points[i]!.x <= points[i - 1]!.x) return `point ${i}'s tick isn't after point ${i - 1}'s`;
+  if (points.some((p) => p.y < 0 || p.y > 255 || p.x > 0xffff)) return "a volume is 0-255, a tick 0-65535";
+  return null;
+}
+
+/** A one-channel song that plays instrument `ins` of the music pool: `note` (XM's: 49 is C-4) on its first row,
+ * a key off after `hold` rows, `rows` rows at speed 6 (GAX2's packed rows: a note, rests, the key off). */
+export function instrumentSong(ins: number, note: number, hold: number, rows = 64, mixRate = 15769): MusicSong {
+  const rest = (n: number): number[] => (n <= 0 ? [] : n === 1 ? [0x80] : [0xff, n]);
+  const bytes = [0x00, 0x80 | (note & 0x7f), ins, ...rest(hold - 1), 0x81, 0x00, ...rest(rows - hold - 1)];
+  return {
+    key: `instrument_${ins}`,
+    id: -1,
+    channelCount: 1,
+    patternRows: rows,
+    orderCount: 1,
+    loopOrder: 0,
+    volume: 256,
+    mixRate,
+    numSfx: 3,
+    halfRateFx: 1,
+    dsp: [0, 0, 0, 0, 0, 0, 0],
+    patterns: toBase64(Uint8Array.from(bytes)),
+    orders: [[[0, 0]]],
+  };
 }
 
 // -- the sound effects ------------------------------------------------------------------
