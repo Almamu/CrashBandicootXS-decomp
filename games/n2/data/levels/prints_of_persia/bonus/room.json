@@ -11,15 +11,15 @@
   },
   "params": [
     [0],
-    [0, 1, 0, 0, 0, 0, 0],
-    [0],
-    [0, 27],
-    [0, 196635],
-    [0, 65563],
-    [0, 262171],
-    [0, 589851],
-    [0, 131099],
-    [0, 131099]
+    {"layout": "flags", "flags": [], "extra": [1, 0, 0, 0, 0, 0]},
+    {"layout": "flags", "flags": []},
+    {"layout": "n2_crate", "flags": [], "options": [], "unk_02": 0, "trial_kind": "TNT_CRATE", "param6": 0, "param7": 0},
+    {"layout": "n2_crate", "flags": [], "options": [], "unk_02": 0, "trial_kind": "TNT_CRATE", "param6": 3, "param7": 0},
+    {"layout": "n2_crate", "flags": [], "options": [], "unk_02": 0, "trial_kind": "TNT_CRATE", "param6": 1, "param7": 0},
+    {"layout": "n2_crate", "flags": [], "options": [], "unk_02": 0, "trial_kind": "TNT_CRATE", "param6": 4, "param7": 0},
+    {"layout": "n2_crate", "flags": [], "options": [], "unk_02": 0, "trial_kind": "TNT_CRATE", "param6": 9, "param7": 0},
+    {"layout": "n2_crate", "flags": [], "options": [], "unk_02": 0, "trial_kind": "TNT_CRATE", "param6": 2, "param7": 0},
+    {"layout": "n2_crate", "flags": [], "options": [], "unk_02": 0, "trial_kind": "TNT_CRATE", "param6": 2, "param7": 0}
   ],
   "links": [
     [37, 36]

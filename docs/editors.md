@@ -96,8 +96,8 @@ data"'s second half.
 A room's entity parameter records were raw word lists; they now name
 their fields where the entity types say which view their spawner reads
 (entity_types.json's `"params"`), as docs/levels.md, "Parameter records"
-describes, and stay words where nothing does (N-Tranced's, unused or
-shared records). The schema's `room.schema.json` has each view
+describes, and stay words where nothing does (unused or shared records,
+N-Tranced's types whose spawners' reads aren't known). The schema's `room.schema.json` has each view
 (`$defs/param_<layout>`).
 
 **Migration (#1167, one time).** XS's 41 rooms were rewritten with
@@ -108,7 +108,10 @@ CRC hashes the words, not the form). The loader accepts both forms, but
 named form is the one the data keeps. A mod's room copied before this
 (`tree.copy_room` copies the tree's, already named) or written by hand as
 words is still read: `tools/levels.py name-params games/xs/data/levels/<room>`
-names it.
+names it. N-Tranced's 36 rooms followed (`tools/levels.py --levels-dir
+games/n2/data/levels name-params`): 1,229 of their 1,268 records, by the
+views its assembly shows ([n_tranced.md, "Parameter
+records"](./n_tranced.md#parameter-records)); its ROM is the same.
 
 ## Errors
 
@@ -324,8 +327,9 @@ room's save like any other and keeps all of it or none.
 **Opening a room.** The left column is the project's levels.json: each
 level's rooms in play order, its bonus and gem-path rooms, and the stages
 played in an actor category (which have no room to open). XS's rooms,
-N-Tranced's (whose entity types are partly named and whose parameter
-records stay raw words) and a mod's tree's open the same way.
+N-Tranced's (whose entity types are partly named, and whose parameter
+records are named where its spawners show their views) and a mod's tree's
+open the same way.
 
 **The view** draws the room the way the game does:
 
@@ -443,8 +447,8 @@ A bonus or gem-path room starts as the level's (`ROOM=bonus` or
 symbols, listed in levels.json: [levels.md, "Adding a
 room"](./levels.md#adding-a-room); the backend writes only files that
 exist), resizing a room, drawing new tiles, adding a
-collision value to the legend, and naming N-Tranced's records (their
-views aren't known yet: they are edited as words).
+collision value to the legend. N-Tranced's records of types 73, 92 and
+106 stay words (what their spawners read isn't known yet).
 
 ## The cutscene editor
 

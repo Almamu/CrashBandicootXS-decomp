@@ -11,13 +11,13 @@
   },
   "params": [
     [0],
-    [0],
-    [0, 1, 0, 0, 0, 0, 0],
-    [0, 27],
-    [0, 131099],
-    [0, 196635],
-    [3136, 327707],
-    [0, 393243]
+    {"layout": "flags", "flags": []},
+    {"layout": "flags", "flags": [], "extra": [1, 0, 0, 0, 0, 0]},
+    {"layout": "n2_crate", "flags": [], "options": [], "unk_02": 0, "trial_kind": "TNT_CRATE", "param6": 0, "param7": 0},
+    {"layout": "n2_crate", "flags": [], "options": [], "unk_02": 0, "trial_kind": "TNT_CRATE", "param6": 2, "param7": 0},
+    {"layout": "n2_crate", "flags": [], "options": [], "unk_02": 0, "trial_kind": "TNT_CRATE", "param6": 3, "param7": 0},
+    {"layout": "n2_crate", "flags": ["UNK6"], "options": ["SLOT_MYSTERY", "SLOT_LIFE"], "unk_02": 0, "trial_kind": "TNT_CRATE", "param6": 5, "param7": 0},
+    {"layout": "n2_crate", "flags": [], "options": [], "unk_02": 0, "trial_kind": "TNT_CRATE", "param6": 6, "param7": 0}
   ],
   "links": [
     [35, 34],

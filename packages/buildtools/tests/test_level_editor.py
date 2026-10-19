@@ -73,6 +73,11 @@ class Reading(LevelEditor):
         self.assertEqual(sorted(v["layers"]), ["bg0", "bg1", "bg3", "collision"])
         scarab = next(t["type"] for t in v["entityTypes"] if t["name"] == "SCARAB")
         self.assertEqual(v["sprites"][str(scarab)]["bank"], 13)  # bank13_scarab, by name
+        # its records are named by its own views (docs/n_tranced.md, "Parameter records")
+        layouts = {e["type"]: v["room"]["params"][e["param"]].get("layout") for e in v["room"]["entities"]
+                   if isinstance(v["room"]["params"][e["param"]], dict)}
+        self.assertEqual(layouts.get("POWERS"), "hint_text")
+        self.assertEqual(layouts.get("BASIC_CRATE"), "n2_crate")
 
     def test_layers_and_cells(self):
         _, v = self.call("GET", "/api/projects/xs/room?path=" + ROOM)

@@ -33,6 +33,19 @@ export interface EntityTypes {
       | "platform"
       | "crate"
       | "iron_switch_crate"
-      | "outline_crate";
+      | "outline_crate"
+      | "n2_crate"
+      | "n2_iron_switch_crate"
+      | "n2_outline_crate"
+      | "patrol_xy"
+      | "patrol_y"
+      | "platform_group"
+      | "circle_platform"
+      | "group"
+      | "group_state"
+      | "width"
+      | "path_point"
+      | "path"
+      | "hint_text";
   }[];
 }

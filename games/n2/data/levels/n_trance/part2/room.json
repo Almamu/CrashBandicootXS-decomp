@@ -11,16 +11,16 @@
   },
   "params": [
     [0],
-    [0],
-    [0, 0],
-    [0, 65536],
-    [0, 131072],
-    [0, 196608],
-    [0, 262144],
-    [0, 327680],
-    [0, 524288],
-    [0, 458752],
-    [0, 393216]
+    {"layout": "flags", "flags": []},
+    {"layout": "path_point", "flags": [], "path": 0, "action": 0, "index": 0},
+    {"layout": "path_point", "flags": [], "path": 0, "action": 0, "index": 1},
+    {"layout": "path_point", "flags": [], "path": 0, "action": 0, "index": 2},
+    {"layout": "path_point", "flags": [], "path": 0, "action": 0, "index": 3},
+    {"layout": "path_point", "flags": [], "path": 0, "action": 0, "index": 4},
+    {"layout": "path_point", "flags": [], "path": 0, "action": 0, "index": 5},
+    {"layout": "path_point", "flags": [], "path": 0, "action": 0, "index": 8},
+    {"layout": "path_point", "flags": [], "path": 0, "action": 0, "index": 7},
+    {"layout": "path_point", "flags": [], "path": 0, "action": 0, "index": 6}
   ],
   "links": null,
   "entities": [
