@@ -166,3 +166,64 @@ def edited_instrument(old, new, lengths, where):
 def users(instruments, idx):
     """The instruments whose wave rows name sample idx."""
     return sorted(int(n) for n, ins in instruments.items() if idx in ins["sample_indices"])
+
+
+# -- new instruments, and instruments taken out --------------------------------------------------------------------
+
+def _wave_row(**kw):
+    return dict({"byte_02": 0, "is_bidirectional": False, "start_position": 0, "loop_start": 0, "loop_end": 0,
+                 "int_10": 0, "ushort_14": 0, "ushort_16": 0, "pitch": 0}, **kw)
+
+
+def _record(empty, sample, tune):
+    return {
+        "byte_00": empty, "sample_indices": [sample, 0, 0, 0], "byte_05": 0, "byte_06": 0, "byte_07": 0,
+        "vibrato_delay": 0, "vibrato_depth": 0, "vibrato_speed": 0, "byte_0b": 0,
+        "unknown12": [1, 255, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0], "row_speed": 1, "ushort_12": 0,
+        "samples": [_wave_row(pitch=tune), _wave_row(), _wave_row(), _wave_row()],
+        "rows": [{"relative_note_number": 2 if not empty else 0, "dont_use_note_pitch": False,
+                  "sample_index": 1 if not empty else 0, "byte_03": 0,
+                  "effects": [{"type": 0, "param": 0}, {"type": 0, "param": 0}]}],
+        "envelope": {"sustain": None if not empty else NONE, "loop_start": None if not empty else NONE,
+                     "loop_end": None if not empty else NONE,
+                     "points": [{"x": 0, "interpolation": 0, "y": 255, "byte_05": 0, "ushort_06": 0}]},
+    }
+
+
+def blank_instrument(sample=0):
+    """A new instrument as the build makes one from a sample (crashdata.audio.gax.instrument_entry): one wave row
+    playing `sample` (0: none yet) at 8363 Hz on XM's C-4, no loop, a one-step sequence starting it at the note, a
+    flat envelope cut at the key off, no vibrato."""
+    from crashdata.audio import gax as G
+
+    return _record(0, sample, G.tune_for_rate(G.XM_C4_RATE, False))
+
+
+def empty_instrument():
+    """The empty instrument, as the pool's instrument 0 is (`byte_00`): a note on it plays nothing. An instrument
+    taken out of the pool that isn't its last becomes one, so the numbers after it stay."""
+    return _record(1, 0, 0)
+
+
+def new_instrument(rec, lengths, where):
+    """A new instrument's record (blank_instrument's fields, the editable ones edited: a copy of another
+    instrument is one), checked as an edit is."""
+    base = blank_instrument()
+    env = rec.get("envelope") if isinstance(rec, dict) else None
+    if isinstance(env, dict):
+        # none written as the record has it (0xff or null)
+        for k in ("sustain", "loop_start", "loop_end"):
+            if env.get(k) == NONE:
+                base["envelope"][k] = NONE
+    return edited_instrument(base, rec, lengths, where)
+
+
+def taken_out(instruments, gone):
+    """The pool's instruments (manifest records by number) with those of `gone` taken out: each becomes the empty
+    instrument, and the empty ones at the end (after instrument 0) leave the pool."""
+    out = dict(instruments)
+    for n in gone:
+        out[str(n)] = empty_instrument()
+    while len(out) > 1 and out[str(max(map(int, out)))]["byte_00"]:
+        del out[str(max(map(int, out)))]
+    return out

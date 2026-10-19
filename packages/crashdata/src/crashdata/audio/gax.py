@@ -1304,15 +1304,17 @@ def load_pool(manifest, samples_dir, sample_data=None):
     return instruments, samples
 
 
-def sfx_pool(manifest_path=None, samples_dir=None, table_path=None):
+def sfx_pool(manifest_path=None, samples_dir=None, table_path=None, manifest=None):
     """The sound-effect set's pool, with the new instruments sound effects
     name (games/xs/sound/sfx_table.json's entries with an "instrument",
     games/xs/sound/instruments/<name>.json, docs/audio.md "Adding a sound
     effect"), and {name: its instrument number}, which tools/sfx_table.py
-    writes as the entry's slot_id."""
+    writes as the entry's slot_id. manifest: the set's manifest, when it
+    isn't the file's (an editor's unsaved edits)."""
     manifest_path = manifest_path or SFX_MANIFEST
     table_path = table_path or SFX_TABLE
-    manifest = schemas.load(manifest_path)
+    if manifest is None:
+        manifest = schemas.load(manifest_path)
     instruments, samples = load_pool(manifest, samples_dir or SFX_SAMPLES_DIR)
     pool = Pool(manifest, instruments, samples, 'the sound-effect set')
     rel = os.path.relpath(table_path, ROOT)
@@ -1546,6 +1548,13 @@ def rom_song(sm, xm, instruments, where='the XM'):
         sys.exit(f"{where} doesn't fit the scaffold gax_manifest.json records for it: {why}. Take its "
                  f"{', '.join(SCAFFOLD)} out of the manifest's song, and it is built from the XM like a new "
                  "song (the music editor does when it changes a song's structure)")
+    # its settings, which the music editor edits: what GAX2 can play
+    if sm['sample_rate'] not in GAX_MIX_RATES:
+        sys.exit(f"{where}: sample_rate {sm['sample_rate']}: GAX2 mixes at {', '.join(map(str, GAX_MIX_RATES))} Hz")
+    need = work_size(sm['num_channels'], sm['sample_rate'], sm['half_rate_fx'], sm['mixer_data_bytes'])
+    if need > GAX_WORK_SIZE:
+        sys.exit(f"{where}: GAX2 needs {need:#x} bytes of work RAM at {sm['sample_rate']} Hz with its echo taps "
+                 f"(GAX2_estimate), but StartSong gives it {GAX_WORK_SIZE:#x}")
     song = Song(sm, num_items=sm['num_items'], unk_ptr=0)
     used_indices = xm['gax_instrument_indices']
 
@@ -1700,11 +1709,12 @@ def set_effect(rows, row, effect, param, why, fail):
     fail(f"{why}, but row {row} has an effect on every channel (a GAX2 row has one)")
 
 
-def new_song(key, xm_path, xm, pool, rom=None):
+def new_song(key, xm_path, xm, pool, rom=None, given=None):
     """A song with no ROM history: its scaffold derived from the XM, with
     the settings of the optional games/xs/sound/songs/<key>.json next to it
     (rom: a ROM song's manifest entry without its scaffold, whose settings
-    and title bytes are its).
+    and title bytes are its; given: the settings to use in place of the
+    JSON's, an editor's unsaved ones).
 
     - one GAX2 channel per XM channel, in order;
     - one order position per entry of the XM's order list (a channel's
@@ -1729,8 +1739,8 @@ def new_song(key, xm_path, xm, pool, rom=None):
     if rom is not None:
         # a ROM song without its scaffold: the manifest's settings
         settings.update({f: rom[f] for f in SCAFFOLD_SETTINGS if f in rom})
-    elif os.path.exists(json_path):
-        given = schemas.load(json_path)
+    elif given is not None or os.path.exists(json_path):
+        given = schemas.load(json_path) if given is None else given
         unknown = sorted(set(given) - set(NEW_SONG_DEFAULTS))
         if unknown:
             sys.exit(f"{os.path.relpath(json_path, ROOT)}: unknown settings {', '.join(unknown)} "
@@ -1832,11 +1842,12 @@ def block_songs(manifest):
     return keys + [t['song'] for t in manifest['song_table'] if t['song'] not in keys]
 
 
-def load_songs(manifest, songs_dir, samples_dir, xms=None, sample_data=None):
+def load_songs(manifest, songs_dir, samples_dir, xms=None, sample_data=None, settings=None):
     """The music pool and the songs in the music block's order: (the pool,
     with the new songs' new instruments appended; the songs' keys; their
     Songs). xms: {key: read_xm's value} to use in place of a song's XM
-    file, sample_data {index: bytes} in place of a sample's WAV (an
+    file, sample_data {index: bytes} in place of a sample's WAV, settings
+    {key: a new song's settings} in place of its songs/<key>.json (an
     editor's unsaved edits)."""
     instruments, samples = load_pool(manifest, samples_dir, sample_data)
     # the new songs' new instruments are appended to it
@@ -1852,7 +1863,7 @@ def load_songs(manifest, songs_dir, samples_dir, xms=None, sample_data=None):
         elif key in manifest['songs']:
             songs.append(new_song(key, xm_path, xm, pool, manifest['songs'][key]))
         else:
-            songs.append(new_song(key, xm_path, xm, pool))
+            songs.append(new_song(key, xm_path, xm, pool, given=(settings or {}).get(key)))
     return pool, keys, songs
 
 

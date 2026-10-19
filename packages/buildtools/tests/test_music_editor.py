@@ -136,6 +136,11 @@ class Music(Backend):
             body["samples"][slot["path"]] = b64((sound / slot["path"]).read_bytes())
         # every instrument of the music pool, its record as it is
         body["instruments"] = {str(i["index"]): i["record"] for i in v["poolInstruments"]}
+        # every song's settings, the sound-effect set's every instrument
+        rom = ("sample_rate", "volume", "half_rate_fx", "mixer_data_bytes")
+        body["songSettings"] = {s["key"]: {f: s["settings"].get(f) for f in (rom if s["rom"] else ("title", "artist")
+                                                                              + rom)} for s in v["songs"]}
+        body["sfxInstruments"] = {str(i["index"]): i["record"] for i in v["sfxInstruments"] if i["index"]}
         return body
 
 
@@ -294,6 +299,17 @@ class Reading(Music):
             ({"structures": {"nothing": {}}}, None),
             ({"structures": {"jungle": structure(self.patterns("jungle"))},
               "patterns": {"jungle": [{"pattern": 0, "row": 0, "channel": 0, "cell": [0, 0, 0, 0, 0]}]}}, None),
+            # pool instruments: one a song names taken out, a new one that isn't the next, one added to a song
+            # that the pool doesn't have
+            ({"deleteInstruments": [7]}, None),
+            ({"instruments": {"60": v["poolInstruments"][7]["record"]}}, None),
+            ({"songInstruments": {"intro": [200]}}, None),
+            # settings GAX2 can't play: a mix rate it doesn't have, too long an echo at 42 kHz; a ROM song's title
+            ({"songSettings": {"jungle": {"sample_rate": 22050}}}, None),
+            ({"songSettings": {"jungle": {"sample_rate": 42049, "mixer_data_bytes": list(struct.pack(
+                "<7I", 4, 500, 8, 0, 0, 0, 0))}}}, None),
+            ({"songSettings": {"jungle": {"title": "a title"}}}, None),
+            ({"sfxInstruments": {"9": dict(v["sfxInstruments"][9]["record"], unknown12=[0] * 12)}}, None),
         ]:
             st, r = self.call("POST", "/api/projects/xs/music/save", body)
             self.assertEqual(st, 422, (list(body), r))
@@ -479,10 +495,43 @@ class Scratch(unittest.TestCase):
         self.assertEqual(pool["music"]["instruments"][28]["rows"][0]["sweepMax"], 3600)
         st, r = self.call("POST", "/api/projects/xs/music/pool", dict(pool_edits, deleteSamples=[1]))
         self.assertEqual(st, 422, r)  # instruments play sample 1
+        # a new pool instrument, from sample 6 with a vibrato, played by intro (added to its XM's instruments);
+        # instrument 34, which no song names, taken out
+        new_ins = max(int(k) for k in m0["instruments"]) + 1
+        rec = json.loads(json.dumps(v["instrumentTemplates"]["blank"]))
+        rec["sample_indices"][0] = 6
+        rec["vibrato_depth"], rec["vibrato_speed"] = 20, 8
+        pool_edits["instruments"][str(new_ins)] = rec
+        pool_edits["deleteInstruments"] = [34]
+        st, pool = self.call("POST", "/api/projects/xs/music/pool", pool_edits)
+        self.assertEqual((st, len(pool["music"]["instruments"]), pool["music"]["instruments"][34]["empty"]),
+                         (200, new_ins + 1, 1), pool)
+        intro = self.patterns("intro")
+        intro_cell = [{"pattern": 0, "row": 0, "channel": 0, "cell": [49, len(intro["instruments"]) + 1, 0, 0, 0]}]
+        song_instruments = {"intro": [new_ins]}
+        intro_preview = self.song("intro", unsaved=dict(pool_edits, songInstruments=song_instruments,
+                                                        patterns={"intro": intro_cell}))
+        self.assertIn(bytes([0x80 | 49, new_ins]), base64.b64decode(intro_preview["patterns"]))
+        # settings: warp_room's mix rate, volume and echo (a ROM song: the manifest's); the new song's (its JSON)
+        warp = {"sample_rate": 26760, "volume": 300, "half_rate_fx": 0,
+                "mixer_data_bytes": list(struct.pack("<7I", 3, 40, 10, 15, 6, 0, 0))}
+        settings = {"warp_room": warp, "test_song": {"sample_rate": 21025, "title": "the test song"}}
+        warp_preview = self.song("warp_room", unsaved={"songSettings": {"warp_room": warp}})
+        self.assertEqual((warp_preview["mixRate"], warp_preview["volume"], warp_preview["dsp"][:5]),
+                         (26760, 300, [3, 40, 10, 15, 6]))
+        # the sound-effect set's instrument 31: a new envelope, tuned up
+        sfx_m = json.loads((sound / "gax_sfx_manifest.json").read_text())
+        sfx_rec = json.loads(json.dumps(sfx_m["instruments"]["31"]))
+        sfx_rec["samples"][0]["pitch"] += 96
+        sfx_rec["envelope"] = {"sustain": None, "loop_start": None, "loop_end": None,
+                               "points": [{"x": 0, "y": 255}, {"x": 12, "y": 60}, {"x": 40, "y": 0}]}
         body = {"sfxTable": table, "music": music, "themes": {"THEME_SNOW": "jungle"},
                 "patterns": {"jungle": edits}, "songComments": {"jungle": "the jungle theme's, edited"},
                 "samples": {"sfx_samples/09.wav": imp2["wav"]}, "structures": structures, "newSongs": new_song,
-                "newInstruments": [{"name": "test_beep", "wav": imp["wav"]}], **pool_edits}
+                "newInstruments": [{"name": "test_beep", "wav": imp["wav"]}], **pool_edits,
+                "songInstruments": song_instruments, "songSettings": settings,
+                "sfxInstruments": {"31": sfx_rec}}
+        body["patterns"]["intro"] = intro_cell
         st, r = self.call("POST", "/api/projects/xs/music/save", body)
         self.assertEqual(st, 200, r)
         self.assertFalse([d for d in r["diagnostics"] if d["severity"] == "error"], r)
@@ -491,19 +540,32 @@ class Scratch(unittest.TestCase):
             SOUND + "/music.json", SOUND + "/sfx_samples/09.wav", SOUND + "/sfx_samples/test_beep.wav",
             SOUND + "/sfx_table.json", SOUND + "/songs/jungle.xm", SOUND + "/songs/drums.xm",
             SOUND + "/songs/main_menu_japan.xm", SOUND + "/songs/test_song.xm",
+            SOUND + "/songs/intro.xm", SOUND + "/songs/test_song.json", SOUND + "/gax_sfx_manifest.json",
             SOUND + "/samples/%02d.wav" % nxt, SOUND + "/samples/%02d.wav" % gone]))
         self.assertFalse((sound / "samples" / ("%02d.wav" % gone)).exists())
         m1 = json.loads((sound / "gax_manifest.json").read_text())
         self.assertNotIn(str(gone), m1["samples"])
         self.assertEqual(m1["instruments"]["28"]["sample_indices"][0], nxt)
         self.assertEqual([p["y"] for p in m1["instruments"]["43"]["envelope"]["points"]], [142, 220, 0])
+        self.assertEqual((m1["instruments"][str(new_ins)]["sample_indices"], m1["instruments"]["34"]["byte_00"]),
+                         ([6, 0, 0, 0], 1))
+        self.assertEqual({f: m1["songs"]["warp_room"][f] for f in warp}, warp)
+        self.assertIn("pattern_groups", m1["songs"]["warp_room"])
+        self.assertEqual(json.loads((sound / "songs" / "test_song.json").read_text()),
+                         {"sample_rate": 21025, "title": "the test song"})
+        self.assertEqual(json.loads((sound / "gax_sfx_manifest.json").read_text())["instruments"]["31"]["samples"][0]
+                         ["pitch"], sfx_rec["samples"][0]["pitch"])
+        self.assertEqual(self.song("intro")["patterns"], intro_preview["patterns"])
+        self.assertEqual(self.song("warp_room"), warp_preview)
+        self.assertEqual(self.patterns("intro")["instruments"][-1], {"name": "Instrument %d" % new_ins,
+                                                                      "pool": new_ins})
         st, raw = self.get_bytes("/api/projects/xs/music/pool")
         self.assertEqual(json.loads(raw)["music"]["instruments"], pool["music"]["instruments"])
         # read back: the player plays the saved edit, the shared positions too
         self.assertEqual(self.song("jungle")["patterns"], preview["patterns"])
         # the structures as they played before the save, the ROM songs without their scaffold
         self.assertEqual(self.song("drums"), drums_preview)
-        self.assertEqual(self.song("test_song"), test_preview)
+        self.assertEqual(self.song("test_song"), dict(test_preview, mixRate=21025))
         m1 = json.loads((sound / "gax_manifest.json").read_text())
         self.assertEqual([k for k in ("drums", "main_menu_japan", "jungle") if "pattern_groups" in m1["songs"][k]],
                          ["jungle"])

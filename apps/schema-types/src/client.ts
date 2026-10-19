@@ -332,6 +332,27 @@ export interface MusicSongInfo {
   halfRateFx?: number;
   title?: string;
   artist?: string | null;
+  /** its settings as the build reads them: a ROM song's manifest entry's (crashdata.audio.gax.SCAFFOLD_SETTINGS), a new
+   * song's songs/<key>.json over the defaults (gax.NEW_SONG_DEFAULTS) */
+  settings?: MusicSongSettings & { num_fx_channels: number; ushort_0a?: number; title_bytes?: string };
+  /** a new song's settings file, from the tree's root (it may not exist yet) */
+  settingsFile?: string;
+  /** GAX2_estimate's work RAM for it (StartSong gives GAX2 limits.workSize) */
+  workSize?: number;
+}
+
+/** A song's settings the Music tab edits (crashdata.audio.edit.ROM_SETTINGS; a new song's NEW_SETTINGS: its title too). */
+export interface MusicSongSettings {
+  /** the mix rate, Hz: one of gGaxMixRates */
+  sample_rate: number;
+  /** GaxSongData.volume, Q8 */
+  volume: number;
+  /** the sound-effect voices mixed at half the mix rate */
+  half_rate_fx: number;
+  /** the mixer's 28 bytes (struct GaxDspParams): the channels mixed before the echo, three taps' delay (ms) and gain */
+  mixer_data_bytes: number[];
+  title?: string | null;
+  artist?: string | null;
 }
 
 /** A sound effect: sfx_table.json's entry, its id and where it is named. */
@@ -388,9 +409,15 @@ export interface MusicView {
   instruments: { name: string; file: string; data: Record<string, unknown> }[];
   /** the music pool's instruments: their gax_manifest.json records, and the songs whose XMs name them (`Instrument N`) */
   poolInstruments: { index: number; record: GaxManifestDefs.Instrument; songs: string[] }[];
+  /** the sound-effect set's instruments: their gax_sfx_manifest.json records (slot N plays instrument N) */
+  sfxInstruments: { index: number; record: GaxManifestDefs.Instrument }[];
+  /** a new pool instrument, blank (crashdata.audio.pool.blank_instrument), and what one taken out becomes (the empty one) */
+  instrumentTemplates: { blank: GaxManifestDefs.Instrument; empty: GaxManifestDefs.Instrument };
+  /** a new song's settings when its songs/<key>.json doesn't say (crashdata.audio.gax.NEW_SONG_DEFAULTS) */
+  songDefaults: MusicSongSettings & { num_fx_channels: number };
   mixRates: number[];
-  limits: { maxIndex: number; maxSampleLength: number; romSfxSlots: number };
-  files: { manifest: string; music: string; sfxTable: string; levels: string };
+  limits: { maxIndex: number; maxSampleLength: number; romSfxSlots: number; workSize: number; maxEchoGain: number; xmInstruments: number };
+  files: { manifest: string; sfxManifest: string; music: string; sfxTable: string; levels: string };
 }
 
 /** GAX2's tables (lib/gax/data/gax_tables.c). */
@@ -502,11 +529,16 @@ export interface MusicUnsaved extends MusicPoolEdits {
   newSongs?: { key: string; xm: string }[];
   structures?: Record<string, MusicStructure>;
   patterns?: Record<string, MusicCellEdit[]>;
+  /** song -> pool instruments added to its XM as `Instrument N` (after its own: a cell plays one by its new number) */
+  songInstruments?: Record<string, number[]>;
+  /** song -> its settings (a ROM song's in the manifest, a new song's in songs/<key>.json) */
+  songSettings?: Record<string, MusicSongSettings>;
 }
 
 /** The music pool's edits (a save's, a player request's): instruments' records, new samples, samples taken out. */
 export interface MusicPoolEdits {
-  /** instrument number -> its gax_manifest.json record (its envelope, vibrato, wave rows, sequence edited) */
+  /** instrument number -> its gax_manifest.json record (its envelope, vibrato, wave rows, sequence edited; a number
+   * after the pool's: a new instrument) */
   instruments?: Record<string, GaxManifestDefs.Instrument>;
   /** samples/NN.wav, sfx_samples/NN.wav -> base64 8-bit mono WAV: a sample's new sound */
   samples?: Record<string, string>;
@@ -514,6 +546,10 @@ export interface MusicPoolEdits {
   newSamples?: Record<string, string>;
   /** samples no instrument plays, taken out */
   deleteSamples?: number[];
+  /** instruments no song's XM names, taken out (emptied; the pool's last ones removed) */
+  deleteInstruments?: number[];
+  /** the sound-effect set: instrument number -> its gax_sfx_manifest.json record */
+  sfxInstruments?: Record<string, GaxManifestDefs.Instrument>;
 }
 
 /** GET /api/projects/ID/music/patterns: a song's XM for the pattern view. */
@@ -566,6 +602,8 @@ export interface MusicSave extends MusicPoolEdits {
   /** a song's XM with a new structure (a ROM song's scaffold then leaves the manifest) */
   structures?: Record<string, MusicStructure>;
   patterns?: Record<string, MusicCellEdit[]>;
+  songInstruments?: Record<string, number[]>;
+  songSettings?: Record<string, MusicSongSettings>;
   /** samples/NN.wav or sfx_samples/NN.wav -> base64 8-bit mono WAV */
   samples?: Record<string, string>;
   /** new sound-effect instruments: instruments/<name>.json and sfx_samples/<name>.wav */

@@ -263,6 +263,124 @@ class PoolEdits(unittest.TestCase):
         self.assertEqual(pool["music"]["waves"][nxt][1], 800)
 
 
+class NewInstruments(unittest.TestCase):
+    """New pool instruments, instruments taken out, a pool instrument added to a song's XM, a song's settings and
+    the sound-effect set's instruments (crashdata.audio.edit, pool)."""
+
+    game = Game("xs", ROOT)
+
+    def test_the_templates(self):
+        # the empty instrument is instrument 0's record; a blank one is the build's instrument from a sample
+        self.assertEqual(P.empty_instrument(), MANIFEST["instruments"]["0"])
+        spec = {"sample": b"\x00" * 10, "loop": "none", "loop_start": 0, "loop_end": 0, "volume": 64,
+                "tune": G.tune_for_rate(G.XM_C4_RATE, False), "fixed_pitch": False, "envelope": None,
+                "vibrato": (0, 0, 0)}
+        self.assertEqual(P.blank_instrument(5), G.instrument_entry(spec, 5, self.fail))
+
+    def test_new_instruments(self):
+        top = max(int(k) for k in MANIFEST["instruments"])
+        copy = json.loads(json.dumps(MANIFEST["instruments"]["7"]))
+        copy["samples"][0]["pitch"] += 32
+        body = {"instruments": {str(top + 1): copy, str(top + 2): P.blank_instrument(3)}}
+        m, _, _, _ = E.apply_pool_edits(E.Files(self.game), MANIFEST, body)
+        self.assertEqual((m["instruments"][str(top + 1)], m["instruments"][str(top + 2)]["sample_indices"]),
+                         (copy, [3, 0, 0, 0]))
+        # not the next number; a field the engine doesn't read; a loop past the sample
+        for bad in ({str(top + 2): copy}, {str(top + 1): dict(copy, unknown12=[0] * 12)},
+                    {str(top + 1): dict(copy, samples=[dict(copy["samples"][0], loop_end=10 ** 7)]
+                                        + copy["samples"][1:])}):
+            self.assertRaises(E.EditError, E.apply_pool_edits, E.Files(self.game), MANIFEST, {"instruments": bad})
+        pool = E.player_pool(self.game, body)
+        self.assertEqual(len(pool["music"]["instruments"]), top + 3)
+        self.assertEqual(pool["music"]["instruments"][top + 1]["rows"][0]["tune"], copy["samples"][0]["pitch"])
+
+    def test_instruments_taken_out(self):
+        files = E.Files(self.game)
+        keys = [t["song"] for t in MANIFEST["song_table"]]
+        named = E.named_instruments(files, keys, {})
+        unused = sorted(set(map(int, MANIFEST["instruments"])) - set(named) - {0})
+        self.assertEqual(unused, [26, 34, 51])
+        top = max(map(int, MANIFEST["instruments"]))
+        # one in the middle becomes the empty instrument; the last one leaves the pool
+        m, _, _, _ = E.apply_pool_edits(files, MANIFEST, {"deleteInstruments": [26, top]}, lambda: named)
+        self.assertEqual(m["instruments"]["26"], P.empty_instrument())
+        self.assertNotIn(str(top), m["instruments"])
+        self.assertRaises(E.EditError, E.apply_pool_edits, files, MANIFEST, {"deleteInstruments": [7]}, lambda: named)
+        self.assertRaises(E.EditError, E.apply_pool_edits, files, MANIFEST, {"deleteInstruments": [0]}, lambda: named)
+        # a song given the instrument names it then
+        self.assertRaises(E.EditError, E.player_pool, self.game, {"songInstruments": {"intro": [26]},
+                                                                  "deleteInstruments": [26]})
+
+    def test_a_pool_instrument_added_to_a_song(self):
+        buf = (SOUND / "songs" / "intro.xm").read_bytes()
+        names = E.xm_instrument_names(buf)
+        out = E.xm_with_instruments(buf, [26, 51])
+        self.assertEqual(E.xm_instrument_names(out), names + ["Instrument 26", "Instrument 51"])
+        xm = G.read_xm("intro.xm", out)
+        self.assertEqual(xm["gax_instrument_indices"][-2:], [26, 51])
+        self.assertEqual(E.structure(out), E.structure(buf))
+        self.assertRaises(E.EditError, E.xm_with_instruments, buf, [int(names[0].split()[1])])
+        # a cell playing it: the song built with it plays pool instrument 26 there
+        n = len(names) + 1
+        body = {"songInstruments": {"intro": [26]},
+                "patterns": {"intro": [{"pattern": 0, "row": 0, "channel": 0, "cell": [49, n, 0, 0, 0]}]}}
+        song = E.player_song(self.game, "intro", unsaved=body)
+        streams = base64.b64decode(song["patterns"])
+        self.assertIn(bytes([0x80 | 49, 26]), streams)
+        self.assertRaises(E.EditError, E.player_song, self.game, "intro", unsaved={"songInstruments": {"intro": [99]}})
+
+    def test_song_settings(self):
+        files = E.Files(self.game)
+        keys = [t["song"] for t in MANIFEST["song_table"]]
+        st = {"sample_rate": 26760, "volume": 300, "half_rate_fx": 1,
+              "mixer_data_bytes": list(struct.pack("<7I", 3, 40, 10, 15, 6, 0, 0))}
+        m, new, writes = E.apply_settings(files, MANIFEST, keys, {}, {"songSettings": {"warp_room": st}})
+        self.assertEqual(({f: m["songs"]["warp_room"][f] for f in st}, new, writes), (st, {}, []))
+        # a ROM song keeps its scaffold
+        self.assertTrue(G.scaffolded(m["songs"]["warp_room"]))
+        song = E.player_song(self.game, "warp_room", unsaved={"songSettings": {"warp_room": st}})
+        self.assertEqual((song["mixRate"], song["volume"], song["halfRateFx"], song["dsp"]),
+                         (26760, 300, 1, [3, 40, 10, 15, 6, 0, 0]))
+        # unchanged: the manifest as it was
+        same = {f: MANIFEST["songs"]["warp_room"][f] for f in E.ROM_SETTINGS}
+        self.assertEqual(E.apply_settings(files, MANIFEST, keys, {}, {"songSettings": {"warp_room": same}})[0],
+                         MANIFEST)
+        bad = [dict(st, sample_rate=22050), dict(st, volume=-1), dict(st, half_rate_fx=2),
+               dict(st, mixer_data_bytes=list(struct.pack("<7I", 9, 40, 10, 0, 0, 0, 0))),
+               dict(st, mixer_data_bytes=list(struct.pack("<7I", 3, 40, 300, 0, 0, 0, 0))),
+               dict(st, sample_rate=42049, mixer_data_bytes=list(struct.pack("<7I", 3, 400, 10, 0, 0, 0, 0))),
+               dict(st, title="a ROM song's title is its bytes")]
+        for b in bad:
+            self.assertRaises(E.EditError, E.apply_settings, files, MANIFEST, keys, {}, {"songSettings": {"warp_room": b}})
+
+    def test_a_new_songs_settings(self):
+        xm = base64.b64encode((SOUND / "songs" / "drums.xm").read_bytes()).decode()
+        st = dict(G.NEW_SONG_DEFAULTS, sample_rate=21025, volume=200, title="test", artist=None)
+        st = {f: st[f] for f in E.NEW_SETTINGS}
+        body = {"newSongs": [{"key": "test_song", "xm": xm}], "songSettings": {"test_song": st}}
+        song = E.player_song(self.game, "test_song", unsaved=body)
+        self.assertEqual((song["mixRate"], song["volume"]), (21025, 200))
+        e = E.unsaved_songs(E.Files(self.game), MANIFEST, body)
+        self.assertEqual(e.settings["test_song"]["sample_rate"], 21025)
+
+    def test_the_sound_effect_sets_instruments(self):
+        sfx = json.loads((SOUND / "gax_sfx_manifest.json").read_text())
+        rec = json.loads(json.dumps(sfx["instruments"]["9"]))
+        rec["samples"][0]["pitch"] += 100
+        rec["envelope"] = {"sustain": None, "loop_start": None, "loop_end": None,
+                           "points": [{"x": 0, "y": 255}, {"x": 20, "y": 0}]}
+        out = E.apply_sfx_edits(E.Files(self.game), {"sfxInstruments": {"9": rec}})
+        self.assertEqual(out["instruments"]["9"]["samples"][0]["pitch"], rec["samples"][0]["pitch"])
+        self.assertEqual(out["instruments"]["10"], sfx["instruments"]["10"])
+        pool = E.player_pool(self.game, {"sfxInstruments": {"9": rec}})
+        self.assertEqual(pool["sfx"]["instruments"][9]["rows"][0]["tune"], rec["samples"][0]["pitch"])
+        # every record of the set through the edit unchanged is itself
+        self.assertEqual(E.apply_sfx_edits(E.Files(self.game), {"sfxInstruments": {
+            k: v for k, v in sfx["instruments"].items() if k != "0"}}), sfx)
+        for bad in ({"0": rec}, {"999": rec}, {"9": dict(rec, sample_indices=[200, 0, 0, 0])}):
+            self.assertRaises(E.EditError, E.apply_sfx_edits, E.Files(self.game), {"sfxInstruments": bad})
+
+
 def pcm(frames, rate, width, channels):
     buf = io.BytesIO()
     with wave.open(buf, "wb") as w:

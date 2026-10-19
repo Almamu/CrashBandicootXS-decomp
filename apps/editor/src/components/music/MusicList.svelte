@@ -118,18 +118,54 @@
   {:else if mu.kind === "instrument"}
     <h3>The music pool's instruments</h3>
     <ol>
-      {#each mu.view?.poolInstruments ?? [] as ins (ins.index)}
-        {@const r = mu.record(ins.index)!}
+      {#each mu.poolList as ins (ins.index)}
+        {@const r = ins.record}
+        {@const songs = mu.instrumentSongs(ins.index)}
         <li>
-          <button class:on={mu.instrument === ins.index} onclick={() => (mu.instrument = ins.index)} title={ins.songs.length ? `in ${ins.songs.join(", ")}` : "no song's XM names it"}>
+          <button class:on={mu.instrumentPool === "music" && mu.instrument === ins.index} onclick={() => ((mu.instrumentPool = "music"), (mu.instrument = ins.index))} title={songs.length ? `in ${songs.join(", ")}` : "no song's XM names it"}>
             <span class="id">{String(ins.index).padStart(2, "0")}</span>
-            <span class="name">{r.byte_00 ? "(empty)" : `sample ${r.sample_indices.filter((v) => v).join(", ") || "none"}`}{mu.state.instruments[String(ins.index)] ? " *" : ""}</span>
-            <span class="count">{ins.songs.length}</span>
+            <span class="name">{ins.deleted ? "(taken out)" : r.byte_00 ? "(empty)" : `sample ${r.sample_indices.filter((v) => v).join(", ") || "none"}`}{ins.added ? " (new)" : mu.state.instruments[String(ins.index)] ? " *" : ""}</span>
+            <span class="count">{songs.length}</span>
           </button>
         </li>
       {/each}
     </ol>
-    <p class="hint">A song's XM plays instrument N as "Instrument N". An instrument is shared: an edit is heard in every song that plays it.</p>
+    {@const sel = mu.instrumentPool === "music" ? mu.poolList.find((i) => i.index === mu.instrument) : undefined}
+    {@const why = mu.cannotDeleteInstrument(mu.instrument)}
+    <div class="row">
+      <button onclick={() => mu.newPoolInstrument(null, "blank")} title="a new instrument at the end of the pool: one wave row with no sample yet, at 8363 Hz on C-4, cut at the key off">New</button>
+      <button disabled={!sel || !!sel.record.byte_00} onclick={() => sel && mu.newPoolInstrument({ copy: sel.record }, `a copy of ${sel.index}`)} title="a new instrument, a copy of the one selected">Copy</button>
+      <label class="hint" title="a new instrument playing a sample of the pool at 8363 Hz on C-4, as the build makes one from an XM's sample">
+        from sample
+        <select value="" onchange={(e) => {
+          const v = Number(e.currentTarget.value);
+          e.currentTarget.value = "";
+          if (v) mu.newPoolInstrument({ sample: v }, `sample ${v}`);
+        }}>
+          <option value="">…</option>
+          {#each mu.poolSamples as s (s.index)}<option value={s.index}>{s.index}{s.added ? " (new)" : ""}</option>{/each}
+        </select>
+      </label>
+      <button disabled={mu.instrumentPool !== "music" || !!why} title={mu.instrumentPool !== "music" ? "" : (why ?? "take it out of the pool: the pool's last goes, another becomes the empty instrument (the numbers after it stay)")} onclick={() => mu.deletePoolInstrument(mu.instrument)}>Delete</button>
+    </div>
+    <p class="hint">A song's XM plays instrument N as "Instrument N"; a cell can play any of the pool's (the song's XM gets it). An instrument is shared: an edit is heard in every song that plays it.</p>
+    <h3>The sound-effect set's instruments</h3>
+    <ol>
+      {#each mu.view?.sfxInstruments ?? [] as ins (ins.index)}
+        {@const r = mu.record(ins.index, "sfx")!}
+        {@const named = mu.state.sfx.entries.filter((e) => (e as { slot_id?: number }).slot_id === ins.index).map((e) => e.name ?? "?")}
+        {#if !r.byte_00}
+          <li>
+            <button class:on={mu.instrumentPool === "sfx" && mu.instrument === ins.index} onclick={() => ((mu.instrumentPool = "sfx"), (mu.instrument = ins.index))} title={named.length ? `SFX_${named.join(", SFX_")}` : "no sound effect plays it"}>
+              <span class="id">{String(ins.index).padStart(2, "0")}</span>
+              <span class="name">sample {r.sample_indices[0]}{mu.state.sfxInstruments[String(ins.index)] ? " *" : ""}{named.length ? ` · ${named[0]}` : ""}</span>
+              <span class="count">{named.length}</span>
+            </button>
+          </li>
+        {/if}
+      {/each}
+    </ol>
+    <p class="hint">Slot N of a sound effect (sfx_table.json's slot_id) is the set's instrument N (gax_sfx_manifest.json): an edit is heard in every sound effect on it.</p>
   {:else}
     <h3>The music pool</h3>
     <ol>

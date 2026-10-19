@@ -15,7 +15,7 @@ import * as M from "./model.ts";
 export type Kind = "song" | "sfx" | "sample" | "instrument";
 
 function emptyState(): M.EditState {
-  return { sfx: { entries: [] } as unknown as SfxTable, music: { screen_music: [] }, themes: {}, comments: {}, cells: {}, samples: {}, newInstruments: {}, newSongs: [], removeSongs: [], structures: {}, instruments: {}, newSamples: {}, deleteSamples: [] };
+  return { sfx: { entries: [] } as unknown as SfxTable, music: { screen_music: [] }, themes: {}, comments: {}, cells: {}, samples: {}, newInstruments: {}, newSongs: [], removeSongs: [], structures: {}, instruments: {}, newSamples: {}, deleteSamples: [], deleteInstruments: [], songInstruments: {}, songSettings: {}, sfxInstruments: {} };
 }
 
 /** The NO_NOTE sentinel of a channel's note (GaxChannelState.note 0x8AD0). */
@@ -36,8 +36,9 @@ class MusicEditorState {
   song = $state("");
   sfx = $state(0);
   sample = $state("");
-  /** the music pool's instrument selected */
+  /** the instrument selected: the music pool's, or the sound-effect set's */
   instrument = $state(1);
+  instrumentPool = $state<"music" | "sfx">("music");
   /** the songs' XMs, by key, as saved: their patterns and decoded cells */
   patterns = $state.raw<Record<string, { p: MusicPatterns; cells: Uint8Array[] }>>({});
   /** the order position the pattern view shows, and the cell selected */
@@ -300,6 +301,66 @@ class MusicEditorState {
     );
   }
 
+  /** The selected song's XM instruments now: its own, then the pool instruments added to it. */
+  xmInstruments(key = this.song): { name: string; pool: number | null; added: boolean }[] {
+    const p = this.patterns[key]?.p;
+    return p ? M.songInstruments(p, this.state.songInstruments[key]) : [];
+  }
+
+  /** A cell playing pool instrument `n`: the XM instrument that is `Instrument n`, added to the song's XM if it has
+   * none (one step of the undo stack with the cell). */
+  setCellPool(pattern: number, row: number, channel: number, cell: M.Cell, n: number): void {
+    const song = this.song;
+    const list = this.xmInstruments(song);
+    const at = list.findIndex((i) => i.pool === n);
+    if (at >= 0) {
+      this.setCell(pattern, row, channel, [cell[0], at + 1, cell[2], cell[3], cell[4]]);
+      return;
+    }
+    const most = this.view?.limits.xmInstruments ?? 128;
+    if (list.length >= most) {
+      editor.error = `an XM has at most ${most} instruments`;
+      return;
+    }
+    const c: M.Cell = [cell[0], list.length + 1, cell[2], cell[3], cell[4]];
+    this.apply(`${song} plays instrument ${n} (pattern ${pattern}, row ${row}, channel ${channel + 1})`, (s) => {
+      const songInstruments = { ...s.songInstruments, [song]: [...(s.songInstruments[song] ?? []), n] };
+      const st = s.structures[song];
+      if (st) return { ...s, songInstruments, structures: { ...s.structures, [song]: M.setCellIn(st, pattern, row, channel, c) } };
+      return { ...s, songInstruments, cells: { ...s.cells, [song]: { ...(s.cells[song] ?? {}), [M.cellKey(pattern, row, channel)]: c } } };
+    });
+  }
+
+  // -- a song's settings -------------------------------------------------------------------
+
+  /** Song `key`'s settings now: its edit, or what the build reads (the manifest's, songs/<key>.json's, the defaults). */
+  settingsOf(key: string): M.SongSettings | null {
+    const v = this.view;
+    if (!v) return null;
+    const edit = this.state.songSettings[key];
+    if (edit) return edit;
+    const info = v.songs.find((x) => x.key === key);
+    const s = info?.settings ?? (this.state.newSongs.some((n) => n.key === key) ? v.songDefaults : null);
+    if (!s) return null;
+    const out: M.SongSettings = { sample_rate: s.sample_rate, volume: s.volume, half_rate_fx: s.half_rate_fx, mixer_data_bytes: [...s.mixer_data_bytes] };
+    if (!info?.rom) Object.assign(out, { title: s.title ?? null, artist: s.artist ?? null });
+    return out;
+  }
+
+  setSettings(key: string, label: string, patch: Partial<M.SongSettings>, coalesce: string | null = null): void {
+    const base = this.settingsOf(key);
+    if (!base) return;
+    this.apply(`${key}'s ${label}`, (s) => ({ ...s, songSettings: { ...s.songSettings, [key]: { ...(s.songSettings[key] ?? base), ...patch } } }), coalesce ? `settings:${key}:${coalesce}` : null);
+  }
+
+  revertSettings(key: string): void {
+    this.apply(`${key}'s settings as saved`, (s) => {
+      const songSettings = { ...s.songSettings };
+      delete songSettings[key];
+      return { ...s, songSettings };
+    });
+  }
+
   setSfx(i: number, patch: Partial<M.SfxEntry> & { slot_id?: number; instrument?: string }, key: string | null = null): void {
     this.apply(
       `Edit sound effect ${i}`,
@@ -444,8 +505,8 @@ class MusicEditorState {
   /** The music pool as the build would build it with the unsaved edits: the backend builds it when they change it
    * (an instrument's record, a sample added or taken out, a new song's or a structure's instruments). */
   private async builtPool(unsaved: MusicUnsaved = M.unsavedBody(this.state)): Promise<MusicPool | undefined> {
-    if (!(unsaved.newSongs || unsaved.structures || unsaved.instruments || unsaved.newSamples || unsaved.deleteSamples)) return this.pool!;
-    const pk = JSON.stringify({ n: unsaved.newSongs, s: unsaved.structures, i: unsaved.instruments, a: unsaved.newSamples, d: unsaved.deleteSamples, m: unsaved.samples });
+    if (!(unsaved.newSongs || unsaved.structures || unsaved.instruments || unsaved.newSamples || unsaved.deleteSamples || unsaved.deleteInstruments || unsaved.sfxInstruments || unsaved.songSettings)) return this.pool!;
+    const pk = JSON.stringify({ n: unsaved.newSongs, s: unsaved.structures, i: unsaved.instruments, a: unsaved.newSamples, d: unsaved.deleteSamples, m: unsaved.samples, x: unsaved.deleteInstruments, f: unsaved.sfxInstruments, t: unsaved.songSettings });
     const hit = this.poolCache.get(pk) ?? (await editor.run("Building the music pool with the edits", () => client.musicPool(editor.projectId, unsaved)));
     if (hit) this.poolCache.set(pk, hit);
     return hit;
@@ -453,26 +514,93 @@ class MusicEditorState {
 
   // -- the music pool's instruments ------------------------------------------------------
 
-  /** Instrument n's record now: its edit, or the manifest's. */
-  record(n: number): M.InstrumentRecord | null {
-    return this.state.instruments[String(n)] ?? this.view?.poolInstruments.find((i) => i.index === n)?.record ?? null;
+  /** The music pool's instruments now (model.ts poolInstruments: the new ones too, those taken out emptied). */
+  get poolList(): M.PoolInstrument[] {
+    return this.view ? M.poolInstruments(this.view, this.state) : [];
   }
 
-  setRecord(n: number, label: string, f: (r: M.InstrumentRecord) => M.InstrumentRecord, key: string | null = null): void {
-    const base = this.record(n);
-    if (!base) return;
-    this.apply(`Instrument ${n}: ${label}`, (s) => {
-      const next = f(s.instruments[String(n)] ?? base);
-      return { ...s, instruments: { ...s.instruments, [String(n)]: next } };
-    }, key ? `instrument:${n}:${key}` : null);
+  /** Instrument n's record now (of the music pool or the sound-effect set): its edit, or the manifest's. */
+  record(n: number, pool: "music" | "sfx" = "music"): M.InstrumentRecord | null {
+    if (pool === "sfx") return this.state.sfxInstruments[String(n)] ?? this.view?.sfxInstruments.find((i) => i.index === n)?.record ?? null;
+    return this.poolList.find((i) => i.index === n)?.record ?? null;
   }
 
-  revertRecord(n: number): void {
-    this.apply(`Instrument ${n} as saved`, (s) => {
+  setRecord(n: number, label: string, f: (r: M.InstrumentRecord) => M.InstrumentRecord, key: string | null = null, pool: "music" | "sfx" = "music"): void {
+    const base = this.record(n, pool);
+    if (!base || (pool === "music" && this.state.deleteInstruments.includes(n))) return;
+    const field = pool === "sfx" ? "sfxInstruments" : "instruments";
+    this.apply(
+      `${pool === "sfx" ? "Sound-effect instrument" : "Instrument"} ${n}: ${label}`,
+      (s) => ({ ...s, [field]: { ...s[field], [String(n)]: f(s[field][String(n)] ?? base) } }),
+      key ? `${pool}:instrument:${n}:${key}` : null,
+    );
+  }
+
+  revertRecord(n: number, pool: "music" | "sfx" = "music"): void {
+    const field = pool === "sfx" ? "sfxInstruments" : "instruments";
+    this.apply(`${pool === "sfx" ? "Sound-effect instrument" : "Instrument"} ${n} as saved`, (s) => {
+      const records = { ...s[field] };
+      delete records[String(n)];
+      return { ...s, [field]: records };
+    });
+  }
+
+  /** The songs whose XMs name pool instrument n now (`Instrument n`): the saved ones', the instruments added to them,
+   * the new songs' read so far. */
+  instrumentSongs(n: number): string[] {
+    const out = [
+      ...(this.view?.poolInstruments.find((i) => i.index === n)?.songs ?? []),
+      ...Object.entries(this.state.songInstruments)
+        .filter(([, ns]) => ns.includes(n))
+        .map(([k]) => k),
+      ...this.state.newSongs.filter((ns) => this.patterns[ns.key]?.p.instruments.some((i) => i.pool === n)).map((ns) => ns.key),
+    ];
+    return [...new Set(out)].filter((k) => !this.state.removeSongs.includes(k)).sort();
+  }
+
+  /** A new instrument at the end of the music pool: blank, from a pool sample, or a copy of a record. */
+  newPoolInstrument(from: { sample: number } | { copy: M.InstrumentRecord } | null, label: string): void {
+    const v = this.view;
+    if (!v) return;
+    const n = M.nextInstrument(v, this.state);
+    if (n > v.limits.maxIndex) {
+      editor.error = `a pattern row names an instrument by a byte: at most ${v.limits.maxIndex}`;
+      return;
+    }
+    const rec = M.newInstrumentRecord(v, from);
+    if (this.apply(`New instrument ${n} (${label})`, (s) => ({ ...s, instruments: { ...s.instruments, [String(n)]: rec } }))) {
+      this.kind = "instrument";
+      this.instrumentPool = "music";
+      this.instrument = n;
+    }
+  }
+
+  /** Why pool instrument n can't be taken out (null if it can): a song's XM names it, it is the empty one, or it is a
+   * new one with new ones after it (they keep their numbers). */
+  cannotDeleteInstrument(n: number): string | null {
+    const list = this.poolList;
+    const it = list.find((i) => i.index === n);
+    if (!it || it.deleted || n === 0 || it.record.byte_00) return "the empty instrument stays";
+    const who = this.instrumentSongs(n);
+    if (who.length) return `${who.join(", ")} name Instrument ${n}`;
+    if (it.added && list[list.length - 1]!.index !== n) return "take the new instruments after it out first";
+    return null;
+  }
+
+  deletePoolInstrument(n: number): void {
+    const why = this.cannotDeleteInstrument(n);
+    if (why) {
+      editor.error = why;
+      return;
+    }
+    const added = this.poolList.find((i) => i.index === n)!.added;
+    this.apply(`Delete instrument ${n}`, (s) => {
       const instruments = { ...s.instruments };
       delete instruments[String(n)];
-      return { ...s, instruments };
+      return { ...s, instruments, deleteInstruments: added ? s.deleteInstruments : [...s.deleteInstruments, n] };
     });
+    const list = this.poolList;
+    if (!list.some((i) => i.index === this.instrument)) this.instrument = list[list.length - 1]?.index ?? 0;
   }
 
   /** The music pool's samples now: the saved ones less those taken out, then the new ones; {index, length, path}. */
@@ -484,7 +612,16 @@ class MusicEditorState {
 
   /** The instruments whose wave rows name sample idx, now. */
   sampleUsers(idx: number): number[] {
-    return (this.view?.poolInstruments ?? []).filter((i) => this.record(i.index)!.sample_indices.includes(idx)).map((i) => i.index);
+    return this.poolList.filter((i) => i.record.sample_indices.includes(idx)).map((i) => i.index);
+  }
+
+  /** The sound-effect set's samples (sfx_samples/NN.wav: slot N plays sample N). */
+  get sfxSamples(): { index: number; path: string; length: number; added: boolean }[] {
+    const slots = this.view?.sfxSlots ?? [];
+    return slots
+      .filter((s, i) => slots.findIndex((t) => t.sample === s.sample) === i)
+      .map((s) => ({ index: s.sample, path: s.path, length: this.state.samples[s.path]?.length ?? s.length, added: false }))
+      .sort((a, b) => a.index - b.index);
   }
 
   /** A WAV as the music pool's next sample (samples/NN.wav, NN after the pool's); returns its number. */
@@ -529,6 +666,12 @@ class MusicEditorState {
     this.playing = "instrument";
   }
 
+  /** Sound-effect instrument n played as PlaySfx plays a sound effect on it (priority 0, volume 1.0), over the song
+   * chosen for the sound effects. */
+  async playSfxInstrument(n: number): Promise<void> {
+    await this.playSfxEntry({ slot_id: n, pitch_offset: 0, volume: 256 } as unknown as M.SfxEntry & { slot_id: number }, "instrument");
+  }
+
   /** A player of the song, run on to order position `from` (GAX2 has no seek: the frames before it are mixed and dropped). */
   async songPlayer(key: string, from = 0): Promise<GaxPlayer | undefined> {
     if (!this.pool) return undefined;
@@ -556,6 +699,10 @@ class MusicEditorState {
   async playSfx(i = this.sfx): Promise<void> {
     const e = this.state.sfx.entries[i] as M.SfxEntry & { slot_id?: number; instrument?: string };
     if (!e) return;
+    await this.playSfxEntry(e, "sfx");
+  }
+
+  private async playSfxEntry(e: M.SfxEntry & { slot_id?: number; instrument?: string }, what: "sfx" | "instrument"): Promise<void> {
     const p = await this.songPlayer(this.sfxSong);
     if (!p) return;
     const slot = e.slot_id ?? this.pools().slots[e.instrument ?? ""];
@@ -579,7 +726,7 @@ class MusicEditorState {
         }
       },
     });
-    this.playing = "sfx";
+    this.playing = what;
   }
 
   /** The tree's samples read so far (sfx_samples/NN.wav, ...), as saved. */

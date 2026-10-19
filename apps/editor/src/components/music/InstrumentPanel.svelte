@@ -17,14 +17,19 @@
   let { part }: { part: "sound" | "record" } = $props();
 
   const n = $derived(mu.instrument);
-  const rec = $derived(mu.record(n));
-  const info = $derived(mu.view?.poolInstruments.find((i) => i.index === n));
-  const edited = $derived(!!mu.state.instruments[String(n)]);
+  const pool = $derived(mu.instrumentPool);
+  const sfx = $derived(pool === "sfx");
+  const rec = $derived(mu.record(n, pool));
+  const listed = $derived(sfx ? undefined : mu.poolList.find((i) => i.index === n));
+  const edited = $derived(!!(sfx ? mu.state.sfxInstruments : mu.state.instruments)[String(n)]);
+  const songs = $derived(sfx ? [] : mu.instrumentSongs(n));
+  const sfxNames = $derived(sfx ? mu.state.sfx.entries.filter((e) => (e as { slot_id?: number }).slot_id === n).map((e) => `SFX_${e.name ?? "?"}`) : []);
+  const samples = $derived(sfx ? mu.sfxSamples : mu.poolSamples);
   const marks = $derived(rec ? M.envMarks(rec) : { sustain: null, loopStart: null, loopEnd: null });
   const points = $derived(rec ? M.envPoints(rec) : []);
   const row0 = $derived(rec ? rec.samples[0] : null);
   const wave0 = $derived(rec ? rec.sample_indices[0] : 0);
-  const wavePath = $derived(wave0 ? (mu.poolSamples.find((s) => s.index === wave0)?.path ?? "") : "");
+  const wavePath = $derived(wave0 ? (samples.find((s) => s.index === wave0)?.path ?? "") : "");
   const sound = $derived(wavePath ? mu.sound(wavePath) : null);
   let note = $state(49);
   let hold = $state(16);
@@ -32,10 +37,10 @@
     if (wavePath) void mu.loadWav(wavePath);
   });
 
-  const lengthOf = (idx: number) => mu.poolSamples.find((s) => s.index === idx)?.length ?? 0;
+  const lengthOf = (idx: number) => samples.find((s) => s.index === idx)?.length ?? 0;
 
   function set(label: string, f: (r: M.InstrumentRecord) => M.InstrumentRecord, key: string | null = null) {
-    mu.setRecord(n, label, f, key);
+    mu.setRecord(n, label, f, key, pool);
   }
 
   function setRow(r: number, label: string, f: (w: M.WaveRow) => M.WaveRow, key: string | null = null) {
@@ -84,8 +89,12 @@
   <div class="empty"><p>Pick an instrument on the left.</p></div>
 {:else if part === "sound"}
   <div class="sound">
-    <h2>Instrument {n}{edited ? " (edited, not saved)" : ""}</h2>
-    <p class="hint">{rec.byte_00 ? "The empty instrument: a note on it plays nothing." : `Named "Instrument ${n}" in ${info?.songs.length ? info.songs.join(", ") : "no song's XM"}.`}</p>
+    <h2>{sfx ? "Sound-effect instrument" : "Instrument"} {n}{listed?.added ? " (new, not saved)" : listed?.deleted ? " (taken out, not saved)" : edited ? " (edited, not saved)" : ""}</h2>
+    {#if sfx}
+      <p class="hint">Slot {n} of the sound-effect set: {sfxNames.length ? `played by ${sfxNames.join(", ")}` : "no entry of the table plays it"}. A sound effect plays it at its fixed pitch on a voice, as PlaySfx does.</p>
+    {:else}
+      <p class="hint">{listed?.deleted ? "Taken out: it becomes the empty instrument (the pool's last ones leave the pool)." : rec.byte_00 ? "The empty instrument: a note on it plays nothing." : `Named "Instrument ${n}" in ${songs.length ? songs.join(", ") : "no song's XM"}.`}</p>
+    {/if}
     <h3>Volume envelope</h3>
     {#if rec.envelope}
       <EnvelopeGraph {points} sustain={marks.sustain} loopStart={marks.loopStart} loopEnd={marks.loopEnd} onchange={envelope} />
@@ -101,20 +110,24 @@
       </p>
     {/if}
     <div class="row">
-      <label>Note <select bind:value={note}>{#each noteNames as k (k)}<option value={k}>{M.noteName(k)}</option>{/each}</select></label>
-      <label title="the rows (at speed 6, 6 ticks each) before the key off">Key off after <input type="number" min="1" max="200" bind:value={hold} style="width: 4rem" /> rows</label>
+      {#if !sfx}
+        <label>Note <select bind:value={note}>{#each noteNames as k (k)}<option value={k}>{M.noteName(k)}</option>{/each}</select></label>
+        <label title="the rows (at speed 6, 6 ticks each) before the key off">Key off after <input type="number" min="1" max="200" bind:value={hold} style="width: 4rem" /> rows</label>
+      {/if}
       {#if mu.playing === "instrument"}
         <button class="primary" onclick={() => mu.stop()}>■ Stop</button>
+      {:else if sfx}
+        <button class="primary" disabled={!!problem} onclick={() => mu.playSfxInstrument(n)} title="as PlaySfx plays a sound effect on it: GAX_fx_ex on voice 0, priority 0, volume 1.0, over the song chosen in the Sound effects tab ({mu.sfxSong})">▶ Play it</button>
       {:else}
-        <button class="primary" disabled={!!problem} onclick={() => mu.playInstrument(n, note, Math.max(1, hold))} title="the note on one channel, as a song plays it (GAX2, the pool with the unsaved edits)">▶ Play the note</button>
+        <button class="primary" disabled={!!problem || !!listed?.deleted} onclick={() => mu.playInstrument(n, note, Math.max(1, hold))} title="the note on one channel, as a song plays it (GAX2, the pool with the unsaved edits)">▶ Play the note</button>
       {/if}
     </div>
   </div>
 {:else}
   <div class="panel">
     <section>
-      <h3>Instrument {n} <span class="hint">gax_manifest.json's instruments/{n}</span></h3>
-      {#if edited}<button onclick={() => mu.revertRecord(n)}>Put the saved one back</button>{/if}
+      <h3>Instrument {n} <span class="hint">{sfx ? "gax_sfx_manifest.json" : "gax_manifest.json"}'s instruments/{n}</span></h3>
+      {#if edited && !listed?.added}<button onclick={() => mu.revertRecord(n, pool)}>Put the saved one back</button>{/if}
       <div class="grid3">
         <label title="ticks before the vibrato starts">Vibrato delay <input type="number" min="0" max="255" value={rec.vibrato_delay} oninput={(e) => int(num(e.currentTarget.value), 0, 255) && set("vibrato delay", (x) => ({ ...x, vibrato_delay: num(e.currentTarget.value) }), "vd")} /></label>
         <label title="its depth: depth/64 semitones (0: none)">depth <input type="number" min="0" max="255" value={rec.vibrato_depth} oninput={(e) => int(num(e.currentTarget.value), 0, 255) && set("vibrato depth", (x) => ({ ...x, vibrato_depth: num(e.currentTarget.value) }), "vdp")} /></label>
@@ -168,7 +181,7 @@
               Sample
               <select value={idx} onchange={(e) => set(`wave row ${r + 1}'s sample`, (x) => ({ ...x, sample_indices: x.sample_indices.map((v, k) => (k === r ? Number(e.currentTarget.value) : v)) as M.InstrumentRecord["sample_indices"] }))}>
                 <option value={0}>none</option>
-                {#each mu.poolSamples as s (s.index)}<option value={s.index}>{s.index}{s.added ? " (new)" : ""} · {s.length}</option>{/each}
+                {#each samples as s (s.index)}<option value={s.index}>{s.index}{s.added ? " (new)" : ""} · {s.length}</option>{/each}
               </select>
             </label>
             <label title="the tune: semitones from the note (GAX2's tune / 32)">Relative note <input type="number" min="-1024" max="1023" value={t.note} onchange={(e) => int(num(e.currentTarget.value), -1024, 1023) && setRow(r, "tune", (x) => ({ ...x, pitch: num(e.currentTarget.value) * 32 + t.fine }))} /></label>

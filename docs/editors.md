@@ -604,10 +604,15 @@ has the SHA-1s of every song's first 1200 frames and three sound-effect
 sequences as the PC port mixes them, and of songs the editor changed
 (`tools/gax_render.py`'s `edited_body`: a ROM song restructured with
 alternating speeds and GAX2's own slides, cell edits of shared ROM
-patterns, a channel added), saved by the backend in a copy of the tree
-whose PC port renders them; the player's test plays the same edits
-unsaved, as the editor does, and host.yml renders them again with the PC
-port (`tools/gax_render.py check`).
+patterns, a channel added, a new pool instrument a ROM song's cell
+plays, a ROM song's mix rate, volume and echo taps, and
+`instrument_note`, a song of one note on the new instrument, the song
+"▶ Play the note" plays), and sound effects on an edited sound-effect
+instrument (over a level song, and over the song with the new
+settings), saved by the backend in a copy of the tree whose PC port
+renders them; the player's test plays the same edits unsaved, as the
+editor does ("▶ Play the note"'s own song too), and host.yml renders
+them again with the PC port (`tools/gax_render.py check`).
 
 **Songs.** The left column's first tab is the song table, in song id
 order (`SONG_<KEY>`), each with what plays it: a level theme, a screen,
@@ -626,8 +631,12 @@ rate.
 
 **Cells.** A cell selected (the mouse, the arrow keys; Page Up and Down
 change the order position) is edited on the right: its note (C-4, C#4,
-=== key off), instrument (the XM's: `Instrument N` is the pool's N),
-volume column, effect and parameter; Delete clears it. What GAX2 makes
+=== key off), instrument (the XM's: `Instrument N` is the pool's N; or
+any other instrument of the pool, new ones too, which the cell's song
+then names: the save adds `Instrument N` to the end of its XM's
+instruments, a name with no sample, since the build reads only the
+name; a tracker plays it silent), volume column, effect and parameter;
+Delete clears it. What GAX2 makes
 of it is shown as the build makes it (crashdata.audio.gax's XM import,
 [audio.md, "The XM's cells"](./audio.md#the-xms-cells)): the note, the
 one effect of the row (1xx, 2xx, 3xx, 7xy alternating speeds, Ax0/A0y,
@@ -664,6 +673,25 @@ structural change makes it a song built from its XM (each order
 position's pattern its own, the sharing found again by content; the
 save takes the scaffold out of the manifest), and the bar says so. A
 changed song plays as the build will build it, before it is saved.
+
+**Settings.** Under the cell, the song's settings, each change a step of
+the undo stack: a ROM song's as the manifest records them (its
+`songs` entry: the mix rate, `GaxSongData.volume` in Q8, its sound
+effects at half the mix rate, and the mixer's echo, `mixer_data_bytes`:
+the channels mixed before the echo, three taps' delay in ms and gain in
+16ths, the third tap's gain fixed at 1/16 since the ARM echo routine
+doesn't read it), a new song's in `songs/<key>.json` (the same, and the
+title and artist of the string stored after its patterns). A ROM song
+keeps its scaffold: the settings aren't its structure. The mix rate is
+one of GAX2's 12 (gGaxMixRates), the echoed channels at most the
+song's, a gain at most 255, and the work RAM `GAX2_estimate` counts for
+the channels, the mix rate and the longest echo delay must fit the
+0x2000 bytes StartSong gives GAX2 (the panel shows it); the save refuses
+the others, with the reason. The panel says what GAX2 doesn't read: the
+XM's BPM (GAX2 steps one tick a frame), `num_fx_channels` (StartSong
+asks for 3 voices) and panning (GAX2 mixes mono). The song plays with
+its new settings before it is saved; a ROM song's title string is its
+recorded bytes, shown, not edited.
 
 A new song ("Import an XM as a new song…") opens and plays before it is
 saved: the backend reads its XM and builds it, with the new instruments
@@ -723,6 +751,19 @@ ticks increasing from 0) and works out the envelope's slopes
 doesn't move keeps its recorded one). GAX2 mixes mono, so an instrument
 has no panning envelope (the record's second envelope, `unknown12`, is
 one the engine never reads), and the bytes it never reads aren't edited.
+"New" adds an instrument at the end of the pool (the next number): blank
+(one wave row with no sample yet, at 8363 Hz on C-4, cut at the key off:
+the instrument the build makes from an XM's sample), a copy of the one
+selected, or one playing a sample of the pool; any song's cell can then
+play it (`Instrument N`). "Delete" takes out an instrument no song's XM
+names: the pool's last leaves the pool, another becomes the empty
+instrument (instrument 0's record), so the numbers after it stay. The
+same tab lists the sound-effect set's instruments
+(`gax_sfx_manifest.json`: a sound effect's slot N is instrument N),
+edited with the same panel and the same checks against the set's samples,
+and played as `PlaySfx` plays a sound effect on its slot ("▶ Play it",
+over the song chosen in the Sound effects tab): an edit is heard in every
+sound effect on that slot.
 
 **Samples.** The fourth tab lists the music pool's samples (with the
 instruments and songs that play each, and those no instrument plays) and
@@ -740,18 +781,18 @@ Every change is a step of the undo stack (Ctrl+Z, Ctrl+Shift+Z or
 Ctrl+Y); Ctrl+S saves, space plays and stops. The page's address keeps
 the song (`#mode=music&song=jungle`).
 
-**Not yet / not here:** a new song's settings (`songs/<key>.json`) and
-a ROM song's (its mix rate, volume and echo taps: the "Data files" tab
-edits the manifest); a new instrument in the music pool's records (a
-new song brings its own, in its XM or as `instruments/<name>.json`, and
-an XM names a pool instrument as `Instrument N`, which the editor's cell
-panel only offers from the XM's instruments); a new song's own XM
-instruments (they come from its XM); a sound-effect instrument's record
-(`gax_sfx_manifest.json`, the "Data files" tab); the game's timing around the sound (fades, ducks,
-sound effects as the gameplay triggers them: the player plays a song or
-one sound effect, with the music volume asked for); GAX2's jingle player
-and low-pass filter, which the game doesn't use; N-Tranced's sound,
-which isn't data yet (no `games/n2/sound/`: the tab says so).
+**Not yet / not here:** a new song's own XM instruments, those that
+aren't `Instrument N` (they are made from its XM's samples and
+envelopes by the build; edit them in a tracker, or give the song a pool
+instrument); new instruments in the sound-effect set (a new sound effect
+brings its own, `instruments/<name>.json`); a panning envelope and the
+XM's BPM, which GAX2 doesn't have (it mixes mono and steps a tick a
+frame: the panels say so); the game's timing around the sound (fades,
+ducks, sound effects as the gameplay triggers them: the player plays a
+song or one sound effect, with the music volume asked for); GAX2's
+jingle player and low-pass filter, which the game doesn't use;
+N-Tranced's sound, which isn't data yet (no `games/n2/sound/`: the tab
+says so).
 
 ## The editor's backend
 
@@ -887,14 +928,26 @@ base64 WAV}` (new music pool samples, `samples/NN.wav` and the
 manifest's `samples` entry, numbered after the pool's) and
 `deleteSamples` `[NN]` (music pool samples no instrument plays, their
 WAV and entry taken out: put back like any file if the save is
-refused). Before anything is written,
+refused); an `instruments` number after the pool's is a new instrument
+(the next numbers), and `deleteInstruments` `[N]` takes out instruments
+no song's XM names (emptied, the pool's last ones removed);
+`songInstruments` `{song: [N]}` adds `Instrument N` to the song's XM
+for its cells to play; `songSettings` `{song: settings}` is a ROM
+song's `sample_rate`, `volume`, `half_rate_fx` and `mixer_data_bytes`
+in the manifest, a new song's (and its `title`, `artist`) in
+`songs/<key>.json`; `sfxInstruments` `{N: record}` is the sound-effect
+set's instrument N (`gax_sfx_manifest.json`). Before anything is written,
 the editor's own checks: the sound effects' names (one entry a name, and
 every `SFX_<NAME>` the code or a cutscene names kept), slots (the set's
 1-87) and instruments, the volumes; the screens' and themes' songs (in
 the song table); a new song's key and XM; that a ROM song stays in the
 table and a removed song isn't played; each cell (bytes, an instrument
 the module has); a sample's WAV (8-bit mono) and length, at least what
-the loops and starts of the instruments that play it reach. A refusal's
+the loops and starts of the instruments that play it reach; an
+instrument's record (crashdata.audio.pool), a new one's number, an
+instrument taken out that no song names, one added to a song that the
+pool has; a song's settings (crashdata.audio.edit.check_settings: a mix
+rate of GAX2's, the work RAM StartSong gives it). A refusal's
 diagnostics point into sfx_table.json (`/entries/12/slot_id`),
 music.json, levels.json or gax_manifest.json (`/song_table`).
 
