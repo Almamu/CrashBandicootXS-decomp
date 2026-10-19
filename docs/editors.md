@@ -221,7 +221,13 @@ mGBA comparisons use.
   makes the extra room the one played (level_pick.c). The game isn't in
   its bonus round or on its gem path then (the platform sets that): the
   player starts at the room's start marker without the warp-in, and the
-  room's exit goes on to the level's first room.
+  room's exit goes on to the level's first room. Ace of space's gem path,
+  the one `HOVER` room (room 16), stops the PC port on its first frame
+  however it is entered: the hover controller writes its camera lead's
+  speed before making the lead, and the lead is a sprite with no bank
+  that the sprite code reads through NULL in several places; on the GBA
+  those land in the BIOS area. The port doesn't cover that yet
+  ([platforms.md](./platforms.md), "Seams").
 - **In a window** the game runs paced from the level select on, and the
   keyboard or a gamepad plays it (Esc quits, F12 takes a screenshot).
 - **Headless** (`--headless`, `--out`, `--screens`, or an executable
