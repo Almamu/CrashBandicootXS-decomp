@@ -170,8 +170,12 @@ jobs:
   # The PC port under UBSan and ASan (docs/platforms.md, "Sanitizers"):
   # boot.keys and bonus.keys played headless, the pictures still mGBA's,
   # and any report fails the run (the executable exits with an error). UBSan
-  # doesn't check object sizes here: PlayCutscene reads Display::dispcnt
-  # (a halfword) as a word, as the ROM does.
+  # checks everything, object sizes too, but for the one report
+  # platform/pc/ubsan.supp drops: PlayCutscene reads Display::dispcnt (a
+  # halfword) as a word, as the ROM does. UBSan's checks are left
+  # recoverable (no -fno-sanitize-recover): an unrecoverable check prints
+  # and aborts without reading the suppressions, and halt_on_error=1 ends
+  # the run at the first report all the same.
   sanitizers:
     runs-on: ubuntu-24.04
     name: Host build (platform/pc, ${{ matrix.sanitize }})
@@ -192,14 +196,14 @@ jobs:
       run: |
         sudo sysctl vm.mmap_rnd_bits=28
         if [ "${{ matrix.sanitize }}" = undefined ]; then
-          make -j"$(nproc)" PLATFORM=pc HOST_SDL=0 SANITIZE=undefined SANITIZE_FLAGS='-fno-sanitize=object-size -fno-sanitize-recover=all'
+          make -j"$(nproc)" PLATFORM=pc HOST_SDL=0 SANITIZE=undefined
         else
           make -j"$(nproc)" PLATFORM=pc HOST_SDL=0 SANITIZE=address
         fi
 
     - name: Boot and play a bonus round
       env:
-        UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1:log_path=${{ github.workspace }}/sanitizer
+        UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1:suppressions=${{ github.workspace }}/platform/pc/ubsan.supp:log_path=${{ github.workspace }}/sanitizer
         ASAN_OPTIONS: detect_leaks=0:log_path=${{ github.workspace }}/sanitizer
       run: |
         python3 tools/boottest.py host build/pc/crashbandicootxs_pc --keys platform/pc/tests/boot.keys \

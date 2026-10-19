@@ -1,0 +1,20 @@
+# UBSan's suppressions for the pc platform (docs/platforms.md,
+# "Sanitizers"): UBSAN_OPTIONS=suppressions=platform/pc/ubsan.supp.
+# A line `CHECK:PATTERN` drops CHECK's reports in the functions (or source
+# files) PATTERN names; nothing else is dropped.
+#
+# PlayCutscene (engine/src/game/level/level_cutscene.cpp) hands
+# SetSlideshowDispcnt `*(u32 *)dispcnt`: 4 bytes of the 2-byte
+# Display::dispcnt, as the ROM reads it (an `ldr`). Only the low halfword
+# is used (gSlideshowDispcnt's, written to REG_DISPCNT), so the read is
+# left as the ROM has it, and only its object-size report is dropped.
+object-size:Game::Level::LevelState::PlayCutscene
+
+# N. Gin's airship and hovercraft (Airship::ConvertTiles,
+# airship_graphics.cpp; Hovercraft::ConvertTiles, hovercraft.cpp) walk
+# their picture's frames from the palette's address + 0x204: the picture
+# right after the 512-byte palette, back to back as in the ROM
+# (boss_pictures.cpp). The reads are past the palette object, and only
+# their object-size reports are dropped.
+object-size:Game::Vehicles::Jetpack::Airship::ConvertTiles
+object-size:Game::Bosses::Hovercraft::ConvertTiles

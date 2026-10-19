@@ -285,6 +285,8 @@ platform/pc/units/                 units built in place of engine/src/'s and lib
                                    ("The sound")
 platform/pc/libc_names.txt         the game's functions named as the C library's,
                                    and its operator new and delete
+platform/pc/ubsan.supp             UBSan's suppressions: the one report the ROM's own code
+                                   makes (see "Sanitizers")
 platform/pc/preview.keys           tools/preview.py's input: the menus to the level select
 platform/pc/tests/boot.keys        the headless boot's input (CI)
 platform/pc/tests/boot_mgba.json   mGBA's log of it (boottest.py), what CI compares
@@ -741,7 +743,7 @@ sound:
 ```
 make PLATFORM=pc SANITIZE=undefined    # UBSan
 make PLATFORM=pc SANITIZE=address      # ASan
-UBSAN_OPTIONS=print_stacktrace=1 build/pc/crashbandicootxs_pc --headless --keys platform/pc/tests/boot.keys --frames 6000
+UBSAN_OPTIONS=print_stacktrace=1:suppressions=platform/pc/ubsan.supp build/pc/crashbandicootxs_pc --headless --keys platform/pc/tests/boot.keys --frames 6000
 ```
 
 `SANITIZE_FLAGS` adds flags of its own (`-fno-sanitize=...`,
@@ -774,8 +776,19 @@ the previews, the cutscene and the sound), both clean since:
   `SetSlideshowDispcnt(*(u32 *)dispcnt)` reads 4 bytes of the 2-byte
   `Display::dispcnt`, as the ROM does (an `ldr`); the upper half is
   never used (gSlideshowDispcnt's low halfword is what is written to
-  REG_DISPCNT), so it is left, and the CI job's UBSan run doesn't check
-  object sizes (`-fno-sanitize=object-size`).
+  REG_DISPCNT), so it is left, and its report alone is dropped at run
+  time: platform/pc/ubsan.supp, UBSan's suppressions file
+  (`UBSAN_OPTIONS=suppressions=...`), drops `object-size` reports in
+  `LevelState::PlayCutscene` and in the two ConvertTiles of N. Gin's
+  airship and hovercraft, which walk their picture's frames from the
+  palette's address + 0x204 (the picture right after the palette, as in
+  the ROM; boss_pictures.cpp), and nothing else, so the CI job's UBSan run
+  checks object sizes everywhere else (it used to be built with
+  `-fno-sanitize=object-size`). The file is the platform's: the code and
+  the ROM are unchanged. A suppression only applies to a recoverable
+  check (an unrecoverable one, `-fno-sanitize-recover`, reports and
+  aborts without looking), so the job builds UBSan's checks recoverable
+  and ends the run at the first report with `halt_on_error=1`.
 - ASan: nothing beyond the two data files above (leaks aren't checked,
   `detect_leaks=0`: the game's heaps are its own).
 
