@@ -12,7 +12,7 @@
 struct HostOptions {
     u32 frames;            /* --frames N: stop after N game frames (0: never) */
     u32 vblanks;           /* --vblanks N: stop after N VBlanks (0: never) */
-    u32 checkpointEvery;   /* --checkpoint-every N (default 60) */
+    u32 checkpointEvery;   /* --checkpoint-every N (60; 0 in the window) */
     const char *keys;      /* --keys FILE: the scripted input */
     const char *dumpDir;   /* --dump DIR: the checkpoints' memory, raw */
     const char *screenDir; /* --screens DIR: the checkpoints' pictures, PNG */
