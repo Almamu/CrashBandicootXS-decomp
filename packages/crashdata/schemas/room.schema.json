@@ -364,6 +364,45 @@
         },
         {
           "$ref": "#/$defs/param_outline_crate"
+        },
+        {
+          "$ref": "#/$defs/param_n2_crate"
+        },
+        {
+          "$ref": "#/$defs/param_n2_iron_switch_crate"
+        },
+        {
+          "$ref": "#/$defs/param_n2_outline_crate"
+        },
+        {
+          "$ref": "#/$defs/param_patrol_xy"
+        },
+        {
+          "$ref": "#/$defs/param_patrol_y"
+        },
+        {
+          "$ref": "#/$defs/param_platform_group"
+        },
+        {
+          "$ref": "#/$defs/param_circle_platform"
+        },
+        {
+          "$ref": "#/$defs/param_group"
+        },
+        {
+          "$ref": "#/$defs/param_group_state"
+        },
+        {
+          "$ref": "#/$defs/param_width"
+        },
+        {
+          "$ref": "#/$defs/param_path_point"
+        },
+        {
+          "$ref": "#/$defs/param_path"
+        },
+        {
+          "$ref": "#/$defs/param_hint_text"
         }
       ]
     },
@@ -1309,6 +1348,787 @@
       ],
       "additionalProperties": false,
       "description": "an outline crate's placement: its group, its step and solidKind"
+    },
+    "param_n2_crate": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "n2_crate"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "BIT0",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "UNK6",
+              "ASSIST_AKU_AKU"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "ASSIST_CHECKPOINT",
+              "ASSIST_LIFE",
+              "SLOT_MYSTERY",
+              "SLOT_LIFE",
+              "SLOT_TNT",
+              "BIT5",
+              "BIT6",
+              "BIT7"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "unk_02": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "trial_kind": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]*$",
+              "description": "an entity type's name"
+            },
+            {
+              "type": "integer",
+              "minimum": -32768,
+              "maximum": 32767
+            }
+          ]
+        },
+        "param6": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "param7": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "N-Tranced's crate placement (CreateCrate, sub_08011C80): XS's bytes, its own bits"
+    },
+    "param_n2_iron_switch_crate": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "n2_iron_switch_crate"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "BIT0",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "UNK6",
+              "ASSIST_AKU_AKU"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "ASSIST_CHECKPOINT",
+              "ASSIST_LIFE",
+              "SLOT_MYSTERY",
+              "SLOT_LIFE",
+              "SLOT_TNT",
+              "BIT5",
+              "BIT6",
+              "BIT7"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "unk_02": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "trial_kind": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]*$",
+              "description": "an entity type's name"
+            },
+            {
+              "type": "integer",
+              "minimum": -32768,
+              "maximum": 32767
+            }
+          ]
+        },
+        "group": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "steps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "step_delay": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "N-Tranced's iron switch crate: its outline crates' group, the step count and the step delay"
+    },
+    "param_n2_outline_crate": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "n2_outline_crate"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "BIT0",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "UNK6",
+              "ASSIST_AKU_AKU"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "ASSIST_CHECKPOINT",
+              "ASSIST_LIFE",
+              "SLOT_MYSTERY",
+              "SLOT_LIFE",
+              "SLOT_TNT",
+              "BIT5",
+              "BIT6",
+              "BIT7"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "unk_02": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "trial_kind": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]*$",
+              "description": "an entity type's name"
+            },
+            {
+              "type": "integer",
+              "minimum": -32768,
+              "maximum": 32767
+            }
+          ]
+        },
+        "group": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "step": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "solid_kind": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]*$",
+              "description": "an entity type's name"
+            },
+            {
+              "type": "integer",
+              "minimum": -32768,
+              "maximum": 32767
+            }
+          ]
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "N-Tranced's outline crate: its group, its step and solidKind"
+    },
+    "param_patrol_xy": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "patrol_xy"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "range_x": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "range_y": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "N-Tranced's scarab: the X and Y ranges either side of the spawn point"
+    },
+    "param_patrol_y": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "patrol_y"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "range_y": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "N-Tranced's standing scorpion: the Y range either side of the spawn point"
+    },
+    "param_platform_group": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "platform_group"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "type": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "dist_x": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "dist_y": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "dir_x": {
+          "type": "integer",
+          "minimum": -32768,
+          "maximum": 32767
+        },
+        "dir_y": {
+          "type": "integer",
+          "minimum": -32768,
+          "maximum": 32767
+        },
+        "flag": {
+          "type": "integer",
+          "minimum": -32768,
+          "maximum": 32767
+        },
+        "group": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "N-Tranced's platforms: XS's platform view (type isn't read), and the 1-based group it is listed in (0: none)"
+    },
+    "param_circle_platform": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "circle_platform"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "type": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "radius_x": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "radius_y": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "angle": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "speed": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "N-Tranced's circling platform: its radii, start angle (degrees, steps of 45) and angular speed (type isn't read)"
+    },
+    "param_group": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "group"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "group": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "N-Tranced's grouped hazards: the 1-based group they are listed in (sub_08025DD0)"
+    },
+    "param_group_state": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "group_state"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "group": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "state": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "N-Tranced's type 67: its group, and its state (1: starts triggered, in no group)"
+    },
+    "param_width": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "width"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "N-Tranced's type 72: its box's width in pixels"
+    },
+    "param_path_point": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "path_point"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "path": {
+          "type": "integer",
+          "minimum": -128,
+          "maximum": 127
+        },
+        "action": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "index": {
+          "type": "integer",
+          "minimum": -128,
+          "maximum": 127
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "N-Tranced's path points: the path, what a follower does there (1 reverse, 2 stop) and the point's index"
+    },
+    "param_path": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "path"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "path": {
+          "type": "integer",
+          "minimum": -128,
+          "maximum": 127
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "N-Tranced's path follower: the path it follows"
+    },
+    "param_hint_text": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "hint_text"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "text": {
+          "type": "integer",
+          "minimum": -128,
+          "maximum": 127
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "N-Tranced's power hint: its UI text (0x7A + text)"
     }
   }
 }

@@ -210,8 +210,10 @@ at, in one of two forms (`crashdata.levels.params`, #1167):
   ```
 
 - **raw**: its 32-bit words, `[0, 327707]`, for a record whose meaning
-  isn't known: N-Tranced's (its entity types have no views yet), a record
-  no entity uses, one that entities of two views share.
+  isn't known: a record no entity uses, one that entities of two views
+  share, N-Tranced's types whose spawners aren't understood yet (its other
+  views are in [n_tranced.md, "Parameter
+  records"](./n_tranced.md#parameter-records)).
 
 The views are level_data.h's `struct entity_params.p` and crate.hpp's
 `struct crate_placement`, by name:

@@ -416,6 +416,41 @@ code passes; `extract-table` reads the values.
 
 Still to do for #1113: the level select, and the entity types' names.
 
+### Parameter records
+
+N-Tranced's rooms name their parameter records as XS's do
+([levels.md, "Parameter records"](./levels.md#parameter-records)), by the
+view each entity type's spawner reads: entity_types.json's `"params"`,
+set only where the disassembly shows what the spawner reads (#1167). Its
+spawners find a record as XS's do (the level at `0x02000E64`: `+8` the
+offsets, `+0xC` the records), so `tools/levels.py --levels-dir
+games/n2/data/levels name-params` named 1,229 of its 1,268 records, every
+one giving back its words (the ROM is the same). The rest stay words: 15
+of types 73, 92 and 106 (what they read isn't known: 73's flags bit 0 is
+"always active" and bit 1 "starts triggered", not XS's bits), and 24 that
+no entity uses.
+
+| view | types | what the asm shows |
+|---|---|---|
+| `flags` (XS's) | 0, 2, 3, 9, 38, 39, 46-49, 55-57, 61, 64, 65, 71, 74, 76, 77, 80, 81, 85, 89, 91, 96-101, 103, 107, 109 | the flags byte only (bits 1 and 2 the flips, as XS's; type 0 sets the player's) or nothing; the words some records carry past it (38's and 39's `[1, 0, 0, 0, 0, 0]`, ...) are never read: `"extra"` |
+| `patrol` (XS's) | 51-53, 58, 60, 63, 66, 78 (the pot carrier, scimitar guard, scorpion, spike-block mummy, mummy, sarcophagus, banana monkey, 58) | `ldr` +4 into the enemy controller's `+0x198`: the X range either side of the spawn point (`SpawnPotCarrier`, `0x0801D418`) |
+| `patrol_xy`, `patrol_y` | 62 (scarab), 108 (standing scorpion) | +4 and +8 the X and Y ranges (`+0x198`, `+0x19C`); the standing scorpion's +4 the Y range |
+| `n2_crate`, `n2_iron_switch_crate`, `n2_outline_crate` | the crates (13-31, and 50, 75, 95, 102: kinds 22-25) | `CreateCrate` (`sub_08011C80`) reads XS's bytes (+0, +1, +4, +6, +7; +8 an iron switch crate's step delay, an outline crate's solid kind), but its bits differ: flags bit 6 sets the crate's `+0x7A`, bit 7 makes a "?" or slot crate an Aku Aku crate with crate assistance (`0x08011D24`) and is a checkpoint crate's mirror; options bit 0 a checkpoint (`0x08011D74`), bit 1 a life crate, bits 2-4 a slot crate's faces |
+| `platform_group` | 33, 69, 90, 104 (platforms) | XS's platform view (+8/+0xC the distances, +0x10/+0x12 the directions, +0x14 always active; +4 isn't read) and +0x18 the 1-based group it joins (`sub_08025DD0`) |
+| `circle_platform` | 45 | +8/+0xC the radii, +0x14 the start angle in degrees (`sub_0802A3F4`'s steps of 45), +0x18 the angular speed |
+| `group`, `group_state` | 59 (rock pusher), 68, 93, 94; 67 | +4 the 1-based group (`sub_08025DD0`); 67's +8 a state (1: starts triggered, joins no group) |
+| `width` | 72 | +4 its box's width (`+0x20`, SetEntitySize's layout) |
+| `path_point`, `path` | 83, 88 | a path's points (`ldrsb` +4 the path, `ldrb` +5 what a follower does there: 1 reverse, 2 stop, `ldrsb` +6 the point) into the path table at `0x020001C8`; 88 follows path +4 |
+| `hint_text` | 105 (powers) | `ldrb` +4 + 0x7A: its UI text (GetUiText) |
+
+The crates' bit names are `crashdata.levels.params`' `N2_CRATE_FLAG_BITS`
+and `N2_CRATE_OPTION_BITS` (`BIT0`, `FLIP_X`, `FLIP_Y`, `UNK3`, `UNK4`,
+`TRIAL_KIND`, `UNK6`, `ASSIST_AKU_AKU`; `ASSIST_CHECKPOINT`,
+`ASSIST_LIFE`, `SLOT_MYSTERY`, `SLOT_LIFE`, `SLOT_TNT`, `BIT5`-`BIT7`).
+The slot faces' names assume N-Tranced's faces 1, 2 and 4 are XS's.
+`trial_kind` 27 (`TNT_CRATE` in N-Tranced's types) is the ROM's "a basic
+crate", as XS's 0x1B.
+
 ## Graphics (#1115)
 
 N-Tranced's graphics are built as XS's are (docs/graphics.md), from

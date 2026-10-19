@@ -17,7 +17,20 @@ export type ParamRecord =
   | ParamPlatform
   | ParamCrate
   | ParamIronSwitchCrate
-  | ParamOutlineCrate;
+  | ParamOutlineCrate
+  | ParamN2Crate
+  | ParamN2IronSwitchCrate
+  | ParamN2OutlineCrate
+  | ParamPatrolXy
+  | ParamPatrolY
+  | ParamPlatformGroup
+  | ParamCirclePlatform
+  | ParamGroup
+  | ParamGroupState
+  | ParamWidth
+  | ParamPathPoint
+  | ParamPath
+  | ParamHintText;
 
 /**
  * games/<game>/data/levels/<level>/<slot>/room.json (docs/levels.md, "Sources and build")
@@ -552,6 +565,360 @@ export interface ParamOutlineCrate {
   group?: number;
   step?: number;
   solid_kind?: string | number;
+  /**
+   * the record's words past the view, which nothing names yet
+   *
+   * @minItems 1
+   */
+  extra?: [number, ...number[]];
+}
+/**
+ * N-Tranced's crate placement (CreateCrate, sub_08011C80): XS's bytes, its own bits
+ */
+export interface ParamN2Crate {
+  layout: "n2_crate";
+  /**
+   * the byte's bits, by name
+   */
+  flags?: ("BIT0" | "FLIP_X" | "FLIP_Y" | "UNK3" | "UNK4" | "TRIAL_KIND" | "UNK6" | "ASSIST_AKU_AKU")[];
+  /**
+   * the byte's bits, by name
+   */
+  options?: (
+    "ASSIST_CHECKPOINT" | "ASSIST_LIFE" | "SLOT_MYSTERY" | "SLOT_LIFE" | "SLOT_TNT" | "BIT5" | "BIT6" | "BIT7"
+  )[];
+  unk_02?: number;
+  trial_kind?: string | number;
+  param6?: number;
+  param7?: number;
+  /**
+   * the record's words past the view, which nothing names yet
+   *
+   * @minItems 1
+   */
+  extra?: [number, ...number[]];
+}
+/**
+ * N-Tranced's iron switch crate: its outline crates' group, the step count and the step delay
+ */
+export interface ParamN2IronSwitchCrate {
+  layout: "n2_iron_switch_crate";
+  /**
+   * the byte's bits, by name
+   */
+  flags?: ("BIT0" | "FLIP_X" | "FLIP_Y" | "UNK3" | "UNK4" | "TRIAL_KIND" | "UNK6" | "ASSIST_AKU_AKU")[];
+  /**
+   * the byte's bits, by name
+   */
+  options?: (
+    "ASSIST_CHECKPOINT" | "ASSIST_LIFE" | "SLOT_MYSTERY" | "SLOT_LIFE" | "SLOT_TNT" | "BIT5" | "BIT6" | "BIT7"
+  )[];
+  unk_02?: number;
+  trial_kind?: string | number;
+  group?: number;
+  steps?: number;
+  step_delay?: number;
+  /**
+   * the record's words past the view, which nothing names yet
+   *
+   * @minItems 1
+   */
+  extra?: [number, ...number[]];
+}
+/**
+ * N-Tranced's outline crate: its group, its step and solidKind
+ */
+export interface ParamN2OutlineCrate {
+  layout: "n2_outline_crate";
+  /**
+   * the byte's bits, by name
+   */
+  flags?: ("BIT0" | "FLIP_X" | "FLIP_Y" | "UNK3" | "UNK4" | "TRIAL_KIND" | "UNK6" | "ASSIST_AKU_AKU")[];
+  /**
+   * the byte's bits, by name
+   */
+  options?: (
+    "ASSIST_CHECKPOINT" | "ASSIST_LIFE" | "SLOT_MYSTERY" | "SLOT_LIFE" | "SLOT_TNT" | "BIT5" | "BIT6" | "BIT7"
+  )[];
+  unk_02?: number;
+  trial_kind?: string | number;
+  group?: number;
+  step?: number;
+  solid_kind?: string | number;
+  /**
+   * the record's words past the view, which nothing names yet
+   *
+   * @minItems 1
+   */
+  extra?: [number, ...number[]];
+}
+/**
+ * N-Tranced's scarab: the X and Y ranges either side of the spawn point
+ */
+export interface ParamPatrolXy {
+  layout: "patrol_xy";
+  /**
+   * the byte's bits, by name
+   */
+  flags?: (
+    | "EXIT_MIRROR"
+    | "FLIP_X"
+    | "FLIP_Y"
+    | "UNK3"
+    | "UNK4"
+    | "TRIAL_KIND"
+    | "ASSIST_AKU_AKU"
+    | "ASSIST_CHECKPOINT"
+  )[];
+  range_x?: number;
+  range_y?: number;
+  /**
+   * the record's words past the view, which nothing names yet
+   *
+   * @minItems 1
+   */
+  extra?: [number, ...number[]];
+}
+/**
+ * N-Tranced's standing scorpion: the Y range either side of the spawn point
+ */
+export interface ParamPatrolY {
+  layout: "patrol_y";
+  /**
+   * the byte's bits, by name
+   */
+  flags?: (
+    | "EXIT_MIRROR"
+    | "FLIP_X"
+    | "FLIP_Y"
+    | "UNK3"
+    | "UNK4"
+    | "TRIAL_KIND"
+    | "ASSIST_AKU_AKU"
+    | "ASSIST_CHECKPOINT"
+  )[];
+  range_y?: number;
+  /**
+   * the record's words past the view, which nothing names yet
+   *
+   * @minItems 1
+   */
+  extra?: [number, ...number[]];
+}
+/**
+ * N-Tranced's platforms: XS's platform view (type isn't read), and the 1-based group it is listed in (0: none)
+ */
+export interface ParamPlatformGroup {
+  layout: "platform_group";
+  /**
+   * the byte's bits, by name
+   */
+  flags?: (
+    | "EXIT_MIRROR"
+    | "FLIP_X"
+    | "FLIP_Y"
+    | "UNK3"
+    | "UNK4"
+    | "TRIAL_KIND"
+    | "ASSIST_AKU_AKU"
+    | "ASSIST_CHECKPOINT"
+  )[];
+  type?: number;
+  dist_x?: number;
+  dist_y?: number;
+  dir_x?: number;
+  dir_y?: number;
+  flag?: number;
+  group?: number;
+  /**
+   * the record's words past the view, which nothing names yet
+   *
+   * @minItems 1
+   */
+  extra?: [number, ...number[]];
+}
+/**
+ * N-Tranced's circling platform: its radii, start angle (degrees, steps of 45) and angular speed (type isn't read)
+ */
+export interface ParamCirclePlatform {
+  layout: "circle_platform";
+  /**
+   * the byte's bits, by name
+   */
+  flags?: (
+    | "EXIT_MIRROR"
+    | "FLIP_X"
+    | "FLIP_Y"
+    | "UNK3"
+    | "UNK4"
+    | "TRIAL_KIND"
+    | "ASSIST_AKU_AKU"
+    | "ASSIST_CHECKPOINT"
+  )[];
+  type?: number;
+  radius_x?: number;
+  radius_y?: number;
+  angle?: number;
+  speed?: number;
+  /**
+   * the record's words past the view, which nothing names yet
+   *
+   * @minItems 1
+   */
+  extra?: [number, ...number[]];
+}
+/**
+ * N-Tranced's grouped hazards: the 1-based group they are listed in (sub_08025DD0)
+ */
+export interface ParamGroup {
+  layout: "group";
+  /**
+   * the byte's bits, by name
+   */
+  flags?: (
+    | "EXIT_MIRROR"
+    | "FLIP_X"
+    | "FLIP_Y"
+    | "UNK3"
+    | "UNK4"
+    | "TRIAL_KIND"
+    | "ASSIST_AKU_AKU"
+    | "ASSIST_CHECKPOINT"
+  )[];
+  group?: number;
+  /**
+   * the record's words past the view, which nothing names yet
+   *
+   * @minItems 1
+   */
+  extra?: [number, ...number[]];
+}
+/**
+ * N-Tranced's type 67: its group, and its state (1: starts triggered, in no group)
+ */
+export interface ParamGroupState {
+  layout: "group_state";
+  /**
+   * the byte's bits, by name
+   */
+  flags?: (
+    | "EXIT_MIRROR"
+    | "FLIP_X"
+    | "FLIP_Y"
+    | "UNK3"
+    | "UNK4"
+    | "TRIAL_KIND"
+    | "ASSIST_AKU_AKU"
+    | "ASSIST_CHECKPOINT"
+  )[];
+  group?: number;
+  state?: number;
+  /**
+   * the record's words past the view, which nothing names yet
+   *
+   * @minItems 1
+   */
+  extra?: [number, ...number[]];
+}
+/**
+ * N-Tranced's type 72: its box's width in pixels
+ */
+export interface ParamWidth {
+  layout: "width";
+  /**
+   * the byte's bits, by name
+   */
+  flags?: (
+    | "EXIT_MIRROR"
+    | "FLIP_X"
+    | "FLIP_Y"
+    | "UNK3"
+    | "UNK4"
+    | "TRIAL_KIND"
+    | "ASSIST_AKU_AKU"
+    | "ASSIST_CHECKPOINT"
+  )[];
+  width?: number;
+  /**
+   * the record's words past the view, which nothing names yet
+   *
+   * @minItems 1
+   */
+  extra?: [number, ...number[]];
+}
+/**
+ * N-Tranced's path points: the path, what a follower does there (1 reverse, 2 stop) and the point's index
+ */
+export interface ParamPathPoint {
+  layout: "path_point";
+  /**
+   * the byte's bits, by name
+   */
+  flags?: (
+    | "EXIT_MIRROR"
+    | "FLIP_X"
+    | "FLIP_Y"
+    | "UNK3"
+    | "UNK4"
+    | "TRIAL_KIND"
+    | "ASSIST_AKU_AKU"
+    | "ASSIST_CHECKPOINT"
+  )[];
+  path?: number;
+  action?: number;
+  index?: number;
+  /**
+   * the record's words past the view, which nothing names yet
+   *
+   * @minItems 1
+   */
+  extra?: [number, ...number[]];
+}
+/**
+ * N-Tranced's path follower: the path it follows
+ */
+export interface ParamPath {
+  layout: "path";
+  /**
+   * the byte's bits, by name
+   */
+  flags?: (
+    | "EXIT_MIRROR"
+    | "FLIP_X"
+    | "FLIP_Y"
+    | "UNK3"
+    | "UNK4"
+    | "TRIAL_KIND"
+    | "ASSIST_AKU_AKU"
+    | "ASSIST_CHECKPOINT"
+  )[];
+  path?: number;
+  /**
+   * the record's words past the view, which nothing names yet
+   *
+   * @minItems 1
+   */
+  extra?: [number, ...number[]];
+}
+/**
+ * N-Tranced's power hint: its UI text (0x7A + text)
+ */
+export interface ParamHintText {
+  layout: "hint_text";
+  /**
+   * the byte's bits, by name
+   */
+  flags?: (
+    | "EXIT_MIRROR"
+    | "FLIP_X"
+    | "FLIP_Y"
+    | "UNK3"
+    | "UNK4"
+    | "TRIAL_KIND"
+    | "ASSIST_AKU_AKU"
+    | "ASSIST_CHECKPOINT"
+  )[];
+  text?: number;
   /**
    * the record's words past the view, which nothing names yet
    *

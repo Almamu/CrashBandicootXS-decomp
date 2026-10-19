@@ -14,7 +14,11 @@ crate.hpp's `struct crate_placement`. In room.json a record is either
   "param6": 5, "param7": 0}`.
 
 Which view an entity type's spawner reads is entity_types.json's
-"params" (LAYOUTS below, by name). The named form holds the record's
+"params" (LAYOUTS below, by name). N-Tranced's spawners read some of XS's
+views (its patrolling enemies' `patrol`, the `flags` byte) and views of
+their own, named from its assembly (N2_LAYOUTS below; docs/n_tranced.md,
+"Parameter records"): its crates' bytes are XS's, but their flag and
+option bits mean other things, so they have views of their own. The named form holds the record's
 bytes exactly: the fields in order (a record may end before the view
 does, at a field's end rounded up to a word: the ROM's records are as
 long as what their entities read), every byte the view doesn't name
@@ -36,10 +40,21 @@ import struct
 FLAG_BITS = ["EXIT_MIRROR", "FLIP_X", "FLIP_Y", "UNK3", "UNK4", "TRIAL_KIND", "ASSIST_AKU_AKU", "ASSIST_CHECKPOINT"]
 # A crate placement's options byte (CRATE_PLACEMENT_OPTION_*, crate.hpp).
 OPTION_BITS = ["ASSIST_LIFE", "SLOT_MYSTERY", "SLOT_LIFE", "SLOT_TNT", "BIT4", "BIT5", "BIT6", "BIT7"]
+# N-Tranced's crate placement bits (its CreateCrate, sub_08011C80 in
+# games/n2/asm/code_08011C80.s): the flags' bits 1, 2 and 5 are XS's (the
+# flips, the time-trial kind); bit 6 sets the crate's +0x7A (BreakCrate
+# reads it; what for isn't known), bit 7 turns a "?" or slot crate into an
+# Aku Aku crate with crate assistance (XS's bit 6) and is a checkpoint
+# crate's respawn mirror. The options: bit 0 a checkpoint, bit 1 a life
+# crate with crate assistance; bits 2-4 a slot crate's faces (XS's 1-3).
+N2_CRATE_FLAG_BITS = ["BIT0", "FLIP_X", "FLIP_Y", "UNK3", "UNK4", "TRIAL_KIND", "UNK6", "ASSIST_AKU_AKU"]
+N2_CRATE_OPTION_BITS = ["ASSIST_CHECKPOINT", "ASSIST_LIFE", "SLOT_MYSTERY", "SLOT_LIFE", "SLOT_TNT",
+                        "BIT5", "BIT6", "BIT7"]
 
 # A field: (name, byte offset, kind). The kinds: a struct format letter
-# (B, H, h, I, i: u8, u16, s16, u32, s32), "flags"/"options" (a byte as
-# the list of its bits' names) or "entity" (an s16 entity type: its name in
+# (B, b, H, h, I, i: u8, s8, u16, s16, u32, s32), "flags"/"options" (a byte as
+# the list of its bits' names; "n2_crate_flags"/"n2_crate_options",
+# N-Tranced's crates') or "entity" (an s16 entity type: its name in
 # entity_types.json, or its number).
 _FLAGS = ("flags", 0, "flags")
 _CRATE = [_FLAGS, ("options", 1, "options"), ("unk_02", 2, "H"), ("trial_kind", 4, "entity"),
@@ -87,8 +102,55 @@ LAYOUTS = {
                       "size": 10, "about": "an outline crate's placement: its group, its step and solidKind"},
 }
 
-_FMT = {"B": "<B", "H": "<H", "h": "<h", "I": "<I", "i": "<i", "flags": "<B", "options": "<B", "entity": "<h"}
-_BITS = {"flags": FLAG_BITS, "options": OPTION_BITS}
+
+# N-Tranced's views (#1167), each from what its spawners read in
+# games/n2/asm (the record at params + paramOffsets[param], through the
+# level at 0x02000E64, as XS's): docs/n_tranced.md, "Parameter records",
+# gives each one's evidence. Its types that read only the flags byte (or
+# nothing) and its patrolling enemies (the X range either side, `ldr` +4
+# into the controller's +0x198) use XS's "flags" and "patrol".
+_N2_CRATE = [("flags", 0, "n2_crate_flags"), ("options", 1, "n2_crate_options"), ("unk_02", 2, "H"),
+             ("trial_kind", 4, "entity"), ("param6", 6, "B"), ("param7", 7, "B")]
+N2_LAYOUTS = {
+    "n2_crate": {"fields": _N2_CRATE, "size": 8,
+                 "about": "N-Tranced's crate placement (CreateCrate, sub_08011C80): XS's bytes, its own bits"},
+    "n2_iron_switch_crate": {"fields": _N2_CRATE[:4] + [("group", 6, "B"), ("steps", 7, "B"), ("step_delay", 8, "B")],
+                             "size": 9, "about": "N-Tranced's iron switch crate: its outline crates' group, the "
+                                                 "step count and the step delay"},
+    "n2_outline_crate": {"fields": _N2_CRATE[:4] + [("group", 6, "B"), ("step", 7, "B"), ("solid_kind", 8, "entity")],
+                         "size": 10, "about": "N-Tranced's outline crate: its group, its step and solidKind"},
+    "patrol_xy": {"fields": [_FLAGS, ("range_x", 4, "i"), ("range_y", 8, "i")], "size": 12,
+                  "about": "N-Tranced's scarab: the X and Y ranges either side of the spawn point"},
+    "patrol_y": {"fields": [_FLAGS, ("range_y", 4, "i")], "size": 8,
+                 "about": "N-Tranced's standing scorpion: the Y range either side of the spawn point"},
+    "platform_group": {"fields": [_FLAGS, ("type", 4, "I"), ("dist_x", 8, "i"), ("dist_y", 12, "i"),
+                                  ("dir_x", 16, "h"), ("dir_y", 18, "h"), ("flag", 20, "h"), ("group", 24, "i")],
+                       "size": 28, "about": "N-Tranced's platforms: XS's platform view (type isn't read), and the "
+                                            "1-based group it is listed in (0: none)"},
+    "circle_platform": {"fields": [_FLAGS, ("type", 4, "I"), ("radius_x", 8, "i"), ("radius_y", 12, "i"),
+                                   ("angle", 20, "i"), ("speed", 24, "i")], "size": 28,
+                        "about": "N-Tranced's circling platform: its radii, start angle (degrees, steps of 45) and "
+                                 "angular speed (type isn't read)"},
+    "group": {"fields": [_FLAGS, ("group", 4, "i")], "size": 8,
+              "about": "N-Tranced's grouped hazards: the 1-based group they are listed in (sub_08025DD0)"},
+    "group_state": {"fields": [_FLAGS, ("group", 4, "i"), ("state", 8, "B")], "size": 9,
+                    "about": "N-Tranced's type 67: its group, and its state (1: starts triggered, in no group)"},
+    "width": {"fields": [_FLAGS, ("width", 4, "i")], "size": 8,
+              "about": "N-Tranced's type 72: its box's width in pixels"},
+    "path_point": {"fields": [_FLAGS, ("path", 4, "b"), ("action", 5, "B"), ("index", 6, "b")], "size": 7,
+                   "about": "N-Tranced's path points: the path, what a follower does there (1 reverse, 2 stop) "
+                            "and the point's index"},
+    "path": {"fields": [_FLAGS, ("path", 4, "b")], "size": 5,
+             "about": "N-Tranced's path follower: the path it follows"},
+    "hint_text": {"fields": [_FLAGS, ("text", 4, "b")], "size": 5,
+                  "about": "N-Tranced's power hint: its UI text (0x7A + text)"},
+}
+LAYOUTS.update(N2_LAYOUTS)
+
+_FMT = {"B": "<B", "b": "<b", "H": "<H", "h": "<h", "I": "<I", "i": "<i", "flags": "<B", "options": "<B",
+        "n2_crate_flags": "<B", "n2_crate_options": "<B", "entity": "<h"}
+_BITS = {"flags": FLAG_BITS, "options": OPTION_BITS, "n2_crate_flags": N2_CRATE_FLAG_BITS,
+         "n2_crate_options": N2_CRATE_OPTION_BITS}
 
 
 def _size(kind):
@@ -206,7 +268,7 @@ def record_schemas(S):
                 props[name] = S.any_of(S.string(r"^[A-Z][A-Z0-9_]*$", description="an entity type's name"),
                                        S.integer(S.S16))
             else:
-                lo, hi = {"B": S.U8, "H": S.U16, "h": S.S16, "I": S.U32, "i": S.S32}[kind]
+                lo, hi = {"B": S.U8, "b": (-0x80, 0x7F), "H": S.U16, "h": S.S16, "I": S.U32, "i": S.S32}[kind]
                 props[name] = S.integer(lo, hi)
         props["extra"] = S.array(S.integer(S.U32), min_items=1,
                                  description="the record's words past the view, which nothing names yet")
