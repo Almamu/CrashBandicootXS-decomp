@@ -48,7 +48,13 @@ def instrument():
 
 
 def gax_manifest():
-    song = S.obj(dict(song_info(), **{
+    from crashdata.audio import gax as G
+
+    # a song's settings as GAX2 plays them (the music editor edits them): one of its mix rates, the
+    # sound effects at half rate or not
+    settings = {"sample_rate": S.enum(G.GAX_MIX_RATES, description="the mix rate, Hz (gGaxMixRates)"),
+                "half_rate_fx": S.integer(0, 1, description="the sound-effect voices mixed at half the mix rate")}
+    song = S.obj(dict(song_info(), **settings, **{
         "num_items": S.integer(S.U16), "unk_ptr_is_null": S.boolean(), "no_pool": S.boolean(),
         "mixer_data_bytes": S.array(S.integer(S.U8), length=28, description="the mixer's echo taps"),
         "channel_transposes": S.array(S.array(S.integer(-0x8000, 0xFFFF))),

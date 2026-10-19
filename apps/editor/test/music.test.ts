@@ -31,7 +31,7 @@ interface Reference {
   frames: number;
   songs: Record<string, string>;
   sfx: { song: string; musicVolume?: number; frames: number; events: [number, number, number, number, number][]; sha1: string }[];
-  edited?: { songs: Record<string, string> };
+  edited?: { songs: Record<string, string>; sfx?: { song: string; musicVolume?: number; frames: number; events: [number, number, number, number, number][]; sha1: string }[] };
 }
 
 const ref = JSON.parse(readFileSync(join(__dirname, "gax_reference.json"), "utf8")) as Reference;
@@ -84,6 +84,30 @@ describe("the player", () => {
       // and they are edited: not the song as it was
       expect(got).not.toBe(ref.songs[key]);
     }
+    // the edited sound-effect instrument, over jungle and over warp_room with its edited settings
+    for (const s of ref.edited!.sfx ?? []) {
+      const p = new GaxPlayer(edited.pool.tables, decodePool(edited.pool.music), decodePool(edited.pool.sfx), edited.songs[s.song] ?? data.songs[s.song]!);
+      if (s.musicVolume !== undefined) p.setMusicVolume(-1, s.musicVolume);
+      const out = new Int8Array(s.frames * p.frames);
+      for (let f = 0; f < s.frames; f++) {
+        for (const [at, slot, voice, prio, vol] of s.events) {
+          if (at !== f) continue;
+          p.fx(slot, voice, prio, -1);
+          p.setFxVolume(voice, vol);
+        }
+        p.frame(out.subarray(f * p.frames, (f + 1) * p.frames));
+      }
+      expect([s.song, sha1(out)]).toEqual([s.song, s.sha1]);
+    }
+    // "Play the note": the one-channel song the editor makes for a new pool instrument, as the PC port plays the
+    // song of that note the backend built (tools/gax_render.py note_xm)
+    const note = python<{ n: number; note: number; hold: number; rows: number }>(
+      `from buildtools import gax_render as R\nb = R.edited_body(".")\nprint(json.dumps({"n": b["songInstruments"]["cutscenes"][0], "note": R.NOTE, "hold": R.NOTE_HOLD, "rows": R.NOTE_ROWS}))`,
+    );
+    const p = new GaxPlayer(edited.pool.tables, decodePool(edited.pool.music), decodePool(edited.pool.sfx), M.instrumentSong(note.n, note.note, note.hold, note.rows));
+    const out = p.render(ref.frames);
+    expect(out.some((v) => v !== 0)).toBe(true);
+    expect(sha1(out)).toBe(ref.edited!.songs.instrument_note);
   });
 
   it("follows the song's position: order, row, speed, loop", () => {
@@ -225,6 +249,64 @@ describe("the music pool's instruments", () => {
     const p = new GaxPlayer(data.pool.tables, decodePool(data.pool.music), decodePool(data.pool.sfx), song);
     const out = p.render(60);
     expect(out.some((v) => v !== 0)).toBe(true);
+  });
+});
+
+describe("new pool instruments, a song's settings", () => {
+  const view = python<MusicView>(`print(json.dumps(E.view(g)))`);
+  const sfx = JSON.parse(readFileSync(join(ROOT, "games/xs/sound/sfx_table.json"), "utf8"));
+  const music = JSON.parse(readFileSync(join(ROOT, "games/xs/sound/music.json"), "utf8"));
+  const s0 = M.initialState(view, sfx, music);
+  const top = Math.max(...view.poolInstruments.map((i) => i.index));
+
+  it("number new instruments after the pool's; one taken out is emptied, the last ones leave", () => {
+    expect(M.nextInstrument(view, s0)).toBe(top + 1);
+    const copy = M.newInstrumentRecord(view, { copy: view.poolInstruments[7]!.record });
+    const fromSample = M.newInstrumentRecord(view, { sample: 6 });
+    expect(fromSample.sample_indices).toEqual([6, 0, 0, 0]);
+    const s1 = { ...s0, instruments: { [String(top + 1)]: copy, [String(top + 2)]: fromSample } };
+    expect(M.nextInstrument(view, s1)).toBe(top + 3);
+    const list = M.poolInstruments(view, { ...s1, deleteInstruments: [26] });
+    expect(list.map((i) => i.index).slice(-3)).toEqual([top, top + 1, top + 2]);
+    expect(list.find((i) => i.index === 26)!.record).toEqual(view.instrumentTemplates.empty);
+    // the pool's last taken out: it leaves the pool
+    expect(M.poolInstruments(view, { ...s0, deleteInstruments: [top] }).length).toBe(top);
+    // what the backend makes of the same edits
+    const py = python<{ len: number; empty: number }>(
+      `b = json.loads(${JSON.stringify(JSON.stringify({ instruments: s1.instruments, deleteInstruments: [26] }))})\np = E.player_pool(g, b)\nprint(json.dumps({"len": len(p["music"]["instruments"]), "empty": p["music"]["instruments"][26]["empty"]}))`,
+    );
+    expect(py).toEqual({ len: top + 3, empty: 1 });
+    const b = M.saveBody(s0, { ...s1, deleteInstruments: [26], songInstruments: { intro: [top + 1] } });
+    expect([Object.keys(b.instruments ?? {}), b.deleteInstruments, b.songInstruments]).toEqual([[String(top + 1), String(top + 2)], [26], { intro: [top + 1] }]);
+  });
+
+  it("add a pool instrument to a song's XM instruments", () => {
+    const p = python<MusicPatterns>(`print(json.dumps(E.patterns(g, "intro")))`);
+    const list = M.songInstruments(p, [top]);
+    expect(list.slice(-1)).toEqual([{ name: `Instrument ${top}`, pool: top, added: true }]);
+    expect(list.length).toBe(p.instruments.length + 1);
+  });
+
+  it("check a song's settings as the backend does: GAX2's mix rates, its work RAM, the echo", () => {
+    const jungle = view.songs.find((s) => s.key === "jungle")!;
+    const st: M.SongSettings = { sample_rate: jungle.settings!.sample_rate, volume: jungle.settings!.volume, half_rate_fx: jungle.settings!.half_rate_fx, mixer_data_bytes: jungle.settings!.mixer_data_bytes };
+    expect(M.settingsProblem(st, 4, view)).toBeNull();
+    expect(M.workSize(4, st.sample_rate, st.half_rate_fx, st.mixer_data_bytes, view.mixRates)).toBe(jungle.workSize);
+    const taps = [3, 40, 10, 15, 6, 0, 0];
+    expect(M.echoTaps(M.withEchoTaps(taps))).toEqual(taps);
+    const cases: [number, number, number, number[]][] = [
+      [4, 18158, 1, taps],
+      [7, 42049, 0, [4, 120, 9, 0, 0, 0, 0]],
+      [16, 42049, 1, [0, 100, 8, 0, 0, 0, 0]],
+      [2, 5735, 0, [0, 0, 0, 0, 0, 0, 0]],
+    ];
+    const py = python<number[]>(`import struct\nprint(json.dumps([G.work_size(c, r, h, list(struct.pack("<7I", *t))) for c, r, h, t in ${JSON.stringify(cases)}]))`);
+    expect(cases.map(([c, r, h, t]) => M.workSize(c, r, h, M.withEchoTaps(t), view.mixRates))).toEqual(py);
+    expect(M.settingsProblem({ ...st, sample_rate: 22050 }, 4, view)).toMatch(/mixes at/);
+    expect(M.settingsProblem({ ...st, mixer_data_bytes: M.withEchoTaps([5, 10, 8, 0, 0, 0, 0]) }, 4, view)).toMatch(/channels/);
+    expect(M.settingsProblem({ ...st, sample_rate: 42049, mixer_data_bytes: M.withEchoTaps([4, 500, 8, 0, 0, 0, 0]) }, 4, view)).toMatch(/work RAM/);
+    const b = M.saveBody(s0, { ...s0, songSettings: { jungle: { ...st, volume: 300 } } });
+    expect(b.songSettings).toEqual({ jungle: { ...st, volume: 300 } });
   });
 });
 

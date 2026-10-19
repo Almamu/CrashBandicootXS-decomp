@@ -32,6 +32,7 @@ import json
 import os
 import re
 import shutil
+import struct
 import subprocess
 import sys
 import tempfile
@@ -108,6 +109,29 @@ def _cells(edits, buf, layout, pi):
     return cells
 
 
+# "Play the note" (the Instruments tab): a one-channel song with a note on a pool instrument and a key off after
+# HOLD rows, ROWS rows at speed 6 (apps/editor's model.ts instrumentSong). The reference has it as a new song the
+# backend builds from an XM of that note (note_xm), which the PC port renders.
+NOTE, NOTE_HOLD, NOTE_ROWS = 49, 16, 40
+NOTE_SONG = "instrument_note"
+
+
+def note_xm(instrument, note=NOTE, hold=NOTE_HOLD, rows=NOTE_ROWS):
+    """An XM of one channel and one pattern: `note` on the pool's `Instrument N` on its first row, a key off on row
+    `hold`, `rows` rows, speed 6, looping to its start."""
+    from crashdata.audio import edit as E
+
+    cells = bytearray(rows * E.CELL)
+    cells[0:2] = bytes([note, 1])
+    cells[hold * E.CELL] = E.XM_KEY_OFF
+    packed = E.pack_cells(bytes(cells))
+    head = b"Extended Module: " + NOTE_SONG.encode().ljust(20, b"\0") + b"\x1a" + b"the music editor".ljust(20)
+    head += struct.pack("<HI", 0x104, 276) + struct.pack("<8H", 1, 0, 1, 1, 1, 1, 6, 125) + bytes(256)
+    pattern = struct.pack("<IBHH", 9, 0, rows, len(packed)) + packed
+    ins = struct.pack("<I22sBH", 29, b"Instrument %d" % instrument, 0, 0)
+    return head + pattern + ins
+
+
 def edited_body(root):
     """The music editor's edits of the reference's edited songs, as a save
     sends them (the tree at root's XMs, unedited, are their base):
@@ -123,7 +147,16 @@ def edited_body(root):
     - the music pool, heard in jungle: instrument 43 (its drum) with a new
       volume envelope and tuned 2 semitones up; a new sample (a buzz,
       looped forward) for instrument 28, with a vibrato; the sample 28
-      played before, which no other instrument plays, taken out."""
+      played before, which no other instrument plays, taken out;
+    - a new pool instrument (the pool's next: sample 6 looped forward, a
+      vibrato and a decaying envelope) played by cutscenes, which has it
+      added to its XM's instruments, on its first row; and by
+      instrument_note, a new song of that one note (note_xm: what "Play
+      the note" plays);
+    - warp_room's settings: mix rate 26760 Hz, volume 300, its sound
+      effects at half rate and longer echo taps;
+    - the sound-effect set's instrument 31 retuned with a new envelope
+      (EDITED_SFX plays it)."""
     from crashdata.audio import edit as E
 
     songs = os.path.join(root, "games", "xs", "sound", "songs")
@@ -164,14 +197,45 @@ def edited_body(root):
     lead["sample_indices"][0] = nxt
     lead["samples"][0].update(byte_02=0, is_bidirectional=False, start_position=0, loop_start=200, loop_end=1800)
     lead["vibrato_depth"], lead["vibrato_speed"] = 30, 10
+    # a new pool instrument: sample 6 (instrument 7's) looped forward, a vibrato, a decaying envelope
+    new = max(int(k) for k in manifest["instruments"]) + 1
+    from crashdata.audio import pool as P
+
+    ins = P.blank_instrument(6)
+    ins["samples"][0].update(loop_start=7282, loop_end=11523)
+    ins["vibrato_delay"], ins["vibrato_depth"], ins["vibrato_speed"] = 6, 24, 6
+    ins["envelope"] = {"sustain": 1, "loop_start": None, "loop_end": None,
+                       "points": [{"x": 0, "y": 255}, {"x": 20, "y": 180}, {"x": 60, "y": 0}]}
+    cutscenes = E.xm_instrument_names(read("cutscenes"))
+    # the sound-effect set's instrument 31: tuned up 3 semitones, a new envelope
+    with open(os.path.join(root, "games", "xs", "sound", "gax_sfx_manifest.json")) as f:
+        sfx = json.load(f)
+    s31 = json.loads(json.dumps(sfx["instruments"]["31"]))
+    s31["samples"][0]["pitch"] += 96
+    s31["envelope"] = {"sustain": None, "loop_start": None, "loop_end": None,
+                       "points": [{"x": 0, "y": 255}, {"x": 12, "y": 60}, {"x": 40, "y": 0}]}
     return {
         "structures": {"drums": st, "main_menu_japan": japan},
         "patterns": {"jungle": [{"pattern": 0, "row": 0, "channel": 0, "cell": [14, 1, 0, 7, 0x64]},
-                                {"pattern": 2, "row": 6, "channel": 1, "cell": [0, 0, 1, 11, 0x40]}]},
-        "instruments": {"43": drum, "28": lead},
+                                {"pattern": 2, "row": 6, "channel": 1, "cell": [0, 0, 1, 11, 0x40]}],
+                     "cutscenes": [{"pattern": 0, "row": 0, "channel": 0, "cell": [49, len(cutscenes) + 1, 0, 0, 0]}]},
+        "instruments": {"43": drum, "28": lead, str(new): ins},
         "newSamples": {str(nxt): E._b64(E.wav_bytes([b - 256 if b > 127 else b for b in buzz], 16000))},
         "deleteSamples": [gone],
+        "songInstruments": {"cutscenes": [new]},
+        "newSongs": [{"key": NOTE_SONG, "xm": E._b64(note_xm(new)), "comment": "the music editor's note test"}],
+        "songSettings": {"warp_room": {"sample_rate": 26760, "volume": 300, "half_rate_fx": 1,
+                                       "mixer_data_bytes": list(struct.pack("<7I", 4, 45, 9, 25, 5, 30, 0))}},
+        "sfxInstruments": {"31": s31},
     }
+
+
+# the edited tree's sound effects: instrument 31 (edited) and 9 (as it was) over jungle, its music muted, and over
+# warp_room (edited settings) with its music
+EDITED_SFX = [
+    {"song": "jungle", "musicVolume": 0, "frames": 300, "events": [[10, 31, 0, 0, 255], [150, 9, 1, 0, 255]]},
+    {"song": "warp_room", "frames": 400, "events": [[30, 31, 0, 0, 200], [200, 31, 1, 0, 255]]},
+]
 
 
 def edited_tree(dest, make_args=()):
@@ -218,7 +282,15 @@ def reference_text(ref):
         out += [' "edited": {', '  "about": %s,' % json.dumps(e["about"]), '  "songs": {']
         out += ['   %s: %s%s' % (json.dumps(k), json.dumps(v), "," if i < len(songs) - 1 else "")
                 for i, (k, v) in enumerate(songs)]
-        out += ["  }", " }"]
+        if e.get("sfx"):
+            out += ["  },", '  "sfx": [']
+            for i, s in enumerate(e["sfx"]):
+                head = ", ".join("%s: %s" % (json.dumps(k), json.dumps(v)) for k, v in s.items() if k != "events")
+                out.append('   {%s,\n    "events": [%s]}%s' % (head, ", ".join(json.dumps(x) for x in s["events"]),
+                                                              "," if i < len(e["sfx"]) - 1 else ""))
+            out += ["  ]", " }"]
+        else:
+            out += ["  }", " }"]
     return "\n".join(out + ["}"]) + "\n"
 
 
@@ -282,12 +354,27 @@ def main(argv=None):
                     bad += 1
                     print("gax_render: edited %s: the PC port's %d frames are %s, the reference says %s"
                           % (song, ref["frames"], got, digest))
+            # the edited tree's sound effects (an edited sound-effect instrument, a song with edited settings)
+            if a.cmd == "write":
+                ref["edited"]["sfx"] = [dict(s) for s in EDITED_SFX]
+            for i, s in enumerate(ref["edited"].get("sfx", [])):
+                _, data = render(s["song"], s["frames"], os.path.join(tmp, "edited_sfx_%d.wav" % i),
+                                 s.get("musicVolume"), [tuple(e) for e in s["events"]], exe=exe,
+                                 offsets=edited_offsets)
+                got = sha1(data)
+                if a.cmd == "write":
+                    s["sha1"] = got
+                elif got != s["sha1"]:
+                    bad += 1
+                    print("gax_render: edited sfx %d (%s): the PC port's %d frames are %s, the reference says %s"
+                          % (i, s["song"], s["frames"], got, s["sha1"]))
     if a.cmd == "write":
         with open(a.reference, "w") as f:
             f.write(reference_text(ref))
         print("wrote %s" % a.reference)
         return 0
-    n = len(ref["songs"]) + len(ref["sfx"]) + len(ref.get("edited", {}).get("songs", {}))
+    n = len(ref["songs"]) + len(ref["sfx"]) + len(ref.get("edited", {}).get("songs", {})) + \
+        len(ref.get("edited", {}).get("sfx", []))
     print("gax_render: %d of %d renders as the reference" % (n - bad, n))
     return 1 if bad else 0
 

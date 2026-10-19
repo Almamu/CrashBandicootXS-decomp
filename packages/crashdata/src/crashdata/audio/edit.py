@@ -189,12 +189,11 @@ def player_pool(game, unsaved=None):
     instruments are in the pool as the build would add them."""
     files = Files(game)
     with bound(game):
-        manifest = D.read_json(files.manifest)
-        manifest, xms, sample_data = unsaved_songs(files, manifest, unsaved or {})
-        xms = {k: _read_xm_bytes(files.songs / ("%s.xm" % k), v) for k, v in xms.items()}
-        pool, _, _ = G.load_songs(manifest, str(files.songs), str(files.samples), xms, sample_data)
-        sfx, slots = G.sfx_pool()
-        sfx_manifest = D.read_json(files.sfx_manifest)
+        e = unsaved_songs(files, D.read_json(files.manifest), unsaved or {})
+        xms = {k: _read_xm_bytes(files.songs / ("%s.xm" % k), v) for k, v in e.xms.items()}
+        pool, _, _ = G.load_songs(e.manifest, str(files.songs), str(files.samples), xms, e.sample_data, e.settings)
+        sfx, slots = G.sfx_pool(manifest=e.sfx_manifest)
+        sfx_manifest = e.sfx_manifest
     info = sfx_manifest["song_info"]
     return {
         "tables": tables(files),
@@ -231,13 +230,13 @@ def player_song(game, key, edits=None, unsaved=None):
     if edits:
         unsaved["patterns"] = dict(unsaved.get("patterns") or {}, **{key: edits})
     with bound(game):
-        manifest = D.read_json(files.manifest)
-        manifest, xms, sample_data = unsaved_songs(files, manifest, unsaved)
-        keys = [t["song"] for t in manifest["song_table"]]
+        e = unsaved_songs(files, D.read_json(files.manifest), unsaved)
+        keys = [t["song"] for t in e.manifest["song_table"]]
         if key not in keys:
             raise EditError("%s isn't a song of the song table" % key)
-        xms = {k: _read_xm_bytes(files.songs / ("%s.xm" % k), v) for k, v in xms.items()}
-        pool, order, songs = G.load_songs(manifest, str(files.songs), str(files.samples), xms, sample_data)
+        xms = {k: _read_xm_bytes(files.songs / ("%s.xm" % k), v) for k, v in e.xms.items()}
+        pool, order, songs = G.load_songs(e.manifest, str(files.songs), str(files.samples), xms, e.sample_data,
+                                          e.settings)
         song = songs[order.index(key)]
         out = song_struct(song, pool.instruments)
     out["key"] = key
@@ -246,11 +245,12 @@ def player_song(game, key, edits=None, unsaved=None):
 
 
 def unsaved_songs(files, manifest, body):
-    """The songs as unsaved edits make them: (the manifest, {key: the XM's
-    bytes} of the songs they change). body, each part optional, as
-    plan_save's: "newSongs" [{key, xm}] (at the song table's end),
-    "structures" {key: structure()} (a ROM song whose structure changes
-    loses its scaffold: descaffolded) and "patterns" {key: cell edits}."""
+    """The sound as unsaved edits make it (an Edited). body, each part
+    optional, as plan_save's: "newSongs" [{key, xm}] (at the song table's
+    end), "songInstruments", "structures" {key: structure()} (a ROM song
+    whose structure changes loses its scaffold: descaffolded), "patterns"
+    {key: cell edits}, "songSettings", the music pool's edits and
+    "sfxInstruments"."""
     manifest = json.loads(json.dumps(manifest))
     keys = [t["song"] for t in manifest["song_table"]]
     xms = {}
@@ -266,8 +266,31 @@ def unsaved_songs(files, manifest, body):
         keys.append(key)
         xms[key] = data
     manifest, xms = apply_song_edits(files, manifest, keys, xms, body)
-    manifest, sample_data, _, _ = apply_pool_edits(files, manifest, body)
-    return manifest, xms, sample_data
+    manifest, settings, _ = apply_settings(files, manifest, keys, xms, body)
+    manifest, sample_data, _, _ = apply_pool_edits(files, manifest, body, lambda: named_instruments(files, keys, xms))
+    check_song_instruments(manifest, body)
+    return Edited(manifest, xms, sample_data, settings, apply_sfx_edits(files, body))
+
+
+class Edited:
+    """The sound as unsaved edits make it (unsaved_songs): the manifest, {key: XM bytes} of the songs they
+    change, {sample: its signed bytes} of the music samples they change, {key: settings} of the new songs whose
+    settings they change, the sound-effect manifest."""
+
+    def __init__(self, manifest, xms, sample_data, settings, sfx_manifest):
+        self.manifest, self.xms, self.sample_data = manifest, xms, sample_data
+        self.settings, self.sfx_manifest = settings, sfx_manifest
+
+
+def check_song_instruments(manifest, body):
+    """The pool instruments body's "songInstruments" add to songs' XMs are instruments of the pool after the
+    edits, not empty ones."""
+    for key, ns in (body.get("songInstruments") or {}).items():
+        for n in ns:
+            rec = manifest["instruments"].get(str(n))
+            if rec is None or rec["byte_00"]:
+                raise EditError("songInstruments/%s: the music pool has no instrument %s%s"
+                                % (key, n, " (it is the empty one)" if rec else ""))
 
 
 def _pool_sample(files, idx):
@@ -276,7 +299,7 @@ def _pool_sample(files, idx):
     return G.load_sample_wav(str(p)) if p.is_file() else None
 
 
-def apply_pool_edits(files, manifest, body):
+def apply_pool_edits(files, manifest, body, named=None):
     """body's edits of the music pool (each optional):
 
     - "samples": {"samples/NN.wav": base64 WAV}, a sample's new sound (8-bit mono);
@@ -284,7 +307,12 @@ def apply_pool_edits(files, manifest, body):
       manifest's `samples`), numbered after the pool's;
     - "deleteSamples": [NN]: samples no instrument plays, taken out;
     - "instruments": {"N": record}: instrument N's manifest record (its
-      editable fields, crashdata.audio.pool.EDITABLE).
+      editable fields, crashdata.audio.pool.EDITABLE); an N after the
+      pool's (the next numbers) is a new instrument (pool.new_instrument:
+      blank, a copy of another, from a sample);
+    - "deleteInstruments": [N]: instruments no song's XM names (named():
+      named_instruments' answer) taken out (pool.taken_out: emptied, the
+      pool's last ones removed).
 
     Returns (the manifest, {sample: its signed bytes, None when it is taken
     out}, {rel: bytes to write}, [rel to delete])."""
@@ -323,14 +351,42 @@ def apply_pool_edits(files, manifest, body):
     edits = body.get("instruments") or {}
     if not isinstance(edits, dict):
         raise EditError("instruments: {N: its manifest record}")
-    for n, rec in edits.items():
-        if str(n) not in manifest["instruments"]:
-            raise EditError("instruments/%s: not one of the music pool's instruments" % n)
+    # new instruments: the pool's next numbers
+    top = max(int(k) for k in manifest["instruments"])
+    new = sorted(int(n) for n in edits if str(n).isdigit() and str(int(n)) not in manifest["instruments"])
+    if new and new != list(range(top + 1, top + 1 + len(new))):
+        raise EditError("instruments: new instruments are the pool's next numbers, from %d (not %s)"
+                        % (top + 1, ", ".join(map(str, new))))
+    if new and new[-1] > G.MAX_INDEX:
+        raise EditError("instruments/%d: a pattern row names an instrument by a byte (at most %d)"
+                        % (new[-1], G.MAX_INDEX))
+    for n, rec in sorted(edits.items(), key=lambda kv: int(kv[0]) if str(kv[0]).isdigit() else -1):
+        where = "instruments/%s" % n
+        if not str(n).isdigit() or str(int(n)) != str(n):
+            raise EditError("%s: an instrument is a number" % where)
         try:
-            manifest["instruments"][str(n)] = P.edited_instrument(manifest["instruments"][str(n)], rec, lengths,
-                                                                  "instruments/%s" % n)
+            if int(n) in new:
+                manifest["instruments"][str(n)] = P.new_instrument(rec, lengths, where)
+            else:
+                manifest["instruments"][str(n)] = P.edited_instrument(manifest["instruments"][str(n)], rec, lengths,
+                                                                      where)
         except P.PoolError as e:
             raise EditError(str(e))
+    # instruments taken out: no song's XM may name them
+    gone = body.get("deleteInstruments") or []
+    if not isinstance(gone, list):
+        raise EditError("deleteInstruments: [N, ...]")
+    if gone:
+        users_of = named() if named else {}
+        for i, n in enumerate(gone):
+            where = "deleteInstruments/%d" % i
+            if isinstance(n, bool) or not isinstance(n, int) or str(n) not in manifest["instruments"] or n == 0:
+                raise EditError("%s: %r isn't one of the music pool's instruments (1-%d)" % (where, n, top))
+            if str(n) in edits:
+                raise EditError("%s: instrument %d is edited by the same save" % (where, n))
+            if users_of.get(n):
+                raise EditError("%s: %s name Instrument %d" % (where, ", ".join(users_of[n]), n))
+        manifest["instruments"] = P.taken_out(manifest["instruments"], gone)
     for idx in body.get("deleteSamples") or []:
         where = "deleteSamples/%s" % idx
         if isinstance(idx, bool) or not isinstance(idx, int) or str(idx) not in manifest["samples"]:
@@ -347,6 +403,36 @@ def apply_pool_edits(files, manifest, body):
     return manifest, data, writes, deletes
 
 
+def apply_sfx_edits(files, body):
+    """body's "sfxInstruments" {N: record}: the sound-effect set's instrument N (gax_sfx_manifest.json's record)
+    edited as a music pool instrument is (crashdata.audio.pool.edited_instrument), against the set's samples
+    (with body's new sounds for sfx_samples/NN.wav). Returns the sound-effect manifest."""
+    sfx = D.read_json(files.sfx_manifest)
+    edits = body.get("sfxInstruments") or {}
+    if not isinstance(edits, dict):
+        raise EditError("sfxInstruments: {N: its gax_sfx_manifest.json record}")
+    if not edits:
+        return sfx
+    sfx = json.loads(json.dumps(sfx))
+    lengths = {}
+    for k in sfx["samples"]:
+        path = "sfx_samples/%02d.wav" % int(k)
+        if path in (body.get("samples") or {}):
+            lengths[int(k)] = len(sample_wav(_b64decode(body["samples"][path], "samples/" + path), path)[0])
+        elif (files.sound / path).is_file():
+            lengths[int(k)] = len(G.load_sample_wav(str(files.sound / path)))
+    for n, rec in edits.items():
+        where = "sfxInstruments/%s" % n
+        if str(n) not in sfx["instruments"] or str(n) == "0":
+            raise EditError("%s: not one of the sound-effect set's instruments (1-%d)"
+                            % (where, max(int(k) for k in sfx["instruments"])))
+        try:
+            sfx["instruments"][str(n)] = P.edited_instrument(sfx["instruments"][str(n)], rec, lengths, where)
+        except P.PoolError as e:
+            raise EditError(str(e).replace("the music pool's", "the sound-effect set's"))
+    return sfx
+
+
 def _xm_now(files, xms, key, what):
     if key in xms:
         return xms[key]
@@ -357,9 +443,19 @@ def _xm_now(files, xms, key, what):
 
 
 def apply_song_edits(files, manifest, keys, xms, body):
-    """body's "structures", then its "patterns", on the XMs (xms: the
-    new songs' bytes, the others are the files'). Returns (the manifest,
-    {key: XM bytes} of the songs that change)."""
+    """body's "songInstruments", "structures", then its "patterns", on the
+    XMs (xms: the new songs' bytes, the others are the files'). Returns
+    (the manifest, {key: XM bytes} of the songs that change)."""
+    added = body.get("songInstruments") or {}
+    if not isinstance(added, dict):
+        raise EditError("songInstruments: {song: [pool instrument N, ...]}")
+    for key, ns in added.items():
+        if key not in keys:
+            raise EditError("songInstruments: %s isn't a song of the song table" % key)
+        buf = _xm_now(files, xms, key, "songInstruments")
+        new = xm_with_instruments(buf, ns, "songInstruments/%s" % key)
+        if new != buf:
+            xms[key] = new
     structures = body.get("structures") or {}
     if not isinstance(structures, dict):
         raise EditError("structures: {song: {channels, patterns, order, restart, speed}}")
@@ -380,6 +476,125 @@ def apply_song_edits(files, manifest, keys, xms, body):
         if changed:
             xms[key] = new
     return manifest, xms
+
+
+# ---------------------------------------------------------------------------
+# A song's settings: a ROM song's in the manifest (`songs`), a new song's
+# in songs/<key>.json (crashdata.audio.gax.NEW_SONG_DEFAULTS)
+
+# what the editor edits: GaxSongData's mix rate, volume and half-rate
+# sound effects, the mixer's echo taps (struct GaxDspParams); a new song's
+# title string too (a ROM song's is its recorded bytes). The rest the game
+# doesn't read (num_fx_channels: StartSong asks for 3 voices) or isn't
+# known (ushort_0a).
+ROM_SETTINGS = ("sample_rate", "volume", "half_rate_fx", "mixer_data_bytes")
+NEW_SETTINGS = ("title", "artist") + ROM_SETTINGS
+MAX_ECHO_GAIN = 255
+
+
+def settings_of(files, manifest, key):
+    """Song `key`'s settings as the build reads them, and whether they are a ROM song's (the manifest's)."""
+    sm = manifest["songs"].get(key)
+    if sm is not None:
+        return {f: sm[f] for f in G.SCAFFOLD_SETTINGS if f in sm}, True
+    s = dict(G.NEW_SONG_DEFAULTS)
+    js = files.songs / ("%s.json" % key)
+    if js.is_file():
+        s.update(D.read_json(js))
+    return s, False
+
+
+def echo_taps(mixer_data_bytes):
+    """The mixer's data (struct GaxDspParams, 7 words): the channels mixed before the echo, then the three
+    taps' delay (ms) and gain (x/16); the third tap's gain isn't read (the ARM echo adds it at 1/16)."""
+    return list(struct.unpack("<7I", bytes(mixer_data_bytes)))
+
+
+def check_settings(s, channels, where):
+    """Why GAX2 or the game can't play a song with settings `s` and `channels` channels (an EditError)."""
+    def whole(f, lo, hi):
+        v = s.get(f)
+        if isinstance(v, bool) or not isinstance(v, int) or not lo <= v <= hi:
+            raise EditError("%s/%s: %r (%d-%d)" % (where, f, v, lo, hi))
+        return v
+
+    if s.get("sample_rate") not in G.GAX_MIX_RATES:
+        raise EditError("%s/sample_rate: %r: GAX2 mixes at %s Hz (gGaxMixRates)"
+                        % (where, s.get("sample_rate"), ", ".join(map(str, G.GAX_MIX_RATES))))
+    whole("volume", 0, 0xFFFF)
+    whole("half_rate_fx", 0, 1)
+    m = s.get("mixer_data_bytes")
+    if not isinstance(m, list) or len(m) != 28 or not all(isinstance(b, int) and not isinstance(b, bool)
+                                                         and 0 <= b <= 0xFF for b in m):
+        raise EditError("%s/mixer_data_bytes: 28 bytes (the mixer's echo taps)" % where)
+    taps = echo_taps(m)
+    if taps[0] > channels:
+        raise EditError("%s/mixer_data_bytes: %d channels mixed before the echo, but the song has %d"
+                        % (where, taps[0], channels))
+    for i in (2, 4):
+        if taps[i] > MAX_ECHO_GAIN:
+            raise EditError("%s/mixer_data_bytes: echo tap %d's gain %d (0-%d, 16 is the tap as it is)"
+                            % (where, i // 2, taps[i], MAX_ECHO_GAIN))
+    need = G.work_size(channels, s["sample_rate"], s["half_rate_fx"], m)
+    if need > G.GAX_WORK_SIZE:
+        raise EditError("%s: GAX2 needs %#x bytes of work RAM for %d channels at %d Hz with these echo taps "
+                        "(GAX2_estimate), but StartSong gives it %#x: a lower mix rate or shorter echo delays"
+                        % (where, need, channels, s["sample_rate"], G.GAX_WORK_SIZE))
+    for f in ("title", "artist"):
+        if f in s and s[f] is not None and (not isinstance(s[f], str) or len(s[f].encode("latin-1", "replace"))
+                                             > 200):
+            raise EditError("%s/%s: a string (Latin-1, at most 200 characters)" % (where, f))
+
+
+def apply_settings(files, manifest, keys, xms, body):
+    """body's "songSettings" {song: settings} (ROM_SETTINGS of a ROM song, NEW_SETTINGS of a new one): checked
+    against the song's channels (its XM after the edits). Returns (the manifest, {key: a new song's settings
+    as the build will read them}, [(rel, songs/<key>.json's new value)])."""
+    edits = body.get("songSettings") or {}
+    if not isinstance(edits, dict):
+        raise EditError("songSettings: {song: its settings}")
+    manifest = json.loads(json.dumps(manifest))
+    out, writes = {}, []
+    for key, given in edits.items():
+        where = "songSettings/%s" % key
+        if key not in keys:
+            raise EditError("%s: not a song of the song table" % where)
+        if not isinstance(given, dict):
+            raise EditError("%s: {%s}" % (where, ", ".join(NEW_SETTINGS)))
+        now, rom = settings_of(files, manifest, key)
+        allowed = ROM_SETTINGS if rom else NEW_SETTINGS
+        unknown = sorted(set(given) - set(allowed))
+        if unknown:
+            raise EditError("%s: %s can't be edited (%s's are %s)" % (where, ", ".join(unknown),
+                                                                      "a ROM song" if rom else "a new song",
+                                                                      ", ".join(allowed)))
+        given = {f: (None if f in ("title", "artist") and v == "" else v) for f, v in given.items()}
+        merged = dict(now, **given)
+        sm = manifest["songs"].get(key)
+        if rom and G.scaffolded(sm):
+            channels = sm["num_channels"]
+        else:
+            channels = XmLayout(_xm_now(files, xms, key, where)).channels
+        check_settings(merged, channels, where)
+        if rom:
+            for f in ROM_SETTINGS:
+                if f in given:
+                    sm[f] = given[f]
+            continue
+        out[key] = merged
+        js = files.songs / ("%s.json" % key)
+        old = D.read_json(js) if js.is_file() else {}
+        value = dict(old)
+        for f, v in given.items():
+            if v == now.get(f):
+                continue
+            if v is None:
+                value.pop(f, None)
+            else:
+                value[f] = v
+        if value != old:
+            writes.append((files.rel(js), value))
+    return manifest, out, writes
 
 
 def _read_xm_bytes(path, data):
@@ -591,6 +806,64 @@ def xm_with_structure(buf, st, where="xm"):
         out += ph + data
     out += buf[layout.end:]
     return bytes(out)
+
+
+MAX_XM_INSTRUMENTS = 128  # FT2's
+
+
+def xm_instrument_names(buf):
+    """An XM's instruments' names, in order."""
+    layout = XmLayout(buf)
+    count = struct.unpack_from("<H", buf, 72)[0]
+    pos, out = layout.end, []
+    for _ in range(count):
+        size = struct.unpack_from("<I", buf, pos)[0]
+        out.append(buf[pos + 4:pos + 26].split(b"\x00")[0].decode("ascii", errors="replace"))
+        samples = struct.unpack_from("<H", buf, pos + 27)[0]
+        header = struct.unpack_from("<I", buf, pos + 29)[0] if samples and size >= 33 else 40
+        lengths = [struct.unpack_from("<I", buf, pos + size + k * header)[0] for k in range(samples)]
+        pos += size + samples * header + sum(lengths)
+    return out
+
+
+def xm_with_instruments(buf, pool_numbers, where="xm"):
+    """The XM with an instrument `Instrument N` added at the end of its
+    list for each pool instrument N (a cell then plays it by its new
+    number). The build reads only the name of an `Instrument N` (its XM
+    samples and envelopes aren't GAX2's), so it is a name with no sample:
+    a tracker plays it silent."""
+    if not isinstance(pool_numbers, list):
+        raise EditError("%s: [pool instrument N, ...]" % where)
+    names = xm_instrument_names(buf)
+    out = bytearray(buf)
+    for i, n in enumerate(pool_numbers):
+        if isinstance(n, bool) or not isinstance(n, int) or not 1 <= n <= G.MAX_INDEX:
+            raise EditError("%s/%d: %r isn't one of the music pool's instruments (1-%d)" % (where, i, n, G.MAX_INDEX))
+        name = "Instrument %d" % n
+        if name in names:
+            raise EditError("%s/%d: the module has %s already (its instrument %d)" % (where, i, name,
+                                                                                    names.index(name) + 1))
+        if len(names) >= MAX_XM_INSTRUMENTS:
+            raise EditError("%s: an XM has at most %d instruments" % (where, MAX_XM_INSTRUMENTS))
+        out += struct.pack("<I22sBH", 29, name.encode("ascii"), 0, 0)
+        names.append(name)
+    struct.pack_into("<H", out, 72, len(names))
+    return bytes(out)
+
+
+def named_instruments(files, keys, xms):
+    """{pool instrument N: the songs whose XMs name it (`Instrument N`)}, of the song table's songs (xms: the
+    songs whose bytes aren't the files')."""
+    out = {}
+    for key in keys:
+        p = files.songs / ("%s.xm" % key)
+        if key not in xms and not p.is_file():
+            continue
+        for name in xm_instrument_names(xms[key] if key in xms else p.read_bytes()):
+            number = name[len("Instrument "):] if name.startswith("Instrument ") else ""
+            if number.isdigit():
+                out.setdefault(int(number), []).append(key)
+    return out
 
 
 def descaffolded(manifest, key):
@@ -940,6 +1213,12 @@ def view(game):
             entry["halfRateFx"] = settings["half_rate_fx"]
             entry["title"] = settings.get("title") or xm["name"] or key
             entry["artist"] = settings.get("artist")
+            # what the Music tab's settings edit (ROM_SETTINGS, NEW_SETTINGS), as the build reads them
+            entry["settings"], _ = settings_of(files, manifest, key)
+            if sm is None:
+                entry["settingsFile"] = files.rel(files.songs / ("%s.json" % key))
+            entry["workSize"] = G.work_size(xm["num_channels"], settings["sample_rate"], settings["half_rate_fx"],
+                                            settings["mixer_data_bytes"])
             songs.append(entry)
         # the music pool's samples
         samples = []
@@ -972,6 +1251,7 @@ def view(game):
             slots.append({"slot": n, "sample": idx, "path": files.sound_rel(p), "length": len(data), "wavRate": rate,
                           "rate": round(rate_hz(period, note + ins["samples"][0]["pitch"]), 1),
                           "fixedPitch": bool(row["dont_use_note_pitch"]), "minLength": need})
+        sfx_records = [{"index": n, "record": sfx_ins[n]} for n in sorted(sfx_ins)]
         names = [e["name"] for e in table["entries"] if "name" in e]
         refs = sfx_references(files, names)
         sfx = []
@@ -996,9 +1276,15 @@ def view(game):
         "samples": samples,
         "instruments": new_instruments,
         "poolInstruments": pool_instruments,
+        "sfxInstruments": sfx_records,
+        # a new pool instrument (blank: from a sample, none yet) and what one taken out becomes
+        "instrumentTemplates": {"blank": P.blank_instrument(), "empty": P.empty_instrument()},
+        "songDefaults": dict(G.NEW_SONG_DEFAULTS),
         "mixRates": list(G.GAX_MIX_RATES),
-        "limits": {"maxIndex": G.MAX_INDEX, "maxSampleLength": G.MAX_SAMPLE_LENGTH, "romSfxSlots": max(sfx_ins)},
-        "files": {"manifest": files.rel(files.manifest), "music": files.rel(files.music),
+        "limits": {"maxIndex": G.MAX_INDEX, "maxSampleLength": G.MAX_SAMPLE_LENGTH, "romSfxSlots": max(sfx_ins),
+                   "workSize": G.GAX_WORK_SIZE, "maxEchoGain": MAX_ECHO_GAIN, "xmInstruments": MAX_XM_INSTRUMENTS},
+        "files": {"manifest": files.rel(files.manifest), "sfxManifest": files.rel(files.sfx_manifest),
+                  "music": files.rel(files.music),
                   "sfxTable": files.rel(files.sfx_table), "levels": files.rel(files.levels)},
     }
 
@@ -1035,8 +1321,16 @@ def plan_save(game, body):
       "comment"}]: instruments/<name>.json with its sample
       sfx_samples/<name>.wav, for new sound effects (an sfxTable entry's
       "instrument");
-    - "instruments", "newSamples", "deleteSamples": the music pool's
-      instruments and samples (apply_pool_edits).
+    - "instruments", "newSamples", "deleteSamples", "deleteInstruments":
+      the music pool's instruments and samples (apply_pool_edits: new
+      instruments too);
+    - "songInstruments": {song key: [pool instrument N]}: `Instrument N`
+      added to the song's XM (xm_with_instruments), for its cells to play;
+    - "songSettings": {song key: settings} (apply_settings): a ROM song's
+      mix rate, volume, half-rate sound effects and echo taps (the
+      manifest's), a new song's and its title (songs/<key>.json);
+    - "sfxInstruments": {N: record}: the sound-effect set's instruments
+      (gax_sfx_manifest.json, apply_sfx_edits).
 
     Returns {"json": [(rel, value)], "bytes": [(rel, bytes)], "delete":
     [rel]}."""
@@ -1093,6 +1387,9 @@ def plan_save(game, body):
     manifest, xms = apply_song_edits(files, manifest, keys, dict(new_xms), body)
     for key, data in xms.items():
         out_bytes.append((files.rel(files.songs / ("%s.xm" % key)), data))
+    # the songs' settings: a ROM song's in the manifest, a new song's in songs/<key>.json
+    manifest, _, settings_writes = apply_settings(files, manifest, keys, xms, body)
+    out_json += settings_writes
 
     # what names a song: the themes, the screens, the cutscenes
     levels = D.read_json(files.levels) if files.levels.is_file() else None
@@ -1167,10 +1464,17 @@ def plan_save(game, body):
         out_bytes.append((files.rel(wav), data))
         out_json.append((files.rel(js), spec))
     # the music pool: its instruments, new samples, samples taken out
-    manifest, _, pool_writes, pool_deletes = apply_pool_edits(files, manifest, body)
+    manifest, _, pool_writes, pool_deletes = apply_pool_edits(files, manifest, body,
+                                                              lambda: named_instruments(files, keys, xms))
+    check_song_instruments(manifest, body)
     out_bytes += list(pool_writes.items())
+    # the sound-effect set's instruments
+    old_sfx = D.read_json(files.sfx_manifest)
+    sfx_manifest = apply_sfx_edits(files, body)
+    if sfx_manifest != old_sfx:
+        out_json.append((files.rel(files.sfx_manifest), sfx_manifest))
     manifest_ins = {int(n): v for n, v in manifest["instruments"].items()}
-    sfx_manifest_ins = {int(n): v for n, v in D.read_json(files.sfx_manifest)["instruments"].items()}
+    sfx_manifest_ins = {int(n): v for n, v in sfx_manifest["instruments"].items()}
     for path, b64 in (body.get("samples") or {}).items():
         m = SAMPLE_PATH.match(path or "")
         p = files.sound / path if m else None

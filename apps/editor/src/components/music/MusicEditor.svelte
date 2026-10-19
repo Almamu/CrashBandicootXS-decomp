@@ -55,7 +55,7 @@
       e.preventDefault();
       if (mu.playing) mu.stop();
       else if (mu.kind === "sfx") void mu.playSfx();
-      else if (mu.kind === "instrument") void mu.playInstrument(mu.instrument, 49, 16);
+      else if (mu.kind === "instrument") void (mu.instrumentPool === "sfx" ? mu.playSfxInstrument(mu.instrument) : mu.playInstrument(mu.instrument, 49, 16));
       else void mu.playSong();
     }
   }
@@ -87,11 +87,10 @@
     <section class="middle">
       <div class="toolbar">
         {#if mu.kind === "song"}
-          {@const info = mu.songInfo}
           {@const sv = mu.songView}
           <strong>{mu.song}</strong>
           <span class="hint">
-            {#if sv}{sv.p.channels} channels{/if}{#if info}, {info.mixRate} Hz{/if}{#if mu.state.structures[mu.song]} · structure changed{/if}
+            {#if sv}{sv.p.channels} channels{/if}{#if mu.settingsOf(mu.song)}, {mu.settingsOf(mu.song)?.sample_rate} Hz{/if}{#if mu.state.songSettings[mu.song]} · settings changed{/if}{#if mu.state.structures[mu.song]} · structure changed{/if}
             {#if len}· loops to order {len.order} after {M.frameTime(len.loop)}{/if}
           </span>
           <span class="sep"></span>

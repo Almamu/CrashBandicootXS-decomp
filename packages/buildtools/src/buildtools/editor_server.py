@@ -577,8 +577,10 @@ class Server:
     @staticmethod
     def music_unsaved(body):
         """The songs' unsaved edits a player request carries (newSongs,
-        structures, patterns: music_edit.unsaved_songs)."""
-        keys = ("newSongs", "structures", "patterns", "instruments", "samples", "newSamples", "deleteSamples")
+        structures, patterns, settings, the pools' edits:
+        music_edit.unsaved_songs)."""
+        keys = ("newSongs", "songInstruments", "structures", "patterns", "songSettings", "instruments", "samples",
+                "newSamples", "deleteSamples", "deleteInstruments", "sfxInstruments")
         return {k: body[k] for k in keys if k in body} if body else {}
 
     def music_pool(self, project, body=None):

@@ -166,8 +166,14 @@ export interface Song {
   loop_point?: number;
   volume: number;
   ushort_0a: number;
-  sample_rate: number;
+  /**
+   * the mix rate, Hz (gGaxMixRates)
+   */
+  sample_rate: 5735 | 10513 | 11469 | 13380 | 15769 | 18158 | 21025 | 26760 | 31537 | 36316 | 40138 | 42049;
   num_fx_channels: number;
+  /**
+   * the sound-effect voices mixed at half the mix rate
+   */
   half_rate_fx: number;
   num_items?: number;
   unk_ptr_is_null?: boolean;

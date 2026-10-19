@@ -703,6 +703,42 @@ recorded one). It adds samples to the pool (`samples/NN.wav` and a
 it was the last). An edited instrument or sample changes the music block
 (the ROM's bytes are then not what it builds), as a replaced sample does.
 
+It adds instruments to the pool too, as manifest records numbered after
+the pool's (52 for the first): blank, a copy of another, or playing a
+sample of the pool at 8363 Hz on XM's C-4 (`crashdata.audio.pool`:
+the instrument the build makes from an XM's sample, "From the XM"
+below). A song plays one as any pool instrument, `Instrument N` in its
+XM (the editor adds that instrument to the XM's list, a name with no
+sample, when a cell of the song is given it). Being the manifest's,
+they come before the new songs' own instruments ("New instruments"
+below), which then number from after them. An instrument no song's XM
+names can be taken out: the last record leaves the manifest, another
+becomes the empty instrument (instrument 0's record: `byte_00`, no
+sample), so the numbers after it, which the XMs name, stay.
+
+The sound-effect set's instruments are edited the same way, as their
+records in `gax_sfx_manifest.json` (a sound effect's `slot_id` N plays
+instrument N), checked against the set's samples.
+
+## A song's settings
+
+A song's settings are the `GaxSongData` fields and mixer data the song
+is built with: a ROM song's in its manifest entry (`songs`), a new
+song's in `songs/<key>.json` ("Adding a song"). The music editor edits
+the mix rate (`sample_rate`, one of gGaxMixRates), `volume` (Q8),
+`half_rate_fx` and the echo (`mixer_data_bytes`, `struct
+GaxDspParams`: seven words, the number of channels mixed before the
+echo, then three taps' delay in ms and gain in 16ths; the ARM echo
+routine adds the third tap at 1/16 and doesn't read its gain, and with
+the first tap's delay 0 there is no echo), and a new song's title and
+artist. A ROM song keeps its scaffold when they change (they aren't its
+structure). `tools/gax_audio.py` and the editor stop on settings GAX2
+can't play: a mix rate it doesn't have, or a song that needs more work
+RAM than StartSong gives GAX2 (see "GAX2's limits": the echo line is
+the longest delay at the mix rate). `num_fx_channels` isn't read by the
+game (StartSong asks for 3 voices), and the XM's BPM isn't read by
+GAX2 (a tick a frame).
+
 ## New instruments
 
 A new song can play instruments the ROM's pool doesn't have, and a new

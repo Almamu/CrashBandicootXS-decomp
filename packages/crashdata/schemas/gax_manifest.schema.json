@@ -437,9 +437,21 @@
           "maximum": 65535
         },
         "sample_rate": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 65535
+          "enum": [
+            5735,
+            10513,
+            11469,
+            13380,
+            15769,
+            18158,
+            21025,
+            26760,
+            31537,
+            36316,
+            40138,
+            42049
+          ],
+          "description": "the mix rate, Hz (gGaxMixRates)"
         },
         "num_fx_channels": {
           "type": "integer",
@@ -449,7 +461,8 @@
         "half_rate_fx": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 65535
+          "maximum": 1,
+          "description": "the sound-effect voices mixed at half the mix rate"
         },
         "num_items": {
           "type": "integer",

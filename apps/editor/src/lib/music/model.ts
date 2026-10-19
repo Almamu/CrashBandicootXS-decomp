@@ -4,7 +4,7 @@
 // build makes of them (crashdata.audio.gax's XM import), a ROM song's
 // shared patterns, and the sound effects' rules. No DOM: the tests run it
 // in node.
-import type { GaxManifestDefs, Music, MusicCellEdit, MusicInstrument, MusicPatterns, MusicSave, MusicSong, MusicStructure, MusicUnsaved, MusicView, SfxTable } from "@crash/schema-types";
+import type { GaxManifestDefs, Music, MusicCellEdit, MusicInstrument, MusicPatterns, MusicSave, MusicSong, MusicSongSettings, MusicStructure, MusicUnsaved, MusicView, SfxTable } from "@crash/schema-types";
 
 export type InstrumentRecord = GaxManifestDefs.Instrument;
 
@@ -56,7 +56,18 @@ export interface EditState {
   newSamples: Record<string, SampleEdit>;
   /** music pool samples taken out (no instrument plays them) */
   deleteSamples: number[];
+  /** music pool instruments taken out (no song's XM names them): emptied, the pool's last ones removed */
+  deleteInstruments: number[];
+  /** song -> the pool instruments added to its XM's instruments (`Instrument N`), for its cells to play */
+  songInstruments: Record<string, number[]>;
+  /** song -> its settings (a ROM song's mix rate, volume, half-rate sound effects, echo taps; a new song's title too) */
+  songSettings: Record<string, SongSettings>;
+  /** the sound-effect set: instrument number -> its edited record (gax_sfx_manifest.json's) */
+  sfxInstruments: Record<string, InstrumentRecord>;
 }
+
+/** A song's settings as the Music tab edits them (crashdata.audio.edit.ROM_SETTINGS, NEW_SETTINGS). */
+export type SongSettings = MusicSongSettings;
 
 export function initialState(v: MusicView, sfx: SfxTable, music: Music): EditState {
   return {
@@ -73,6 +84,10 @@ export function initialState(v: MusicView, sfx: SfxTable, music: Music): EditSta
     instruments: {},
     newSamples: {},
     deleteSamples: [],
+    deleteInstruments: [],
+    songInstruments: {},
+    songSettings: {},
+    sfxInstruments: {},
   };
 }
 
@@ -107,6 +122,21 @@ export function saveBody(saved: EditState, now: EditState): MusicSave {
   if (instruments.length) body.instruments = Object.fromEntries(instruments);
   if (Object.keys(now.newSamples).length) body.newSamples = Object.fromEntries(Object.entries(now.newSamples).map(([k, s]) => [k, s.wav]));
   if (now.deleteSamples.length) body.deleteSamples = now.deleteSamples;
+  Object.assign(body, songAndPoolParts(saved, now));
+  return body;
+}
+
+/** The parts of a save (and a player request) for the songs' added instruments and settings, the pool instruments
+ * taken out and the sound-effect set's instruments: those that differ from the state last saved. */
+function songAndPoolParts(saved: EditState, now: EditState): MusicUnsaved {
+  const body: MusicUnsaved = {};
+  if (now.deleteInstruments.length) body.deleteInstruments = now.deleteInstruments;
+  const added = Object.entries(now.songInstruments).filter(([, ns]) => ns.length);
+  if (added.length) body.songInstruments = Object.fromEntries(added);
+  const settings = Object.entries(now.songSettings).filter(([k, st]) => saved.songSettings[k] !== st);
+  if (settings.length) body.songSettings = Object.fromEntries(settings);
+  const sfx = Object.entries(now.sfxInstruments).filter(([k, r]) => saved.sfxInstruments[k] !== r);
+  if (sfx.length) body.sfxInstruments = Object.fromEntries(sfx);
   return body;
 }
 
@@ -125,6 +155,8 @@ export function unsavedBody(now: EditState): MusicUnsaved {
   if (samples.length) body.samples = Object.fromEntries(samples.map(([p, s]) => [p, s.wav]));
   if (Object.keys(now.newSamples).length) body.newSamples = Object.fromEntries(Object.entries(now.newSamples).map(([k, s]) => [k, s.wav]));
   if (now.deleteSamples.length) body.deleteSamples = now.deleteSamples;
+  const saved = { ...now, songSettings: {}, sfxInstruments: {} };
+  Object.assign(body, songAndPoolParts(saved, now));
   return body;
 }
 
@@ -589,6 +621,97 @@ export function envelopeProblem(points: EnvPoint[]): string | null {
   if (points[0]!.x !== 0) return "the first point is at tick 0";
   for (let i = 1; i < points.length; i++) if (points[i]!.x <= points[i - 1]!.x) return `point ${i}'s tick isn't after point ${i - 1}'s`;
   if (points.some((p) => p.y < 0 || p.y > 255 || p.x > 0xffff)) return "a volume is 0-255, a tick 0-65535";
+  return null;
+}
+
+/** A music pool instrument as the Instruments tab lists it after the edits: its number, its record, whether it is
+ * new (not saved yet) or taken out (emptied: a later one keeps its number). */
+export interface PoolInstrument {
+  index: number;
+  record: InstrumentRecord;
+  added: boolean;
+  deleted: boolean;
+}
+
+/** The music pool's instruments after the edits (crashdata.audio.edit.apply_pool_edits): the saved ones, edited,
+ * then the new ones (the pool's next numbers), those taken out emptied and the empty ones at the end gone
+ * (crashdata.audio.pool.taken_out). */
+export function poolInstruments(v: MusicView, s: EditState): PoolInstrument[] {
+  const saved = new Set(v.poolInstruments.map((i) => i.index));
+  const out: PoolInstrument[] = v.poolInstruments.map((i) => {
+    const deleted = s.deleteInstruments.includes(i.index);
+    return { index: i.index, record: deleted ? v.instrumentTemplates.empty : (s.instruments[String(i.index)] ?? i.record), added: false, deleted };
+  });
+  for (const k of Object.keys(s.instruments)
+    .map(Number)
+    .filter((n) => !saved.has(n))
+    .sort((a, b) => a - b))
+    out.push({ index: k, record: s.instruments[String(k)]!, added: true, deleted: false });
+  while (out.length > 1 && out[out.length - 1]!.deleted) out.pop();
+  return out;
+}
+
+/** The number a new pool instrument gets: after the saved ones and the new ones (crashdata.audio.edit: the pool's
+ * next numbers). */
+export function nextInstrument(v: MusicView, s: EditState): number {
+  return Math.max(...v.poolInstruments.map((i) => i.index), ...Object.keys(s.instruments).map(Number)) + 1;
+}
+
+/** A new pool instrument's record: blank (no sample yet), from a sample of the pool (at 8363 Hz on C-4, as the
+ * build makes one from an XM's sample with no relative note or finetune), or a copy of a record. */
+export function newInstrumentRecord(v: MusicView, from: { sample: number } | { copy: InstrumentRecord } | null): InstrumentRecord {
+  const blank = v.instrumentTemplates.blank;
+  if (from && "copy" in from) return structuredClone(from.copy);
+  const r = structuredClone(blank);
+  if (from) r.sample_indices = [from.sample, 0, 0, 0] as InstrumentRecord["sample_indices"];
+  return r;
+}
+
+/** A song's XM instruments after the edits: its own, then the pool instruments added to it (`Instrument N`). */
+export function songInstruments(p: MusicPatterns, added: number[] | undefined): { name: string; pool: number | null; added: boolean }[] {
+  return [...p.instruments.map((i) => ({ ...i, added: false })), ...(added ?? []).map((n) => ({ name: `Instrument ${n}`, pool: n, added: true }))];
+}
+
+// -- a song's settings ---------------------------------------------------------------------------
+
+/** The mixer's data (struct GaxDspParams, 7 words of mixer_data_bytes): the channels mixed before the echo, then the
+ * three taps' delay (ms) and gain (x/16); the third tap's gain isn't read (crashdata.audio.edit.echo_taps). */
+export function echoTaps(bytes: number[]): number[] {
+  const dv = new DataView(Uint8Array.from(bytes).buffer);
+  return Array.from({ length: 7 }, (_, i) => dv.getUint32(i * 4, true));
+}
+
+export function withEchoTaps(taps: number[]): number[] {
+  const dv = new DataView(new ArrayBuffer(28));
+  taps.forEach((v, i) => dv.setUint32(i * 4, v >>> 0, true));
+  return [...new Uint8Array(dv.buffer)];
+}
+
+/** GAX2_estimate's work RAM for a song StartSong plays (crashdata.audio.gax.work_size). */
+export function workSize(channels: number, sampleRate: number, halfRateFx: number, mixer: number[], mixRates: number[]): number {
+  const fx = 3;
+  const rate = mixRates.find((r) => r >= sampleRate) ?? mixRates[mixRates.length - 1]!;
+  let size = 0x18c + (3 + channels + fx) * 4 + 8;
+  size += 0xc + 0xc + channels * 4 + fx * 4;
+  size += 0xc + 0x1c;
+  size += channels * (0xc + 0x48 + 4);
+  size += fx * 0x58;
+  const taps = echoTaps(mixer);
+  const longest = Math.max(taps[1]!, taps[3]!, taps[5]!);
+  if (longest) size += Math.floor((longest * rate) / 1000) * 2 + 0x18;
+  size += halfRateFx ? 0x130 : 0xdc;
+  return size + Math.floor((rate * 1000) / 0xe94f) * 4 + 0x20;
+}
+
+/** Why GAX2 or the game can't play a song with these settings (crashdata.audio.edit.check_settings), or null. */
+export function settingsProblem(st: SongSettings, channels: number, v: MusicView): string | null {
+  if (!v.mixRates.includes(st.sample_rate)) return `GAX2 mixes at ${v.mixRates.join(", ")} Hz`;
+  if (!Number.isInteger(st.volume) || st.volume < 0 || st.volume > 0xffff) return "the volume is 0-65535 (256 is 1.0)";
+  const taps = echoTaps(st.mixer_data_bytes);
+  if (taps[0]! > channels) return `${taps[0]} channels mixed before the echo, but the song has ${channels}`;
+  if (taps[2]! > v.limits.maxEchoGain || taps[4]! > v.limits.maxEchoGain) return `an echo tap's gain is 0-${v.limits.maxEchoGain}`;
+  const need = workSize(channels, st.sample_rate, st.half_rate_fx, st.mixer_data_bytes, v.mixRates);
+  if (need > v.limits.workSize) return `GAX2 needs 0x${need.toString(16)} bytes of work RAM, StartSong gives it 0x${v.limits.workSize.toString(16)}: a lower mix rate or shorter echo delays`;
   return null;
 }
 
