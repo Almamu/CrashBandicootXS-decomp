@@ -10,6 +10,13 @@ import { cameraFor, cellAt, clampCamera, fit, layerOrigin, lineCells, rectCells,
 import { addEntity, addLink, deleteEntity, inIdOrder, insertionIndex, layoutFields, layouts, moveEntity, newRecord, ownRecord, recordUsers, remapLinks } from "../src/lib/level/entities.ts";
 import { History } from "../src/lib/level/history.ts";
 import {
+  addTile,
+  blockKey,
+  layerBanks,
+  newBlocks,
+  pasteCells,
+  replaceTile,
+  tileUses,
   applyBlocks,
   applyValues,
   base64,
@@ -388,5 +395,66 @@ describe("the room's kind and blend", () => {
     // N-Tranced's types don't name the markers
     const n2 = (json("games/n2/data/levels/entity_types.json") as { types: EntityTypeInfo[] }).types;
     expect(startMarkerFor(room, n2)).toBeNull();
+  });
+});
+
+describe("drawing tiles", () => {
+  // a 4bpp set: tile 0 blank, tile 1 a diagonal, tile 2 a column on the left
+  const tiles = new Uint8Array(3 * 64);
+  for (let i = 0; i < 8; i++) tiles[64 + i * 8 + i] = 3;
+  for (let i = 0; i < 8; i++) tiles[128 + i * 8] = 5;
+  const layer = (): PixelLayer => ({ width: 32, height: 8, data: new Uint8Array(32 * 8) });
+
+  it("redraws the cells that draw a tile, each in its flips and bank, and clears them", () => {
+    const l = layer();
+    const index = tileIndex(tiles, 3, 4);
+    paintBlock(l, [{ x: 0, y: 0 }], tileBlock(tiles, { tile: 2, hflip: false, vflip: false, bank: 1 }, 4));
+    paintBlock(l, [{ x: 2, y: 0 }], tileBlock(tiles, { tile: 2, hflip: true, vflip: false, bank: 3 }, 4));
+    paintBlock(l, [{ x: 3, y: 0 }], tileBlock(tiles, { tile: 1, hflip: false, vflip: false, bank: 0 }, 4));
+    expect(tileUses(l, index, 4, 2)).toBe(2);
+    expect(layerBanks(l)).toEqual([0, 1, 3]);
+    // tile 2 becomes a row along the top
+    const row = new Uint8Array(64);
+    for (let x = 0; x < 8; x++) row[x] = 7;
+    const changes = replaceTile(l, index, 4, 2, row);
+    expect(changes.map((c) => c.index)).toEqual([0, 2]);
+    expect(readCell(l, 0, 0)[0]).toBe(16 + 7);
+    expect(readCell(l, 2, 0)[7]).toBe(48 + 7); // flipped across: still the top row, in bank 3
+    expect(readCell(l, 2, 0)[8]).toBe(48);
+    expect(readCell(l, 3, 0)[0]).toBe(3); // tile 1's cell is left
+    // cleared: blank, in the cell's bank
+    const cleared = replaceTile(l, tileIndex(new Uint8Array([...tiles.subarray(0, 128), ...row]), 3, 4), 4, 2, new Uint8Array(64));
+    expect(cleared.length).toBe(2);
+    expect([...readCell(l, 2, 0)].every((p) => p === 48)).toBe(true);
+  });
+
+  it("adds a new tile to the set, or finds the one it is (flipped too)", () => {
+    const index = tileIndex(tiles, 3, 4);
+    const flipped = tileBlock(tiles, { tile: 2, hflip: true, vflip: false, bank: 0 }, 4);
+    const same = addTile(tiles, 3, index, flipped, 4);
+    expect(same.added).toBe(false);
+    expect(same.brush).toMatchObject({ tile: 2, hflip: true });
+    const dot = new Uint8Array(64);
+    dot[9] = 2;
+    const r = addTile(tiles, 3, index, dot, 4);
+    expect(r).toMatchObject({ count: 4, added: true, brush: { tile: 3 } });
+    expect(tileBlock(r.tiles, { tile: 3, hflip: false, vflip: false, bank: 0 }, 4)[9]).toBe(2);
+    // its flips are it now
+    const dotX = tileBlock(r.tiles, { tile: 3, hflip: true, vflip: false, bank: 0 }, 4);
+    expect(index.get(blockKey(dotX, 4))).toMatchObject({ tile: 3, hflip: true });
+  });
+
+  it("pastes imported cells and counts the new tiles they make", () => {
+    const l = layer();
+    const index = tileIndex(tiles, 3, 4);
+    const data = new Uint8Array(3 * 64);
+    data.set(tileBlock(tiles, { tile: 1, hflip: false, vflip: false, bank: 2 }, 4), 0);
+    data[64 + 5] = 4; // a new block
+    data.set(data.subarray(64, 128).slice().reverse(), 128); // the same block turned around: the same tile
+    const changes = pasteCells(l, { x: 1, y: 0 }, 3, 1, data);
+    expect(changes.map((c) => c.index)).toEqual([1, 2, 3]);
+    expect(newBlocks(l, index, 4, [1, 2, 3])).toBe(1);
+    // outside the layer: left out
+    expect(pasteCells(l, { x: 3, y: 0 }, 3, 1, data).map((c) => c.index)).toEqual([3]); // the rest is outside
   });
 });

@@ -396,8 +396,41 @@ in the layer's picture, BG1-3's as `bank * 16 + pixel`, which the build
 reads back as that tile: painting never adds a tile, though a tile used
 earlier in the set's order than before renumbers the set (the ROM data
 after it moves). On a layer that doesn't scroll at the camera's speed,
-untick "parallax" to paint it where it is. New tiles are drawn in an
-image editor ([levels.md, "BG layers"](./levels.md#bg-layers)).
+untick "parallax" to paint it where it is.
+
+**Drawing tiles.** A set is made from its rooms' pictures, so a tile is
+drawn by drawing cells. The Tiles tab's tile editor draws 8x8 pixels in
+the room's palette (a BG1-3 tile in the brush's bank, colour 0
+transparent; alt-click picks a pixel's colour), starting from the brush's
+tile ("Load tile N") or from nothing:
+
+- **New tile** adds the drawing to the set, after its last tile, and makes
+  it the brush (a drawing the set already has, flipped too, is that tile).
+  It becomes the build's once a cell draws it and the room is saved; one
+  no cell draws is gone again;
+- **Redraw tile N** redraws every cell of the layer that draws the tile,
+  each in its own flips and bank: one undo step. The tab says how many
+  cells draw it here and in all of the set's rooms (as saved): the other
+  rooms keep the old tile, so it stays in the set while they use it;
+- **Clear tile N** blanks those cells (in their banks): a tile no cell of
+  any room draws is gone from the set, which renumbers the tiles after it.
+
+**Import a picture** cuts a PNG (any mode, any size up to a megapixel)
+into cells, quantised to the room's palette as edited (`room/import`): a
+cell that looks like a tile of the set (flipped, in a bank of the layer)
+is that tile; any other pixel takes the nearest colour (BG0: entries
+1-255; BG1-3: the bank of the layer's whose 15 colours draw the cell
+closest, `bank * 16 + p`), a transparent pixel index 0 (BG1-3: `bank *
+16`). The cells are written at the cell asked, one undo step, and the
+tab says how many are the set's tiles, flipped ones, blank, and new
+tiles (each counted once, flips included).
+
+The tab keeps the set within what the engine holds (8,192 tiles for a
+BG0 set, 768 for a BG1-3 one: [levels.md, "Tile sets"](./levels.md#tile-sets))
+and counts the new tiles the room's changes add; the save makes the sets
+the painted layers name as the build will and refuses one past its limit,
+or a BG0 screen with more than 512 different tiles (the tile slot pool's
+VRAM slots).
 
 **Collision.** The Collision tab paints the collision layer's cells with
 a value of the legend (one 8x8 cell of BG0's each; click, drag, Shift and
@@ -469,8 +502,8 @@ headless and shows the room after 700 frames. It builds the saved data.
 A bonus or gem-path room starts as the level's (`ROOM=bonus` or
 `gem_path`, "Preview"); a room no level plays can't be started.
 
-**Not yet:** drawing new tiles, adding a
-collision value to the legend. N-Tranced's records of types 73, 92 and
+**Not yet:** adding a collision value to the legend, and redrawing a tile
+in every room of its set at once (Redraw works on the room open). N-Tranced's records of types 73, 92 and
 106 stay words (what their spawners read isn't known yet).
 
 ## The cutscene editor
@@ -836,7 +869,8 @@ dependency), listens on **127.0.0.1 only**, and serves:
 | `POST /api/projects/ID/preview` `{level, room, headless, frames, noBuild}` | `tools/preview.py --json`'s report and `image`, or `{started, pid}` for the window |
 | `GET /api/projects/ID/room?path=ROOM` | a room's folder (`games/<game>/data/levels/<level>/<slot>`) for the level editor: `{path, room, palette, layers, legend, entityTypes, sprites}` (room.json's value, its 256 BGR555 colours, each layer's size, priority, scroll scale and tile set, the collision legend, entity_types.json's types, a sprite frame per type) |
 | `GET /api/projects/ID/room/layer?path=ROOM&layer=L` | a layer's data: its width and height (u32 LE), then a BG picture's palette indices (a byte a pixel) or the collision layer's cells (u16 LE); gzipped when asked |
-| `GET /api/projects/ID/room/tiles?path=ROOM&layer=L` | a BG layer's tile set as the build makes it: `{tileset, bpp, count, tiles, banks, cells}` (tiles: 64 bytes each, base64; cells: the layer's, u16 LE, base64) |
+| `GET /api/projects/ID/room/tiles?path=ROOM&layer=L` | a BG layer's tile set as the build makes it: `{tileset, bpp, count, tiles, banks, cells, uses, limit}` (tiles: 64 bytes each, base64; cells: the layer's, u16 LE, base64; uses: each tile's cells in all of the set's rooms; limit: the most tiles the engine holds) |
+| `POST /api/projects/ID/room/import` `{path, layer, png, palette?, banks?}` | a picture (base64 PNG) as the layer's cells in the room's palette (`room_edit.import_tiles`): `{cols, rows, cells, stats}` (cells: base64, 64 indices each; stats: blank, the set's tiles, flipped, new, the set's count and limit) |
 | `GET /api/projects/ID/sprite?bank=N&frame=K[&palette=P]` | a sprite bank's frame as a PNG, index 0 transparent, in OBJ palette P or its own |
 | `POST /api/projects/ID/room/save` `{path, room?, layers?, collision?, palette?}` | saves a room's edits, all or none (below) |
 | `POST /api/projects/ID/room/new` `{from, folder, empty?, size?, attach?}` | makes a room (`room_ops.new_room`): a copy of `from`, or an empty one laid out like it, `size` cells; `attach` `{level, as: "rooms" \| "bonus" \| "gem_path", index?}`; the answer's `report`: its number, symbols, warnings; `path` |
@@ -896,7 +930,11 @@ gets its PLTE chunk replaced (the pixels' bytes stay); painted cells
 write the picture as crashdata's writers do (`write_layer_png`'s
 settings, `collision.write_image`). The new files are checked by the
 model's checks (data-check reads the pictures: their palettes, the
-collision image's size and colours) and all go back on an error.
+collision image's size and colours) and, when cells are painted, the tile
+sets their layers name, made as the build makes them
+(`room_edit.tileset_errors`: a set past its limit, a BG0 screen past the
+tile slot pool's 512 tiles; code `tileset`), and all go back on an
+error.
 
 **New, deleted and resized rooms** (`room/new`, `room/delete`,
 `room/resize`, `crashdata.levels.room_ops`) are plans of files to write

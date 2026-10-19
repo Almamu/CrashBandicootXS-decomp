@@ -6,6 +6,7 @@
   import { transparentIndex } from "../../lib/level/render.ts";
   import { tileBlock } from "../../lib/level/paint.ts";
   import { BG_NAMES, level, type BgName } from "../../lib/level/state.svelte.ts";
+  import TileEditor from "./TileEditor.svelte";
 
   const COLS = 16;
   const SCALE = 2;
@@ -118,6 +119,7 @@
       <canvas bind:this={sheet} onclick={pick} style="width:{COLS * 8 * SCALE}px"></canvas>
       <div class="sel" style="left:{(level.brush.tile % COLS) * 8 * SCALE}px;top:{Math.floor(level.brush.tile / COLS) * 8 * SCALE}px;width:{8 * SCALE}px;height:{8 * SCALE}px"></div>
     </div>
+    <TileEditor {set} />
   {/if}
 </div>
 

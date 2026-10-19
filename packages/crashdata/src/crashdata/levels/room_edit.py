@@ -208,7 +208,8 @@ def tileset(symbol, room_key, lname):
     layer's cells in it: (bpp, tiles: 64 bytes each, a pixel a byte (4bpp:
     0-15), banks: each tile's palette bank where it is first drawn, cells:
     the layer's cells as little-endian u16, BG0's tile | flip << 14, BG1-3's
-    tile | flip << 10 | bank << 12)."""
+    tile | flip << 10 | bank << 12, uses: each tile's cells in every room's
+    layers that name the set, limit: the most tiles the engine holds)."""
     levels = L.read_json(L.LEVELS_JSON)
     users = L.tileset_users(levels)
     if symbol not in users:
@@ -221,7 +222,159 @@ def tileset(symbol, room_key, lname):
     cells = maps.get((room_key, lname))
     if cells is None:
         raise EditError("%s isn't one of %s's rooms (levels.json's \"rooms\")" % (room_key, symbol))
-    return users[symbol]["bpp"], data, banks, struct.pack("<%dH" % len(cells), *cells)
+    bpp = users[symbol]["bpp"]
+    mask = 0x3FFF if bpp == 8 else 0x3FF
+    uses = [0] * len(tiles)
+    for layer_cells in maps.values():
+        for v in layer_cells:
+            uses[v & mask] += 1
+    return bpp, data, banks, struct.pack("<%dH" % len(cells), *cells), uses, L.MAX_TILES[bpp]
+
+
+def tileset_errors(symbols):
+    """What the engine can't take of the tile sets `symbols` as their rooms'
+    pictures now make them (docs/levels.md, "Tile sets"): more tiles than it
+    holds, a screen of BG0 with more tiles than the tile slot pool's."""
+    levels = L.read_json(L.LEVELS_JSON)
+    users = L.tileset_users(levels)
+    out = []
+    for symbol in sorted(symbols):
+        if symbol not in users:
+            continue
+        try:
+            _, _, maps = L.generate_tileset(symbol, levels, users)
+        except SystemExit as e:
+            out.append(str(e.code if e.code is not None else e))
+            continue
+        if users[symbol]["bpp"] == 8:
+            out += L.bg0_window_errors(symbol, maps, levels)
+    return out
+
+
+def _nearest(colours, rgb):
+    r, g, b = rgb
+    best, bi = None, 0
+    for i, (cr, cg, cb) in colours:
+        d = (cr - r) ** 2 + (cg - g) ** 2 + (cb - b) ** 2
+        if best is None or d < best:
+            best, bi = d, i
+            if not d:
+                break
+    return bi, best
+
+
+def import_tiles(png, palette, bpp, set_tiles, banks=None):
+    """A picture (PNG bytes, any mode) as a BG layer's cells, quantised to the
+    room's palette (docs/editors.md, "Tiles"): its size in cells (rounded up;
+    the rest is transparent), each cell's 64 palette indices (BG0: the
+    nearest of entries 1-255, a transparent pixel 0; BG1-3: the bank of
+    `banks` (all 16 by default) whose 15 colours draw the cell closest,
+    `bank * 16 + p`, a transparent pixel p = 0), and what the cells are in
+    the tile set `set_tiles` (64 bytes a tile): a tile of it, one of its
+    tiles flipped, blank, or a new tile (counted once, flips included)."""
+    from PIL import Image
+
+    try:
+        img = Image.open(io.BytesIO(png))
+        img.load()
+    except Exception as e:
+        raise EditError("not a picture: %s" % e)
+    img = img.convert("RGBA")
+    w, h = img.size
+    if w * h > 1024 * 1024:
+        raise EditError("%dx%d pixels: import at most a megapixel at a time" % (w, h))
+    cols, rows = -(-w // CELL), -(-h // CELL)
+    rgb = [tuple(c) for c in (jasc_pal.to_rgb(v) for v in palette_entries(palette))]
+    px = img.load()
+    bank_list = list(range(16)) if not banks else sorted({int(b) for b in banks if 0 <= int(b) < 16})
+    if bpp == 4 and not bank_list:
+        raise EditError("no palette bank to import into")
+    # a cell that looks like a tile of the set (flipped, in a bank) is that
+    # tile: the room palette has entries of the same colour, so the nearest
+    # colour alone could make another block of the same look
+    looks = {}
+    for t in range(len(set_tiles) // 64):
+        for f, blk in enumerate(_flips(bytes(set_tiles[t * 64:(t + 1) * 64]))):
+            for bank in ([0] if bpp == 8 else bank_list):
+                add = bank * 16 if bpp == 4 else 0
+                key = tuple(None if p == 0 else rgb[p + add] for p in blk)
+                looks.setdefault(key, bytes(p + add for p in blk))
+    cache = {}
+    out = bytearray(cols * rows * 64)
+    for cy in range(rows):
+        for cx in range(cols):
+            cell = []
+            for y in range(CELL):
+                for x in range(CELL):
+                    X, Y = cx * CELL + x, cy * CELL + y
+                    c = px[X, Y] if X < w and Y < h else (0, 0, 0, 0)
+                    cell.append(None if c[3] < 128 else c[:3])
+            o = (cy * cols + cx) * 64
+            if tuple(cell) in looks:
+                out[o:o + 64] = looks[tuple(cell)]
+                continue
+            if bpp == 8:
+                block = []
+                for c in cell:
+                    if c is None:
+                        block.append(0)
+                        continue
+                    if c not in cache:
+                        cache[c] = _nearest([(i, rgb[i]) for i in range(1, 256)], c)[0]
+                    block.append(cache[c])
+            else:
+                best = None
+                for bank in bank_list:
+                    err, block = 0, []
+                    for c in cell:
+                        if c is None:
+                            block.append(bank * 16)
+                            continue
+                        key = (bank, c)
+                        if key not in cache:
+                            cache[key] = _nearest([(bank * 16 + i, rgb[bank * 16 + i]) for i in range(1, 16)], c)
+                        i, d = cache[key]
+                        block.append(i)
+                        err += d
+                    if best is None or err < best[0]:
+                        best = (err, block)
+                block = best[1]
+            o = (cy * cols + cx) * 64
+            out[o:o + 64] = bytes(block)
+    # what the cells are in the set
+    index = {}
+    for t in range(len(set_tiles) // 64):
+        blk = bytes(set_tiles[t * 64:(t + 1) * 64])
+        for f, fb in enumerate(_flips(blk)):
+            index.setdefault(fb, (t, f))
+    stats = {"cells": cols * rows, "blank": 0, "tiles": 0, "flipped": 0, "new": 0}
+    new = set()
+    for k in range(cols * rows):
+        blk = bytes(p & 15 if bpp == 4 else p for p in out[k * 64:(k + 1) * 64])
+        hit = index.get(blk)
+        if hit is not None:
+            stats["blank" if hit[0] == 0 else "flipped" if hit[1] else "tiles"] += 1
+        elif blk not in new:
+            new.add(blk)
+            for fb in _flips(blk):
+                index.setdefault(fb, (-1, 0))
+            stats["new"] += 1
+        else:
+            stats["tiles"] += 1
+    return cols, rows, bytes(out), stats
+
+
+def _flips(blk):
+    """A 64-pixel block under its four flips (none, X, Y, both)."""
+    rows = [blk[y * 8:(y + 1) * 8] for y in range(8)]
+    h = [r[::-1] for r in rows]
+    return [b"".join(rows), b"".join(h), b"".join(rows[::-1]), b"".join(h[::-1])]
+
+
+def palette_entries(palette):
+    if len(palette) != 256 or not all(isinstance(v, int) and 0 <= v <= 0xFFFF for v in palette):
+        raise EditError("a room palette is 256 entries of 0-0xFFFF (BGR555, bit 15 kept)")
+    return palette
 
 
 def sprite_png(bank_dir, frame, palette_pal=None):
@@ -341,5 +494,6 @@ def patch_collision(path, info, cells):
     return buf.getvalue()
 
 
-__all__ = ["EditError", "SPRITES", "collision_cells", "entity_sprites", "layer_info", "layer_pixels", "legend",
-           "patch_collision", "patch_layer", "room_view", "sprite_banks", "sprite_png", "tileset", "with_palette"]
+__all__ = ["EditError", "SPRITES", "collision_cells", "entity_sprites", "import_tiles", "layer_info", "layer_pixels",
+           "legend", "patch_collision", "patch_layer", "room_view", "sprite_banks", "sprite_png", "tileset",
+           "tileset_errors", "with_palette"]

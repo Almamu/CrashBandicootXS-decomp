@@ -347,6 +347,160 @@ class Rooms(LevelEditor):
         self.assertEqual(r["report"]["number"], 36)
 
 
+class Tiles(LevelEditor):
+    """Drawing tiles: a picture imported as cells, the tile sets' limits on a save."""
+
+    def test_import(self):
+        from PIL import Image
+        # two cells of jungle jam's BG1 as true colour, one of them flipped: the set's tiles, nothing new
+        with Image.open(ROOT / ROOM / "bg1.png") as im:
+            rgb = im.convert("RGBA").crop((64, 64, 80, 72))
+        a, b = rgb.crop((0, 0, 8, 8)), rgb.crop((8, 0, 16, 8)).transpose(Image.FLIP_LEFT_RIGHT)
+        pic = Image.new("RGBA", (24, 8), (0, 0, 0, 0))
+        pic.paste(a, (0, 0))
+        pic.paste(b, (8, 0))
+        buf = io.BytesIO()
+        pic.save(buf, format="PNG")
+        st, r = self.call("POST", "/api/projects/xs/room/import", {
+            "path": ROOM, "layer": "bg1", "png": base64.b64encode(buf.getvalue()).decode()})
+        self.assertEqual(st, 200, r)
+        self.assertEqual((r["cols"], r["rows"]), (3, 1))
+        s = r["stats"]
+        self.assertEqual((s["cells"], s["new"], s["blank"], s["limit"]), (3, 0, 1, 768))
+        self.assertEqual(s["tiles"] + s["flipped"], 2)
+        cells = base64.b64decode(r["cells"])
+        with Image.open(ROOT / ROOM / "bg1.png") as im:
+            self.assertEqual(cells[:64], im.crop((64, 64, 72, 72)).tobytes())
+        # a colour no entry has: the nearest, in one bank per cell
+        pic = Image.new("RGB", (8, 8), (250, 10, 240))
+        buf = io.BytesIO()
+        pic.save(buf, format="PNG")
+        st, r = self.call("POST", "/api/projects/xs/room/import", {
+            "path": ROOM, "layer": "bg1", "png": base64.b64encode(buf.getvalue()).decode(), "banks": [2]})
+        self.assertEqual(st, 200, r)
+        self.assertTrue(all(p >> 4 == 2 and p & 15 for p in base64.b64decode(r["cells"])))
+        self.assertEqual(r["stats"]["new"], 1)
+
+    def test_too_many_tiles_on_a_screen(self):
+        # 600 cells of new tiles in one screen of BG0: more than the tile slot pool's 512
+        import random
+        rnd = random.Random(1)
+        cells = [[cx, cy, base64.b64encode(bytes(rnd.randrange(1, 256) for _ in range(64))).decode()]
+                 for cy in range(20) for cx in range(30)]
+        files = {p: p.read_bytes() for p in (ROOT / ROOM).glob("*")}
+        try:
+            st, r = self.call("POST", "/api/projects/xs/room/save", {"path": ROOM, "layers": {"bg0": cells}})
+            self.assertEqual(st, 422, r)
+            self.assertEqual({d["code"] for d in r["diagnostics"]}, {"tileset"}, r)
+            self.assertIn("tile slot pool", r["diagnostics"][0]["message"])
+            for p, b in files.items():
+                self.assertEqual(p.read_bytes(), b, p)
+        finally:
+            for p, b in files.items():
+                p.write_bytes(b)
+
+
+EXTRA = "games/xs/data/levels/jungle_jam/extra"
+
+
+def scratch_edits(call):
+    """The edit test's edits, through the API (`call(method, path, body)`):
+    a new room (a copy of jungle jam's, played before it), resized, its blend
+    changed, a new tile drawn into BG0 and a picture imported into BG1.
+    Returns the answers, for checking."""
+    from PIL import Image
+
+    out = {}
+    st, out["new"] = call("POST", "/api/projects/xs/room/new", {
+        "from": "jungle_jam/main", "folder": "jungle_jam/extra",
+        "attach": {"level": "LEVEL_JUNGLE_JAM", "as": "rooms", "index": 0}})
+    assert st == 200, out["new"]
+    st, out["resize"] = call("POST", "/api/projects/xs/room/resize", {
+        "path": EXTRA, "edges": {"left": 4, "right": -10, "top": 0, "bottom": 2}})
+    assert st == 200, out["resize"]
+    st, v = call("GET", "/api/projects/xs/room?path=" + EXTRA)
+    room = v["room"]
+    room["record"]["blend"] = {"effect": 1, "eva": 8, "evb": 12}
+    start = next(e for e in room["entities"] if e["type"] == "START_MARKER")
+    cx, cy = start["x"] // 8, start["y"] // 8
+    # a new tile: a checker of two colours, in a row of BG0 cells above the start
+    tile = bytes((34 if (x // 2 + y // 2) % 2 else 200) for y in range(8) for x in range(8))
+    b64 = base64.b64encode(tile).decode()
+    bg0 = [[cx + k, cy - 6, b64] for k in range(-4, 12)]
+    # a picture imported into BG1 (scale 128: its cells near the start's, halved): a gradient
+    pic = Image.new("RGB", (48, 24))
+    pic.putdata([(x * 5, y * 10, 255 - x * 5) for y in range(24) for x in range(48)])
+    buf = io.BytesIO()
+    pic.save(buf, format="PNG")
+    st, out["import"] = call("POST", "/api/projects/xs/room/import", {
+        "path": EXTRA, "layer": "bg1", "png": base64.b64encode(buf.getvalue()).decode(), "banks": [0, 1, 2, 3]})
+    assert st == 200, out["import"]
+    imp = out["import"]
+    cells = base64.b64decode(imp["cells"])
+    bx, by = cx // 2 + 4, max(0, cy // 2 - 8)
+    bg1 = [[bx + i % imp["cols"], by + i // imp["cols"], base64.b64encode(cells[i * 64:(i + 1) * 64]).decode()]
+           for i in range(imp["cols"] * imp["rows"])]
+    st, out["save"] = call("POST", "/api/projects/xs/room/save", {
+        "path": EXTRA, "room": room, "layers": {"bg0": bg0, "bg1": bg1}})
+    assert st == 200, out["save"]
+    out["cells"] = {"bg0": bg0, "bg1": bg1}
+    return out
+
+
+class Scratch(unittest.TestCase):
+    """The edit test in a scratch copy of the tree (crashdata.mods.copy_tree):
+    a new room, resized, a new tile and an imported picture, a blend;
+    data-check passes, and with CRASH_EDITOR_TEST_BUILD=1 the ROM builds."""
+
+    @classmethod
+    def setUpClass(cls):
+        import tempfile
+        import threading
+
+        from crashdata import mods
+        from buildtools import editor_server as E
+
+        cls.tmp = Path(tempfile.mkdtemp(prefix="level-editor-"))
+        cls.tree = cls.tmp / "tree"
+        mods.copy_tree(cls.tree)
+        cls.app = E.Server(cls.tree)
+        cls.httpd = E.serve(cls.app, 0)
+        cls.port = cls.httpd.server_address[1]
+        threading.Thread(target=cls.httpd.serve_forever, daemon=True).start()
+
+    @classmethod
+    def tearDownClass(cls):
+        import shutil
+
+        cls.httpd.shutdown()
+        cls.httpd.server_close()
+        shutil.rmtree(cls.tmp, ignore_errors=True)
+
+    token = None
+    call = LevelEditor.call
+
+    def test_an_edit(self):
+        import os
+        import subprocess
+
+        out = scratch_edits(self.call)
+        self.assertEqual(sorted(out["save"]["saved"]), [EXTRA + "/bg0.png", EXTRA + "/bg1.png", EXTRA + "/room.json"])
+        self.assertGreaterEqual(out["import"]["stats"]["new"], 1)
+        st, v = self.call("GET", "/api/projects/xs/room?path=" + EXTRA)
+        self.assertEqual(v["room"]["record"]["blend"], {"effect": 1, "eva": 8, "evb": 12})
+        self.assertEqual(v["room"]["layers"]["bg0"]["size_tiles"], [496, 62])
+        # the new tile is the set's, at its end
+        st, t = self.call("GET", "/api/projects/xs/room/tiles?path=%s&layer=bg0" % EXTRA)
+        self.assertEqual(st, 200, t)
+        self.assertGreater(t["count"], 6638)
+        st, rep = self.call("GET", "/api/projects/xs/check?text=0")
+        self.assertTrue(rep["ok"], rep["diagnostics"])
+        if os.environ.get("CRASH_EDITOR_TEST_BUILD") == "1":
+            b = subprocess.run(["make", "-j%d" % (os.cpu_count() or 1)], cwd=self.tree, capture_output=True, text=True)
+            self.assertEqual(b.returncode, 0, b.stdout[-3000:] + b.stderr[-3000:])
+            self.assertTrue((self.tree / "crashbandicootxs.gba").is_file())
+
+
 class PreviewRooms(unittest.TestCase):
     """tools/preview.py's LEVEL and ROOM: a level's bonus and gem-path rooms
     by name or folder (the PC port's --room bonus|gem-path)."""

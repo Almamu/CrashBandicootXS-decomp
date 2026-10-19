@@ -188,6 +188,20 @@ export interface RoomTiles {
   banks: number[];
   /** base64 of the layer's cells, u16 LE: BG0 tile | flip << 14, BG1-3 tile | flip << 10 | bank << 12 */
   cells: string;
+  /** each tile's cells in every layer of every room that names the set */
+  uses: number[];
+  /** the most tiles the engine holds of such a set (BG0 8192, BG1-3 768) */
+  limit: number;
+}
+
+/** POST /api/projects/ID/room/import: a picture as a layer's cells, quantised to the room's palette. */
+export interface TileImport {
+  cols: number;
+  rows: number;
+  /** base64 of cols * rows cells' 64 palette indices, row by row of cells */
+  cells: string;
+  /** the cells: blank, a tile of the set, one flipped, new tiles (each once); the set's size and limit */
+  stats: { cells: number; blank: number; tiles: number; flipped: number; new: number; setCount: number; limit: number };
 }
 
 /** POST /api/projects/ID/room/save: a room's edits, saved together. */
@@ -789,6 +803,11 @@ export class EditorClient {
   /** Saves a room's edits (room.json, painted cells, the palette) together: all, or none. */
   saveRoom(id: string, body: RoomSave): Promise<SaveResult> {
     return this.request("POST", this.project(id, "room/save"), body);
+  }
+
+  /** A picture (PNG, base64) as a BG layer's cells in the room's palette (`banks`: BG1-3's to use). */
+  importTiles(id: string, body: { path: string; layer: string; png: string; palette?: number[]; banks?: number[] }): Promise<TileImport> {
+    return this.request("POST", this.project(id, "room/import"), body);
   }
 
   /** Makes a room: a copy of one, or an empty room laid out like it; saved, checked, all or nothing. */

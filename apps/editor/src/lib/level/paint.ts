@@ -197,3 +197,120 @@ export function brushOfBlock(index: Map<string, TileBrush>, block: Uint8Array, b
   if (!b) return null;
   return { ...b, bank: bpp === 4 ? block[0]! >> 4 : 0 };
 }
+
+// -- drawing tiles (docs/editors.md, "Tiles") -----------------------------------
+//
+// A tile set is made from its rooms' pictures, so a tile is drawn by drawing
+// cells: an edited tile replaces the cells that draw it (each in its own
+// flips and bank), a new tile is a block no tile of the set is yet, which
+// the build adds at the end of the set once a cell draws it, and a tile no
+// cell draws any more is gone from the set.
+
+/** A tile's 64 pixels (4bpp: 0-15) drawn as a cell does: flipped, and on BG1-3 in a bank. */
+export function drawTile(pixels: Uint8Array, b: TileBrush, bpp: 4 | 8): Uint8Array {
+  return tileBlock(pixels, { ...b, tile: 0 }, bpp);
+}
+
+/**
+ * Replaces every cell of a layer that draws `tile` (under any flip, in any
+ * bank) with `pixels` drawn in that cell's flips and bank: the cells that
+ * change. `pixels` of zeros clears them (BG1-3: blank in their bank).
+ */
+export function replaceTile(layer: PixelLayer, index: Map<string, TileBrush>, bpp: 4 | 8, tile: number, pixels: Uint8Array): CellChange<Uint8Array>[] {
+  const cols = layer.width / CELL;
+  const rows = layer.height / CELL;
+  const out: CellChange<Uint8Array>[] = [];
+  for (let cy = 0; cy < rows; cy++) {
+    for (let cx = 0; cx < cols; cx++) {
+      const before = readCell(layer, cx, cy);
+      const b = brushOfBlock(index, before, bpp);
+      if (!b || b.tile !== tile) continue;
+      const after = drawTile(pixels, b, bpp);
+      if (sameBlock(before, after)) continue;
+      writeCell(layer, cx, cy, after);
+      out.push({ index: cy * cols + cx, before, after });
+    }
+  }
+  return out;
+}
+
+/** How many cells of a layer draw `tile`. */
+export function tileUses(layer: PixelLayer, index: Map<string, TileBrush>, bpp: 4 | 8, tile: number): number {
+  const cols = layer.width / CELL;
+  const rows = layer.height / CELL;
+  let n = 0;
+  for (let cy = 0; cy < rows; cy++) for (let cx = 0; cx < cols; cx++) if (brushOfBlock(index, readCell(layer, cx, cy), bpp)?.tile === tile) n++;
+  return n;
+}
+
+/**
+ * A set with a tile added at its end (a block of 64 pixels, 4bpp: 0-15), or
+ * the brush of the tile that already is it (flips included): {tiles, count,
+ * index, brush, added}.
+ */
+export function addTile(
+  tiles: Uint8Array,
+  count: number,
+  index: Map<string, TileBrush>,
+  pixels: Uint8Array,
+  bpp: 4 | 8,
+): { tiles: Uint8Array; count: number; brush: TileBrush; added: boolean } {
+  const have = index.get(blockKey(pixels, bpp));
+  if (have) return { tiles, count, brush: { ...have }, added: false };
+  const out = new Uint8Array((count + 1) * CELL_PIXELS);
+  out.set(tiles.subarray(0, count * CELL_PIXELS));
+  out.set(pixels.subarray(0, CELL_PIXELS), count * CELL_PIXELS);
+  for (const [hflip, vflip] of [[false, false], [true, false], [false, true], [true, true]] as const) {
+    const key = blockKey(tileBlock(out, { tile: count, hflip, vflip, bank: 0 }, bpp), bpp);
+    if (!index.has(key)) index.set(key, { tile: count, hflip, vflip, bank: 0 });
+  }
+  return { tiles: out, count: count + 1, brush: { tile: count, hflip: false, vflip: false, bank: 0 }, added: true };
+}
+
+/**
+ * Writes imported cells (`data`: cols * rows blocks of 64 indices, row by
+ * row) into a layer at cell `at`, those inside it: the cells that change.
+ */
+export function pasteCells(layer: PixelLayer, at: Point, cols: number, rows: number, data: Uint8Array): CellChange<Uint8Array>[] {
+  const lc = layer.width / CELL;
+  const lr = layer.height / CELL;
+  const out: CellChange<Uint8Array>[] = [];
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const cx = at.x + x;
+      const cy = at.y + y;
+      if (cx < 0 || cy < 0 || cx >= lc || cy >= lr) continue;
+      const after = data.slice((y * cols + x) * CELL_PIXELS, (y * cols + x + 1) * CELL_PIXELS);
+      const before = readCell(layer, cx, cy);
+      if (sameBlock(before, after)) continue;
+      writeCell(layer, cx, cy, after);
+      out.push({ index: cy * lc + cx, before, after });
+    }
+  }
+  return out;
+}
+
+/** The new tiles a layer's cells would add to its set: the blocks no tile is, each once (flips included). */
+export function newBlocks(layer: PixelLayer, index: Map<string, TileBrush>, bpp: 4 | 8, cells: Iterable<number>): number {
+  const cols = layer.width / CELL;
+  const seen = new Set<string>();
+  let n = 0;
+  for (const i of cells) {
+    const block = readCell(layer, i % cols, Math.floor(i / cols));
+    const key = blockKey(block, bpp);
+    if (index.has(key) || seen.has(key)) continue;
+    n++;
+    // its flips are the same tile
+    for (const [hflip, vflip] of [[false, false], [true, false], [false, true], [true, true]] as const) {
+      seen.add(blockKey(tileBlock(block.map((p) => (bpp === 4 ? p & 15 : p)), { tile: 0, hflip, vflip, bank: 0 }, bpp), bpp));
+    }
+  }
+  return n;
+}
+
+/** The palette banks a BG1-3 layer's cells draw in (a cell's pixels are all of one bank). */
+export function layerBanks(layer: PixelLayer): number[] {
+  const seen = new Array<boolean>(16).fill(false);
+  for (let y = 0; y < layer.height; y += CELL) for (let x = 0; x < layer.width; x += CELL) seen[layer.data[y * layer.width + x]! >> 4] = true;
+  return seen.flatMap((b, i) => (b ? [i] : []));
+}

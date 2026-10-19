@@ -781,6 +781,10 @@ def room_size_errors(room):
                         "/layers/%s/size_chunks" % lname))
         if min(layer["scale"]) < 0:
             out.append(("%s scrolls at a negative scale" % lname, "/layers/%s/scale" % lname))
+    sets = {layers[n]["tileset"] for n in ("bg1", "bg2", "bg3") if n in layers}
+    if len(sets) > 1:
+        out.append(("BG1-3 name the tile sets %s: they share char block 2, where each loads its set, so they name one"
+                    % ", ".join(sorted(sets)), "/layers"))
     base = layers.get("bg0") or layers["collision"]
     w, h = base["size_tiles"]
     if not (ROOM_MIN_CELLS[0] <= w <= ROOM_MAX_CELLS[0] and ROOM_MIN_CELLS[1] <= h <= ROOM_MAX_CELLS[1]):
@@ -1095,9 +1099,17 @@ _HIGH_NIBBLES = 0xF0F0F0F0F0F0F0F0
 _BYTES = 0x0101010101010101
 
 TILESET_ORDER_JSON = LEVELS_DIR / "tileset_order.json"
-# The most tiles a cell can name: BG0's 14-bit tile-slot pool ids, BG1-3's
-# 10-bit screen entries.
-MAX_TILES = {8: 0x4000, 4: 0x400}
+# The most tiles a set can have (docs/levels.md, "Tile sets"): not what a
+# cell can name (BG0's 14 bits, BG1-3's 10) but what the engine holds: BG0's
+# tile slot pool maps 0x2000 tile ids (slotForTile), and BG1-3's sets are
+# unpacked into char block 2 up to the screen blocks at 0x0600E000, 768
+# 4bpp tiles.
+MAX_TILES = {8: 0x2000, 4: 768}
+# The BG0 tiles that fit on screen at once: the tile slot pool's VRAM slots
+# (char blocks 0-1, 512 8bpp tiles), for the up to 31x21 cells a screen
+# shows (a camera between cells shows a column and a row more).
+BG0_SLOTS = 0x200
+BG0_WINDOW = (31, 21)
 
 
 def tile_blocks(data, bpp):
@@ -1314,8 +1326,55 @@ def generate_tileset(symbol, levels, users=None, order=None):
         more = len(errors) - 20
         sys.exit("\n".join(errors[:20] + (["... and %d more cells" % more] if more > 0 else [])))
     if len(tiles) > MAX_TILES[spec["bpp"]]:
-        sys.exit("%s: %d tiles, more than a cell can name (%d)" % (symbol, len(tiles), MAX_TILES[spec["bpp"]]))
+        sys.exit("%s: %d tiles, more than the engine holds (%d: %s, docs/levels.md \"Tile sets\")"
+                 % (symbol, len(tiles), MAX_TILES[spec["bpp"]],
+                    "the BG0 tile slot pool's ids" if bg0 else "char block 2, up to the screen blocks"))
     return tiles, banks, maps
+
+
+def bg0_window_max(cells, cols, size_tiles):
+    """The most distinct BG0 tiles a screen of the room shows at once, and
+    where (the window's top left cell): every camera position's up to 31x21
+    cells (BG0_WINDOW) of the scrollable size. The tile slot pool has
+    BG0_SLOTS of them (docs/levels.md, "Tile sets")."""
+    from collections import Counter
+
+    sw, sh = size_tiles
+    ww, wh = min(BG0_WINDOW[0], sw), min(BG0_WINDOW[1], sh)
+    ids = [v & 0x3FFF for v in cells]
+    best, at = 0, (0, 0)
+    for y0 in range(sh - wh + 1):
+        cnt = Counter()
+        cols_ids = [[ids[(y0 + r) * cols + x] for r in range(wh)] for x in range(sw)]
+        for x in range(ww):
+            cnt.update(cols_ids[x])
+        if len(cnt) > best:
+            best, at = len(cnt), (0, y0)
+        for x0 in range(1, sw - ww + 1):
+            for t in cols_ids[x0 - 1]:
+                cnt[t] -= 1
+                if not cnt[t]:
+                    del cnt[t]
+            cnt.update(cols_ids[x0 + ww - 1])
+            if len(cnt) > best:
+                best, at = len(cnt), (x0, y0)
+    return best, at
+
+
+def bg0_window_errors(symbol, maps, levels):
+    """Each BG0 layer of the set whose screen shows more tiles than the
+    tile slot pool holds."""
+    out = []
+    for (room, lname), cells in maps.items():
+        if lname != "bg0":
+            continue
+        layer = read_json(LEVELS_DIR / room / "room.json")["layers"]["bg0"]
+        n, (x, y) = bg0_window_max(cells, layer["size_chunks"][0] * CHUNK_W, layer["size_tiles"])
+        if n > BG0_SLOTS:
+            out.append("%s/%s/bg0: %d different tiles of %s on one screen (cells %d-%d, %d-%d): the BG0 tile slot "
+                       "pool holds %d (docs/levels.md, \"Tile sets\")"
+                       % (LEVELS_DIR, room, n, symbol, x, x + BG0_WINDOW[0] - 1, y, y + BG0_WINDOW[1] - 1, BG0_SLOTS))
+    return out
 
 
 def tileset_bytes(tiles, bpp):
@@ -1366,6 +1425,10 @@ def tileset_build(symbol, build_dir):
     users = tileset_users(levels)
     tiles, banks, maps = generate_tileset(symbol, levels, users)
     bpp = users[symbol]["bpp"]
+    if bpp == 8:
+        errors = bg0_window_errors(symbol, maps, levels)
+        if errors:
+            sys.exit("\n".join(errors))
     data = tileset_bytes(tiles, bpp)
     out = Path(build_dir) / "tilesets"
     write_if_changed(out / (symbol + ".bin"), data)
@@ -1477,15 +1540,11 @@ def new_tilesets_c(levels, build_dir):
 # BG0's scrollable size at least the screen (LevelLayers' maxScroll is
 # BG0's size less the screen's, which would go negative), at most what an
 # entity's u16 pixel position reaches; at most 512 entities (the entity
-# flags' first 16 words, which a room change clears); the BG1-3 tile sets
-# at most 768 tiles (char block 2 up to the screen blocks at 0x0600E000),
-# the BG0 ones 8192 (the tile slot pool's slotForTile), and at most 512 BG0
-# tiles on screen at once (its VRAM slots).
+# flags' first 16 words, which a room change clears). The tile sets' limits
+# are MAX_TILES and BG0_SLOTS.
 ROOM_MIN_CELLS = (30, 20)
 ROOM_MAX_CELLS = (0x10000 // 8 - 1, 0x10000 // 8 - 1)
 ROOM_MAX_ENTITIES = 512
-TILESET_LIMITS = {8: 0x2000, 4: 768}
-BG0_SLOTS = 0x200
 
 # The record kinds (ROOM_KIND_*, engine/include/constants/rooms.h); a room's
 # "kind" is one of the first three.
