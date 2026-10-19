@@ -292,7 +292,7 @@ platform/pc/tests/intro.keys       the boot to New Game and the whole intro cuts
 platform/pc/tests/link.keys        the save menu's "load link game", with no cable, aborted
 platform/pc/tests/bonus.keys       a new game into Jungle Jam's bonus round and out again
 platform/pc/tests/gem_path.keys    Ace of Space's gem path (--level 11 --room gem-path): its
-                                   hover ride, steered until a nitro, then on foot
+                                   whole hover ride to the exit, then on foot
 platform/pc/tests/*_mgba_screens.json
                                    the hashes of mGBA's pictures for the five (boottest.py
                                    `screens`), what CI compares the PPU's with
@@ -447,7 +447,7 @@ same key file, each frame's picture compared (`--every 1`):
 | boot.keys, `--level` 21 (N. Gin: jetpack) | 960 | 943 |
 | link.keys (the save menu's "load link game" with no cable, aborted) | 1000 | 1000 |
 | bonus.keys (a new game, Jungle Jam into its bonus round and out) | 5000 | 4997 |
-| gem_path.keys, `--level 11 --room gem-path` (Ace of Space's hover ride, then on foot) | 1400 | 1400 |
+| gem_path.keys, `--level 11 --room gem-path` (Ace of Space's hover ride to its exit, then on foot) | 2900 | 2900 |
 
 The pictures that differ are of the CPU's time, not the PPU's: the host's
 game takes no time, the GBA's does. Frame 512 is the first after the

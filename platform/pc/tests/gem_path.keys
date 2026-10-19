@@ -1,17 +1,20 @@
 # The pc platform's gem path test (#1093, docs/platforms.md), played with
 # --level 11 --room gem-path (Ace of Space's gem path, the one HOVER room):
-# boot.keys's Start and A through the logos and menus to the level select,
-# which picks the level (its last Start pauses it, A at 524 resumes), then
-# the hover ride, steered with the D-pad (left slows the ride and puts the
-# camera lead 50 px ahead, right 10 px, neither 30 px) past a ? crate and
-# a nitro wall, through the nitro field until a nitro kills Crash (~1024),
-# then on foot in the level's first room, where a TNT crate kills him
-# (~1240). The ride crashed the host on its first frame until SetLeadSpeed's
-# NULL_WRITE and the camera lead's NULL_READs (its sprite has no bank).
+# platform/pc/preview.keys's Start and A through the logos and menus to the
+# level select (frames 1-514), which picks the level, then the whole hover
+# ride, steered with the D-pad (left slows the ride and puts the camera
+# lead 50 px ahead, right 10 px, neither 30 px) past its ? crates, nitro
+# walls and nitro field and the robot that chases it, without a death, to
+# the room's exit (~frame 2460: InputCtrl::Update drops the camera lead and
+# requests the exit, then SetLeadSpeed writes through the NULL lead, the
+# NULL_WRITE), then on foot in the level's first room, where a TNT crate
+# kills Crash (~2650) and he plays on from the start. The ride crashed the
+# host on its first frame until SetLeadSpeed's NULL_WRITE and the camera
+# lead's NULL_READs (its sprite has no bank).
 # tools/boottest.py `screens` (the same --level and --room) played it on
-# mGBA for tests/gem_path_mgba_screens.json.
-# Written by a search over the host's runs (the steering that kept Crash
-# alive longest).
+# mGBA for tests/gem_path_mgba_screens.json: all 2900 frames the same.
+# The ride was written by a search over the host's runs (each 12-frame
+# step the one whose random continuations survived longest).
 # A line `FRAME KEYS` holds KEYS from FRAME on (platform/pc/src/input.c).
 1 START
 4 -
@@ -185,27 +188,83 @@
 508 -
 511 A
 514 -
-517 START
-520 -
-524 A
-527 -
-624 LEFT
-636 DOWN+LEFT
-732 -
-744 LEFT
-756 UP+LEFT
-972 -
-984 UP+LEFT
-1008 RIGHT
-1020 DOWN+RIGHT
-1032 -
-1130 RIGHT
-1160 RIGHT+A
-1166 RIGHT
-1200 RIGHT+A
-1206 RIGHT
-1250 RIGHT+B
-1256 RIGHT
-1300 RIGHT+A
-1306 RIGHT
-1360 -
+515 -
+539 RIGHT
+563 LEFT
+575 -
+611 RIGHT
+647 LEFT
+659 DOWN
+731 LEFT
+755 RIGHT
+767 LEFT+UP
+935 DOWN
+947 LEFT
+959 LEFT+UP
+971 RIGHT+DOWN
+983 LEFT+DOWN
+995 -
+1007 RIGHT
+1019 -
+1043 RIGHT
+1067 DOWN
+1079 RIGHT+DOWN
+1115 UP
+1175 LEFT
+1199 DOWN
+1223 RIGHT
+1259 UP
+1295 RIGHT
+1307 UP
+1319 LEFT
+1331 RIGHT+DOWN
+1343 RIGHT
+1355 LEFT
+1367 DOWN
+1391 UP
+1427 -
+1439 LEFT
+1451 LEFT+DOWN
+1691 -
+1703 RIGHT
+1739 -
+1751 LEFT+UP
+1763 -
+1799 UP
+1811 -
+1859 RIGHT
+1895 LEFT
+1919 RIGHT+DOWN
+1931 -
+1955 UP
+1967 -
+1979 RIGHT+DOWN
+2003 -
+2015 RIGHT+DOWN
+2027 RIGHT+UP
+2039 LEFT
+2051 RIGHT+UP
+2063 RIGHT
+2087 -
+2099 LEFT
+2123 -
+2243 LEFT
+2267 UP
+2291 -
+2327 DOWN
+2363 UP
+2400 -
+2520 RIGHT
+2560 RIGHT+A
+2566 RIGHT
+2600 RIGHT+A
+2606 RIGHT
+2650 RIGHT+B
+2656 RIGHT
+2700 RIGHT+A
+2706 RIGHT
+2750 RIGHT+B
+2756 RIGHT
+2800 RIGHT+A
+2806 RIGHT
+2860 -

@@ -78,14 +78,15 @@ jobs:
     # Ace of Space's gem path, the one hover ride (tests/gem_path.keys,
     # --room gem-path): its camera lead wrote and read through NULL
     # (NULL_WRITE, NULL_READ), which crashed the host on the ride's first
-    # frame. Steered through its nitros until one kills Crash, then on
+    # frame. Steered through the whole ride to the room's exit, where the
+    # lead is dropped and SetLeadSpeed writes through NULL again, then on
     # foot in the level; every frame's picture is mGBA's
     # (tests/gem_path_mgba_screens.json, boottest.py `screens` with the
     # same --level and --room).
     - name: Ride a gem path
       run: |
         python3 tools/boottest.py host build/pc/crashbandicootxs_pc --keys platform/pc/tests/gem_path.keys \
-          --level 11 --room gem-path --frames 1400 --every 1 --timeout 300 --out host_gem_path_screens.json
+          --level 11 --room gem-path --frames 2900 --every 1 --timeout 300 --out host_gem_path_screens.json
         python3 tools/boottest.py compare platform/pc/tests/gem_path_mgba_screens.json host_gem_path_screens.json
 
     # The editors' preview (#1167, docs/editors.md "Preview"): a level's
