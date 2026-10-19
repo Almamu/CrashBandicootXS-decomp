@@ -46,6 +46,9 @@ export interface EntityTypes {
       | "width"
       | "path_point"
       | "path"
-      | "hint_text";
+      | "hint_text"
+      | "trap_group"
+      | "carrier_path"
+      | "cutscene_trigger";
   }[];
 }

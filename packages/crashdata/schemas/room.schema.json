@@ -403,6 +403,15 @@
         },
         {
           "$ref": "#/$defs/param_hint_text"
+        },
+        {
+          "$ref": "#/$defs/param_trap_group"
+        },
+        {
+          "$ref": "#/$defs/param_carrier_path"
+        },
+        {
+          "$ref": "#/$defs/param_cutscene_trigger"
         }
       ]
     },
@@ -2129,6 +2138,138 @@
       ],
       "additionalProperties": false,
       "description": "N-Tranced's power hint: its UI text (0x7A + text)"
+    },
+    "param_trap_group": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "trap_group"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "ALWAYS_ACTIVE",
+              "STARTS_TRIGGERED",
+              "BIT2",
+              "BIT3",
+              "BIT4",
+              "BIT5",
+              "BIT6",
+              "BIT7"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "group": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "N-Tranced's type 73: always active, starts triggered, and the 1-based group it joins (0: none)"
+    },
+    "param_carrier_path": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "carrier_path"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EXIT_MIRROR",
+              "FLIP_X",
+              "FLIP_Y",
+              "UNK3",
+              "UNK4",
+              "TRIAL_KIND",
+              "ASSIST_AKU_AKU",
+              "ASSIST_CHECKPOINT"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "path": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "N-Tranced's type 92: the path it carries Crash along (the path table at 0x020001C8; its flags aren't read)"
+    },
+    "param_cutscene_trigger": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "const": "cutscene_trigger"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "BIT0",
+              "BIT1",
+              "BIT2",
+              "LOCK_CAMERA",
+              "BIT4",
+              "BIT5",
+              "BIT6",
+              "BIT7"
+            ]
+          },
+          "description": "the byte's bits, by name"
+        },
+        "cutscene": {
+          "type": "integer",
+          "minimum": -128,
+          "maximum": 127
+        },
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "minItems": 1,
+          "description": "the record's words past the view, which nothing names yet"
+        }
+      },
+      "required": [
+        "layout"
+      ],
+      "additionalProperties": false,
+      "description": "N-Tranced's type 106: the cutscene it plays (sub_08043A20) and whether it locks the camera first"
     }
   }
 }

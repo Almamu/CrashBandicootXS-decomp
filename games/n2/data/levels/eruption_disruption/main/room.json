@@ -59,7 +59,7 @@
     {"layout": "path_point", "flags": [], "path": 2, "action": 0, "index": 6},
     {"layout": "path_point", "flags": [], "path": 2, "action": 0, "index": 7},
     {"layout": "path_point", "flags": [], "path": 2, "action": 0, "index": 3},
-    [0, 3],
+    {"layout": "carrier_path", "flags": [], "path": 3},
     {"layout": "group", "flags": [], "group": 1},
     {"layout": "group", "flags": [], "group": 1},
     {"layout": "group", "flags": [], "group": 1},

@@ -96,8 +96,8 @@ data"'s second half.
 A room's entity parameter records were raw word lists; they now name
 their fields where the entity types say which view their spawner reads
 (entity_types.json's `"params"`), as docs/levels.md, "Parameter records"
-describes, and stay words where nothing does (unused or shared records,
-N-Tranced's types whose spawners' reads aren't known). The schema's `room.schema.json` has each view
+describes, and stay words where nothing does (unused or shared records).
+The schema's `room.schema.json` has each view
 (`$defs/param_<layout>`).
 
 **Migration (#1167, one time).** XS's 41 rooms were rewritten with
@@ -111,7 +111,8 @@ words is still read: `tools/levels.py name-params games/xs/data/levels/<room>`
 names it. N-Tranced's 36 rooms followed (`tools/levels.py --levels-dir
 games/n2/data/levels name-params`): 1,229 of their 1,268 records, by the
 views its assembly shows ([n_tranced.md, "Parameter
-records"](./n_tranced.md#parameter-records)); its ROM is the same.
+records"](./n_tranced.md#parameter-records)), and the 15 of types 73, 92
+and 106 once their spawners were read; its ROM is the same.
 
 ## Errors
 
@@ -529,9 +530,6 @@ the desktop app the PC port's window opens, in the browser it runs
 headless and shows the room after 700 frames. It builds the saved data.
 A bonus or gem-path room starts as the level's (`ROOM=bonus` or
 `gem_path`, "Preview"); a room no level plays can't be started.
-
-**Not yet:** N-Tranced's records of types 73, 92 and 106 stay words
-(what their spawners read isn't known yet).
 
 ## The cutscene editor
 

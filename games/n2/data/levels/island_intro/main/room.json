@@ -31,7 +31,7 @@
     {"layout": "n2_crate", "flags": [], "options": [], "unk_02": 0, "trial_kind": "TNT_CRATE", "param6": 0, "param7": 0},
     {"layout": "hint_text", "flags": [], "text": 16},
     {"layout": "hint_text", "flags": [], "text": 13},
-    [8, 1],
+    {"layout": "cutscene_trigger", "flags": ["LOCK_CAMERA"], "cutscene": 1},
     {"layout": "hint_text", "flags": [], "text": 10},
     {"layout": "hint_text", "flags": [], "text": 8},
     {"layout": "hint_text", "flags": [], "text": 5},
