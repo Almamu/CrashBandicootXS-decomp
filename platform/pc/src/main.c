@@ -154,8 +154,9 @@ int main(int argc, char **argv)
     HostInputInit();
     if (!HostFrontendAvailable()) {
         if (!gHostOptions.headless) {
-            fprintf(stderr, "%s: built without SDL2, so there is no window: running headless "
-                            "(rebuild with SDL2's development files installed for one)\n",
+            fprintf(stderr,
+                    "%s: built without SDL2, so there is no window: running headless "
+                    "(rebuild with SDL2's development files installed for one)\n",
                     argv[0]);
         }
         gHostOptions.headless = 1;
