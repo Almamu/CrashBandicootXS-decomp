@@ -921,7 +921,10 @@ pixels:
   pixels).
 
 To use a value that no room has yet, add it to the legend with a new
-colour. The PNG's own palette is the legend's colours in legend order, but
+colour (the level editor's Collision tab does, "New value…":
+[editors.md](./editors.md#the-level-editor)). Its terrain type is one of
+`gTerrainTypes`' 51 (0-0x32): past the table the lookups read a type's
+rows from the bytes after it, as the ROM's 0x81-0x87 and 0xAB cells do. The PNG's own palette is the legend's colours in legend order, but
 only the pixels' colours matter. `extract` writes the same PNGs again,
 byte for byte.
 

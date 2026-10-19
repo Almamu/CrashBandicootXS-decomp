@@ -434,9 +434,24 @@ VRAM slots).
 
 **Collision.** The Collision tab paints the collision layer's cells with
 a value of the legend (one 8x8 cell of BG0's each; click, drag, Shift and
-drag, Alt and click to pick); a value no room has yet needs its own colour
-in collision_legend.json first ([levels.md, "Collision
-layers"](./levels.md#collision-layers)).
+drag, Alt and click to pick). **New value…** adds a value no room has yet
+to the legend, collision_legend.json ([levels.md, "Collision
+layers"](./levels.md#collision-layers)), from its bits
+([flags/terrain.md](./flags/terrain.md)): the terrain type (1-0x23 a
+height per pixel column, 0x24 and up solid), the flag nibble (what XS's
+player does with it is shown: 1 kills, 5 is slippery, 6 is a bar to hang
+from, 7 pushes left, 0xA pushes right, the others do nothing) and the
+open bits (the collision modes a solid cell lets through), with a colour
+no value has and a name (the bits spelled out, as the legend's are, by
+default). The type is one of gTerrainTypes' 51 (0-0x32) or one the
+legend's values already have: past the table the lookups read a type's
+rows from the bytes after it, which only the ROM's own 0x81-0x87 and 0xAB
+do. The legend is every room's, so the value is saved at once
+(`room/legend`, checked like any save) and becomes the tool's value; the
+room's own changes stay unsaved. The build reads a collision image by
+colour, so the new colour is the new value's: the pictures already
+written keep their palettes, and a picture the editor writes gets the
+legend's.
 
 **Palette.** The Palette tab edits the room's 256 colours, 5 bits a
 channel (bit 15 is kept, docs/graphics.md "Palettes"; a colour picked
@@ -502,8 +517,8 @@ headless and shows the room after 700 frames. It builds the saved data.
 A bonus or gem-path room starts as the level's (`ROOM=bonus` or
 `gem_path`, "Preview"); a room no level plays can't be started.
 
-**Not yet:** adding a collision value to the legend, and redrawing a tile
-in every room of its set at once (Redraw works on the room open). N-Tranced's records of types 73, 92 and
+**Not yet:** redrawing a tile in every room of its set at once (Redraw
+works on the room open). N-Tranced's records of types 73, 92 and
 106 stay words (what their spawners read isn't known yet).
 
 ## The cutscene editor
@@ -912,6 +927,7 @@ dependency), listens on **127.0.0.1 only**, and serves:
 | `GET /api/projects/ID/room/layer?path=ROOM&layer=L` | a layer's data: its width and height (u32 LE), then a BG picture's palette indices (a byte a pixel) or the collision layer's cells (u16 LE); gzipped when asked |
 | `GET /api/projects/ID/room/tiles?path=ROOM&layer=L` | a BG layer's tile set as the build makes it: `{tileset, bpp, count, tiles, banks, cells, uses, limit}` (tiles: 64 bytes each, base64; cells: the layer's, u16 LE, base64; uses: each tile's cells in all of the set's rooms; limit: the most tiles the engine holds) |
 | `POST /api/projects/ID/room/import` `{path, layer, png, palette?, banks?}` | a picture (base64 PNG) as the layer's cells in the room's palette (`room_edit.import_tiles`): `{cols, rows, cells, stats}` (cells: base64, 64 indices each; stats: blank, the set's tiles, flipped, new, the set's count and limit) |
+| `POST /api/projects/ID/room/legend` `{value, colour, name?}` | adds a cell value to the collision legend (`room_edit.legend_with`: new, in a colour of its own, of a terrain type gTerrainTypes has or the legend's values do; `name` the bits spelled out by default), saved and checked; the answer's `legend` is the legend as the room's `legend` |
 | `GET /api/projects/ID/sprite?bank=N&frame=K[&palette=P]` | a sprite bank's frame as a PNG, index 0 transparent, in OBJ palette P or its own |
 | `POST /api/projects/ID/room/save` `{path, room?, layers?, collision?, palette?}` | saves a room's edits, all or none (below) |
 | `POST /api/projects/ID/room/new` `{from, folder, empty?, size?, attach?}` | makes a room (`room_ops.new_room`): a copy of `from`, or an empty one laid out like it, `size` cells; `attach` `{level, as: "rooms" \| "bonus" \| "gem_path", index?}`; the answer's `report`: its number, symbols, warnings; `path` |
@@ -1140,7 +1156,8 @@ save body),
 `pnpm build`, the backend's Python tests (every data file of both games
 written back unchanged, a change in the tool's layout, the refusals, the
 token; every room of both games opened and saved back unchanged through
-the room API, a room edit saved and put back, the tile set drawing the
+the room API, a room edit saved and put back, a collision value added to
+each game's legend, painted and read back as the build reads it, the tile set drawing the
 layer's picture, the room save's refusals; every cutscene, page and
 cutscene picture saved back unchanged with nothing written (`git diff
 --exit-code`), an edit in a scratch copy of the tree (text, timing, a

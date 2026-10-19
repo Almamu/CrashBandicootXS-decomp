@@ -37,6 +37,7 @@ import {
 import { channels, fromChannels, fromHex, fromRgb, hex, pixelTable, toRgb } from "../src/lib/level/palette.ts";
 import { blendPixel, blends, compositeBlend, visibleTiles } from "../src/lib/level/render.ts";
 import { startMarkerFor } from "../src/lib/level/room.ts";
+import { composeValue, valueName, freeColour, newValueErrors, typeKind, valueParts } from "../src/lib/level/terrain.ts";
 
 const ROOT = join(import.meta.dirname, "../../..");
 const json = (p: string) => JSON.parse(readFileSync(join(ROOT, p), "utf8")) as unknown;
@@ -456,5 +457,40 @@ describe("drawing tiles", () => {
     expect(newBlocks(l, index, 4, [1, 2, 3])).toBe(1);
     // outside the layer: left out
     expect(pasteCells(l, { x: 3, y: 0 }, 3, 1, data).map((c) => c.index)).toEqual([3]); // the rest is outside
+  });
+});
+
+describe("the collision legend's values", () => {
+  const legend = (game: string) =>
+    (json(`games/${game}/data/levels/collision_legend.json`) as { cells: { value: string; colour: string; name: string }[] }).cells.map((e) => ({
+      value: parseInt(e.value, 16),
+      colour: `#${e.colour}`,
+      name: e.name,
+    }));
+
+  it("spells a value as the legend does, and puts its bits together", () => {
+    for (const e of legend("xs")) expect(valueName(e.value)).toBe(e.name);
+    expect(composeValue({ type: 0x2b, flags: 5, open: 3 })).toBe(0x352b);
+    expect(valueParts(0x352b)).toEqual({ type: 0x2b, flags: 5, open: 3 });
+    expect(valueName(0x812e)).toBe("solid 0x2E, flags 0x1, TERRAIN_FLAG_OPEN_UP");
+    expect(typeKind(0x24)).toMatch(/^solid/);
+    expect(typeKind(0x23)).toMatch(/height/);
+  });
+
+  it("takes a new value in a colour of its own, of a type gTerrainTypes has or the legend's values do", () => {
+    for (const game of ["xs", "n2"]) {
+      const l = legend(game);
+      expect(newValueErrors(0x0632, "#010203", l)).toEqual([]);
+      expect(newValueErrors(0x05ab, "#010203", l)).toEqual([]); // 0xAB is past the table, but the ROM's rooms have it
+      expect(newValueErrors(0x002b, "#010203", l)).toHaveLength(1); // there already
+      expect(newValueErrors(0x0632, l[3]!.colour.toLowerCase(), l)).toHaveLength(1); // its colour is taken
+      expect(newValueErrors(0x0040, "#010203", l)).toHaveLength(1);
+      expect(newValueErrors(0x10000, "#010203", l)).toHaveLength(1);
+      // a free colour is free
+      const c = freeColour(0x0632, l);
+      expect(c).toMatch(/^#[0-9A-F]{6}$/);
+      expect(l.some((e) => e.colour.toUpperCase() === c)).toBe(false);
+      expect(freeColour(0x0632, [...l, { value: 1, colour: c, name: "" }])).not.toBe(c);
+    }
   });
 });

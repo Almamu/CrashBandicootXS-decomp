@@ -26,7 +26,7 @@ API (all JSON; docs/editors.md has each one's fields):
     GET  /api/projects/ID/preview.png      a headless preview's picture (?shot=N: a cutscene's, frame N's)
 
 and the level editor's rooms (room, room/layer, room/tiles, room/save,
-room/new, room/delete, room/resize, room/import, sprite), the cutscene
+room/new, room/delete, room/resize, room/import, room/legend, sprite), the cutscene
 editor's cutscenes (cutscenes, cutscenes/picture, cutscenes/import, cutscenes/save) and the music
 editor's songs and sound effects (music, music/pool, music/song,
 music/patterns, music/import, music/save): docs/editors.md.
@@ -72,7 +72,7 @@ from pathlib import Path
 
 from crashdata import editing, schemas
 from crashdata import levels as L
-from crashdata.levels import room_edit, room_ops
+from crashdata.levels import collision as collision_bmp, room_edit, room_ops
 from crashdata.cutscenes import edit as cutscene_edit
 from crashdata.audio import edit as music_edit
 from crashdata.common import diagnostics as D
@@ -807,6 +807,21 @@ class Server:
         return [{"file": rel, "pointer": "/layers", "line": None, "col": None, "severity": D.ERROR,
                  "code": "tileset", "message": e} for e in errors]
 
+    def add_legend(self, project, body):
+        """POST room/legend {"value": a cell value, "colour": "#RRGGBB",
+        "name"}: the value added to the collision legend
+        (room_edit.legend_with), saved and checked: the save's answer and
+        the legend."""
+        with project.lock:
+            with self.levels(project):
+                doc = room_edit.legend_with(body.get("value"), body.get("colour"), body.get("name"))
+                rel = _rel(collision_bmp.LEGEND_JSON.resolve(), project)
+            staged = [self._stage_json(project, rel, doc)]
+            out = self._commit(project, staged)
+            with self.levels(project):
+                out["legend"] = room_edit.legend()
+            return out
+
     def import_tiles(self, project, body):
         """POST room/import {"path", "layer", "png": base64, "palette": the
         room's 256 colours (as edited), "banks": [BG1-3 banks to use]}: the
@@ -1139,6 +1154,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                               compress=True)
         if (method, what) == ("POST", "room/save"):
             return self._send(200, app.save_room(project, self._body()))
+        if (method, what) == ("POST", "room/legend"):
+            return self._send(200, app.add_legend(project, self._body()))
         if (method, what) == ("POST", "room/import"):
             return self._send(200, app.import_tiles(project, self._body()))
         if (method, what) == ("POST", "room/new"):
