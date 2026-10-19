@@ -717,6 +717,64 @@ line. clang has no such option: with `HOST_CC=clang HOST_CXX=clang++`
 everything compiles, but those three are missing at the link. No
 `-Werror`: the build's warnings are the GBA's.
 
+**Inline methods.** Many of the game's class headers have `#pragma
+interface` (docs/cplusplus.md, "Emitting the vtables"), so no object
+that includes one emits an out-of-line copy of its inline methods: on
+the GBA, and at the host's -O1, every call to one is inlined. A build
+where the host compiler leaves a call out of line (a sanitizer's,
+whose checks make the methods bigger) would miss them at the link, so
+platform.mk generates inlines.cpp, which includes each of those headers
+after a `#pragma implementation` of its name: the copies are emitted
+there, weak, as any inline function's.
+
+**Sanitizers.** `make PLATFORM=pc SANITIZE=<list>` builds with
+`-fsanitize=<list>` (and `-fno-omit-frame-pointer`), on every compile and
+on the link, which brings in the sanitizers' runtimes; changing
+`SANITIZE` (or `SANITIZE_FLAGS`) builds every object again. Both of
+these run the tests of host.yml as they are, with the same pictures and
+sound:
+
+```
+make PLATFORM=pc SANITIZE=undefined    # UBSan
+make PLATFORM=pc SANITIZE=address      # ASan
+UBSAN_OPTIONS=print_stacktrace=1 build/pc/crashbandicootxs_pc --headless --keys platform/pc/tests/boot.keys --frames 6000
+```
+
+`SANITIZE_FLAGS` adds flags of its own (`-fno-sanitize=...`,
+`-fsanitize-recover=address` with `ASAN_OPTIONS=halt_on_error=0` to see
+every report of a run, not only the first).
+
+ASan puts a redzone after each global, and two data files are read
+across their definitions, laid out back to back as in the ROM: a
+cutscene picture's bitmap is read right after its palette (+0x200 from
+it, slideshow.cpp; cutscene_pictures.cpp), and the sprite tile pool is
+one range read from bank 0's tiles (`tileBase` + a frame's offset), cut
+into 56 arrays, one a bank (sprite_tiles.cpp). With redzones, the reads
+past a palette or a bank's end are reported as overflows, and every
+bitmap and every bank after the first is somewhere else than where it is
+read (the pictures differ from mGBA's). So those two files are built
+with `--param asan-globals=0` (no redzones between their globals, and
+no overflow of them caught); every other global is checked. Neither the
+linker-placed globals nor the work RAMs need it: the placed globals are
+addresses inside gHostIwram and gHostEwram (memory.S, not instrumented),
+which ASan sees as one object each. CI (host.yml, `sanitizers`) builds
+both and plays boot.keys and bonus.keys headless, failing on any report
+or picture that isn't mGBA's.
+
+What they found in host.yml's runs (boot, intro, link and bonus keys,
+the previews, the cutscene and the sound), both clean since:
+
+- UBSan: PlayCutscene's CutscenePlayer (level_cutscene.cpp) was built in
+  a buffer aligned to 4 bytes, though the player holds pointers (8 on
+  the host): it is aligned as a pointer now. Its
+  `SetSlideshowDispcnt(*(u32 *)dispcnt)` reads 4 bytes of the 2-byte
+  `Display::dispcnt`, as the ROM does (an `ldr`); the upper half is
+  never used (gSlideshowDispcnt's low halfword is what is written to
+  REG_DISPCNT), so it is left, and the CI job's UBSan run doesn't check
+  object sizes (`-fno-sanitize=object-size`).
+- ASan: nothing beyond the two data files above (leaks aren't checked,
+  `detect_leaks=0`: the game's heaps are its own).
+
 **Seams** (gba/defines.h, each nothing on the GBA). Two for the
 original's own bugs:
 
@@ -792,6 +850,9 @@ and maps unchanged):
     before DropExtraLife gives the extra life its bank. On the GBA the
     value it reads is overwritten by DropExtraLife's StartAnim, and
     bonus.keys plays the same on mGBA as on the host.
+- The sanitizers (UBSan, "Sanitizers" above):
+  - PlayCutscene's storage for its CutscenePlayer (level_cutscene.cpp) is
+    aligned as a `void *`, not an `s32` (the same on the GBA).
 - Phase 6 (GAX2 compiled for the host):
   - GaxPlayerState's `mixBuf`, `echoBuf` and `echoTaps` and
     GaxMixerHandler's `mixBuf` (gax_internal.h), addresses kept as
