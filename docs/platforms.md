@@ -779,7 +779,10 @@ the previews, the cutscene and the sound), both clean since:
   REG_DISPCNT), so it is left, and its report alone is dropped at run
   time: platform/pc/ubsan.supp, UBSan's suppressions file
   (`UBSAN_OPTIONS=suppressions=...`), drops `object-size` reports in
-  `LevelState::PlayCutscene` and nothing else, so the CI job's UBSan run
+  `LevelState::PlayCutscene` and in the two ConvertTiles of N. Gin's
+  airship and hovercraft, which walk their picture's frames from the
+  palette's address + 0x204 (the picture right after the palette, as in
+  the ROM; boss_pictures.cpp), and nothing else, so the CI job's UBSan run
   checks object sizes everywhere else (it used to be built with
   `-fno-sanitize=object-size`). The file is the platform's: the code and
   the ROM are unchanged. A suppression only applies to a recoverable
