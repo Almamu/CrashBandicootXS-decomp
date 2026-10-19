@@ -6,6 +6,7 @@ made into GAX2 samples.
 
     python3 -m unittest discover -s packages/crashdata/tests
 """
+import hashlib
 import io
 import json
 import math
@@ -61,6 +62,52 @@ class Patterns(unittest.TestCase):
         self.assertEqual(sorted((p, r, c) for p, r, c, _ in edits), sorted((p, 2, c) for p, c, _ in shared))
         self.assertRaises(E.EditError, E.expand_edits, MANIFEST, "jungle",
                           [{"pattern": 0, "row": 0, "channel": 0, "cell": [50, 99, 0, 0, 0]}], 14)
+
+    def test_every_rom_pattern_packs_back_to_the_roms_bytes(self):
+        """Every pattern of every ROM song, its cells packed again as an
+        edit packs them (E.pack_cells) and encoded as the build encodes
+        an edited pattern, gives back the ROM's bytes: rom_patterns.json
+        has the SHA-1 of each of the songs' pattern groups as the ROM
+        stores them. Every order position and channel of a group, not only
+        the one the build packs, so an edit of any of them (made in all,
+        E.expand_edits) starts from the ROM's bytes."""
+        rom = json.loads((Path(__file__).parent / "rom_patterns.json").read_text())
+        self.assertEqual(sorted(rom), sorted(MANIFEST["songs"]))
+        pool, _, _ = G.load_songs(MANIFEST, str(SOUND / "songs"), str(SOUND / "samples"))
+        for key, sm in MANIFEST["songs"].items():
+            buf = (SOUND / "songs" / ("%s.xm" % key)).read_bytes()
+            layout = E.XmLayout(buf)
+            out = bytearray(buf[:layout.patterns[0][0]])
+            for i, (start, hlen, _, _) in enumerate(layout.patterns):
+                data = E.pack_cells(E.unpack_cells(buf, layout, i))
+                head = bytearray(buf[start:start + hlen])
+                struct.pack_into("<H", head, 7, len(data))
+                out += head + data
+            out += buf[layout.end:]
+            song = G.rom_song(sm, G.read_xm(key, bytes(out)), pool.instruments)
+            for ci, ch in enumerate(song.channels):
+                for pi, pat in enumerate(ch.patterns):
+                    gid = ch.pattern_groups[pi]
+                    self.assertEqual(hashlib.sha1(pat.pack()).hexdigest(), rom[key][gid], (key, ci, pi, gid))
+
+    def test_the_effects_the_xm_says(self):
+        """What a cell's effect and volume column are in GAX2
+        (gax._xm_effect_to_gax): the ROM's alternating speeds, its finer
+        and coarser volume slides and its volumes are all written."""
+        for (e, p, v), want in [
+            ((7, 0x96, 0), (7, 0x96)),          # 9 ticks, then 6
+            ((10, 0x20, 0x92), (10, 2)),        # XM's A20: up 2
+            ((10, 0x01, 0x81), (11, 1)),        # A01: down 1
+            ((10, 0x11, 0), (0, 0)),            # both ways: no slide
+            ((12, 0x18, 0), (12, 0x60)),        # C18: 24 * 4
+            ((12, 0x40, 0), (12, 0xFF)),
+            ((12, 0x62, 0), (12, 0x62)),        # over 0x40: GAX2's own
+            ((11, 0xFF, 1), (11, 0xFF)),        # volume column 01: the command as it is
+            ((10, 0x40, 1), (10, 0x40)),
+            ((0, 0, 0x94), (10, 0x40)),
+            ((15, 0x80, 0x30), (12, 0x80)),     # a BPM: the volume column's
+        ]:
+            self.assertEqual(G._xm_effect_to_gax(e, p, v), want, (e, p, v))
 
     def test_the_songs_patterns_are_the_builds(self):
         pool, keys, songs = G.load_songs(MANIFEST, str(SOUND / "songs"), str(SOUND / "samples"))

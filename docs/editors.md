@@ -576,8 +576,7 @@ portamento, the resampler with its half-rate mode, the echo, the downmix
 to 8 bits) with the integer widths and truncations of the C and of the
 ARM routines as `platform/pc/src/gax_dsp.c` writes them. It plays what
 the backend gives it, as `tools/gax_audio.py` builds it: a song's
-`GaxSongData`, order lists and packed patterns (the ROM's recorded bytes
-where the build keeps them) and the two pools' instruments and samples
+`GaxSongData`, order lists and packed patterns and the two pools' instruments and samples
 (`music/song`, `music/pool`), starting the song as `StartSong` does (3
 sound-effect voices) and mixing a frame's block at a time, which the
 page queues on the browser's audio at the song's mix rate. Nothing is
@@ -624,19 +623,21 @@ rate.
 change the order position) is edited on the right: its note (C-4, C#4,
 === key off), instrument (the XM's: `Instrument N` is the pool's N),
 volume column, effect and parameter; Delete clears it. What GAX2 makes
-of it is shown as the build makes it (crashdata.audio.gax's XM import):
-the note, the one effect of the row (1xx, 2xx, 3xx, Cxx, Dxx, EDx, Fxx
-under 0x20, else the volume column's), and what the build drops (another
-effect, a second effect in the volume column), marked in the pattern
-too. A ROM song stores a channel's pattern once for every order position
-(and channel) that plays the same notes: the panel says which, and an
-edit is made in all of them, as the save writes it (with their
-transposes). Such a pattern plays the ROM's own bytes while its notes and
-instruments are the ROM's, which the XM can only approximate (GAX2's
-alternating speeds, its finer volume slides); an edit makes the build
-pack it from the XM, and the edited song plays as the build will build
-it (`POST music/song` with the edits): an edit is heard before it is
-saved. A new song needs saving (the build makes it) before it plays.
+of it is shown as the build makes it (crashdata.audio.gax's XM import,
+[audio.md, "The XM's cells"](./audio.md#the-xms-cells)): the note, the
+one effect of the row (1xx, 2xx, 3xx, 7xy alternating speeds, Ax0/A0y,
+Cxx, Dxx, EDx, Fxx under 0x20, else the volume column's; a volume column
+01 makes the effect column GAX2's own command and parameter), and what
+the build drops (another effect, a second effect in the volume column),
+marked in the pattern too. The XM says everything a pattern's bytes hold
+(the ROM's alternating speeds, its volume slides and volumes, its drums'
+notes), so every pattern of the ROM's songs packs back to the ROM's
+bytes and an edited one plays what its cells say. A ROM song stores a
+channel's pattern once for every order position (and channel) that plays
+the same notes: the panel says which, and an edit is made in all of
+them, as the save writes it (with their transposes). The edited song
+plays as the build will build it (`POST music/song` with the edits): an
+edit is heard before it is saved. A new song needs saving (the build makes it) before it plays.
 
 **Where songs play.** The right column also has every screen's song
 (music.json: the title, the level select, the credits, the bonus rooms,
@@ -729,7 +730,7 @@ dependency), listens on **127.0.0.1 only**, and serves:
 | `GET /api/projects/ID/music/pool` | what the music editor's player needs besides a song (`player_pool`): GAX2's tables (`lib/gax/data/gax_tables.c`: gGaxPeriodTable, gGaxVibratoTable, the mix rates), the music pool's and the sound-effect set's instruments as `struct GaxChannelInstrument` (the new songs' and sound effects' new instruments too) and their samples, `{tables, music, sfx, sfxSlots}`; gzipped when asked |
 | `GET /api/projects/ID/music/song?key=K` | a song as `tools/gax_audio.py` builds it (`player_song`), as GAX2_init sees it: its `GaxSongData` fields, the mixer's echo taps (`dsp`), the packed pattern streams (`patterns`, base64) and each channel's order list (`orders`: `[offset in patterns, transpose]`) |
 | `POST /api/projects/ID/music/song` `{key, edits}` | the same, built with unsaved cell edits of its XM (`edits` as the save's `patterns`) |
-| `GET /api/projects/ID/music/patterns?key=K` | a song's XM for the pattern view: `{rows, cells, channels, order, playOrder, loopOrder, instruments, groups?, transposes?, recorded?}` (each pattern's cells, 5 bytes a cell, base64; for a ROM song, which order positions share a stored pattern) |
+| `GET /api/projects/ID/music/patterns?key=K` | a song's XM for the pattern view: `{rows, cells, channels, order, playOrder, loopOrder, instruments, groups?, transposes?}` (each pattern's cells, 5 bytes a cell, base64; for a ROM song, which order positions share a stored pattern) |
 | `POST /api/projects/ID/music/import` `{wav, rate?}` | a WAV (base64: PCM 8 to 32-bit or 32-bit float, any channels) made into a GAX2 sample, mixed to mono, resampled to `rate` (linearly) and rounded to 8 bits: `{wav, length, rate, source, peak, clipped, how}` |
 | `POST /api/projects/ID/music/save` `{sfxTable?, music?, themes?, songComments?, newSongs?, removeSongs?, patterns?, samples?, newInstruments?}` | saves the music editor's edits, all or none (below) |
 
@@ -833,12 +834,9 @@ tree's songs packs back to its own bytes), the other patterns and the
 instruments keep theirs. A ROM song stores a pattern once for the order
 positions and channels that play the same notes (`pattern_groups`, with
 their transposes): an edit of one cell is made in each of them (the note
-moved by their transposes), as the ROM would share it, and the edited
-group's recorded bytes (`pattern_group_bytes`, which the build keeps
-while a pattern's notes and instruments are the ROM's, docs/audio.md
-"Build pipeline") leave the manifest, so the build packs that pattern
-from the XM, its effects and volumes too, and what the XM can't say
-(GAX2's alternating speeds, its finer volume slides) is the XM's there.
+moved by their transposes), as the ROM would share it; the build packs it from
+its cells, as it packs every pattern ([audio.md, "The XM's
+cells"](./audio.md#the-xms-cells)).
 After the files are in place the model's checks build the music and the
 sound effects (`music-build`, `sfx-build`: a XM the encoder refuses, a
 WAV, an instrument), and every file goes back on a new error. A value

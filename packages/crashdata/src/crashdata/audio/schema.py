@@ -49,7 +49,6 @@ def gax_manifest():
         "mixer_data_bytes": S.array(S.integer(S.U8), length=28, description="the mixer's echo taps"),
         "channel_transposes": S.array(S.array(S.integer(-0x8000, 0xFFFF))),
         "pattern_groups": S.array(S.array(S.integer(0, 0xFFFF))),
-        "pattern_group_bytes": S.obj(pattern_properties={INDEX_KEY: B64}),
         "title": S.string(), "artist": S.string(), "title_bytes": B64,
         "pattern_group_order": S.array(S.integer(0, 0xFFFF)), "channel_order": S.array(S.integer(0, 0xFFFF)),
     }), required=list(song_info()) + ["mixer_data_bytes", "title", "artist"])

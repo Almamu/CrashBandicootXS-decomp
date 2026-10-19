@@ -463,7 +463,8 @@ Everything is generated from editable sources, never read from
   strings, etc), and `song_table`, the song IDs (`gSongTable`'s order,
   which isn't `song_order`, the block's).
 - `games/xs/sound/songs/*.xm` — one FastTracker II module per song (patterns/notes),
-  editable in any XM tracker; and a new song's optional settings,
+  editable in any XM tracker, every pattern packed from its cells (see
+  "The XM's cells"); and a new song's optional settings,
   `games/xs/sound/songs/<key>.json` (see "Adding a song").
 - `games/xs/sound/samples/*.wav` — one sample per instrument sample slot.
 - `games/xs/sound/instruments/*.json` — new instruments, each with a WAV under
@@ -517,6 +518,36 @@ Both tools write into `build/crashbandicootxs/sound/`, and the constants
 headers into `build/include/constants/` — `games/xs/sound/` itself only ever holds
 editable sources, never build products.
 
+## The XM's cells
+
+A song's patterns are its XM's cells, and nothing else: the build packs
+every pattern from them, the ROM's too, and with the tree's XMs every
+pattern packs back to the ROM's bytes (packages/crashdata/tests:
+`rom_patterns.json` has the SHA-1 of each of the ROM's stored patterns,
+and `make compare` checks the whole block). A GAX2 row is a note, an
+instrument and one effect. The note is the XM's, less the order
+position's transpose (`(note - transpose) & 0x7f`; a key off, `===`, is
+GAX2's note 1); a drum's too: a fixed-pitch instrument plays at its own
+pitch whatever the note, but the ROM's songs still write one (it is
+where a portamento on the channel starts from), so its XM writes it, and
+a tracker plays the drum at that note. The effect is the effect
+column's, or else the volume column's (`_xm_effect_to_gax`):
+
+| XM | GAX2 |
+|---|---|
+| `1xx`, `2xx`, `3xx` | pitch slide up, down, portamento to the note |
+| `7xy` | alternating speeds: rows of x ticks and y ticks in turn (GAX2's `Info` swaps `speed`'s two bytes each row; XM's `7` is a tremolo, which GAX2 hasn't) |
+| `Ax0`, `A0y` | volume slide up by x, down by y (an `Axy` with both is dropped) |
+| `Cxx` | the volume: `00`-`40` XM's (0-64, GAX2's 0-255 in steps of 4), `41`-`FF` GAX2's own |
+| `Dxx` | pattern break: always to the next pattern's first row (`breakRow` is stored, never read) |
+| `Exy` | as it is (GAX2 plays `EDx`, the note delay) |
+| `Fxx` under 0x20 | the speed (0x20 and over is XM's BPM: GAX2 steps one tick a frame) |
+| volume column `10`-`50`, `80`-`8F`, `90`-`9F` | the volume (x 4), a slide down by x, up by x * 16 |
+| volume column `01` | the effect column is GAX2's own command and parameter, as they are (FT2 reads `01`-`0F` as no volume): what the forms above can't say, a slide by more than 15 (`B FF` with `01` is GAX2's slide down by 255) or a volume under 65 that isn't a multiple of 4 |
+
+Other effects, and a volume column when the effect column has an effect,
+are dropped: a GAX2 row has one effect.
+
 ## Adding a song
 
 A new song is an XM in `games/xs/sound/songs/` and an entry of the manifest's
@@ -558,9 +589,10 @@ byte. A song that isn't in `songs` has no ROM history, and
    - The order list is the song's order, and the restart position is
      where it loops back to.
    - A row has at most one effect: the effect column's portamentos
-     (`1xx`, `2xx`, `3xx`), volume (`Cxx`), pattern break (`Dxx`), `Exx`
-     and speed (`Fxx` under 0x20), or else the volume column's volume or
-     fine volume slide. Other effects are dropped.
+     (`1xx`, `2xx`, `3xx`), alternating speeds (`7xy`), volume slide
+     (`Axy`), volume (`Cxx`), pattern break (`Dxx`), `Exx` and speed
+     (`Fxx` under 0x20), or else the volume column's volume or volume
+     slide (see "The XM's cells"). Other effects are dropped.
 2. **Settings** (optional), `games/xs/sound/songs/<key>.json`; every field has a
    default, the ROM's level songs':
 

@@ -208,15 +208,6 @@ export interface Song {
   ];
   channel_transposes?: number[][];
   pattern_groups?: number[][];
-  pattern_group_bytes?: {
-    /**
-     * base64
-     *
-     * This interface was referenced by `undefined`'s JSON-Schema definition
-     * via the `patternProperty` "^[0-9]+$".
-     */
-    [k: string]: string;
-  };
   title: string;
   artist: string;
   /**

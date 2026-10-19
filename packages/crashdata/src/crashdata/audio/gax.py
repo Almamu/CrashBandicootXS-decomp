@@ -246,73 +246,6 @@ class Pattern:
         return bytes([0]) + b"".join(r.pack() for r in self.rows)
 
 
-def unpack_pattern(buf):
-    """Inverse of Pattern.pack()/PatternRow.pack() - only used to compare a
-    freshly-imported XM pattern against the original recorded bytes (see
-    NOTE in link())."""
-    pat = Pattern()
-    if buf[0]:
-        pat.is_empty = True
-        return pat
-    pos = 1
-    rows = []
-    while pos < len(buf):
-        flags = buf[pos]
-        row = PatternRow()
-        if flags == 0x80:
-            row.cmd = PatternRow.CMD_REST
-            pos += 1
-        elif flags == 0xFA:
-            row.cmd = PatternRow.CMD_EFFECT_ONLY
-            row.effect = buf[pos + 1]
-            row.effect_param = buf[pos + 2]
-            pos += 3
-        elif flags == 0xFF:
-            row.cmd = PatternRow.CMD_REST_MULTI
-            row.rest_duration = buf[pos + 1]
-            pos += 2
-        elif flags & 0x80:
-            row.cmd = PatternRow.CMD_NOTE_ONLY
-            row.note = flags & 0x7F
-            row.instrument = buf[pos + 1]
-            pos += 2
-        else:
-            row.cmd = PatternRow.CMD_NOTE
-            row.note = flags & 0x7F
-            row.instrument = buf[pos + 1]
-            row.effect = buf[pos + 2]
-            row.effect_param = buf[pos + 3]
-            pos += 4
-        rows.append(row)
-    pat.rows = rows
-    return pat
-
-
-def _note_instrument_timeline(pat, instruments_by_index):
-    """(cmd_kind, note_or_None, instrument_or_None) per tick, ignoring effects
-    and the exact 2-vs-4-byte encoding choice - used only to detect whether a
-    modder actually changed the musical content of a pattern. For fixed-pitch
-    instruments (e.g. drums) the note value is cosmetic (the game ignores it),
-    and gaxm's own GAX->XM export already replaces it with a placeholder, so
-    it's normalized away here too rather than treated as a real edit."""
-    if pat.is_empty:
-        return ('empty',)
-    timeline = []
-    for r in pat.rows:
-        if r.cmd == PatternRow.CMD_REST:
-            timeline.append(('rest',))
-        elif r.cmd == PatternRow.CMD_REST_MULTI:
-            timeline.extend([('rest',)] * r.rest_duration)
-        elif r.cmd == PatternRow.CMD_EFFECT_ONLY:
-            timeline.append(('rest',))
-        else:
-            ins = instruments_by_index.get(r.instrument)
-            fixed_pitch = ins is not None and ins.rows and ins.rows[0].dont_use_note_pitch
-            note = None if (fixed_pitch or r.note == 1) else r.note
-            timeline.append(('note', note, r.instrument))
-    return tuple(timeline)
-
-
 class InstrumentEffect:
     def __init__(self, type_=0, param=0):
         self.type = type_
@@ -547,15 +480,38 @@ def read_xm(path, buf=None):
 # mapping was derived and verified against every song in the original ROM)
 # ---------------------------------------------------------------------------
 
+# The volume column's byte that makes the effect column GAX2's own
+# command and parameter, as they are (FT2 reads 01-0F as no volume): what
+# the XM's forms below can't say, e.g. a volume slide by more than 15 or a
+# volume that isn't a multiple of 4 under 65 (docs/audio.md, "The XM's
+# cells").
+GAX_RAW_VOLUME = 0x01
+
+
 def _xm_effect_to_gax(effect, param, volume):
-    if effect in (1, 2, 3):
+    """A cell's GAX2 effect, (command, parameter): (0, 0) for none.
+
+    - volume column 01: the effect column is GAX2's command, as it is;
+    - 1xx, 2xx, 3xx, Dxx, Exy: the same command;
+    - 7xy: GAX2's alternating speeds, x ticks a row then y (XM's 7 is
+      tremolo, which GAX2 hasn't);
+    - Ax0 / A0y: XM's volume slide, up x (GAX2's 10) or down y (11);
+    - Cxx: the volume, 00-40 as XM's (0-64, GAX2's x 4), 41-FF GAX2's own;
+    - Fxx under 0x20: the speed (0x20 and over is a BPM: GAX2 steps a tick
+      a frame);
+    - else the volume column: 10-50 the volume, 80-8F a slide down by x,
+      90-9F up by x * 16."""
+    if volume == GAX_RAW_VOLUME:
         return effect, param
+    if effect in (1, 2, 3, 7, 13, 14):
+        return effect, param
+    if effect == 10 and param:
+        if not param & 0x0F:
+            return 10, param >> 4
+        if not param & 0xF0:
+            return 11, param
     if effect == 12:
-        return 12, min(255, param * 4)
-    if effect == 13:
-        return 13, param
-    if effect == 14:
-        return 14, param
+        return 12, min(255, param * 4) if param <= 0x40 else param
     if effect == 15 and param < 0x20:
         return 15, param
     if volume:
@@ -628,10 +584,13 @@ def build_pattern_from_xm(xm_rows, used_indices, instruments_by_index, transpose
 
         gax_idx = used_indices[xr.instrument - 1] if xr.instrument else (rows[-1].instrument if rows else used_indices[0])
         ins = instruments_by_index.get(gax_idx)
-        if ins is not None and ins.rows and ins.rows[0].dont_use_note_pitch:
-            note_val = ins.rows[0].relative_note_number
-        elif xr.note:
+        # a fixed-pitch instrument (a drum) plays at its own pitch, but its
+        # note is still the row's (the ROM's songs write it): the XM's, or
+        # the instrument's own when the cell has none
+        if xr.note:
             note_val = (xr.note - transpose) & 0x7F
+        elif ins is not None and ins.rows and ins.rows[0].dont_use_note_pitch:
+            note_val = ins.rows[0].relative_note_number
         else:
             note_val = 0
 
@@ -744,7 +703,6 @@ class Song:
         self.info_handler = SoundHandler(*HANDLER_FUNCS['info'], type_flags=0x1C)
         self.mixer_handler = SoundHandler(*HANDLER_FUNCS['mixer'], type_flags=0xC)
         self.channel_handlers = []
-        self.pattern_group_bytes = {}  # gid -> original raw packed bytes
         # the default song's info has no instrument set and points its
         # sample set at its own sequence data
         self.no_pool = manifest_entry.get('no_pool', False)
@@ -792,24 +750,13 @@ def link_instruments(alloc, instruments_by_index, samples_by_index, dedup_sample
     return instrument_set_addr, sample_table_addr
 
 
-def pack_groups(song, instruments_by_index):
+def pack_groups(song):
     """Each pattern group's packed bytes, {group: bytes}: the group's first
-    member built from its XM column, or the ROM's recorded bytes when its
-    notes and instruments are those (see NOTE in link())."""
+    member, built from its XM column (see NOTE in link())."""
     group_packed = {}
     for ch in song.channels:
         for i, p in enumerate(ch.patterns):
-            gid = ch.pattern_groups[i]
-            if gid in group_packed:
-                continue
-            original = song.pattern_group_bytes.get(gid)
-            if original is not None and (
-                _note_instrument_timeline(unpack_pattern(original), instruments_by_index)
-                == _note_instrument_timeline(p, instruments_by_index)
-            ):
-                group_packed[gid] = original
-            else:
-                group_packed[gid] = p.pack()
+            group_packed.setdefault(ch.pattern_groups[i], p.pack())
     return group_packed
 
 
@@ -818,7 +765,7 @@ def song_sequence(song, instruments_by_index):
     streams, each group once in `pattern_group_order`; for each channel its
     order list, [(the pattern's offset in the streams, transpose)]), which
     is GaxSongData.patterns and each channel handler's GaxOrderEntry list."""
-    group_packed = pack_groups(song, instruments_by_index)
+    group_packed = pack_groups(song)
     streams, offsets = bytearray(), {}
     for gid in song.pattern_group_order:
         offsets[gid] = len(streams)
@@ -854,14 +801,11 @@ def link(instruments_by_index, songs, samples_by_index, header_prefix):
         # exactly like the original hardware does (they physically share
         # memory, so editing one edits all of them - not a bug).
         #
-        # Within a group, if the XM-derived notes/instruments are unchanged
-        # from what the original recorded bytes decode to, use those original
-        # bytes verbatim (byte-for-byte, including exotic effect encodings
-        # the XM round-trip can't represent) instead of the freshly-packed
-        # version - this is what makes an unedited song rebuild identical to
-        # the original ROM. Any actual edit is detected by content and falls
-        # back to the freshly-encoded bytes.
-        group_packed = pack_groups(song, instruments_by_index)
+        # The XM says everything a pattern's bytes hold (the alternating
+        # speeds, every volume slide and volume, a drum's note: see
+        # _xm_effect_to_gax), so an unedited song packs back to the ROM's
+        # bytes and an edited one to what its cells say.
+        group_packed = pack_groups(song)
 
         # Groups must be allocated in the order they physically appear in the
         # original data (captured once from the ROM), not in channel/pattern
@@ -1558,9 +1502,6 @@ def rom_song(sm, xm, instruments):
     song = Song(sm, num_items=sm['num_items'], unk_ptr=0)
     used_indices = xm['gax_instrument_indices']
 
-    song.pattern_group_bytes = {
-        int(gid): base64.b64decode(b) for gid, b in sm.get('pattern_group_bytes', {}).items()
-    }
     song.pattern_group_order = sm['pattern_group_order']
     song.channel_order = sm['channel_order']
 
@@ -1697,6 +1638,10 @@ def gax_effect(cell):
     return _xm_effect_to_gax(cell.effect, cell.param, cell.volume)[0]
 
 
+# the commands that set the speed: Fxx, and 7xy's alternating speeds
+SPEED_EFFECTS = (7, 15)
+
+
 def set_effect(rows, row, effect, param, why, fail):
     """Puts a GAX2 effect (`effect`, `param`) on `row` of an order
     position, in the first channel with no effect there: a GAX2 row has
@@ -1782,8 +1727,8 @@ def new_song(key, xm_path, xm, pool):
             set_effect(rows, last, 13, 0, f"pattern {order[pos]} has {len(rows)} rows, under the song's "
                        f"{num_rows}, so it needs a pattern break (D00) on its last row", fail)
     # the starting speed: GaxInfoResetPosition starts every song at 6
-    if xm['tempo'] != 6 and all(gax_effect(cell) != 15 for cell in order_rows[0][0]):
-        speeds = any(gax_effect(cell) == 15 for rows in order_rows for row in rows for cell in row)
+    if xm['tempo'] != 6 and all(gax_effect(cell) not in SPEED_EFFECTS for cell in order_rows[0][0]):
+        speeds = any(gax_effect(cell) in SPEED_EFFECTS for rows in order_rows for row in rows for cell in row)
         if xm['restart'] == 0 and speeds:
             fail(f"speed {xm['tempo']}: GAX2 starts a song at speed 6, so the tool sets {xm['tempo']} with an "
                  "Fxx on the first row, which this song plays again when it loops (restart position 0) "

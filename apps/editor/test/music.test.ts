@@ -99,6 +99,8 @@ describe("the cells", () => {
     const cases: [number, number, number][] = [
       [1, 0x20, 0], [3, 0x08, 0x40], [0xc, 0x40, 0], [0xc, 0x50, 0], [0xd, 0, 0], [0xe, 0xd3, 0], [0xf, 0x07, 0], [0xf, 0x80, 0x30],
       [0, 0, 0x30], [0, 0, 0x95], [0, 0, 0x83], [0, 0, 0x60], [4, 0x44, 0], [0xa, 0x0f, 0x20],
+      // the ROM's: alternating speeds, volume slides, volumes over C40, GAX2's own command (volume column 01)
+      [7, 0x96, 0], [0xa, 0x20, 0x92], [0xa, 0x01, 0x81], [0xa, 0x11, 0], [0xc, 0x62, 0], [0xb, 0xff, 1], [0xa, 0x40, 1],
     ];
     const py = python<[number, number][]>(`print(json.dumps([G._xm_effect_to_gax(e, p, v) for e, p, v in ${JSON.stringify(cases)}]))`);
     expect(cases.map(([e, p, v]) => M.gaxEffect(e, p, v))).toEqual(py);
@@ -106,6 +108,8 @@ describe("the cells", () => {
     expect(M.cellNotes([49, 1, 0x30, 0xf, 0x80]).plays).toBe("C-4, set the volume 80");
     expect(M.cellNotes([49, 1, 0x30, 0xf, 0x06]).dropped[0]).toMatch(/one effect/);
     expect(M.cellNotes([0, 0, 0, 4, 0x44]).dropped[0]).toMatch(/no such effect/);
+    expect(M.cellNotes([0, 0, 0, 7, 0x96]).plays).toBe("alternating speeds 96 (9 ticks, then 6)");
+    expect(M.cellNotes([0, 0, 1, 0xb, 0xff])).toEqual({ plays: "GAX2's own volume slide down FF", dropped: [] });
   });
 
   it("are edited in every pattern a ROM pattern shares its bytes with, as the save writes them", () => {

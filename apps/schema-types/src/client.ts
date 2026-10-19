@@ -507,8 +507,6 @@ export interface MusicPatterns {
   /** a ROM song's: the pattern group of each channel's order position (one group, one copy) */
   groups?: number[][];
   transposes?: number[][];
-  /** the groups whose ROM bytes are kept while their notes and instruments are the ROM's */
-  recorded?: number[];
 }
 
 /** POST /api/projects/ID/music/import's answer: a WAV made into a GAX2 sample. */
