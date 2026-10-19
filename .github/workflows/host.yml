@@ -63,6 +63,18 @@ jobs:
           --frames 1000 --every 1 --timeout 300 --out host_link_screens.json
         python3 tools/boottest.py compare platform/pc/tests/link_mgba_screens.json host_link_screens.json
 
+    # A new game played into Jungle Jam's bonus round (tests/bonus.keys):
+    # the "?" platform, the round's crates and its life crate (whose extra
+    # life read a NULL bank, which crashed the host), back out by its exit
+    # pad, and on, with deaths before and after. Every 10th frame's picture
+    # is mGBA's (tests/bonus_mgba_screens.json); 3 frames of the 5000 are
+    # torn on the GBA (see docs/platforms.md), none of them a 10th.
+    - name: Play a bonus round
+      run: |
+        python3 tools/boottest.py host build/pc/crashbandicootxs_pc --keys platform/pc/tests/bonus.keys \
+          --frames 5000 --every 10 --timeout 300 --out host_bonus_screens.json
+        python3 tools/boottest.py compare platform/pc/tests/bonus_mgba_screens.json host_bonus_screens.json
+
     # The editors' preview (#1167, docs/editors.md "Preview"): a level's
     # room started from the level select, headless, its first picture
     # written (a polar stage, by folder and room index; a bonus room by its

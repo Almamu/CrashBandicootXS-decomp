@@ -51,11 +51,17 @@ namespace Entities
 {
 
 /* Sets `frame` to the animation's first step: 0, or the last one
- * (frameCount - 1) if that is lower. */
+ * (frameCount - 1) if that is lower.
+ *
+ * ExtraLife::Create calls it before its spawner (DropExtraLife) gives
+ * the new extra life a bank, so the ROM reads `anims` through a NULL
+ * bank (the BIOS area's open-bus value) and `frameCount` through that.
+ * DropExtraLife's StartAnim sets `frame` to 0 right after, so what it
+ * read never counts (#1093: breaking a life crate crashed the host). */
 static inline void ClampFrame(Sprite *part)
 {
     s32 frame = 0;
-    s32 count = part->bank->anims[part->tag].frameCount;
+    s32 count = NULL_READ(NULL_READ(part->bank)->anims)[part->tag].frameCount;
 
     CLAMP_INDEX(frame, count);
     part->frame = frame;
