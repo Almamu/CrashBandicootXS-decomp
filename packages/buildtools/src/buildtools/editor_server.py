@@ -26,7 +26,7 @@ API (all JSON; docs/editors.md has each one's fields):
     GET  /api/projects/ID/preview.png      a headless preview's picture (?shot=N: a cutscene's, frame N's)
 
 and the level editor's rooms (room, room/layer, room/tiles, room/save,
-room/new, room/delete, room/resize, room/import, room/legend, sprite), the cutscene
+room/new, room/delete, room/resize, room/import, room/redraw, room/legend, sprite), the cutscene
 editor's cutscenes (cutscenes, cutscenes/picture, cutscenes/import, cutscenes/save) and the music
 editor's songs and sound effects (music, music/pool, music/song,
 music/patterns, music/import, music/save): docs/editors.md.
@@ -807,6 +807,35 @@ class Server:
         return [{"file": rel, "pointer": "/layers", "line": None, "col": None, "severity": D.ERROR,
                  "code": "tileset", "message": e} for e in errors]
 
+    def redraw_tile(self, project, body):
+        """POST room/redraw {"path", "layer", "tile", "pixels": base64 of 64
+        pixels (4bpp: 0-15), "was": the tile's pixels as the editor shows
+        them}: the tile redrawn in every room whose layers name the layer's
+        set (room_edit.redraw_tile), every picture saved together and
+        checked, the set as the build makes it too: all or none. The
+        answer's report: the cells redrawn, by room and layer."""
+        d, _ = self.room_dir(project, body.get("path"))
+        lname = body.get("layer")
+        if lname not in room_edit.BG_LAYERS:
+            raise HttpError(400, "redraw a tile of a BG layer's set (bg0-bg3)")
+        pixels, was = (_b64(body.get(k)) for k in ("pixels", "was"))
+        with project.lock:
+            staged = []
+            try:
+                with self.levels(project):
+                    _, _, info = self.room_layer(project, d, lname)
+                    symbol = info["tileset"]
+                    changes, layers = room_edit.redraw_tile(symbol, body.get("tile"), pixels, was)
+                    for p, data in changes:
+                        p = p.resolve()
+                        staged.append(self._stage_bytes(_rel(p, project), p, data))
+            except BaseException:
+                self._unstage(staged)
+                raise
+            out = self._commit(project, staged, check=lambda: self.tileset_check(project, d, {symbol}))
+        out["report"] = {"tileset": symbol, "tile": body.get("tile"), "cells": sum(layers.values()), "layers": layers}
+        return out
+
     def add_legend(self, project, body):
         """POST room/legend {"value": a cell value, "colour": "#RRGGBB",
         "name"}: the value added to the collision legend
@@ -1154,6 +1183,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                               compress=True)
         if (method, what) == ("POST", "room/save"):
             return self._send(200, app.save_room(project, self._body()))
+        if (method, what) == ("POST", "room/redraw"):
+            return self._send(200, app.redraw_tile(project, self._body()))
         if (method, what) == ("POST", "room/legend"):
             return self._send(200, app.add_legend(project, self._body()))
         if (method, what) == ("POST", "room/import"):

@@ -204,6 +204,16 @@ export interface TileImport {
   stats: { cells: number; blank: number; tiles: number; flipped: number; new: number; setCount: number; limit: number };
 }
 
+/** POST /api/projects/ID/room/redraw's report: a tile redrawn in every room of its set. */
+export interface TileRedraw {
+  tileset: string;
+  tile: number;
+  /** the cells redrawn, all rooms' */
+  cells: number;
+  /** "<level>/<slot>/<layer>": its cells redrawn */
+  layers: Record<string, number>;
+}
+
 /** POST /api/projects/ID/room/save: a room's edits, saved together. */
 /** A new room (crashdata.levels.room_ops.new_room). */
 export interface NewRoom {
@@ -841,6 +851,15 @@ export class EditorClient {
   /** Saves a room's edits (room.json, painted cells, the palette) together: all, or none. */
   saveRoom(id: string, body: RoomSave): Promise<SaveResult> {
     return this.request("POST", this.project(id, "room/save"), body);
+  }
+
+  /**
+   * Redraws a tile of the layer's set in every room that names it (`pixels`,
+   * `was`: base64 of 64 pixels, 4bpp 0-15; `was` the tile as shown); saved,
+   * checked, all or nothing. `report`: the cells redrawn, by room and layer.
+   */
+  redrawTile(id: string, body: { path: string; layer: string; tile: number; pixels: string; was: string }): Promise<RoomOpResult<TileRedraw>> {
+    return this.request("POST", this.project(id, "room/redraw"), body);
   }
 
   /** Adds a cell value to the collision legend (`name`: its bits spelled out by default); saved, checked. */

@@ -5,7 +5,9 @@
   // pictures, so a tile is drawn by drawing cells: "Redraw" replaces the
   // cells that draw the tile, "New tile" adds the drawing to the set as the
   // brush (the build keeps it once a cell draws it), "Clear" blanks the cells
-  // that draw it (a tile no cell draws is gone from the set).
+  // that draw it (a tile no cell draws is gone from the set). With "every
+  // room", Redraw and Clear go to every room of the set at once (room/redraw,
+  // saved).
   import type { TileImport } from "@crash/schema-types";
   import { client } from "../../lib/api.ts";
   import { editor } from "../../lib/state.svelte.ts";
@@ -22,6 +24,8 @@
   let source = $state<number | null>(null);
   let colour = $state(1);
   let painting = false;
+  /** Redraw and Clear in every room of the set (saved at once), not the layer here */
+  let everywhere = $state(false);
 
   const bg0 = $derived(set.bpp === 8);
   const bank = $derived(level.brush.bank);
@@ -92,14 +96,39 @@
     return `rgb(${v & 255},${(v >> 8) & 255},${(v >> 16) & 255})`;
   }
 
-  function redraw() {
+  // every room: a tile the build made, other than the blank tile 0, with the room's changes saved
+  const whyNotEverywhere = $derived(
+    source === null
+      ? "load a tile first"
+      : source === 0
+        ? "tile 0 is the blank tile every set starts with"
+        : source >= set.built
+          ? "a new tile isn't in the other rooms: save the room first"
+          : level.dirty
+            ? "save the room's changes first"
+            : null,
+  );
+
+  async function redraw() {
     if (source === null) return;
+    if (everywhere) {
+      if (whyNotEverywhere) return;
+      if (!confirm(`Redraw tile ${source} in the ${set.uses[source] ?? 0} cells of all of ${set.name}'s rooms, and save them?`)) return;
+      if (await level.redrawEverywhere(source, pixels)) source = null;
+      return;
+    }
     const n = level.replaceTile(source, pixels);
     editor.error = n ? null : `no cell of ${level.paintLayer} draws tile ${source}`;
   }
 
-  function clear() {
+  async function clear() {
     if (source === null) return;
+    if (everywhere) {
+      if (whyNotEverywhere) return;
+      if (!confirm(`Blank the ${set.uses[source] ?? 0} cells of all of ${set.name}'s rooms that draw tile ${source}, and save them?`)) return;
+      if (await level.redrawEverywhere(source, new Uint8Array(CELL_PIXELS))) source = null;
+      return;
+    }
     if (!confirm(`Blank the ${here} cells of ${level.paintLayer} that draw tile ${source}?`)) return;
     level.replaceTile(source, new Uint8Array(CELL_PIXELS), `Clear tile ${source}`);
   }
@@ -171,9 +200,24 @@
   </p>
   <div class="row">
     <button onclick={() => level.addTile(pixels)} title="add the drawing to the set and paint with it">New tile</button>
-    <button disabled={source === null} onclick={redraw} title="redraw every cell of this layer that draws the tile, in its flips and bank">Redraw tile {source ?? ""}</button>
-    <button disabled={source === null || !here} onclick={clear} title="blank the cells of this layer that draw the tile">Clear tile {source ?? ""}</button>
+    <button
+      disabled={source === null || (everywhere && !!whyNotEverywhere) || !!editor.busy}
+      onclick={redraw}
+      title={everywhere
+        ? (whyNotEverywhere ?? "redraw every cell of the set's rooms that draws the tile, in its flips and bank, and save")
+        : "redraw every cell of this layer that draws the tile, in its flips and bank"}>Redraw tile {source ?? ""}</button
+    >
+    <button
+      disabled={source === null || (everywhere ? !!whyNotEverywhere || !set.uses[source] : !here) || !!editor.busy}
+      onclick={clear}
+      title={everywhere ? (whyNotEverywhere ?? "blank the cells of the set's rooms that draw the tile, and save") : "blank the cells of this layer that draw the tile"}
+      >Clear tile {source ?? ""}</button
+    >
+    <label title="Redraw and Clear the tile in every room of {set.name} at once (the saved pictures; saved, all or nothing)"
+      ><input type="checkbox" bind:checked={everywhere} /> every room</label
+    >
   </div>
+  {#if everywhere && whyNotEverywhere && source !== null}<p class="muted small">Every room: {whyNotEverywhere}.</p>{/if}
 
   <strong>Import a picture</strong>
   <input type="file" accept="image/*" onchange={(e) => (file = e.currentTarget.files?.[0] ?? null)} aria-label="a picture to import" />

@@ -413,7 +413,20 @@ tile ("Load tile N") or from nothing:
   cells draw it here and in all of the set's rooms (as saved): the other
   rooms keep the old tile, so it stays in the set while they use it;
 - **Clear tile N** blanks those cells (in their banks): a tile no cell of
-  any room draws is gone from the set, which renumbers the tiles after it.
+  any room draws is gone from the set, which renumbers the tiles after it;
+- with **every room** ticked, Redraw and Clear do it in every room whose
+  layers name the set, at once (`room/redraw`, `room_edit.redraw_tile`):
+  each cell of their saved pictures that draws the tile, in its own flips
+  and bank, so the old tile is gone from the set and the drawing takes
+  its place. It is a save, not an undo step: every picture it changes is
+  written together and checked like a room save (the model's checks and
+  the set as the build makes it, its limits), all or none, and the room
+  is opened again. The room's own changes are saved first, the tile is
+  one the build made (a new tile drawn here isn't in the other rooms yet)
+  and not tile 0, the blank tile every set starts with; the tile as the
+  tab shows it must still be the set's (another save changed it: open the
+  room again). A cell of a tile that looks the same flipped (symmetric)
+  draws the new tile unflipped, as the set reads it.
 
 **Import a picture** cuts a PNG (any mode, any size up to a megapixel)
 into cells, quantised to the room's palette as edited (`room/import`): a
@@ -517,9 +530,8 @@ headless and shows the room after 700 frames. It builds the saved data.
 A bonus or gem-path room starts as the level's (`ROOM=bonus` or
 `gem_path`, "Preview"); a room no level plays can't be started.
 
-**Not yet:** redrawing a tile in every room of its set at once (Redraw
-works on the room open). N-Tranced's records of types 73, 92 and
-106 stay words (what their spawners read isn't known yet).
+**Not yet:** N-Tranced's records of types 73, 92 and 106 stay words
+(what their spawners read isn't known yet).
 
 ## The cutscene editor
 
@@ -927,6 +939,7 @@ dependency), listens on **127.0.0.1 only**, and serves:
 | `GET /api/projects/ID/room/layer?path=ROOM&layer=L` | a layer's data: its width and height (u32 LE), then a BG picture's palette indices (a byte a pixel) or the collision layer's cells (u16 LE); gzipped when asked |
 | `GET /api/projects/ID/room/tiles?path=ROOM&layer=L` | a BG layer's tile set as the build makes it: `{tileset, bpp, count, tiles, banks, cells, uses, limit}` (tiles: 64 bytes each, base64; cells: the layer's, u16 LE, base64; uses: each tile's cells in all of the set's rooms; limit: the most tiles the engine holds) |
 | `POST /api/projects/ID/room/import` `{path, layer, png, palette?, banks?}` | a picture (base64 PNG) as the layer's cells in the room's palette (`room_edit.import_tiles`): `{cols, rows, cells, stats}` (cells: base64, 64 indices each; stats: blank, the set's tiles, flipped, new, the set's count and limit) |
+| `POST /api/projects/ID/room/redraw` `{path, layer, tile, pixels, was}` | redraws a tile of the layer's set in every room that names it (`room_edit.redraw_tile`; pixels and was: base64 of 64 pixels, 4bpp 0-15; was: the tile as the editor shows it), every changed picture saved together and checked (below), all or none; `report`: `{tileset, tile, cells, layers}` (the cells redrawn, by `<level>/<slot>/<layer>`) |
 | `POST /api/projects/ID/room/legend` `{value, colour, name?}` | adds a cell value to the collision legend (`room_edit.legend_with`: new, in a colour of its own, of a terrain type gTerrainTypes has or the legend's values do; `name` the bits spelled out by default), saved and checked; the answer's `legend` is the legend as the room's `legend` |
 | `GET /api/projects/ID/sprite?bank=N&frame=K[&palette=P]` | a sprite bank's frame as a PNG, index 0 transparent, in OBJ palette P or its own |
 | `POST /api/projects/ID/room/save` `{path, room?, layers?, collision?, palette?}` | saves a room's edits, all or none (below) |
@@ -998,7 +1011,12 @@ error.
 and remove (room.json, the pictures, levels.json, tileset_order.json,
 cxx_symbols.txt's room classes block), saved the same way: a new room's
 folder is made first and goes again on a refusal; a deleted file is put
-back.
+back. **A tile redrawn in every room** (`room/redraw`) is the pictures it
+changes, every room's of the set, saved the same way and checked as a
+room save with painted cells is (the model's checks, then
+`room_edit.tileset_errors` on the set); **a new collision value**
+(`room/legend`) is collision_legend.json's new value, saved as any data
+file.
 
 **Saving the cutscenes** (`cutscenes/save`, `crashdata.cutscenes.edit.plan_save`)
 is the same transaction over cutscenes.json, the text's files, the
@@ -1157,7 +1175,8 @@ save body),
 written back unchanged, a change in the tool's layout, the refusals, the
 token; every room of both games opened and saved back unchanged through
 the room API, a room edit saved and put back, a collision value added to
-each game's legend, painted and read back as the build reads it, the tile set drawing the
+each game's legend, painted and read back as the build reads it, a
+tile redrawn in every room of its set and back, the tile set drawing the
 layer's picture, the room save's refusals; every cutscene, page and
 cutscene picture saved back unchanged with nothing written (`git diff
 --exit-code`), an edit in a scratch copy of the tree (text, timing, a
