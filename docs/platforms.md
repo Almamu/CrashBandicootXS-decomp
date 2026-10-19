@@ -219,7 +219,12 @@ build/pc/crashbandicootxs_pc --headless --keys platform/pc/tests/boot.keys --fra
 It needs no ARM toolchain, agbcc or baserom, only what the data
 generators need, and SDL2 (found by `pkg-config sdl2`) for the window.
 Without SDL2, or with `make PLATFORM=pc HOST_SDL=0`, the executable runs
-headless only (CI: `.github/workflows/host.yml` builds both).
+headless only (CI: `.github/workflows/host.yml` builds both). When
+pkg-config doesn't find SDL2 the build warns that it is making an
+executable without a window, and that executable, started without
+`--headless`, says it has none before it runs headless. An executable
+built before SDL2 was installed keeps running headless: `make
+PLATFORM=pc` rebuilds `sdl.c` and relinks once pkg-config finds it.
 
 **Controls.** Keyboard: the arrows are the D-pad, X is A, Z is B, A and
 S are L and R, Enter is Start, Backspace (or right Shift) is Select. A

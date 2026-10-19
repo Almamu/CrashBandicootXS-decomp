@@ -21,12 +21,18 @@ HOST_EXE := build/$(PLATFORM)/crashbandicootxs_$(PLATFORM)
 
 # The window (src/sdl.c) needs SDL2, found by pkg-config; without it (or
 # with HOST_SDL=0) the executable runs headless only, which is all the
-# tests need.
+# tests need. Not finding it is said (a warning), since the executable
+# then has no window; HOST_SDL=0 on the command line is taken as meant.
 HOST_PKG_CONFIG ?= pkg-config
 HOST_SDL ?= $(shell $(HOST_PKG_CONFIG) --exists sdl2 2>/dev/null && echo 1 || echo 0)
 ifeq ($(HOST_SDL),1)
 HOST_SDL_CFLAGS := -DHOST_SDL $(shell $(HOST_PKG_CONFIG) --cflags sdl2)
 HOST_SDL_LIBS := $(shell $(HOST_PKG_CONFIG) --libs sdl2)
+else ifneq ($(origin HOST_SDL),command line)
+# Said once, not again when make restarts for the generated makefiles.
+ifeq ($(MAKE_RESTARTS),)
+$(warning $(HOST_PKG_CONFIG) finds no sdl2: building $(HOST_EXE) without a window (headless only))
+endif
 endif
 
 .PHONY: all
