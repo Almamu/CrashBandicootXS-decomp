@@ -47,9 +47,9 @@ export interface RoomEntry {
   path: string;
   /** its slot: "main", "part1", "bonus", "gem path", ... */
   label: string;
-  /** gLevelTable's index and the room's in its "rooms", when it can be previewed */
+  /** gLevelTable's index and the room's in its "rooms" (or "bonus", "gem_path": its extra rooms), when it can be previewed */
   level?: number;
-  room?: number;
+  room?: number | "bonus" | "gem_path";
 }
 
 export interface LevelEntry {
@@ -196,7 +196,7 @@ class LevelEditorState {
       const f = await client.read<"levels.schema.json">(editor.projectId, `${base}levels.json`);
       const data = f.data as unknown as { rooms?: string[]; levels?: { name?: string; constant?: string; rooms?: (string | Record<string, unknown>)[]; bonus?: string; gem_path?: string }[] };
       const listed: Record<string, boolean> = {};
-      const entry = (folder: string, label: string, level?: number, room?: number): RoomEntry => {
+      const entry = (folder: string, label: string, level?: number, room?: RoomEntry["room"]): RoomEntry => {
         listed[folder] = true;
         return { folder, path: base + folder, label, level, room };
       };
@@ -207,8 +207,8 @@ class LevelEditorState {
           if (typeof r === "string") rooms.push(entry(r, r.split("/").pop() ?? r, i, k));
           else stages.push(typeof r["stage"] === "string" ? r["stage"] : Object.entries(r).map(([key, v]) => `${key} ${String(v)}`).join(", "));
         });
-        if (l.bonus) rooms.push(entry(l.bonus, "bonus"));
-        if (l.gem_path) rooms.push(entry(l.gem_path, "gem path"));
+        if (l.bonus) rooms.push(entry(l.bonus, "bonus", i, "bonus"));
+        if (l.gem_path) rooms.push(entry(l.gem_path, "gem path", i, "gem_path"));
         return { index: i, name: l.name ?? l.constant ?? String(i), rooms, stages };
       });
       this.others = (data.rooms ?? []).filter((r) => !listed[r]).map((r) => ({ folder: r, path: base + r, label: r }));

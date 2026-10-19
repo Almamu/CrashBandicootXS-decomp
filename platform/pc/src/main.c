@@ -28,7 +28,7 @@
 #include "host_platform.h"
 
 struct HostOptions gHostOptions = { 0, 0, 60, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-                                    3, 0, -1, -1,   0,    0,    0,    -1,   -1 };
+                                    3, 0, -1, -1,   0,    0,    0,    -1,   -1,   HOST_EXTRA_ROOM_NONE };
 
 void HostExit(int status, const char *how)
 {
@@ -48,7 +48,7 @@ static void Usage(const char *argv0)
     fprintf(
         stderr,
         "usage: %s [--headless] [--scale N] [--save FILE] [--wav FILE] [--frames N] [--vblanks N]\n"
-        "       [--keys FILE] [--level N [--room R]] [--cutscene N [--language L]]\n"
+        "       [--keys FILE] [--level N [--room R|bonus|gem-path]] [--cutscene N [--language L]]\n"
         "       [--checkpoint-every N] [--dump DIR] [--screens DIR]\n"
         "       [--ppu-stats] [--quiet]\n"
         "  --headless            no window, no frame pacing (always, built without SDL)\n"
@@ -60,6 +60,7 @@ static void Usage(const char *argv0)
         "  --screenshot-at N     in the window, take F12's screenshot at game frame N\n"
         "  --level N             the level select picks level N (gLevelTable's index), once\n"
         "  --room R              with --level: the level starts in its room R\n"
+        "  --room bonus|gem-path with --level: the level starts in its bonus or gem-path room\n"
         "  --cutscene N          the boot plays cutscene N (a CUTSCENE_* id), not the legal notice\n"
         "  --language L          with --cutscene: in language L (0 English ... 5 Dutch)\n"
         "  --frames N            stop after N game frames (KeyInput::Update calls)\n"
@@ -131,7 +132,13 @@ int main(int argc, char **argv)
         } else if (strcmp(arg, "--level") == 0) {
             gHostOptions.level = (s32)Number(argv[0], value);
         } else if (strcmp(arg, "--room") == 0) {
-            gHostOptions.room = (s32)Number(argv[0], value);
+            if (strcmp(value, "bonus") == 0) {
+                gHostOptions.extraRoom = HOST_EXTRA_ROOM_BONUS;
+            } else if (strcmp(value, "gem-path") == 0) {
+                gHostOptions.extraRoom = HOST_EXTRA_ROOM_GEM_PATH;
+            } else {
+                gHostOptions.room = (s32)Number(argv[0], value);
+            }
         } else if (strcmp(arg, "--cutscene") == 0) {
             gHostOptions.cutscene = (s32)Number(argv[0], value);
         } else if (strcmp(arg, "--language") == 0) {

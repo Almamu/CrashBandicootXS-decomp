@@ -65,11 +65,16 @@ jobs:
 
     # The editors' preview (#1167, docs/editors.md "Preview"): a level's
     # room started from the level select, headless, its first picture
-    # written (a polar stage, by folder and room index).
+    # written (a polar stage, by folder and room index; a bonus room by its
+    # folder, a gem-path room by its level and "gem_path").
     - name: Preview a room
       run: |
         python3 tools/preview.py snow_crash 1 --no-build --headless --out host_preview.png --json
         test -s host_preview.png
+        python3 tools/preview.py jungle_jam/bonus --no-build --headless --out host_preview_bonus.png --json
+        test -s host_preview_bonus.png
+        python3 tools/preview.py snow_crash gem_path --no-build --headless --out host_preview_gem_path.png --json
+        test -s host_preview_gem_path.png
 
     # The cutscene editor's "Play this cutscene" (docs/editors.md, "Preview"):
     # the boot plays the intro in French, A every 60 frames, a picture before

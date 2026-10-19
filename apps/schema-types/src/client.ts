@@ -43,7 +43,7 @@ export interface PreviewStarted {
 export interface PreviewOptions {
   /** gLevelTable's index, a constant, a name or a room folder */
   level?: string | number;
-  /** an index in the level's "rooms" or a folder */
+  /** an index in the level's "rooms", a folder, or "bonus" / "gem_path" (the level's extra rooms) */
   room?: string | number;
   /** run headless and give back a picture, instead of opening the game's window */
   headless?: boolean;
