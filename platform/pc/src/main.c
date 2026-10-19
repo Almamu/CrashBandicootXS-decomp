@@ -28,7 +28,7 @@
 #include "host_platform.h"
 
 struct HostOptions gHostOptions = { 0, 0, 60, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-                                    3, 0, -1, -1,   0,    0,    0,    -1,   -1,   HOST_EXTRA_ROOM_NONE };
+                                    3, 0, -1, -1,   0,    0,    0,    -1,   -1 };
 
 void HostExit(int status, const char *how)
 {

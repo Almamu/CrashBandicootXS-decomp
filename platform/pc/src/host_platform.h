@@ -29,7 +29,7 @@ struct HostOptions {
     int ppuStats;          /* --ppu-stats: what the picture used, at the end */
     s32 cutscene;          /* --cutscene N: the boot plays cutscene N (-1: no) */
     s32 language;          /* --language L: in language L (gLanguage; -1: as it is) */
-    s32 extraRoom;         /* --room bonus|gem-path: the level starts in that room (HOST_EXTRA_ROOM_*) */
+    s32 extraRoom;         /* --room bonus|gem-path: HOST_EXTRA_ROOM_* (0: no) */
 };
 
 /* --room bonus and --room gem-path (level_pick.c): the level's room list's
