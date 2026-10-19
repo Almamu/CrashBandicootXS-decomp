@@ -121,3 +121,106 @@ export function transparentIndex(bg0: boolean): (i: number) => boolean {
   return bg0 ? (i) => i === 0 : (i) => (i & 15) === 0;
 }
 
+
+/** A BG layer as the blend composite reads it: its picture, where it is, and its pixels' colours (0: transparent). */
+export interface BlendLayer {
+  data: Uint8Array;
+  width: number;
+  height: number;
+  /** the layer's (0, 0) in the world */
+  origin: Point;
+  /** palette index -> 32-bit pixel (ABGR words), 0 for a transparent index */
+  table: Uint32Array;
+  /** BLDCNT's first / second target bits for this layer */
+  first: boolean;
+  second: boolean;
+}
+
+/** The room's colour effect (room.json's record "blend", SetupRoomBlend): BLDCNT's effect, BLDALPHA's weights. */
+export interface Blend {
+  effect: number;
+  eva: number;
+  evb: number;
+}
+
+/** The backdrop: black, as a pixel (LoadRoom sets BACKDROP_COLOR to 0 after the room's palette: its entry 0 is never shown). */
+export const BACKDROP = 0xff000000;
+
+/** BLDCNT's targets for a room's blend (SetupRoomBlend): BG3 first, BG0-2 (and the sprites) second. */
+export const BLEND_FIRST: Record<string, boolean> = { bg3: true };
+export const BLEND_SECOND: Record<string, boolean> = { bg0: true, bg1: true, bg2: true };
+
+/** Whether the composite is needed: alpha blending (effect 1) changes the picture; 0 doesn't, 2 and 3 use BLDY, which the room doesn't set. */
+export function blends(b: Blend | undefined | null): boolean {
+  return !!b && (b.effect & 3) === 1;
+}
+
+/** Two pixels (ABGR words) blended as the PPU does (platform/pc's Blend): each channel (a * eva + b * evb) / 16, at most 255; the weights at most 16. */
+export function blendPixel(a: number, eva: number, b: number, evb: number): number {
+  const ea = Math.min(eva & 31, 16);
+  const eb = Math.min(evb & 31, 16);
+  let out = 0xff000000;
+  for (let shift = 0; shift <= 16; shift += 8) {
+    const c = Math.floor((((a >>> shift) & 0xff) * ea + ((b >>> shift) & 0xff) * eb) / 16);
+    out |= Math.min(c, 255) << shift;
+  }
+  return out >>> 0;
+}
+
+/**
+ * The room's BG layers composited with its alpha blend, as the PPU does it:
+ * per pixel the front layer's colour, unless it is a first target and the
+ * next opaque layer under it is a second target, when the two are blended
+ * (the backdrop isn't a second target: SetupRoomBlend leaves BLDCNT's bit
+ * 13 clear). `layers` front to back; the output is `w` x `h` pixels, pixel
+ * (i, j) the world's (x0 + i * step, y0 + j * step); outside the room's
+ * picture (`roomW` x `roomH`) it is transparent, else the backdrop where no
+ * layer is.
+ */
+export function compositeBlend(
+  layers: BlendLayer[],
+  backdrop: number,
+  blend: Blend,
+  roomW: number,
+  roomH: number,
+  x0: number,
+  y0: number,
+  step: number,
+  w: number,
+  h: number,
+  out: Uint32Array,
+): void {
+  const alpha = blends(blend);
+  for (let j = 0; j < h; j++) {
+    const wy = Math.floor(y0 + j * step);
+    for (let i = 0; i < w; i++) {
+      const wx = Math.floor(x0 + i * step);
+      const o = j * w + i;
+      if (wx < 0 || wy < 0 || wx >= roomW || wy >= roomH) {
+        out[o] = 0;
+        continue;
+      }
+      let top = backdrop;
+      let topLayer: BlendLayer | null = null;
+      let under = backdrop;
+      let underLayer: BlendLayer | null = null;
+      for (const l of layers) {
+        const lx = wx - l.origin.x;
+        const ly = wy - l.origin.y;
+        if (lx < 0 || ly < 0 || lx >= l.width || ly >= l.height) continue;
+        const px = l.table[l.data[ly * l.width + lx]!]!;
+        if (!px) continue;
+        if (!topLayer) {
+          top = px;
+          topLayer = l;
+          if (!alpha || !l.first) break;
+        } else {
+          under = px;
+          underLayer = l;
+          break;
+        }
+      }
+      out[o] = topLayer && underLayer?.second ? blendPixel(top, blend.eva, under, blend.evb) : top;
+    }
+  }
+}

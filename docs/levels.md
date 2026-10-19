@@ -650,7 +650,7 @@ Where each field comes from:
 | `gLevelRoomNN` (a room's record) | `palette`, `desc` | the room's `gRoomNNPalette`, `gRoomNNDesc` (room.json's `"symbols"`) |
 | | `kind` | room.json's `"record"` `"kind"`: `ON_FOOT`, `UNDERWATER` or `HOVER` (`ROOM_KIND_*`) |
 | | `unk_0C` | 0 |
-| | `param.blend` | `"record"` `"blend"`: `{"effect", "eva", "evb"}` |
+| | `param.blend` | `"record"` `"blend"`: `{"effect", "eva", "evb"}`: BLDCNT's effect (0-3: none, alpha blending, brighten, darken) and BLDALPHA's weights (0-31), the bits `SetupRoomBlend` keeps; BG3 is the first target, BG0-2 and the sprites the second |
 | `gLevelStageN` (a stage's record) | all | `{"stage": "<NAME>"}`: kind `ROOM_KIND_CATEGORY`, `param.catIndex` = `CATEGORY_<NAME>` (`constants/categories.h`, from `"categories"`, see "Actor categories"), N its value; no palette or descriptor |
 
 The record's symbol is room.json's `"record"` `"symbol"`

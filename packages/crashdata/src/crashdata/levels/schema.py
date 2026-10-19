@@ -69,7 +69,12 @@ def room():
         "record": S.obj({
             "symbol": S.string(S.C_NAME),
             "kind": S.enum(L.ROOM_KINDS[:3], description="ROOM_KIND_*"),
-            "blend": S.obj({"effect": S.integer(S.U16), "eva": S.integer(S.U8), "evb": S.integer(S.U8)},
+            "blend": S.obj({"effect": S.integer(0, L.BLEND_EFFECT_MAX, description="BLDCNT's effect: 0 none, 1 alpha "
+                                                "blending (BG3 over BG0-2), 2 brighten, 3 darken"),
+                            "eva": S.integer(0, L.BLEND_WEIGHT_MAX, description="BLDALPHA's EVA: BG3's weight in "
+                                             "16ths (the PPU stops at 16)"),
+                            "evb": S.integer(0, L.BLEND_WEIGHT_MAX, description="BLDALPHA's EVB: the weight of BG0-2 "
+                                             "and the sprites under BG3, in 16ths")},
                            description="SetupRoomBlend's colour effect"),
             "unk_0C": S.integer(S.S32, description="N-Tranced's extra rooms: the record's +0x0C when not 0"),
         }, required=["symbol", "kind"], description="the room's struct level_room in the level table"),

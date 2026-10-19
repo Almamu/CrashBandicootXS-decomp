@@ -24,6 +24,7 @@ import {
   type TileBrush,
 } from "./paint.ts";
 import type { Point } from "./coords.ts";
+import type { RoomRecord } from "./room.ts";
 import { addEntity, addLink, deleteEntity, deleteLink, moveEntity, newRecord, ownRecord, type Entity, type ParamRecord } from "./entities.ts";
 
 export type BgName = "bg0" | "bg1" | "bg2" | "bg3";
@@ -71,6 +72,8 @@ export interface Show {
   columns: boolean;
   screens: boolean;
   camera: boolean;
+  /** the room's alpha blend (its record's "blend"), drawn as the PPU does */
+  blend: boolean;
 }
 
 function same(a: unknown, b: unknown): boolean {
@@ -121,6 +124,7 @@ class LevelEditorState {
     columns: false,
     screens: false,
     camera: true,
+    blend: true,
   });
   parallax = $state(true);
   collisionOpacity = $state(0.55);
@@ -372,6 +376,14 @@ class LevelEditorState {
     const out = structuredClone(this.room);
     Object.assign(out.entities[i]!, patch);
     this.setRoom("Edit an entity", out, i);
+  }
+
+  /** Changes the room's record in the level table (its kind, its blend: docs/levels.md, "The level table"). */
+  setRoomRecord(patch: Partial<RoomRecord>): void {
+    if (!this.room?.record) return;
+    const out = structuredClone(this.room);
+    out.record = { ...out.record!, ...patch };
+    this.setRoom(patch.kind !== undefined ? "Change the room's kind" : "Change the room's blend", out);
   }
 
   setRecord(p: number, rec: ParamRecord): void {

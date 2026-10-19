@@ -4,7 +4,7 @@
 // record views.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { Room } from "@crash/schema-types";
+import type { EntityTypeInfo, Room } from "@crash/schema-types";
 import { describe, expect, it } from "vitest";
 import { cameraFor, cellAt, clampCamera, fit, layerOrigin, lineCells, rectCells, scaleQ8, toScreen, toWorld, zoomAt } from "../src/lib/level/coords.ts";
 import { addEntity, addLink, deleteEntity, inIdOrder, insertionIndex, layoutFields, layouts, moveEntity, newRecord, ownRecord, recordUsers, remapLinks } from "../src/lib/level/entities.ts";
@@ -28,7 +28,8 @@ import {
   type PixelLayer,
 } from "../src/lib/level/paint.ts";
 import { channels, fromChannels, fromHex, fromRgb, hex, pixelTable, toRgb } from "../src/lib/level/palette.ts";
-import { visibleTiles } from "../src/lib/level/render.ts";
+import { blendPixel, blends, compositeBlend, visibleTiles } from "../src/lib/level/render.ts";
+import { startMarkerFor } from "../src/lib/level/room.ts";
 
 const ROOT = join(import.meta.dirname, "../../..");
 const json = (p: string) => JSON.parse(readFileSync(join(ROOT, p), "utf8")) as unknown;
@@ -328,5 +329,64 @@ describe("the parameter records' views", () => {
       param7: 0,
     });
     expect(newRecord(roomSchema, null, null)).toEqual([0]);
+  });
+});
+
+describe("the room's kind and blend", () => {
+  const W = 4;
+  const layer = (fill: number, first: boolean, second: boolean, table: Uint32Array) => ({
+    data: new Uint8Array(W * W).fill(fill),
+    width: W,
+    height: W,
+    origin: { x: 0, y: 0 },
+    table,
+    first,
+    second,
+  });
+  // entry 1 is red, 2 is grey, 0 transparent
+  const table = pixelTable([0, 0x001f, 0x4210]);
+  const red = table[1]!;
+  const grey = table[2]!;
+
+  it("blend two pixels as the PPU does: (a * eva + b * evb) / 16, at most 255, the weights at most 16", () => {
+    expect(blendPixel(0xff0000ff, 4, 0xff000000, 16)).toBe((0xff000000 | 63) >>> 0);
+    expect(blendPixel(0xff808080, 16, 0xff808080, 16)).toBe(0xffffffff);
+    expect(blendPixel(0xff0000ff, 31, 0xff000000, 0)).toBe((0xff000000 | 255) >>> 0);
+  });
+
+  it("blend BG3 over BG0-2 only, not over the backdrop, and only with effect 1", () => {
+    const out = new Uint32Array(W * W);
+    const blend = { effect: 1, eva: 4, evb: 16 };
+    const bg3 = layer(1, true, false, table);
+    const bg0 = layer(2, false, true, table);
+    compositeBlend([bg3, bg0], 0xff000000, blend, W, W, 0, 0, 1, W, W, out);
+    expect(out[0]).toBe(blendPixel(red, 4, grey, 16));
+    // BG3 over the backdrop: as it is
+    compositeBlend([bg3], 0xff000000, blend, W, W, 0, 0, 1, W, W, out);
+    expect(out[0]).toBe(red);
+    // BG0 in front of BG3: no blend
+    compositeBlend([bg0, bg3], 0xff000000, blend, W, W, 0, 0, 1, W, W, out);
+    expect(out[0]).toBe(grey);
+    // no effect, or brighten/darken (BLDY, which the room doesn't set): BG3 as it is
+    for (const effect of [0, 2, 3]) {
+      compositeBlend([bg3, bg0], 0xff000000, { ...blend, effect }, W, W, 0, 0, 1, W, W, out);
+      expect(out[0]).toBe(red);
+    }
+    // outside the room: nothing
+    compositeBlend([bg3, bg0], 0xff000000, blend, W, W, -2, 0, 1, W, W, out);
+    expect(out[0]).toBe(0);
+    expect(blends({ effect: 1, eva: 0, evb: 0 })).toBe(true);
+    expect(blends({ effect: 0, eva: 31, evb: 7 })).toBe(false);
+  });
+
+  it("know each kind's start marker", () => {
+    const room = jungle();
+    const types = (json("games/xs/data/levels/entity_types.json") as { types: EntityTypeInfo[] }).types;
+    expect(startMarkerFor(room, types)).toEqual({ want: "START_MARKER", have: "START_MARKER" });
+    const wet = { ...room, record: { ...room.record!, kind: "UNDERWATER" as const } };
+    expect(startMarkerFor(wet, types)).toEqual({ want: "UNDERWATER_START_MARKER", have: "START_MARKER" });
+    // N-Tranced's types don't name the markers
+    const n2 = (json("games/n2/data/levels/entity_types.json") as { types: EntityTypeInfo[] }).types;
+    expect(startMarkerFor(room, n2)).toBeNull();
   });
 });

@@ -26,9 +26,21 @@
     type Point,
     type View,
   } from "../../lib/level/coords.ts";
-  import { pixelOf, pixelTable, toRgb } from "../../lib/level/palette.ts";
+  import { pixelOf, pixelTable } from "../../lib/level/palette.ts";
   import type { CellChange } from "../../lib/level/paint.ts";
-  import { TiledBitmap, cellFill, indexFill, transparentIndex } from "../../lib/level/render.ts";
+  import {
+    BACKDROP,
+    BLEND_FIRST,
+    BLEND_SECOND,
+    TiledBitmap,
+    blends,
+    cellFill,
+    compositeBlend,
+    indexFill,
+    transparentIndex,
+    type Blend,
+    type BlendLayer,
+  } from "../../lib/level/render.ts";
   import { BG_NAMES, level, type BgName, type LayerName } from "../../lib/level/state.svelte.ts";
 
   let { onhover, oncamera }: { onhover?: (p: { world: Point; cell: Point | null } | null) => void; oncamera?: (p: Point) => void } = $props();
@@ -154,9 +166,9 @@
     if (!v) return;
     const z = view.zoom;
     const tl = toScreen(view, 0, 0);
-    // the backdrop: palette entry 0, behind every layer
-    const [r, g, b] = toRgb(level.palette[0] ?? 0);
-    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    // the backdrop, behind every layer: black (LoadRoom sets BACKDROP_COLOR to 0
+    // after the room's palette, so its entry 0 is never shown)
+    ctx.fillStyle = "#000";
     ctx.fillRect(tl.x, tl.y, roomSize.pw * z, roomSize.ph * z);
     const cam = camera();
     oncamera?.(cam);
@@ -164,7 +176,10 @@
     const order = BG_NAMES.filter((n) => v.layers[n] && level.show[n]).sort(
       (a, b2) => v.layers[b2]!.priority - v.layers[a]!.priority || BG_NAMES.indexOf(b2) - BG_NAMES.indexOf(a),
     );
-    for (const n of order) bitmaps[n]?.draw(ctx, view, cw, ch, origin(n, cam));
+    const rb = level.room?.record?.blend;
+    const blend: Blend = { effect: rb?.effect ?? 0, eva: rb?.eva ?? 0, evb: rb?.evb ?? 0 };
+    if (level.show.blend && blends(blend)) drawBlended(ctx, order, cam, blend);
+    else for (const n of order) bitmaps[n]?.draw(ctx, view, cw, ch, origin(n, cam));
     if (level.show.collision && bitmaps.collision) {
       ctx.globalAlpha = level.collisionOpacity;
       bitmaps.collision.draw(ctx, view, cw, ch, { x: 0, y: 0 });
@@ -186,6 +201,43 @@
     if (level.show.links) drawLinks(ctx);
     if (level.show.entities) drawEntities(ctx);
     drawCursor(ctx, cam);
+  }
+
+  let blendCanvas: HTMLCanvasElement | null = null;
+
+  /**
+   * The BG layers with the room's alpha blend (SetupRoomBlend: BG3 over
+   * BG0-2), composited pixel by pixel for the part of the room in view, a
+   * world pixel an output pixel (zoomed out, a canvas pixel one), then drawn
+   * scaled like the layers' tiles.
+   */
+  function drawBlended(ctx: CanvasRenderingContext2D, order: BgName[], cam: Point, blend: Blend) {
+    const step = view.zoom >= 1 ? 1 : 1 / view.zoom;
+    const x0 = Math.max(0, Math.floor(view.x));
+    const y0 = Math.max(0, Math.floor(view.y));
+    const x1 = Math.min(roomSize.pw, view.x + cw / view.zoom);
+    const y1 = Math.min(roomSize.ph, view.y + ch / view.zoom);
+    const w = Math.ceil((x1 - x0) / step);
+    const h = Math.ceil((y1 - y0) / step);
+    if (w <= 0 || h <= 0) return;
+    const layers: BlendLayer[] = [];
+    for (const n of [...order].reverse()) {
+      const l = level.layers[n];
+      if (!l || !tables[n]) continue;
+      layers.push({ data: l.data, width: l.width, height: l.height, origin: origin(n, cam), table: tables[n]!, first: !!BLEND_FIRST[n], second: !!BLEND_SECOND[n] });
+    }
+    blendCanvas ??= document.createElement("canvas");
+    if (blendCanvas.width !== w || blendCanvas.height !== h) {
+      blendCanvas.width = w;
+      blendCanvas.height = h;
+    }
+    const bctx = blendCanvas.getContext("2d");
+    if (!bctx) return;
+    const img = bctx.createImageData(w, h);
+    compositeBlend(layers, BACKDROP, blend, roomSize.pw, roomSize.ph, x0, y0, step, w, h, new Uint32Array(img.data.buffer));
+    bctx.putImageData(img, 0, 0);
+    const s = toScreen(view, x0, y0);
+    ctx.drawImage(blendCanvas, s.x, s.y, w * step * view.zoom, h * step * view.zoom);
   }
 
   function drawColumns(ctx: CanvasRenderingContext2D) {
