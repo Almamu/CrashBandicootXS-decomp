@@ -84,6 +84,20 @@ def cells_of(rows):
     return b64(b"".join(bytes(c) for row in rows for c in row))
 
 
+def keys_song(keymap, notes, name=None):
+    """A save's body: tools/gax_render.py's own_keys, a new song on an instrument of two samples, its key map
+    `keymap`, with more notes on it (rows 4, 8, ...)."""
+    from buildtools import gax_render as R
+
+    spec = {"keymap": keymap}
+    if name is not None:
+        spec["name"] = name
+    xm = R.own_note_xm(hold=36, song=R.KEYS_SONG, instrument=R.two_sample_instrument())
+    cells = [{"pattern": 0, "row": 4 * (i + 1), "channel": 0, "cell": [k, 1, 0, 0, 0]} for i, k in enumerate(notes)]
+    return {"newSongs": [{"key": R.KEYS_SONG, "xm": b64(xm)}], "xmInstruments": {R.KEYS_SONG: {"1": spec}},
+            **({"patterns": {R.KEYS_SONG: cells}} if cells else {})}
+
+
 def snapshot(root):
     return {p: p.read_bytes() for d in TRACKED for p in ([root / d] if (root / d).is_file() else (root / d).rglob("*"))
             if p.is_file()}
@@ -322,8 +336,17 @@ class Reading(Music):
             ({"newSfxSamples": {"99": b64(short)}}, None),
             ({"deleteSfxInstruments": [9]}, None),
             ({"deleteSfxSamples": [9]}, None),
-            # a ROM song's XM instruments are the pool's, not its own
-            ({"xmInstruments": {"drums": {"1": {"volume": 10}}}}, None),
+            # a ROM song's XM instruments are the pool's, not its own; one with its scaffold plays only those
+            ({"xmInstruments": {"drums": {"1": {"name": "drum"}}}}, None),
+            ({"xmInstruments": {"drums": {str(len(self.patterns("drums")["instruments"]) + 1): {"name": "x"}}}}, None),
+            # a new song's own instrument whose key map plays its two samples on the song's notes (the build
+            # refuses it: a GAX2 instrument has one sample), renamed after the pool's
+            (keys_song([0] * 48 + [1] * 48, [40]), None),
+            (keys_song([0] * 96, [], name="Instrument 2"), None),
+            # a JSON instrument's: a new one's name, its WAV outside games/xs/sound/, a new one with no sound
+            ({"jsonInstruments": {"Bad": {"json": {"sample": "samples/bad.wav"}, "wav": b64(short)}}}, None),
+            ({"jsonInstruments": {"fine": {"json": {"sample": "../bad.wav"}, "wav": b64(short)}}}, None),
+            ({"jsonInstruments": {"fine": {"json": {"sample": "samples/fine.wav"}}}}, None),
         ]:
             st, r = self.call("POST", "/api/projects/xs/music/save", body)
             self.assertEqual(st, 422, (list(body), r))
@@ -374,8 +397,8 @@ class Mod(unittest.TestCase):
         # its own instrument, "sample lead" (its first: the second is the pool's Instrument 2)
         self.assertEqual(song["xm"]["own"], [1])
         lead = self.patterns("sample_tune")["instruments"][0]["own"]
-        self.assertEqual((lead["spec"]["volume"], lead["spec"]["loop"], lead["length"], lead["spec"]["envelope"]
-                          ["sustain"]), (48, "forward", 256, 2))
+        self.assertEqual((lead["spec"]["samples"][0]["volume"], lead["spec"]["samples"][0]["loop"],
+                          lead["sounds"][0]["length"], lead["spec"]["envelope"]["sustain"]), (48, "forward", 256, 2))
         self.assertIn("THEME_SAMPLE", [u["name"] for u in song["uses"]])
         st, raw = self.get_bytes("/api/projects/xs/music/song?key=sample_tune")
         self.assertEqual(st, 200, raw[:300])
@@ -570,7 +593,8 @@ class Scratch(unittest.TestCase):
         new_song.append(own_song)
         st, own_p = self.call("POST", "/api/projects/xs/music/patterns", {"key": R.OWN_SONG, "xm": own_song["xm"]})
         self.assertEqual(st, 200, own_p)
-        own = dict(own_p["instruments"][0]["own"]["spec"], volume=56, vibrato={"depth": 9, "rate": 20},
+        spec = own_p["instruments"][0]["own"]["spec"]
+        own = dict(spec, samples=[dict(spec["samples"][0], volume=56)], vibrato={"depth": 9, "rate": 20},
                    envelope={"points": [[0, 64], [8, 30], [30, 0]], "sustain": 1, "loop_start": None,
                              "loop_end": None})
         xm_instruments = {R.OWN_SONG: {"1": own}}
@@ -669,6 +693,80 @@ class Scratch(unittest.TestCase):
             self.assertIn("#define SFX_TEST_BEEP 0x63", sfx_h)
             self.assertIn("#define SFX_TEST_CHIRP 0x64", sfx_h)
             self.assertIn("#define SFX_COUNT 101", sfx_h)
+
+    def test_instruments(self):
+        """A new song's own instruments (tools/gax_render.py's own_keys: a key map, its other sample, a name, new
+        ones around a pool instrument) and a new JSON instrument a new song plays (json_note): played unsaved,
+        saved, read back and played the same; saved again unchanged, nothing is written; a JSON instrument's
+        fields and its WAV edited, each writing only its file."""
+        from buildtools import gax_render as R
+
+        sound = self.tree / SOUND
+        full = R.edited_body(str(self.tree))
+        mine = (R.KEYS_SONG, R.JSON_SONG)
+        body = {"newSongs": [s for s in full["newSongs"] if s["key"] in mine],
+                "patterns": {R.KEYS_SONG: full["patterns"][R.KEYS_SONG]},
+                "songInstruments": {R.KEYS_SONG: full["songInstruments"][R.KEYS_SONG]},
+                "xmInstruments": {R.KEYS_SONG: full["xmInstruments"][R.KEYS_SONG]},
+                "jsonInstruments": full["jsonInstruments"]}
+        st, unsaved = self.call("POST", "/api/projects/xs/music/pool", body)
+        self.assertEqual(st, 200, unsaved)
+        keys_pool = unsaved["xmPool"][R.KEYS_SONG]
+        self.assertEqual((keys_pool[2], keys_pool[3]), (7, None))
+        played = {k: unsaved["music"]["instruments"][i] for k, i in
+                  (("split", keys_pool[0]), ("saw", keys_pool[1]), ("json", unsaved["xmPool"][R.JSON_SONG][0]))}
+        previews = {k: self.song(k, unsaved=body) for k in mine}
+        before = snapshot(self.tree)
+        st, r = self.call("POST", "/api/projects/xs/music/save", body)
+        self.assertEqual(st, 200, r)
+        self.assertFalse([d for d in r["diagnostics"] if d["severity"] == "error"], r)
+        self.assertEqual(sorted(r["saved"]), sorted([
+            SOUND + "/gax_manifest.json", SOUND + "/songs/%s.xm" % R.KEYS_SONG, SOUND + "/songs/%s.xm" % R.JSON_SONG,
+            SOUND + "/instruments/%s.json" % R.JSON_INSTRUMENT, SOUND + "/samples/%s.wav" % R.JSON_INSTRUMENT]))
+        # read back: the instruments as edited, named, in their numbers' order
+        p = self.patterns(R.KEYS_SONG)
+        self.assertEqual([i["name"] for i in p["instruments"]], ["split lead", "saw", "Instrument 7", "not yet"])
+        split = p["instruments"][0]["own"]
+        self.assertEqual((split["spec"]["keymap"], split["plays"], split["spec"]["samples"][1]["loop_end"]),
+                         ([0] * 48 + [1] * 48, [1], 384))
+        self.assertEqual(p["instruments"][3]["own"]["spec"]["samples"], [])
+        self.assertEqual(json.loads((sound / "instruments" / ("%s.json" % R.JSON_INSTRUMENT)).read_text()),
+                         body["jsonInstruments"][R.JSON_INSTRUMENT]["json"])
+        v = self.view()
+        lead = next(i for i in v["instruments"] if i["name"] == R.JSON_INSTRUMENT)
+        self.assertEqual((lead["songs"], lead["sound"]["length"], lead["sound"]["rate"]), ([R.JSON_SONG], 2200, 11025))
+        # played as before the save
+        st, raw = self.get_bytes("/api/projects/xs/music/pool")
+        saved = json.loads(raw)
+        self.assertEqual({k: saved["music"]["instruments"][i] for k, i in
+                          (("split", saved["xmPool"][R.KEYS_SONG][0]), ("saw", saved["xmPool"][R.KEYS_SONG][1]),
+                           ("json", saved["xmPool"][R.JSON_SONG][0]))}, played)
+        for k in mine:
+            self.assertEqual(self.song(k), previews[k])
+        # saved again as it is: nothing is written
+        again = {"xmInstruments": {R.KEYS_SONG: {str(n): i["own"]["spec"] for n, i in enumerate(p["instruments"], 1)
+                                                 if "own" in i}},
+                 "jsonInstruments": {R.JSON_INSTRUMENT: {"json": lead["data"]}}}
+        now = snapshot(self.tree)
+        st, r = self.call("POST", "/api/projects/xs/music/save", again)
+        self.assertEqual((st, r.get("saved")), (200, []), r)
+        self.assertEqual(snapshot(self.tree), now)
+        # the JSON instrument's volume: its file only; a new sound: its WAV only
+        st, r = self.call("POST", "/api/projects/xs/music/save", {"jsonInstruments": {R.JSON_INSTRUMENT: {
+            "json": dict(lead["data"], volume=30)}}})
+        self.assertEqual((st, r.get("saved")), (200, [SOUND + "/instruments/%s.json" % R.JSON_INSTRUMENT]), r)
+        pulse = wav([(0.4 if (i // 25) % 2 else -0.4) for i in range(2400)], 11025)
+        st, r = self.call("POST", "/api/projects/xs/music/save", {"jsonInstruments": {R.JSON_INSTRUMENT: {
+            "json": dict(lead["data"], volume=30), "wav": b64(pulse)}}})
+        self.assertEqual((st, r.get("saved")), (200, [SOUND + "/samples/%s.wav" % R.JSON_INSTRUMENT]), r)
+        # a refused one changes nothing: the instrument's key map playing both samples on the song's notes
+        now = snapshot(self.tree)
+        cells = {R.KEYS_SONG: [{"pattern": 0, "row": 4, "channel": 0, "cell": [40, 1, 0, 0, 0]}]}
+        st, r = self.call("POST", "/api/projects/xs/music/save", {"patterns": cells, "jsonInstruments": {
+            R.JSON_INSTRUMENT: {"json": dict(lead["data"], volume=20)}}})
+        self.assertEqual(st, 422, r)
+        self.assertEqual(snapshot(self.tree), now)
+        del before
 
 
 if __name__ == "__main__":

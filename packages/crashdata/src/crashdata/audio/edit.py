@@ -10,7 +10,7 @@ mod's), binding crashdata.audio.gax to the tree (gax.use_game):
 - view(game): the song table, each song's XM in brief and what plays it
   (the level themes, the screens, the cutscene slides), the screens'
   music, the sound-effect table and what plays each entry (code, the
-  cutscene slides), the samples and the new instruments;
+  cutscene slides), the samples and the new instruments (instruments/<name>.json, with their sound);
 - player_pool(game): what the player needs besides a song: GAX2's tables
   (lib/gax/data/gax_tables.c), the music pool's and the sound-effect
   set's instruments and samples, the song header of the voices;
@@ -192,8 +192,8 @@ def player_pool(game, unsaved=None):
         e = unsaved_songs(files, D.read_json(files.manifest), unsaved or {})
         xms = {k: _read_xm_bytes(files.songs / ("%s.xm" % k), v) for k, v in e.xms.items()}
         pool, order, songs = G.load_songs(e.manifest, str(files.songs), str(files.samples), xms, e.sample_data,
-                                          e.settings)
-        sfx, slots = G.sfx_pool(manifest=e.sfx_manifest, sample_data=e.sfx_sample_data)
+                                          e.settings, e.named)
+        sfx, slots = G.sfx_pool(manifest=e.sfx_manifest, sample_data=e.sfx_sample_data, named=e.named)
         sfx_manifest = e.sfx_manifest
     info = sfx_manifest["song_info"]
     return {
@@ -241,7 +241,7 @@ def player_song(game, key, edits=None, unsaved=None):
             raise EditError("%s isn't a song of the song table" % key)
         xms = {k: _read_xm_bytes(files.songs / ("%s.xm" % k), v) for k, v in e.xms.items()}
         pool, order, songs = G.load_songs(e.manifest, str(files.songs), str(files.samples), xms, e.sample_data,
-                                          e.settings)
+                                          e.settings, e.named)
         song = songs[order.index(key)]
         out = song_struct(song, pool.instruments)
     out["key"] = key
@@ -255,7 +255,7 @@ def unsaved_songs(files, manifest, body):
     end), "songInstruments", "xmInstruments", "structures" {key:
     structure()} (a ROM song whose structure changes loses its scaffold:
     descaffolded), "patterns" {key: cell edits}, "songSettings", the music
-    pool's edits and the sound-effect set's."""
+    pool's edits, the sound-effect set's and "jsonInstruments"."""
     manifest = json.loads(json.dumps(manifest))
     keys = [t["song"] for t in manifest["song_table"]]
     xms = {}
@@ -275,18 +275,21 @@ def unsaved_songs(files, manifest, body):
     manifest, sample_data, _, _ = apply_pool_edits(files, manifest, body, lambda: named_instruments(files, keys, xms))
     check_song_instruments(manifest, body)
     sfx_manifest, sfx_data, _, _ = apply_sfx_edits(files, body)
-    return Edited(manifest, xms, sample_data, settings, sfx_manifest, sfx_data)
+    named, _, _ = apply_json_instruments(files, body)
+    return Edited(manifest, xms, sample_data, settings, sfx_manifest, sfx_data, named)
 
 
 class Edited:
     """The sound as unsaved edits make it (unsaved_songs): the manifest, {key: XM bytes} of the songs they
     change, {sample: its signed bytes} of the music samples they change, {key: settings} of the new songs whose
-    settings they change, the sound-effect manifest and {sample: its signed bytes} of the set's samples they
-    change."""
+    settings they change, the sound-effect manifest, {sample: its signed bytes} of the set's samples they
+    change and {name: (instruments/<name>.json's value, its WAV's bytes or None)} of the JSON instruments they
+    change or add."""
 
-    def __init__(self, manifest, xms, sample_data, settings, sfx_manifest, sfx_sample_data):
+    def __init__(self, manifest, xms, sample_data, settings, sfx_manifest, sfx_sample_data, named=None):
         self.manifest, self.xms, self.sample_data = manifest, xms, sample_data
         self.settings, self.sfx_manifest, self.sfx_sample_data = settings, sfx_manifest, sfx_sample_data
+        self.named = named or {}
 
 
 def check_song_instruments(manifest, body):
@@ -535,28 +538,35 @@ def apply_song_edits(files, manifest, keys, xms, body):
     added = body.get("songInstruments") or {}
     if not isinstance(added, dict):
         raise EditError("songInstruments: {song: [pool instrument N, ...]}")
-    for key, ns in added.items():
-        if key not in keys:
-            raise EditError("songInstruments: %s isn't a song of the song table" % key)
-        buf = _xm_now(files, xms, key, "songInstruments")
-        new = xm_with_instruments(buf, ns, "songInstruments/%s" % key)
-        if new != buf:
-            xms[key] = new
     own = body.get("xmInstruments") or {}
     if not isinstance(own, dict):
         raise EditError("xmInstruments: {song: {XM instrument N: its fields}}")
-    for key, specs in own.items():
+    named = json_instrument_names(body)
+    grown = []
+    for key in list(added) + [k for k in own if k not in added]:
+        part = "songInstruments" if key in added else "xmInstruments"
         if key not in keys:
-            raise EditError("xmInstruments: %s isn't a song of the song table" % key)
+            raise EditError("%s: %s isn't a song of the song table" % (part, key))
+        specs = own.get(key) or {}
         if not isinstance(specs, dict):
             raise EditError("xmInstruments/%s: {XM instrument N: its fields}" % key)
-        buf = new = _xm_now(files, xms, key, "xmInstruments")
-        for n, spec in sorted(specs.items(), key=lambda kv: int(kv[0]) if str(kv[0]).isdigit() else -1):
-            if not str(n).isdigit():
+        for n in specs:
+            if not str(n).isdigit() or str(int(n)) != str(n):
                 raise EditError("xmInstruments/%s/%s: an XM instrument is a number (1-based)" % (key, n))
-            new = xm_with_own_instrument(files, new, int(n), spec, "xmInstruments/%s/%s" % (key, n))
+        buf = _xm_now(files, xms, key, part)
+        # the instruments added to its list: the pool's (songInstruments) and its own new ones (the numbers of
+        # xmInstruments after its own), in their numbers' order
+        count = len(xm_instrument_names(buf))
+        fresh = {int(n) for n in specs if int(n) > count}
+        new = buf
+        if key in added or fresh:
+            new = xm_with_instruments(buf, added.get(key) or [], "songInstruments/%s" % key, fresh)
+        for n, spec in sorted(specs.items(), key=lambda kv: int(kv[0])):
+            new = xm_with_own_instrument(files, new, int(n), spec, "xmInstruments/%s/%s" % (key, n), named)
         if new != buf:
             xms[key] = new
+        if fresh:
+            grown.append(key)
     structures = body.get("structures") or {}
     if not isinstance(structures, dict):
         raise EditError("structures: {song: {channels, patterns, order, restart, speed}}")
@@ -568,6 +578,12 @@ def apply_song_edits(files, manifest, keys, xms, body):
         if new != buf:
             xms[key] = new
             manifest = descaffolded(manifest, key)
+    # a ROM song built with its recorded scaffold plays the pool's instruments by their names (gax.rom_song)
+    for key in grown:
+        if key in manifest["songs"] and G.scaffolded(manifest["songs"][key]):
+            raise EditError("xmInstruments/%s: a ROM song built with its recorded scaffold plays only the pool's "
+                            "instruments (Instrument N): change its structure first, and it is built from its XM"
+                            % key)
     for key, edits in (body.get("patterns") or {}).items():
         if key not in keys:
             raise EditError("patterns: %s isn't a song of the song table" % key)
@@ -927,25 +943,41 @@ def xm_instrument_names(buf):
     return out
 
 
-def xm_with_instruments(buf, pool_numbers, where="xm"):
+def xm_with_instruments(buf, pool_numbers, where="xm", own=()):
     """The XM with an instrument `Instrument N` added at the end of its
     list for each pool instrument N (a cell then plays it by its new
     number). The build reads only the name of an `Instrument N` (its XM
     samples and envelopes aren't GAX2's), so it is a name with no sample:
-    a tracker plays it silent."""
+    a tracker plays it silent.
+
+    own: the numbers of new instruments of the module's own among the
+    added ones (xmInstruments' numbers after the module's), each added as
+    an empty one (no name, no sample) for xm_with_own_instrument to make;
+    the pool's take the other numbers, in their order."""
     if not isinstance(pool_numbers, list):
         raise EditError("%s: [pool instrument N, ...]" % where)
     names = xm_instrument_names(buf)
     out = bytearray(buf)
-    for i, n in enumerate(pool_numbers):
+    first, total = len(names) + 1, len(pool_numbers) + len(own)
+    stray = sorted(k for k in own if not first <= k < first + total)
+    if stray:
+        raise EditError("%s: a new instrument is the module's next number (%d-%d), not %s"
+                        % (where, first, first + total - 1, ", ".join(map(str, stray))))
+    if first - 1 + total > MAX_XM_INSTRUMENTS:
+        raise EditError("%s: an XM has at most %d instruments" % (where, MAX_XM_INSTRUMENTS))
+    pool = iter(enumerate(pool_numbers))
+    for number in range(first, first + total):
+        if number in own:
+            out += struct.pack("<I22sBH", 29, b"", 0, 0)
+            names.append("")
+            continue
+        i, n = next(pool)
         if isinstance(n, bool) or not isinstance(n, int) or not 1 <= n <= G.MAX_INDEX:
             raise EditError("%s/%d: %r isn't one of the music pool's instruments (1-%d)" % (where, i, n, G.MAX_INDEX))
         name = "Instrument %d" % n
         if name in names:
             raise EditError("%s/%d: the module has %s already (its instrument %d)" % (where, i, name,
                                                                                     names.index(name) + 1))
-        if len(names) >= MAX_XM_INSTRUMENTS:
-            raise EditError("%s: an XM has at most %d instruments" % (where, MAX_XM_INSTRUMENTS))
         out += struct.pack("<I22sBH", 29, name.encode("ascii"), 0, 0)
         names.append(name)
     struct.pack_into("<H", out, 72, len(names))
@@ -978,6 +1010,13 @@ def named_instruments(files, keys, xms):
 XM_LOOPS = ("none", "forward", "pingpong")
 XM_ENVELOPE_POINTS = 12  # FT2's
 XM_INSTRUMENT_HEADER = 241  # the fields up to the fadeout (an instrument with samples has 263)
+XM_INSTRUMENT_FULL = 263  # an instrument header with samples, as FT2 writes it
+XM_SAMPLE_HEADER = 40
+XM_SAMPLES = 16  # FT2's: an instrument has at most 16 samples
+XM_NAME = 22
+XM_KEYS = 96  # the notes a key map maps, C-0 to B-7
+SAMPLE_FIELDS = ("volume", "relative_note", "finetune", "loop", "loop_start", "loop_end")
+OWN_FIELDS = ("name", "keymap", "envelope", "vibrato", "samples")
 
 
 def _json_instrument(files, name):
@@ -1026,11 +1065,18 @@ def played_notes(xm):
     return out
 
 
-def own_spec(xi, k):
-    """XM instrument xi's fields the build reads, with its sample k's: what the editor edits."""
-    xs = xi["samples"][k]
+def own_sample(xs):
+    """An XM sample's fields the build reads: its volume, tune and loop."""
     unit = 2 if xs["type"] & 0x10 else 1
     kind = xs["type"] & 3
+    return {"volume": min(64, xs["volume"]), "relative_note": xs["relnote"], "finetune": xs["finetune"],
+            "loop": XM_LOOPS[kind] if xs["loop_len"] and kind < 3 else "none",
+            "loop_start": xs["loop_start"] // unit, "loop_end": (xs["loop_start"] + xs["loop_len"]) // unit}
+
+
+def own_spec(xi):
+    """XM instrument xi's fields the build reads, and its name: what the editor edits. Its key map says which of
+    its samples each note plays (the build makes the one the song's notes play its sample)."""
     on = xi.get("vol_type", 0)
     env = None
     if on & 1:
@@ -1038,32 +1084,35 @@ def own_spec(xi, k):
                "sustain": xi["vol_sustain"] if on & 2 else None,
                "loop_start": xi["vol_loop_start"] if on & 4 else None,
                "loop_end": xi["vol_loop_end"] if on & 4 else None}
-    return {"sample": k, "volume": min(64, xs["volume"]), "relative_note": xs["relnote"], "finetune": xs["finetune"],
-            "loop": XM_LOOPS[kind] if xs["loop_len"] and kind < 3 else "none",
-            "loop_start": xs["loop_start"] // unit, "loop_end": (xs["loop_start"] + xs["loop_len"]) // unit,
-            "envelope": env, "vibrato": {"depth": xi.get("vib_depth", 0), "rate": xi.get("vib_rate", 0)}}
+    return {"name": xi["name"], "keymap": list(xi.get("keymap") or [0] * XM_KEYS), "envelope": env,
+            "vibrato": {"depth": xi.get("vib_depth", 0), "rate": xi.get("vib_rate", 0)},
+            "samples": [own_sample(xs) for xs in xi["samples"]]}
 
 
 def own_instruments(files, xm):
-    """{XM instrument number (1-based, as a cell names it): its own instrument} of an XM (read_xm's): those
-    with a sample that aren't the pool's or a JSON's. Each is {spec (own_spec, of the sample its key map plays
-    on the notes the song plays, C-4's if none), samples (how many), bits (its sample's), length, data (base64:
-    the sample as the build reads it, signed 8-bit), plays (the samples its key map plays on those notes: more
-    than one, and the build refuses it)}."""
+    """{XM instrument number (1-based, as a cell names it): its own instrument} of an XM (read_xm's): those that
+    aren't the pool's or a JSON's, with a sample or a name (a tracker's empty slots have neither). Each is {spec
+    (own_spec), sounds (each sample's: bits, length, data, base64 of it as the build reads it, signed 8-bit, or
+    the problem the build has with it), notes (the notes the song's cells play on it), plays (the samples its key
+    map plays on those notes, C-4's if none: more than one, and the build refuses it)}."""
     notes = played_notes(xm)
     out = {}
     for n, xi in enumerate(xm["instruments"], 1):
-        if _pool_name(xi["name"]) or _json_instrument(files, xi["name"]) or not xi["samples"] or "keymap" not in xi:
+        if _pool_name(xi["name"]) or _json_instrument(files, xi["name"]) or not (xi["samples"] or xi["name"].strip()):
             continue
-        plays = sorted({xi["keymap"][k - 1] for k in notes.get(n, ())}) or [xi["keymap"][G.XM_C4 - 1]]
-        k = plays[0] if plays[0] < len(xi["samples"]) else 0
-        xs = xi["samples"][k]
-        try:
-            data = G.xm_sample_data(xs, _raise)
-        except EditError:
-            continue
-        out[n] = {"spec": own_spec(xi, k), "samples": len(xi["samples"]), "bits": 16 if xs["type"] & 0x10 else 8,
-                  "length": len(data), "data": _b64(data), "plays": plays}
+        keymap = xi.get("keymap") or [0] * XM_KEYS
+        played = sorted(notes.get(n, ()))
+        plays = sorted({keymap[k - 1] for k in played}) or ([keymap[G.XM_C4 - 1]] if xi["samples"] else [])
+        sounds = []
+        for xs in xi["samples"]:
+            bits = 16 if xs["type"] & 0x10 else 8
+            try:
+                data = G.xm_sample_data(xs, _raise)
+            except EditError as e:
+                sounds.append({"bits": bits, "length": 0, "data": "", "problem": str(e)})
+                continue
+            sounds.append({"bits": bits, "length": len(data), "data": _b64(data)})
+        out[n] = {"spec": own_spec(xi), "sounds": sounds, "notes": played, "plays": plays}
     return out
 
 
@@ -1080,46 +1129,21 @@ def _deltas(data):
     return bytes(out)
 
 
-def xm_with_own_instrument(files, buf, n, spec, where="xm"):
-    """The XM with its own instrument n's fields as `spec` says (own_spec's form; "wav", base64, a new sound for
-    its sample: 8-bit mono, written as 8-bit). Only what differs from the XM's is written; the rest keeps its
-    bytes. What GAX2 can't play of what the edit turns on is turned off with it: a volume envelope switched on
-    or changed zeroes the fadeout (GAX2 has none), a vibrato set makes its waveform a sine with no sweep."""
-    xm = _read_xm_bytes(Path(where), buf)
-    if isinstance(n, bool) or not isinstance(n, int) or not 1 <= n <= len(xm["instruments"]):
-        raise EditError("%s: no instrument %r (the module has %d)" % (where, n, len(xm["instruments"])))
-    xi = xm["instruments"][n - 1]
-    start, size, header, heads, datas, end = xm_instrument_spans(buf)[n - 1]
-    if _pool_name(xi["name"]) or _json_instrument(files, xi["name"]):
-        raise EditError("%s: %r is the pool's or instruments/%s.json's, not one of the module's own"
-                        % (where, xi["name"], xi["name"]))
-    if not xi["samples"] or size < XM_INSTRUMENT_HEADER:
-        raise EditError("%s: %r has no sample" % (where, xi["name"]))
-    if not isinstance(spec, dict):
-        raise EditError("%s: {sample, volume, relative_note, finetune, loop, loop_start, loop_end, envelope, "
-                        "vibrato}" % where)
-    unknown = sorted(set(spec) - set(own_spec(xi, 0)) - {"wav"})
-    if unknown:
-        raise EditError("%s: %s isn't one of an XM instrument's fields the build reads" % (where, ", ".join(unknown)))
+def _whole(v, lo, hi, where):
+    if isinstance(v, bool) or not isinstance(v, int) or not lo <= v <= hi:
+        raise EditError("%s: %r (%d to %d)" % (where, v, lo, hi))
+    return v
 
-    def whole(v, lo, hi, what):
-        if isinstance(v, bool) or not isinstance(v, int) or not lo <= v <= hi:
-            raise EditError("%s/%s: %r (%d to %d)" % (where, what, v, lo, hi))
-        return v
 
-    k = whole(spec.get("sample"), 0, len(xi["samples"]) - 1, "sample")
-    now = own_spec(xi, k)
-    wav = spec.get("wav")
-    given = dict(now, **{f: v for f, v in spec.items() if f != "wav"})
-    if wav is None and given == now:
-        return bytes(buf)
-    head = bytearray(buf[start:start + size])
-    # its sample's header and data
-    sh = bytearray(buf[heads[k]:heads[k] + header])
-    at, n_bytes = datas[k]
-    data = buf[at:at + n_bytes]
+# a new sample's fields: FT2's defaults (full volume, C-4 at 8363 Hz, no loop)
+NEW_SAMPLE = {"volume": 64, "relative_note": 0, "finetune": 0, "loop": "none", "loop_start": 0, "loop_end": 0}
+
+
+def _edited_sample(sh, data, now, given, wav, where):
+    """An XM sample's header and data (deltas) with its fields as `given` says (own_sample's form) and `wav`
+    (base64, 8-bit mono, written as 8-bit) its new sound: only what differs from `now` is written."""
     unit = 2 if sh[14] & 0x10 else 1
-    length = n_bytes // unit
+    length = len(data) // unit
     if wav is not None:
         pcm, _ = sample_wav(_b64decode(wav, where + "/wav"), where + "/wav")
         if len(pcm) > G.MAX_SAMPLE_LENGTH:
@@ -1129,11 +1153,11 @@ def xm_with_own_instrument(files, buf, n, spec, where="xm"):
         sh[14] &= ~0x10 & 0xFF
     # a volume over 64 is read as 64: one not edited keeps its byte
     if given["volume"] != now["volume"]:
-        sh[12] = whole(given["volume"], 0, 64, "volume")
+        sh[12] = _whole(given["volume"], 0, 64, where + "/volume")
     if given["relative_note"] != now["relative_note"]:
-        sh[16] = whole(given["relative_note"], -128, 127, "relative_note") & 0xFF
+        sh[16] = _whole(given["relative_note"], -128, 127, where + "/relative_note") & 0xFF
     if given["finetune"] != now["finetune"]:
-        sh[13] = whole(given["finetune"], -128, 127, "finetune") & 0xFF
+        sh[13] = _whole(given["finetune"], -128, 127, where + "/finetune") & 0xFF
     loop = (given["loop"], given["loop_start"], given["loop_end"])
     if loop != (now["loop"], now["loop_start"], now["loop_end"]) or wav is not None:
         if given["loop"] not in XM_LOOPS:
@@ -1143,10 +1167,102 @@ def xm_with_own_instrument(files, buf, n, spec, where="xm"):
             if wav is not None:
                 struct.pack_into("<II", sh, 4, 0, 0)
         else:
-            ls = whole(given["loop_start"], 0, max(0, length - 1), "loop_start")
-            le = whole(given["loop_end"], ls + 1, length, "loop_end")
+            ls = _whole(given["loop_start"], 0, max(0, length - 1), where + "/loop_start")
+            le = _whole(given["loop_end"], ls + 1, length, where + "/loop_end")
             sh[14] = (sh[14] & ~3 & 0xFF) | XM_LOOPS.index(given["loop"])
             struct.pack_into("<II", sh, 4, ls * unit, (le - ls) * unit)
+    return sh, data
+
+
+def xm_with_own_instrument(files, buf, n, spec, where="xm", named=()):
+    """The XM with its own instrument n as `spec` says (own_spec's form, each field optional: what is left out
+    stays): its name, its key map (which of its samples each note plays), its volume envelope and auto-vibrato,
+    and its samples' fields, each with "wav" (base64, 8-bit mono, written as 8-bit) for a new sound; a sample after
+    its own is a new one, with its sound. Only what differs from the XM's is written; the rest keeps its bytes.
+    What GAX2 can't play of what the edit turns on is turned off with it: a volume envelope switched on or
+    changed zeroes the fadeout (GAX2 has none), a vibrato set makes its waveform a sine with no sweep.
+
+    Its name can't become a pool instrument's (`Instrument N`), nor a JSON's (instruments/<name>.json, or one of
+    `named`, a save's new ones) unless it has no sample: an instrument of that name is the JSON's, a name the build
+    reads and nothing else."""
+    xm = _read_xm_bytes(Path(where), buf)
+    if isinstance(n, bool) or not isinstance(n, int) or not 1 <= n <= len(xm["instruments"]):
+        raise EditError("%s: no instrument %r (the module has %d)" % (where, n, len(xm["instruments"])))
+    xi = xm["instruments"][n - 1]
+    start, size, header, heads, datas, end = xm_instrument_spans(buf)[n - 1]
+    if _pool_name(xi["name"]) or _json_instrument(files, xi["name"]):
+        raise EditError("%s: %r is the pool's or instruments/%s.json's, not one of the module's own"
+                        % (where, xi["name"], xi["name"]))
+    if not isinstance(spec, dict):
+        raise EditError("%s: {name, keymap, envelope, vibrato, samples}" % where)
+    unknown = sorted(set(spec) - set(OWN_FIELDS))
+    if unknown:
+        raise EditError("%s: %s isn't one of an XM instrument's fields the build reads (%s)"
+                        % (where, ", ".join(unknown), ", ".join(OWN_FIELDS)))
+    now = own_spec(xi)
+    given = dict(now, **spec)
+    count = len(now["samples"])
+    listed = given["samples"]
+    if not isinstance(listed, list) or len(listed) > XM_SAMPLES:
+        raise EditError("%s/samples: a list of its samples' fields (an XM instrument has at most %d)"
+                        % (where, XM_SAMPLES))
+    total = max(count, len(listed))
+    samples = []
+    for i in range(total):
+        w = "%s/samples/%d" % (where, i)
+        cur = now["samples"][i] if i < count else NEW_SAMPLE
+        g = listed[i] if i < len(listed) else {}
+        if not isinstance(g, dict):
+            raise EditError("%s: {volume, relative_note, finetune, loop, loop_start, loop_end, wav}" % w)
+        unknown = sorted(set(g) - set(SAMPLE_FIELDS) - {"wav"})
+        if unknown:
+            raise EditError("%s: %s isn't one of an XM sample's fields the build reads" % (w, ", ".join(unknown)))
+        if i >= count and g.get("wav") is None:
+            raise EditError("%s: a new sample has its sound (wav)" % w)
+        samples.append((cur, dict(cur, **{f: v for f, v in g.items() if f != "wav"}), g.get("wav")))
+    rest = {f: given[f] for f in OWN_FIELDS if f != "samples"}
+    if total == count and rest == {f: now[f] for f in rest} and all(c == s and w is None for c, s, w in samples):
+        return bytes(buf)
+    if total and header < XM_SAMPLE_HEADER and count:
+        raise EditError("%s: its samples' headers are %d bytes (an XM's are %d)" % (where, header, XM_SAMPLE_HEADER))
+    head = bytearray(buf[start:start + size])
+    if total and size < XM_INSTRUMENT_HEADER:
+        # an instrument with no sample (a name): an instrument header with samples has the key map, the envelopes
+        # and the vibrato
+        head = bytearray(XM_INSTRUMENT_FULL)
+        head[:min(size, 29)] = buf[start:start + min(size, 29)]
+        struct.pack_into("<I", head, 0, XM_INSTRUMENT_FULL)
+    if total and not count:
+        # its first sample: no key map, envelope or vibrato yet (a tracker ignores those of an instrument with none)
+        head[33:] = bytes(len(head) - 33)
+        header = XM_SAMPLE_HEADER
+        struct.pack_into("<I", head, 29, header)
+    if len(head) >= 29:
+        struct.pack_into("<H", head, 27, total)
+    # its name
+    name = given["name"]
+    if name != now["name"]:
+        if not isinstance(name, str) or len(name) > XM_NAME or any(not 0x20 <= ord(c) < 0x7F for c in name):
+            raise EditError("%s/name: %r: at most %d ASCII characters" % (where, name, XM_NAME))
+        if _pool_name(name):
+            raise EditError("%s/name: %r names the pool's instrument (a cell plays one from the pool's list)"
+                            % (where, name))
+        if (_json_instrument(files, name) or name in named) and total:
+            raise EditError("%s/name: %r is instruments/%s.json's: an instrument of that name plays it, not its own "
+                            "samples" % (where, name, name))
+        head[4:26] = name.encode("ascii").ljust(XM_NAME, b"\0")
+    rest_now = {f: now[f] for f in ("keymap", "envelope", "vibrato")}
+    if not total:
+        if {f: given[f] for f in rest_now} != rest_now:
+            raise EditError("%s: it has no sample: its key map, envelope and vibrato come with its first sound" % where)
+    # its key map: the sample each of the 96 notes plays
+    keymap = given["keymap"]
+    if total and (keymap != now["keymap"] or not count):
+        if not isinstance(keymap, list) or len(keymap) != XM_KEYS:
+            raise EditError("%s/keymap: the sample each of the %d notes plays" % (where, XM_KEYS))
+        for k, s in enumerate(keymap):
+            _whole(s, 0, total - 1, "%s/keymap/%d (%s)" % (where, k, G.note_name(k + 1)))
+        head[33:33 + XM_KEYS] = bytes(keymap)
     env = given["envelope"]
     if env != now["envelope"]:
         if env is None:
@@ -1161,14 +1277,14 @@ def xm_with_own_instrument(files, buf, n, spec, where="xm"):
             for i, p in enumerate(pts):
                 if not isinstance(p, list) or len(p) != 2:
                     raise EditError("%s/envelope/points/%d: [tick, volume]" % (where, i))
-                x = whole(p[0], 0 if i == 0 else pts[i - 1][0] + 1, 0 if i == 0 else 0xFFFF,
-                          "envelope/points/%d's tick" % i)
-                y = whole(p[1], 0, 64, "envelope/points/%d's volume" % i)
+                x = _whole(p[0], 0 if i == 0 else pts[i - 1][0] + 1, 0 if i == 0 else 0xFFFF,
+                           "%s/envelope/points/%d's tick" % (where, i))
+                y = _whole(p[1], 0, 64, "%s/envelope/points/%d's volume" % (where, i))
                 struct.pack_into("<HH", head, 129 + 4 * i, x, y)
             marks = {}
             for f in ("sustain", "loop_start", "loop_end"):
                 v = env.get(f)
-                marks[f] = None if v is None else whole(v, 0, len(pts) - 1, "envelope/" + f)
+                marks[f] = None if v is None else _whole(v, 0, len(pts) - 1, "%s/envelope/%s" % (where, f))
             if (marks["loop_start"] is None) != (marks["loop_end"] is None) or \
                     marks["loop_start"] is not None and marks["loop_start"] > marks["loop_end"]:
                 raise EditError("%s/envelope: a loop has a start and an end point, the start first" % where)
@@ -1183,14 +1299,142 @@ def xm_with_own_instrument(files, buf, n, spec, where="xm"):
     if vib != now["vibrato"]:
         if not isinstance(vib, dict) or set(vib) != {"depth", "rate"}:
             raise EditError("%s/vibrato: {depth, rate}" % where)
-        head[237] = whole(vib["depth"], 0, 255, "vibrato/depth")
-        head[238] = whole(vib["rate"], 0, 255, "vibrato/rate")
+        head[237] = _whole(vib["depth"], 0, 255, where + "/vibrato/depth")
+        head[238] = _whole(vib["rate"], 0, 255, where + "/vibrato/rate")
         if vib["depth"] and vib["rate"]:
             head[235] = head[236] = 0
-    pieces = [bytes(head)]
-    pieces += [bytes(sh) if i == k else buf[h:h + header] for i, h in enumerate(heads)]
-    pieces += [data if i == k else buf[d:d + m] for i, (d, m) in enumerate(datas)]
-    return bytes(buf[:start]) + b"".join(pieces) + bytes(buf[end:])
+    # its samples: the headers, then the data
+    sheads, sdata = [], []
+    for i, (cur, g, wav) in enumerate(samples):
+        if i < count:
+            sh, d = bytearray(buf[heads[i]:heads[i] + header]), buf[datas[i][0]:datas[i][0] + datas[i][1]]
+        else:
+            sh, d = bytearray(header), b""
+            sh[12], sh[15] = NEW_SAMPLE["volume"], 0x80  # full volume, panned to the middle
+        if i >= count or g != cur or wav is not None:
+            sh, d = _edited_sample(sh, d, cur, g, wav, "%s/samples/%d" % (where, i))
+        sheads.append(bytes(sh))
+        sdata.append(bytes(d))
+    return bytes(buf[:start]) + bytes(head) + b"".join(sheads) + b"".join(sdata) + bytes(buf[end:])
+
+
+# ---------------------------------------------------------------------------
+# instruments/<name>.json: an instrument from a WAV, which an XM instrument of
+# that name plays and a sound effect names (gax.json_instrument_spec,
+# docs/audio.md "From a WAV"). The editor edits the file's fields and gives
+# its WAV a new sound, or adds a new one with its WAV.
+
+def json_instrument_names(body):
+    """The names of the JSON instruments body's "jsonInstruments" edits or adds."""
+    edits = body.get("jsonInstruments") if isinstance(body, dict) else None
+    return set(edits) if isinstance(edits, dict) else set()
+
+
+def _sound_path(files, rel, where):
+    """games/<game>/sound/rel, a WAV under it."""
+    if not isinstance(rel, str) or not rel.endswith(".wav"):
+        raise EditError("%s: %r: the WAV, a path under %s (e.g. samples/<name>.wav)"
+                        % (where, rel, files.rel(files.sound)))
+    p = (files.sound / rel).resolve()
+    try:
+        p.relative_to(files.sound.resolve())
+    except ValueError:
+        raise EditError("%s: %r isn't under %s" % (where, rel, files.rel(files.sound)))
+    return p
+
+
+def apply_json_instruments(files, body, entries=None):
+    """body's "jsonInstruments": {name: {"json": instruments/<name>.json's value, "wav": base64 (optional), a new
+    sound for the WAV its "sample" names}}: a JSON instrument's fields edited, or a new one (a name the tree
+    hasn't, lower case letters, digits and _) with its WAV. Each is checked as the build reads it, as a song's
+    instrument and, when a sound effect names it (entries: the sound-effect table's after the save), at a fixed
+    pitch. A WAV a pool's sample is (samples/NN.wav, sfx_samples/NN.wav) or another JSON plays isn't given a new
+    sound here. Returns ({name: (its value, its WAV's bytes or None)}, [(rel, value)] of the files that change,
+    {rel: bytes})."""
+    edits = body.get("jsonInstruments") or {}
+    if not isinstance(edits, dict):
+        raise EditError("jsonInstruments: {name: {json, wav}}")
+    named, out_json, writes = {}, [], {}
+    if not edits:
+        return named, out_json, writes
+    plays = {}  # the WAVs the tree's JSON instruments play, as these edits leave them
+    if files.instruments.is_dir():
+        for p in sorted(files.instruments.glob("*.json")):
+            if p.stem not in edits:
+                try:
+                    plays.setdefault(_sound_path(files, D.read_json(p).get("sample"), p.name), []).append(p.stem)
+                except (EditError, ValueError, AttributeError):
+                    pass
+    sfx_named = {e.get("instrument") for e in entries or [] if isinstance(e, dict)}
+    for name, e in sorted(edits.items()):
+        where = "jsonInstruments/%s" % name
+        js = files.instruments / ("%s.json" % name)
+        exists = Path(name).name == name and js.is_file()
+        if not exists and not NAME.match(name):
+            raise EditError("%s: a new instrument's name is lower case letters, digits and _" % where)
+        if not isinstance(e, dict) or set(e) - {"json", "wav"} or not isinstance(e.get("json"), dict):
+            raise EditError("%s: {json: instruments/%s.json's value, wav}" % (where, name))
+        value = e["json"]
+        p = _sound_path(files, value.get("sample"), where + "/json/sample")
+        wav = None
+        if e.get("wav") is not None:
+            wav = _b64decode(e["wav"], where + "/wav")
+            rel = files.sound_rel(p)
+            if SAMPLE_PATH.match(rel):
+                raise EditError("%s/wav: %s is a pool's sample: the Samples tab gives it a new sound" % (where, rel))
+            if plays.get(p):
+                raise EditError("%s/wav: instruments/%s.json plays %s too" % (where, plays[p][0], rel))
+            writes[files.rel(p)] = wav
+        elif not p.is_file():
+            raise EditError("%s: %s isn't a file: give it a sound (wav)" % (where, files.sound_rel(p)))
+        plays.setdefault(p, []).append(name)
+
+        def fail(msg, where=where):
+            raise EditError("%s: %s" % (where, msg))
+
+        with bound(files.game):
+            G.json_instrument_spec(name, False, fail, (value, wav))
+            if name in sfx_named:
+                G.json_instrument_spec(name, True, fail, (value, wav))
+        named[name] = (value, wav)
+        if not exists or D.read_json(js) != value:
+            out_json.append((files.rel(js), value))
+    return named, out_json, writes
+
+
+def json_instruments(files, keys, xms=None):
+    """instruments/<name>.json's instruments as the Instruments tab lists them: {name, file, data (its value),
+    sound (its WAV as the build reads it: length, rate, data, base64 signed 8-bit; or the problem with it), songs
+    (those whose XMs name it)}."""
+    if not files.instruments.is_dir():
+        return []
+    names = {}
+    for key in keys:
+        p = files.songs / ("%s.xm" % key)
+        if xms and key in xms:
+            buf = xms[key]
+        elif p.is_file():
+            buf = p.read_bytes()
+        else:
+            continue
+        for name in xm_instrument_names(buf):
+            names.setdefault(name, []).append(key)
+    out = []
+    for p in sorted(files.instruments.glob("*.json")):
+        data = D.read_json(p)
+        sound = None
+        try:
+            wav = _sound_path(files, data.get("sample") if isinstance(data, dict) else None, p.name)
+            if not wav.is_file():
+                raise EditError("%s isn't a file" % files.sound_rel(wav))
+            with bound(files.game):
+                pcm, rate = G.load_wav(str(wav), _raise)
+            sound = {"path": files.sound_rel(wav), "length": len(pcm), "rate": rate, "data": _b64(pcm)}
+        except EditError as e:
+            sound = {"problem": str(e)}
+        out.append({"name": p.stem, "file": files.rel(p), "data": data, "sound": sound,
+                    "songs": names.get(p.stem, [])})
+    return out
 
 
 def descaffolded(manifest, key):
@@ -1600,10 +1844,8 @@ def view(game):
         for i, e in enumerate(table["entries"]):
             sfx.append(dict(e, id=i, constant="SFX_%s" % e["name"] if "name" in e else None,
                             uses=refs.get(e.get("name"), [])))
-        new_instruments = []
-        if files.instruments.is_dir():
-            for p in sorted(files.instruments.glob("*.json")):
-                new_instruments.append({"name": p.stem, "file": files.rel(p), "data": D.read_json(p)})
+        # instruments/<name>.json's, with their sound and the songs that play them
+        new_instruments = json_instruments(files, keys)
         themes = []
         if files.levels.is_file():
             themes = [{"constant": t.get("constant"), "name": t.get("name"), "song": t.get("song")}
@@ -1676,9 +1918,13 @@ def plan_save(game, body):
       mix rate, volume, half-rate sound effects and echo taps (the
       manifest's), a new song's and its title (songs/<key>.json);
     - "xmInstruments": {song key: {N: fields}}: the song's own XM
-      instrument N's fields the build reads (its sample's sound, loop,
-      volume and tune, its volume envelope and auto-vibrato:
-      xm_with_own_instrument);
+      instrument N's fields the build reads and its name (its key map, its
+      samples' sounds, loops, volumes and tunes, its volume envelope and
+      auto-vibrato: xm_with_own_instrument); an N after the XM's
+      instruments is a new one (with songInstruments', in their numbers'
+      order);
+    - "jsonInstruments": {name: {json, wav}}: instruments/<name>.json's
+      fields, its WAV's new sound, or a new one (apply_json_instruments);
     - "sfxInstruments", "newSfxSamples", "deleteSfxSamples",
       "deleteSfxInstruments": the sound-effect set's instruments and samples
       (gax_sfx_manifest.json, apply_sfx_edits: new instruments too).
@@ -1828,6 +2074,12 @@ def plan_save(game, body):
     if sfx_manifest != old_sfx:
         out_json.append((files.rel(files.sfx_manifest), sfx_manifest))
     out_bytes += list(sfx_writes.items())
+    # the JSON instruments (a new one's name can't be a new sound effect's too)
+    named, json_writes, wav_writes = apply_json_instruments(files, body, entries)
+    for name in set(named) & new_names:
+        raise EditError("jsonInstruments/%s: a new sound effect's instrument is %s too" % (name, name))
+    out_json += json_writes
+    out_bytes += list(wav_writes.items())
     manifest_ins = {int(n): v for n, v in manifest["instruments"].items()}
     sfx_manifest_ins = {int(n): v for n, v in sfx_manifest["instruments"].items()}
     for path, b64 in (body.get("samples") or {}).items():
@@ -1874,7 +2126,7 @@ def plan_save(game, body):
                 diags.append(_diag("slot_id %r: the set's instruments are 1-%d" % (e["slot_id"], max(sfx_ins)), rel,
                                    ptr + "/slot_id"))
             elif "instrument" in e and not ((files.instruments / ("%s.json" % e["instrument"])).is_file()
-                                            or e["instrument"] in new_names):
+                                            or e["instrument"] in new_names or e["instrument"] in named):
                 diags.append(_diag("there is no instruments/%s.json" % e["instrument"], rel, ptr + "/instrument"))
             v = e.get("volume")
             if isinstance(v, int) and not isinstance(v, bool) and v < 0:

@@ -69,6 +69,7 @@ byte-for-byte (verified during development).
 """
 import base64
 import copy
+import io
 import json
 import math
 import os
@@ -981,11 +982,12 @@ def to_8bit(frames, width, fail):
     return bytes(out)
 
 
-def load_wav(path, fail):
-    """(signed 8-bit samples, the WAV's rate) of a mono PCM WAV."""
+def load_wav(path, fail, data=None):
+    """(signed 8-bit samples, the WAV's rate) of a mono PCM WAV. data: its
+    bytes, when they aren't the file's (an editor's unsaved sound)."""
     rel = os.path.relpath(path, ROOT)
     try:
-        with wave.open(path, 'rb') as w:
+        with wave.open(io.BytesIO(data) if data is not None else path, 'rb') as w:
             channels, width, rate = w.getnchannels(), w.getsampwidth(), w.getframerate()
             frames = w.readframes(w.getnframes())
     except (wave.Error, EOFError) as e:
@@ -1150,28 +1152,38 @@ def xm_instrument_spec(xi, sample_no, fail):
     return spec
 
 
-def json_instrument_spec(name, fixed_pitch, fail):
+def json_instrument_spec(name, fixed_pitch, fail, given=None):
     """A new instrument from games/xs/sound/instruments/<name>.json and its WAV
-    (docs/audio.md, "New instruments")."""
+    (docs/audio.md, "New instruments"). given: (the JSON's value, its WAV's
+    bytes or None for the file's) in place of the files (an editor's
+    unsaved edit)."""
     path = os.path.join(INSTRUMENTS_DIR, f'{name}.json')
     rel = os.path.relpath(path, ROOT)
 
     def bad(msg):
         fail(f"{rel}: {msg}")
 
-    try:
-        m = schemas.load(path)
-    except ValueError as e:
-        bad(f"not JSON ({e})")
+    wav_bytes = None
+    if given is not None:
+        m, wav_bytes = given
+        if not isinstance(m, dict):
+            bad("an instrument is an object")
+    else:
+        try:
+            m = schemas.load(path)
+        except ValueError as e:
+            bad(f"not JSON ({e})")
     unknown = sorted(set(m) - set(INSTRUMENT_FIELDS))
     if unknown:
         bad(f"unknown fields {', '.join(unknown)} (an instrument's are {', '.join(INSTRUMENT_FIELDS)})")
     if 'sample' not in m:
         bad('no "sample" (the WAV, a path under games/xs/sound/, e.g. "samples/lead.wav")')
+    if not isinstance(m['sample'], str):
+        bad(f"sample {m['sample']!r}: a path under games/xs/sound/")
     wav = os.path.normpath(os.path.join(SOUND_DIR, m['sample']))
-    if not os.path.isfile(wav):
+    if wav_bytes is None and not os.path.isfile(wav):
         bad(f"its sample {m['sample']} isn't a file under games/xs/sound/")
-    data, wav_rate = load_wav(wav, bad)
+    data, wav_rate = load_wav(wav, bad, wav_bytes)
     rate = m.get('rate', wav_rate)
     if isinstance(rate, bool) or not isinstance(rate, (int, float)) or rate <= 0:
         bad(f"rate {rate!r}: the rate is a number of Hz")
@@ -1217,7 +1229,10 @@ class Pool:
     deduplicated by content: an instrument or a sample the pool already
     has (the ROM's, or an earlier song's) is that one."""
 
-    def __init__(self, manifest, instruments, samples, label):
+    def __init__(self, manifest, instruments, samples, label, named=None):
+        # named: {name: (instruments/<name>.json's value, its WAV's bytes or None)} in place of the files (an
+        # editor's unsaved edits; a name there is an instrument with no file yet too)
+        self.given = named or {}
         self.instruments = instruments
         self.samples = samples
         self.label = label
@@ -1260,8 +1275,12 @@ class Pool:
         """games/xs/sound/instruments/<name>.json's instrument: one pool entry
         however many songs or sound effects use it."""
         if name not in self.named:
-            self.named[name] = self.add(json_instrument_spec(name, fixed_pitch, fail), fail)
+            self.named[name] = self.add(json_instrument_spec(name, fixed_pitch, fail, self.given.get(name)), fail)
         return self.named[name]
+
+    def is_named(self, name):
+        """Whether an XM instrument or a sound effect naming `name` plays instruments/<name>.json's."""
+        return name in self.given or named_instrument(name)
 
     def report(self):
         """A line on what the new instruments add, for the build log."""
@@ -1308,20 +1327,21 @@ def load_pool(manifest, samples_dir, sample_data=None):
     return instruments, samples
 
 
-def sfx_pool(manifest_path=None, samples_dir=None, table_path=None, manifest=None, sample_data=None):
+def sfx_pool(manifest_path=None, samples_dir=None, table_path=None, manifest=None, sample_data=None, named=None):
     """The sound-effect set's pool, with the new instruments sound effects
     name (games/xs/sound/sfx_table.json's entries with an "instrument",
     games/xs/sound/instruments/<name>.json, docs/audio.md "Adding a sound
     effect"), and {name: its instrument number}, which tools/sfx_table.py
     writes as the entry's slot_id. manifest: the set's manifest, when it
-    isn't the file's, and sample_data {index: bytes} in place of a
-    sample's WAV (an editor's unsaved edits)."""
+    isn't the file's, sample_data {index: bytes} in place of a sample's
+    WAV and named {name: (instruments/<name>.json's value, its WAV's
+    bytes)} in place of those files (an editor's unsaved edits)."""
     manifest_path = manifest_path or SFX_MANIFEST
     table_path = table_path or SFX_TABLE
     if manifest is None:
         manifest = schemas.load(manifest_path)
     instruments, samples = load_pool(manifest, samples_dir or SFX_SAMPLES_DIR, sample_data)
-    pool = Pool(manifest, instruments, samples, 'the sound-effect set')
+    pool = Pool(manifest, instruments, samples, 'the sound-effect set', named)
     rel = os.path.relpath(table_path, ROOT)
     slots = {}
     for i, e in enumerate(schemas.load(table_path)['entries']):
@@ -1336,7 +1356,7 @@ def sfx_pool(manifest_path=None, samples_dir=None, table_path=None, manifest=Non
                 fail(f"slot_id {e['slot_id']}: the set's instruments are 1-{pool.rom_instruments - 1}")
             continue
         name = e['instrument']
-        if not named_instrument(name):
+        if not pool.is_named(name):
             fail(f"instrument {name!r}: there is no games/xs/sound/instruments/{name}.json")
         slots[name] = pool.add_named(name, True, fail)
     return pool, slots
@@ -1674,7 +1694,7 @@ def new_song_instruments(xm, order_rows, pool, fail):
                     f"({pool.label}, 0 the empty one); give a new instrument another name")
             out[n - 1] = idx
             continue
-        if named_instrument(name):
+        if pool.is_named(name):
             idx = pool.add_named(name, False, bad)
         else:
             if not xi['samples']:
@@ -1849,16 +1869,17 @@ def block_songs(manifest):
     return keys + [t['song'] for t in manifest['song_table'] if t['song'] not in keys]
 
 
-def load_songs(manifest, songs_dir, samples_dir, xms=None, sample_data=None, settings=None):
+def load_songs(manifest, songs_dir, samples_dir, xms=None, sample_data=None, settings=None, named=None):
     """The music pool and the songs in the music block's order: (the pool,
     with the new songs' new instruments appended; the songs' keys; their
     Songs). xms: {key: read_xm's value} to use in place of a song's XM
     file, sample_data {index: bytes} in place of a sample's WAV, settings
-    {key: a new song's settings} in place of its songs/<key>.json (an
-    editor's unsaved edits)."""
+    {key: a new song's settings} in place of its songs/<key>.json and
+    named {name: (instruments/<name>.json's value, its WAV's bytes)} in
+    place of those files (an editor's unsaved edits)."""
     instruments, samples = load_pool(manifest, samples_dir, sample_data)
     # the new songs' new instruments are appended to it
-    pool = Pool(manifest, instruments, samples, 'the music pool')
+    pool = Pool(manifest, instruments, samples, 'the music pool', named)
 
     keys = block_songs(manifest)
     songs = []

@@ -152,12 +152,33 @@ def own_xm_instrument(name=b"own lead", length=400):
     return head.ljust(263, b"\0") + sample + deltas
 
 
-def own_note_xm(note=NOTE, hold=NOTE_HOLD, rows=NOTE_ROWS):
-    """note_xm's song, its note on its own instrument (own_xm_instrument) instead of the pool's."""
+def own_note_xm(note=NOTE, hold=NOTE_HOLD, rows=NOTE_ROWS, song=OWN_SONG, instrument=None):
+    """note_xm's song, its note on its own instrument (own_xm_instrument, or `instrument`'s bytes) instead of the
+    pool's."""
     buf = note_xm(0, note, hold, rows)
     head = bytearray(buf[:buf.index(b"Instrument 0") - 4])  # the module and its pattern, before the instrument
-    head[17:37] = OWN_SONG.encode().ljust(20, b"\0")
-    return bytes(head) + own_xm_instrument()
+    head[17:37] = song.encode().ljust(20, b"\0")
+    return bytes(head) + (own_xm_instrument() if instrument is None else instrument)
+
+
+# A new song's own instrument with two samples and its key map (docs/audio.md, "From the XM": a GAX2 instrument
+# has one sample, the one the key map plays on the song's notes), renamed; a new own instrument from a WAV and an
+# empty one, around a pool instrument the song is given too; and json_note, a new song of one note on a new
+# instruments/<name>.json instrument, all added by the editor.
+KEYS_SONG, JSON_SONG, JSON_INSTRUMENT = "own_keys", "json_note", "json_lead"
+
+
+def two_sample_instrument(name=b"two keys"):
+    """own_xm_instrument with a second sample (a sine of 64 samples, 6 periods, unlooped, volume 64): its key map
+    plays the first on every note, as a tracker's new instrument does."""
+    one = own_xm_instrument(name)
+    sine = bytes(round(70 * math.sin(2 * math.pi * i / 64)) & 0xFF for i in range(384))
+    deltas = bytes((v - p) & 0xFF for v, p in zip(sine, b"\0" + sine))
+    head = bytearray(one[:263])
+    struct.pack_into("<H", head, 27, 2)
+    first = one[263:263 + 40]
+    second = struct.pack("<IIIBbBBbB22s", len(sine), 0, 0, 64, 0, 0, 0x80, 0, 0, b"sine")
+    return bytes(head) + first + second + one[263 + 40:] + deltas
 
 
 def edited_body(root):
@@ -189,6 +210,15 @@ def edited_body(root):
       (own_note_xm), the instrument edited: a new sound (a square at
       12000 Hz, C-4 tuned to play it there) looped ping-pong, its volume,
       a new envelope with a loop, and an auto-vibrato;
+    - own_keys, a new song on its own XM instrument of two samples
+      (two_sample_instrument), renamed, its key map playing the second on
+      the song's notes, that one looped and its volume set, the first a
+      new sound no note plays; a new own instrument from a WAV with an
+      envelope, pool instrument 7 and a new empty one added around it, and
+      cells playing the first two;
+    - json_note, a new song of one note on json_lead, a new
+      instruments/<name>.json instrument with its WAV, looped, with an
+      envelope and a vibrato;
     - the sound-effect set's new instruments: 88, a blank one (the set's
       one rate) on a new sample 88 (a decaying chirp) with an envelope,
       and 89, a copy of instrument 9 tuned down 2 semitones (EDITED_SFX
@@ -253,10 +283,30 @@ def edited_body(root):
     # own_note's own instrument: a square at 12000 Hz (C-4 plays it there: relative note 6, finetune 32),
     # ping-pong looped, at volume 40, a new envelope looping between its points 1 and 2, and an auto-vibrato
     square = [(40 if (i // 15) % 2 else -40) for i in range(1200)]
-    own = {"sample": 0, "volume": 40, "relative_note": 6, "finetune": 32, "loop": "pingpong", "loop_start": 300,
-           "loop_end": 900, "envelope": {"points": [[0, 64], [6, 40], [18, 56], [48, 0]], "sustain": 2,
-                                         "loop_start": 1, "loop_end": 2},
-           "vibrato": {"depth": 10, "rate": 22}, "wav": E._b64(E.wav_bytes(square, 12000))}
+    own = {"samples": [{"volume": 40, "relative_note": 6, "finetune": 32, "loop": "pingpong", "loop_start": 300,
+                        "loop_end": 900, "wav": E._b64(E.wav_bytes(square, 12000))}],
+           "envelope": {"points": [[0, 64], [6, 40], [18, 56], [48, 0]], "sustain": 2, "loop_start": 1, "loop_end": 2},
+           "vibrato": {"depth": 10, "rate": 22}}
+    # own_keys's instrument 1 renamed, its key map playing its second sample from C-4 up (the song's notes), that
+    # sample looped forward at volume 50, its first one a new sound (which no note plays); a new instrument 2 from
+    # a WAV (a saw at 16000 Hz, its tune for C-4 to play it there: relative note 11, finetune 77) with an envelope;
+    # pool instrument 7 at 3 (songInstruments); a new empty instrument 4, named, which no cell plays
+    saw = [round(-60 + 120 * (i % 40) / 40) for i in range(1600)]
+    keys = {"1": {"name": "split lead", "keymap": [0] * 48 + [1] * 48,
+                  "samples": [{"loop": "none", "wav": E._b64(E.wav_bytes(square[:200], 8363))},
+                              {"volume": 50, "loop": "forward", "loop_start": 64, "loop_end": 384}]},
+            "2": {"name": "saw", "samples": [{"relative_note": 11, "finetune": 77, "loop": "forward",
+                                              "loop_start": 400, "loop_end": 1600,
+                                              "wav": E._b64(E.wav_bytes(saw, 16000))}],
+                  "keymap": [0] * 96, "envelope": {"points": [[0, 64], [10, 30], [40, 0]], "sustain": 1,
+                                                   "loop_start": None, "loop_end": None}},
+            "4": {"name": "not yet"}}
+    # json_lead, a new instruments/<name>.json instrument with its WAV (a decaying pulse at 11025 Hz, looped)
+    pulse = [round((50 if (i // 20) % 2 else -50) * (1 if i < 1100 else 0.6)) for i in range(2200)]
+    named = {"comment": "the music editor's JSON instrument", "sample": "samples/%s.wav" % JSON_INSTRUMENT,
+            "loop": "forward", "loop_start": 1100, "loop_end": 2200, "volume": 48,
+            "envelope": {"points": [[0, 64], [8, 40], [30, 20]], "sustain": 2},
+            "vibrato": {"delay": 4, "depth": 12, "speed": 5}}
     # the sound-effect set's new sample 88 (a decaying chirp at the set's rate) and new instruments 88 (blank, on
     # it, with an envelope) and 89 (instrument 9 tuned down 2 semitones)
     nxt_sfx = max(int(k) for k in sfx["samples"]) + 1
@@ -271,16 +321,26 @@ def edited_body(root):
         "structures": {"drums": st, "main_menu_japan": japan},
         "patterns": {"jungle": [{"pattern": 0, "row": 0, "channel": 0, "cell": [14, 1, 0, 7, 0x64]},
                                 {"pattern": 2, "row": 6, "channel": 1, "cell": [0, 0, 1, 11, 0x40]}],
-                     "cutscenes": [{"pattern": 0, "row": 0, "channel": 0, "cell": [49, len(cutscenes) + 1, 0, 0, 0]}]},
+                     "cutscenes": [{"pattern": 0, "row": 0, "channel": 0, "cell": [49, len(cutscenes) + 1, 0, 0, 0]}],
+                     KEYS_SONG: [{"pattern": 0, "row": 10, "channel": 0, "cell": [53, 2, 0, 0, 0]},
+                                 {"pattern": 0, "row": 20, "channel": 0, "cell": [56, 3, 0, 0, 0]},
+                                 {"pattern": 0, "row": 30, "channel": 0, "cell": [E.XM_KEY_OFF, 0, 0, 0, 0]}]},
         "instruments": {"43": drum, "28": lead, str(new): ins},
         "newSamples": {str(nxt): E._b64(E.wav_bytes([b - 256 if b > 127 else b for b in buzz], 16000))},
         "deleteSamples": [gone],
-        "songInstruments": {"cutscenes": [new]},
+        "songInstruments": {"cutscenes": [new], KEYS_SONG: [7]},
         "newSongs": [{"key": NOTE_SONG, "xm": E._b64(note_xm(new)), "comment": "the music editor's note test"},
-                     {"key": OWN_SONG, "xm": E._b64(own_note_xm()), "comment": "the music editor's own instrument"}],
+                     {"key": OWN_SONG, "xm": E._b64(own_note_xm()), "comment": "the music editor's own instrument"},
+                     {"key": KEYS_SONG, "xm": E._b64(own_note_xm(hold=36, song=KEYS_SONG,
+                                                                 instrument=two_sample_instrument())),
+                      "comment": "the music editor's key map"},
+                     {"key": JSON_SONG, "xm": E._b64(own_note_xm(song=JSON_SONG, instrument=struct.pack(
+                         "<I22sBH", 29, JSON_INSTRUMENT.encode(), 0, 0))),
+                      "comment": "the music editor's JSON instrument"}],
         "songSettings": {"warp_room": {"sample_rate": 26760, "volume": 300, "half_rate_fx": 1,
                                        "mixer_data_bytes": list(struct.pack("<7I", 4, 45, 9, 25, 5, 30, 0))}},
-        "xmInstruments": {OWN_SONG: {"1": own}},
+        "xmInstruments": {OWN_SONG: {"1": own}, KEYS_SONG: keys},
+        "jsonInstruments": {JSON_INSTRUMENT: {"json": named, "wav": E._b64(E.wav_bytes(pulse, 11025))}},
         "sfxInstruments": {"31": s31, str(top_sfx + 1): s88, str(top_sfx + 2): s89},
         "newSfxSamples": {str(nxt_sfx): E._b64(E.wav_bytes(chirp, 8003))},
     }

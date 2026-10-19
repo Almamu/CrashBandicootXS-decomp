@@ -362,8 +362,9 @@ incbins it with the pointers as relocations, so the blocks can move
 ([editors.md, "The music editor"](./editors.md#the-music-editor)) plays
 both as the build makes them and edits their sources: the sound-effect
 table, the screens' and themes' songs, the songs' XM cells, structures,
-settings and own instruments, the music pool's and the sound-effect
-set's instruments (new ones too) and samples; `make data-check` builds
+settings and own instruments (new ones, their key maps and samples
+too), the `instruments/<name>.json` instruments, the music pool's and
+the sound-effect set's instruments (new ones too) and samples; `make data-check` builds
 both blocks (`music-build`, `sfx-build`).
 
 ### Sprite banks (`gSpriteBankTable`)

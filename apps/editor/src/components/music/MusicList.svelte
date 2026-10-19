@@ -10,6 +10,11 @@
   let comment = $state("");
   let sfxName = $state("");
   let file = $state<File | null>(null);
+  /** the song a new own instrument is added to (the one shown, if it can have one), a new JSON instrument's name */
+  let ownSong = $state("");
+  let jsonNew = $state("");
+  const ownSongs = $derived(mu.songs.filter((s) => !s.info?.rom || mu.state.structures[s.key] || mu.patterns[s.key]?.p.scaffold === false).map((s) => s.key));
+  const ownTarget = $derived(ownSongs.includes(ownSong) ? ownSong : ownSongs.includes(mu.song) ? mu.song : (ownSongs[0] ?? ""));
 
   const keyOk = $derived(M.KEY.test(key) && !mu.songKeys.includes(key));
   const sfxNameOk = $derived(M.SFX_NAME.test(sfxName) && !mu.state.sfx.entries.some((e) => e.name === sfxName));
@@ -191,14 +196,63 @@
           <li>
             <button class:on={mu.instrumentPool === "xm" && mu.xmSong === it.song && mu.instrument === it.n} onclick={() => mu.selectOwn(it.song, it.n)} title="{it.song}'s XM instrument {it.n}, made into a new pool instrument by the build">
               <span class="id">{String(it.n).padStart(2, "0")}</span>
-              <span class="name">{it.song} · {it.name || "(no name)"}{mu.state.xmInstruments[it.song]?.[String(it.n)] ? " *" : ""}</span>
+              <span class="name">{it.song} · {it.name || "(no name)"}{it.added ? " (new)" : it.edited ? " *" : ""}</span>
               <span class="count"></span>
             </button>
           </li>
         {/each}
       </ol>
     {/if}
-    <p class="hint">A new song's XM instruments that aren't "Instrument N" (or an instruments/&lt;name&gt;.json's): the build makes each a new pool instrument from its sample and envelopes. {mu.ownList.length ? "" : "No song has one."}</p>
+    {@const ownSel = mu.instrumentPool === "xm" ? mu.ownList.find((i) => i.song === mu.xmSong && i.n === mu.instrument) : undefined}
+    <div class="row">
+      <select value={ownTarget} onchange={(e) => (ownSong = e.currentTarget.value)} title="the song a new instrument is added to (a ROM song built with its recorded scaffold plays only the pool's)">
+        {#each ownSongs as k (k)}<option value={k}>{k}</option>{/each}
+      </select>
+      <button disabled={!ownTarget} onclick={() => mu.newOwn(ownTarget, { blank: "new instrument" })} title="a new instrument at the end of the song's XM: a name, no sound yet (give it one from a WAV)">New</button>
+      <button disabled={!ownTarget || !ownSel} onclick={() => ownSel && mu.newOwn(ownTarget, { copy: { song: ownSel.song, n: ownSel.n } })} title="a copy of the one selected: its fields and its samples' sounds, as the build reads them">Copy</button>
+      <label class="hint" title="a new instrument of the song from a WAV: its one sample, C-4 playing it at the WAV's rate">
+        from a WAV…
+        <input type="file" accept=".wav" disabled={!ownTarget} onchange={async (e) => {
+          const f = e.currentTarget.files?.[0];
+          e.currentTarget.value = "";
+          if (!f) return;
+          const s = await mu.importWav(f);
+          if (s) await mu.newOwn(ownTarget, { wav: s, name: M.xmName(f.name.replace(/\.wav$/i, "")) });
+        }} />
+      </label>
+    </div>
+    <p class="hint">A new song's XM instruments that aren't "Instrument N" (or an instruments/&lt;name&gt;.json's): the build makes each a new pool instrument from its sample and envelopes. {mu.ownList.length ? "" : "No song has one."} A new one is the song's next XM instrument, which its cells then play.</p>
+    <h3>instruments/&lt;name&gt;.json</h3>
+    {#if mu.jsonList.length}
+      <ol>
+        {#each mu.jsonList as it (it.name)}
+          {@const j = mu.json(it.name)}
+          <li>
+            <button class:on={mu.instrumentPool === "json" && mu.jsonName === it.name} onclick={() => mu.selectJson(it.name)} title={j && (j.songs.length || j.sfx.length) ? [...j.songs, ...j.sfx].join(", ") : "no song or sound effect plays it"}>
+              <span class="name">{it.name}{it.added ? " (new)" : it.edited ? " *" : ""}</span>
+              <span class="count">{j ? j.songs.length + j.sfx.length : 0}</span>
+            </button>
+          </li>
+        {/each}
+      </ol>
+    {/if}
+    <div class="row">
+      <input type="text" placeholder="name" bind:value={jsonNew} style="width: 8rem" title="lower case letters, digits and _" />
+      <label class="hint" title="instruments/<name>.json with its WAV, samples/<name>.wav (C-4 plays it at the WAV's rate)">
+        New from a WAV…
+        <input type="file" accept=".wav" disabled={!!mu.cannotNameJson(jsonNew)} onchange={async (e) => {
+          const f = e.currentTarget.files?.[0];
+          e.currentTarget.value = "";
+          if (!f) return;
+          const s = await mu.importWav(f);
+          if (s) {
+            mu.newJson(jsonNew, s);
+            jsonNew = "";
+          }
+        }} />
+      </label>
+    </div>
+    <p class="hint">An instrument from a WAV (docs/audio.md, "From a WAV"), shared by name: an XM instrument named after it plays it, a sound effect names it. {mu.jsonList.length ? "" : "The tree has none."}{jsonNew && mu.cannotNameJson(jsonNew) ? ` ${mu.cannotNameJson(jsonNew)}.` : ""}</p>
   {:else}
     <h3>The music pool</h3>
     <ol>

@@ -10,7 +10,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { delimiter, join } from "node:path";
 import { describe, expect, it } from "vitest";
-import type { MusicInstrument, MusicPatterns, MusicPool, MusicSong, MusicStructure, MusicView } from "@crash/schema-types";
+import type { MusicInstrument, MusicPatterns, MusicPool, MusicSong, MusicStructure, MusicView, MusicXmInstrument } from "@crash/schema-types";
 import { GaxPlayer, decodePool } from "../src/lib/music/gax.ts";
 import * as M from "../src/lib/music/model.ts";
 
@@ -365,22 +365,84 @@ describe("the sound-effect set's new instruments, a song's own instruments", () 
 
   it("show what the build makes of an own XM instrument, and refuse what it refuses", () => {
     // tools/gax_render.py edited_body's own_note, its instrument as the backend builds it unsaved
-    const r = python<{ spec: M.XmInstrumentEdit["spec"]; ins: MusicInstrument }>(
-      `from buildtools import gax_render as R\nb = R.edited_body(".")\np = E.player_pool(g, b)\nspec = dict(b["xmInstruments"]["own_note"]["1"])\nspec.pop("wav")\nprint(json.dumps({"spec": spec, "ins": p["music"]["instruments"][p["xmPool"]["own_note"][0]]}))`,
+    const r = python<{ spec: M.XmSpec; ins: MusicInstrument }>(
+      `from buildtools import gax_render as R\nb = R.edited_body(".")\np = E.player_pool(g, b)\nxm = G.read_xm("own.xm", R.own_note_xm())\nspec = E.own_instruments(E.Files(g), xm)[1]["spec"]\nedit = b["xmInstruments"]["own_note"]["1"]\nspec.update({k: v for k, v in edit.items() if k != "samples"})\nspec["samples"] = [{k: v for k, v in s.items() if k != "wav"} for s in edit["samples"]]\nprint(json.dumps({"spec": spec, "ins": p["music"]["instruments"][p["xmPool"]["own_note"][0]]}))`,
     );
     const gax = M.xmInstrumentGax(r.spec);
     expect([gax.tune, gax.envelope, gax.vibrato.depth, gax.vibrato.speed]).toEqual([r.ins.rows[0]!.tune, r.ins.envelope!.points.map((p) => p.value), r.ins.vibratoDepth, r.ins.vibratoSpeed]);
     expect(r.ins.seq[0]!.fx[0]).toBe((12 << 8) | gax.volume);
-    expect(M.xmInstrumentProblem(r.spec, 1200)).toBeNull();
-    expect(M.xmInstrumentProblem({ ...r.spec, volume: 65 }, 1200)).toMatch(/volume/);
-    expect(M.xmInstrumentProblem({ ...r.spec, loop_end: 1300 }, 1200)).toMatch(/loop/);
-    expect(M.xmInstrumentProblem({ ...r.spec, envelope: { ...r.spec.envelope!, points: Array.from({ length: 13 }, (_, k) => [k, 1] as [number, number]) } }, 1200)).toMatch(/12 points/);
-    // a save sends the fields and the new sound; the player request too
-    const e: M.XmInstrumentEdit = { spec: r.spec, wav: { wav: "UklGRg==", length: 4, rate: 12000 } };
+    const smp = r.spec.samples[0]!;
+    expect(M.xmInstrumentProblem(r.spec, [1200])).toBeNull();
+    expect(M.xmInstrumentProblem({ ...r.spec, samples: [{ ...smp, volume: 65 }] }, [1200])).toMatch(/volume/);
+    expect(M.xmInstrumentProblem({ ...r.spec, samples: [{ ...smp, loop_end: 1300 }] }, [1200])).toMatch(/loop/);
+    expect(M.xmInstrumentProblem({ ...r.spec, envelope: { ...r.spec.envelope!, points: Array.from({ length: 13 }, (_, k) => [k, 1] as [number, number]) } }, [1200])).toMatch(/12 points/);
+    expect(M.xmInstrumentProblem({ ...r.spec, keymap: [...r.spec.keymap.slice(1), 1] }, [1200])).toMatch(/key map/);
+    expect(M.xmNameProblem("Instrument 4", 1, [])).toMatch(/pool/);
+    expect(M.xmNameProblem("lead", 1, ["lead"])).toMatch(/json/);
+    expect(M.xmNameProblem("lead", 0, ["lead"])).toBeNull();
+    expect(M.xmNameProblem("x".repeat(23), 1, [])).toMatch(/22/);
+    expect(M.xmName("Instrument 4.wav")).toBe("Instrument 4.wav");
+    expect(M.xmName("Instrument 4")).toBe("Instrument 4 copy");
+    expect(M.xmName("café crème brûlée, a long one")).toBe("caf_ cr_me br_l_e, a l");
+    // a save sends the fields and the samples' new sounds; the player request too
+    const e: M.XmInstrumentEdit = { spec: r.spec, sounds: { "0": { wav: "UklGRg==", length: 4, rate: 12000 } } };
     const s1 = { ...s0, xmInstruments: { own_note: { "1": e } } };
-    expect(M.saveBody(s0, s1).xmInstruments).toEqual({ own_note: { "1": { ...r.spec, wav: "UklGRg==" } } });
-    expect(M.unsavedBody(s1).xmInstruments).toEqual({ own_note: { "1": { ...r.spec, wav: "UklGRg==" } } });
+    const sent = { ...r.spec, samples: [{ ...smp, wav: "UklGRg==" }] };
+    expect(M.saveBody(s0, s1).xmInstruments).toEqual({ own_note: { "1": sent } });
+    expect(M.unsavedBody(s1).xmInstruments).toEqual({ own_note: { "1": sent } });
     expect(M.saveBody(s1, s1).xmInstruments).toBeUndefined();
+  });
+
+  it("number a song's new instruments and play its key map as the build does", () => {
+    // tools/gax_render.py edited_body's own_keys: instrument 1's key map and samples, new own instruments 2 and 4
+    // around pool instrument 7 (3), and cells on 2 and 3
+    const r = python<{ p: MusicPatterns; names: string[]; edits: Record<string, Partial<MusicXmInstrument>>; added: number[]; own: Record<string, { notes: number[]; plays: number[] }>; xm: string }>(
+      `from buildtools import gax_render as R\nimport base64\nb = R.edited_body(".")\nkey = R.KEYS_SONG\nbuf = base64.b64decode(next(s["xm"] for s in b["newSongs"] if s["key"] == key))\nfiles = E.Files(g)\nm = json.load(open(files.manifest))\n_, xms = E.apply_song_edits(files, m, [key], {key: buf}, {k: {key: b[k][key]} for k in ("songInstruments", "xmInstruments", "patterns")})\nxm = G.read_xm("x.xm", xms[key])\nown = E.own_instruments(files, xm)\nprint(json.dumps({"p": E.patterns(g, key, base64.b64encode(buf).decode()), "names": E.xm_instrument_names(xms[key]), "edits": b["xmInstruments"][key], "added": b["songInstruments"][key], "own": {str(n): {"notes": o["notes"], "plays": o["plays"]} for n, o in own.items()}, "xm": base64.b64encode(xms[key]).decode()}))`,
+    );
+    const count = r.p.instruments.length;
+    const own = Object.fromEntries(
+      Object.entries(r.edits).map(([n, spec]) => {
+        const base = Number(n) <= count ? M.xmSpec(r.p.instruments[Number(n) - 1]!.own!.spec) : M.newXmSpec(spec.name ?? "", null);
+        const merged: MusicXmInstrument = { ...base, ...spec, samples: (spec.samples ?? base.samples).map((x, i) => ({ ...(base.samples[i] ?? M.XM_NEW_SAMPLE), ...x })) };
+        return [n, { spec: M.xmSpec(merged), added: Number(n) > count }];
+      }),
+    );
+    expect(M.songInstruments(r.p, r.added, own).map((i) => i.name)).toEqual(r.names);
+    // the notes the song plays on each instrument now (its cells edited), and the samples its key map plays there
+    const after = python<MusicPatterns>(`print(json.dumps(E.patterns(g, "own_keys", ${JSON.stringify(r.xm)})))`);
+    const notes = M.playedNotes(after, M.decodeCells(after));
+    for (const [n, o] of Object.entries(r.own)) {
+      expect([...(notes.get(Number(n)) ?? [])].sort((a, b) => a - b)).toEqual(o.notes);
+      expect(M.keymapPlays(M.xmSpec(after.instruments[Number(n) - 1]!.own!.spec), o.notes)).toEqual(o.plays);
+    }
+    expect(r.own["1"]!.plays).toEqual([1]);
+    // a new one is sent with its number: blank (no sample), from a WAV (its tune for C-4 at the WAV's rate)
+    const blank = M.newXmSpec("a blank one", null);
+    expect([blank.samples, blank.keymap.length]).toEqual([[], 96]);
+    expect(M.newXmSpec("x", 12000).samples[0]).toEqual({ ...M.XM_NEW_SAMPLE, relative_note: 6, finetune: 32 });
+    expect(M.keymapPlays(blank, [49])).toEqual([]);
+    const s1 = { ...s0, xmInstruments: { own_keys: { "5": { spec: blank, added: true } } } };
+    expect(M.saveBody(s0, s1).xmInstruments).toEqual({ own_keys: { "5": blank } });
+  });
+
+  it("check a JSON instrument as the build does, and send it", () => {
+    const lead = { sample: "samples/lead.wav", loop: "forward" as const, loop_start: 10, loop_end: 100, volume: 40, envelope: { points: [[0, 64], [10, 0]] as [[number, number], [number, number]], sustain: 1 }, vibrato: { delay: 2, depth: 8, speed: 4 } };
+    expect(M.jsonInstrumentProblem(lead, 100)).toBeNull();
+    expect(M.jsonInstrumentProblem({ ...lead, loop_end: 101 }, 100)).toMatch(/loop/);
+    expect(M.jsonInstrumentProblem({ ...lead, volume: 65 }, 100)).toMatch(/volume/);
+    expect(M.jsonInstrumentProblem({ ...lead, vibrato: { speed: 64 } }, 100)).toMatch(/speed/);
+    expect(M.jsonInstrumentProblem({ ...lead, envelope: { points: [[2, 64]] } }, 100)).toMatch(/tick 0/);
+    expect(M.jsonInstrumentProblem({ ...lead, envelope: { points: [[0, 64]], sustain: 3 } }, 100)).toMatch(/sustain/);
+    const rates = [8000, 11025, 16000, 22050, 8363, 31537];
+    const py = python<number[]>(`print(json.dumps([G.tune_for_rate(r, False) for r in ${JSON.stringify(rates)}]))`);
+    expect(rates.map(M.rateTune)).toEqual(py);
+    // a save sends its value and its WAV's new sound; the player request too
+    const e: M.JsonInstrumentEdit = { json: lead, wav: { wav: "UklGRg==", length: 4, rate: 16000 }, added: true };
+    const s1 = { ...s0, jsonInstruments: { lead: e } };
+    expect(M.saveBody(s0, s1).jsonInstruments).toEqual({ lead: { json: lead, wav: "UklGRg==" } });
+    expect(M.unsavedBody(s1).jsonInstruments).toEqual({ lead: { json: lead, wav: "UklGRg==" } });
+    expect(M.saveBody(s1, s1).jsonInstruments).toBeUndefined();
+    expect(M.saveBody(s1, { ...s1, jsonInstruments: { lead: { json: { ...lead, volume: 30 } } } }).jsonInstruments).toEqual({ lead: { json: { ...lead, volume: 30 } } });
   });
 });
 
