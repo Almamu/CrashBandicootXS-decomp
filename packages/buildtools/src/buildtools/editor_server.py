@@ -26,7 +26,7 @@ API (all JSON; docs/editors.md has each one's fields):
     GET  /api/projects/ID/preview.png      a headless preview's picture (?shot=N: a cutscene's, frame N's)
 
 and the level editor's rooms (room, room/layer, room/tiles, room/save,
-sprite), the cutscene editor's cutscenes (cutscenes,
+room/new, room/delete, room/resize, sprite), the cutscene editor's cutscenes (cutscenes,
 cutscenes/picture, cutscenes/import, cutscenes/save) and the music
 editor's songs and sound effects (music, music/pool, music/song,
 music/patterns, music/import, music/save): docs/editors.md.
@@ -72,7 +72,7 @@ from pathlib import Path
 
 from crashdata import editing, schemas
 from crashdata import levels as L
-from crashdata.levels import room_edit
+from crashdata.levels import room_edit, room_ops
 from crashdata.cutscenes import edit as cutscene_edit
 from crashdata.audio import edit as music_edit
 from crashdata.common import diagnostics as D
@@ -323,6 +323,12 @@ class Server:
         return (rel, p, tmp, old)
 
     @staticmethod
+    def _stage_delete(rel, p):
+        """A file to remove (a deleted room's), staged: its bytes are kept to
+        put it back."""
+        return (rel, p, None, p.read_bytes()) if p.is_file() else None
+
+    @staticmethod
     def _unstage(staged):
         for item in staged:
             if item is not None:
@@ -362,6 +368,7 @@ class Server:
     @staticmethod
     def _restore(plan):
         for _, p, _, old in plan:
+            p.parent.mkdir(parents=True, exist_ok=True)
             if old is None:
                 p.unlink(missing_ok=True)
             else:
@@ -781,6 +788,92 @@ class Server:
             return self._commit(project, staged)
 
 
+    # -- the level editor: new, deleted and resized rooms ---------------------
+
+    def commit_room_plan(self, project, plan):
+        """A crashdata.levels.room_ops plan ({json: [(path, value)], bytes:
+        [(path, data)], delete: [path], dirs: [path], report}) saved as one
+        save, all or none: the new folders made, every file staged
+        (written, schema-checked), then the model's checks; on a refusal the
+        files go back, and the folders it made go."""
+        root = project.root.resolve()
+        game_dir = project.game_dir.resolve()
+
+        def rel_of(p):
+            p = Path(p)
+            p = (p if p.is_absolute() else project.root / p).resolve()
+            if not (p.is_relative_to(game_dir) or p == root / "cxx_symbols.txt"):
+                raise HttpError(403, "%s: outside games/%s/" % (p, project.game))
+            return p, p.relative_to(root).as_posix()
+
+        made, staged = [], []
+        try:
+            for d in plan["dirs"]:
+                d, _ = rel_of(d)
+                if not d.exists():
+                    for x in reversed([d] + [q for q in d.parents if q.is_relative_to(game_dir)]):
+                        if not x.exists():
+                            x.mkdir()
+                            made.append(x)
+            for p, value in plan["json"]:
+                staged.append(self._stage_json(project, rel_of(p)[1], value))
+            for p, data in plan["bytes"]:
+                p, rel = rel_of(p)
+                staged.append(self._stage_bytes(rel, p, data))
+            for p in plan["delete"]:
+                p, rel = rel_of(p)
+                staged.append(self._stage_delete(rel, p))
+            result = self._commit(project, staged)
+        except BaseException:
+            self._unstage(staged)
+            for d in reversed(made):
+                if d.is_dir() and not any(d.iterdir()):
+                    d.rmdir()
+            raise
+        # a deleted room's folder, and its level's when it was the last
+        for p in plan["delete"][:1]:
+            d, _ = rel_of(Path(p).parent)
+            for x in (d, d.parent):
+                if x.is_dir() and x != game_dir and x.is_relative_to(game_dir) and not any(x.iterdir()):
+                    x.rmdir()
+        result["report"] = plan["report"]
+        return result
+
+    def new_room(self, project, body):
+        """POST room/new {"from": a room's folder, "folder": its new folder
+        (<level>/<slot>), "empty": bool, "size": [w, h] cells, "attach":
+        {"level", "as", "index"}}: the new room, saved."""
+        base = "games/%s/data/levels/" % project.game
+        src, dst = (str(body.get(k) or "") for k in ("from", "folder"))
+        src, dst = (x[len(base):] if x.startswith(base) else x for x in (src, dst))
+        with project.lock:
+            with self.levels(project):
+                plan = room_ops.new_room(src, dst, bool(body.get("empty")), body.get("size"), body.get("attach"))
+            out = self.commit_room_plan(project, plan)
+        out["path"] = base + dst
+        return out
+
+    def delete_room(self, project, body):
+        """POST room/delete {"path"}: a room no level plays, deleted."""
+        _, key = self.room_dir(project, body.get("path"))
+        with project.lock:
+            with self.levels(project):
+                plan = room_ops.delete_room(key)
+            return self.commit_room_plan(project, plan)
+
+    def resize_room(self, project, body):
+        """POST room/resize {"path", "edges": {left, right, top, bottom},
+        "check": bool}: the room resized (with "check", only what it would
+        change and cut: nothing is written)."""
+        _, key = self.room_dir(project, body.get("path"))
+        with project.lock:
+            with self.levels(project):
+                plan = room_ops.resize_room(key, body.get("edges") or {})
+            if body.get("check"):
+                return {"ok": True, "saved": [], "diagnostics": [], "report": plan["report"]}
+            return self.commit_room_plan(project, plan)
+
+
 def _b64(v):
     if not isinstance(v, str):
         raise HttpError(400, "a cell's pixels are base64")
@@ -1002,6 +1095,12 @@ class Handler(http.server.BaseHTTPRequestHandler):
                               compress=True)
         if (method, what) == ("POST", "room/save"):
             return self._send(200, app.save_room(project, self._body()))
+        if (method, what) == ("POST", "room/new"):
+            return self._send(200, app.new_room(project, self._body()))
+        if (method, what) == ("POST", "room/delete"):
+            return self._send(200, app.delete_room(project, self._body()))
+        if (method, what) == ("POST", "room/resize"):
+            return self._send(200, app.resize_room(project, self._body()))
         if (method, what) == ("GET", "sprite"):
             return self._send(200, app.sprite(project, query.get("bank"), query.get("frame"), query.get("palette")),
                               "image/png")

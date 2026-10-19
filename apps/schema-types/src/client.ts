@@ -191,6 +191,51 @@ export interface RoomTiles {
 }
 
 /** POST /api/projects/ID/room/save: a room's edits, saved together. */
+/** A new room (crashdata.levels.room_ops.new_room). */
+export interface NewRoom {
+  /** the room it is made from (its folder, from the levels' directory or the tree's root) */
+  from: string;
+  /** its folder: <level>/<slot> */
+  folder: string;
+  /** blank pictures and collision, only the start marker; else a copy */
+  empty?: boolean;
+  /** with `empty`: [width, height] in cells (the source's by default) */
+  size?: [number, number];
+  /** a level that plays it: in its "rooms" at `index`, or as its "bonus" / "gem_path" room */
+  attach?: { level: string; as: "rooms" | "bonus" | "gem_path"; index?: number };
+}
+
+export interface NewRoomReport {
+  room: string;
+  number: number;
+  symbols: string;
+  warnings: string[];
+  attached?: { level: string; as: string };
+}
+
+/** Cells added at each edge (negative: taken). */
+export interface RoomEdges {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
+export interface ResizeReport {
+  room: string;
+  /** [before, after], in cells */
+  size: [[number, number], [number, number]];
+  /** per layer: its size before and after, how far its picture moved (cells), how many cells that weren't blank were cut */
+  layers: Record<string, { size: [[number, number], [number, number]]; shift: [number, number]; cut: number }>;
+  /** the entities cut (their ids and places before) */
+  entities: { id: number; type: string; x: number; y: number }[];
+  /** links cut with them */
+  links: number;
+  warnings: string[];
+}
+
+export type RoomOpResult<R> = SaveResult & { report: R };
+
 export interface RoomSave {
   path: string;
   room?: Room;
@@ -744,6 +789,21 @@ export class EditorClient {
   /** Saves a room's edits (room.json, painted cells, the palette) together: all, or none. */
   saveRoom(id: string, body: RoomSave): Promise<SaveResult> {
     return this.request("POST", this.project(id, "room/save"), body);
+  }
+
+  /** Makes a room: a copy of one, or an empty room laid out like it; saved, checked, all or nothing. */
+  newRoom(id: string, body: NewRoom): Promise<RoomOpResult<NewRoomReport> & { path: string }> {
+    return this.request("POST", this.project(id, "room/new"), body);
+  }
+
+  /** Deletes a room no level plays (its folder, its entries in levels.json and tileset_order.json). */
+  deleteRoom(id: string, path: string): Promise<RoomOpResult<{ room: string; deleted: string[]; rom_room: boolean }>> {
+    return this.request("POST", this.project(id, "room/delete"), { path });
+  }
+
+  /** Resizes a room at its edges (cells; BG1-3 by their parallax share); with `check`, only what it would do. */
+  resizeRoom(id: string, path: string, edges: RoomEdges, check = false): Promise<RoomOpResult<ResizeReport>> {
+    return this.request("POST", this.project(id, "room/resize"), { path, edges, check });
   }
 
   /** The cutscenes, their pages' text, their pictures, songs and sound effects, the font. */

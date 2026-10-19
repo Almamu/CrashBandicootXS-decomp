@@ -428,6 +428,32 @@ Brighten and darken go by BLDY, which the room doesn't set (the fades
 do), so they are drawn unchanged. The schema and the build take an
 effect of 0-3 and weights of 0-31, the bits SetupRoomBlend keeps.
 
+**Rooms.** "New room…" (under the level table) makes a room
+(`crashdata.levels.room_ops`): a copy of a room, or an *empty* room laid
+out like one (its layers, tile sets, scroll scales and priorities, its
+palette and record; blank pictures and collision, the size asked, and
+only its start marker), in a new folder `<level>/<slot>`. It gets the
+next free `gRoomNN`/`gLevelRoomNN` symbols, goes at the end of
+levels.json's `"rooms"` and, if asked, into a level: after its rooms, or
+as its bonus or gem-path room (N-Tranced's `"table"` `"records"` get it
+too); XS's cxx_symbols.txt gets its class's members (`levels.py
+symbols`). The Room tab **resizes** the room: cells added (or taken) at
+each edge of BG0 and the collision layer, which share a grid. Their
+pictures move with the left and top edges, and so do the entities; an
+entity left outside goes, with its links, and the entities are put back
+in id order (the links follow). Each BG1-3 layer grows by its parallax
+share of the same edges (`cells * scale / 256`), so at every camera
+position it lines up with BG0 as before. The scrollable sizes, the chunk
+grids and so the camera's bounds and the entity groups follow; the
+layers' `pad_overrides` (the ROM's leftover bytes) go. "Check" says what
+a resize would cut (entities, links, cells that aren't blank) before
+anything is written. **Delete this room** deletes a room no level plays:
+its folder, its entries in levels.json (with a ROM room's in
+`"regions"` and `"assets"`) and tileset_order.json, its classes'
+symbols. Each is one save, checked like any (all or nothing); the sizes
+are held to what the engine takes ([levels.md, "Room
+sizes"](./levels.md#room-sizes)).
+
 **Saving** sends one request with what changed since the room was opened
 or last saved: room.json's value, the painted cells of each layer, the
 collision cells, the palette (`POST .../room/save`, "The editor's
@@ -443,10 +469,7 @@ headless and shows the room after 700 frames. It builds the saved data.
 A bonus or gem-path room starts as the level's (`ROOM=bonus` or
 `gem_path`, "Preview"); a room no level plays can't be started.
 
-**Not yet:** making a new room (a copy of a room's folder with its own
-symbols, listed in levels.json: [levels.md, "Adding a
-room"](./levels.md#adding-a-room); the backend writes only files that
-exist), resizing a room, drawing new tiles, adding a
+**Not yet:** drawing new tiles, adding a
 collision value to the legend. N-Tranced's records of types 73, 92 and
 106 stay words (what their spawners read isn't known yet).
 
@@ -816,6 +839,9 @@ dependency), listens on **127.0.0.1 only**, and serves:
 | `GET /api/projects/ID/room/tiles?path=ROOM&layer=L` | a BG layer's tile set as the build makes it: `{tileset, bpp, count, tiles, banks, cells}` (tiles: 64 bytes each, base64; cells: the layer's, u16 LE, base64) |
 | `GET /api/projects/ID/sprite?bank=N&frame=K[&palette=P]` | a sprite bank's frame as a PNG, index 0 transparent, in OBJ palette P or its own |
 | `POST /api/projects/ID/room/save` `{path, room?, layers?, collision?, palette?}` | saves a room's edits, all or none (below) |
+| `POST /api/projects/ID/room/new` `{from, folder, empty?, size?, attach?}` | makes a room (`room_ops.new_room`): a copy of `from`, or an empty one laid out like it, `size` cells; `attach` `{level, as: "rooms" \| "bonus" \| "gem_path", index?}`; the answer's `report`: its number, symbols, warnings; `path` |
+| `POST /api/projects/ID/room/delete` `{path}` | deletes a room no level plays (`room_ops.delete_room`) |
+| `POST /api/projects/ID/room/resize` `{path, edges: {left, right, top, bottom}, check?}` | resizes a room (`room_ops.resize_room`); `report`: the sizes before and after, each layer's move and cut cells, the entities and links cut, warnings; with `check` nothing is written |
 | `GET /api/projects/ID/cutscenes` | the cutscene editor's view (`crashdata.cutscenes.edit.view`): `{cutscenes, pictures, pages, pageOrder, languages, songs, sfx, font, box, screen, encoding, references, numberFields}` (cutscenes.json's value, the manifest's cutscene pictures, every page's strings in the six languages, the song and sound-effect names, the small font's characters, metrics, glyph pixels and colours, the text box, what plays each cutscene); 404 for a game whose cutscenes aren't data (N-Tranced) |
 | `GET /api/projects/ID/cutscenes/picture?path=cutscenes/P.png` | a cutscene picture: its width and height (u32 LE), its 256 colours (u16 LE), then a byte a pixel; gzipped when asked |
 | `POST /api/projects/ID/cutscenes/import` `{png, palette?}` | a PNG (base64) made into a cutscene picture, on its own colours or mapped to `palette`: `{width, height, palette, pixels, colours, exact, how}`; 422 if it isn't 240x160 |
@@ -871,6 +897,13 @@ write the picture as crashdata's writers do (`write_layer_png`'s
 settings, `collision.write_image`). The new files are checked by the
 model's checks (data-check reads the pictures: their palettes, the
 collision image's size and colours) and all go back on an error.
+
+**New, deleted and resized rooms** (`room/new`, `room/delete`,
+`room/resize`, `crashdata.levels.room_ops`) are plans of files to write
+and remove (room.json, the pictures, levels.json, tileset_order.json,
+cxx_symbols.txt's room classes block), saved the same way: a new room's
+folder is made first and goes again on a refusal; a deleted file is put
+back.
 
 **Saving the cutscenes** (`cutscenes/save`, `crashdata.cutscenes.edit.plan_save`)
 is the same transaction over cutscenes.json, the text's files, the

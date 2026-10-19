@@ -2,8 +2,10 @@
   // The level table (levels.json): each level's rooms, in play order, and its
   // bonus and gem-path rooms; a stage played in an actor category has no room.
   import { level } from "../../lib/level/state.svelte.ts";
+  import NewRoomDialog from "./NewRoomDialog.svelte";
 
   let filter = $state("");
+  let making = $state(false);
   const q = $derived(filter.trim().toLowerCase());
   const shown = $derived(level.levels.filter((l) => !q || l.name.toLowerCase().includes(q) || l.rooms.some((r) => r.folder.includes(q))));
 </script>
@@ -38,8 +40,9 @@
       </li>
     {/if}
   </ul>
-  <p class="muted small">A new room is a copy of a room's folder with its own symbols, listed in levels.json (docs/levels.md, "Adding a room"): the editor doesn't make one yet.</p>
+  <button class="new" disabled={!level.levels.length} onclick={() => (making = true)} title="a copy of a room, or an empty room laid out like it">New room…</button>
 </div>
+{#if making}<NewRoomDialog onclose={() => (making = false)} />{/if}
 
 <style>
   .nav {
@@ -100,7 +103,8 @@
     color: var(--muted);
     font-size: 0.8em;
   }
-  .small {
-    font-size: 0.78rem;
+  .new {
+    margin-top: 0.6rem;
+    width: 100%;
   }
 </style>

@@ -683,11 +683,13 @@ def rooms_hpp():
     return "\n".join(out)
 
 
-def room_symbols_block():
+def room_symbols_block(rooms=None):
+    """cxx_symbols.txt's room classes block for `rooms` (room.json values;
+    levels.json's by default)."""
     lines = [ROOM_CLASSES_BEGIN,
              "# The room classes (games/xs/data/levels/, docs/levels.md \"Room classes\"): each",
              "# member keeps its room.json symbol."]
-    for room in all_rooms():
+    for room in all_rooms() if rooms is None else rooms:
         lines += ["%s %s" % (mangled(room, m), sym) for m, sym, _, _, _ in room_members(room)]
     return "\n".join(lines + [ROOM_CLASSES_END])
 
@@ -762,6 +764,48 @@ def entity_groups(room):
     return groups
 
 
+def room_size_errors(room):
+    """What the engine can't take of a room's layers' sizes and its
+    entities (docs/levels.md, "Room sizes"): (message, pointer) pairs."""
+    out = []
+    layers = room["layers"]
+    if "bg0" not in layers:
+        out.append(("the room has no BG0: LoadRoom keeps the last room's (BG0 and the collision layer are always "
+                    "there)", "/layers"))
+    for lname, layer in layers.items():
+        w, h = layer["size_tiles"]
+        want = [-(-w // CHUNK_W), -(-h // CHUNK_H)]
+        if list(layer["size_chunks"]) != want:
+            out.append(("%s's grid is %dx%d chunks, but its size, %dx%d cells, takes %dx%d: the streamer stops at "
+                        "the grid" % ((lname,) + tuple(layer["size_chunks"]) + (w, h) + tuple(want)),
+                        "/layers/%s/size_chunks" % lname))
+        if min(layer["scale"]) < 0:
+            out.append(("%s scrolls at a negative scale" % lname, "/layers/%s/scale" % lname))
+    base = layers.get("bg0") or layers["collision"]
+    w, h = base["size_tiles"]
+    if not (ROOM_MIN_CELLS[0] <= w <= ROOM_MAX_CELLS[0] and ROOM_MIN_CELLS[1] <= h <= ROOM_MAX_CELLS[1]):
+        out.append(("the room is %dx%d cells: at least the screen, %dx%d (240x160 pixels), at most %dx%d (an "
+                    "entity's position is a u16 pixel)" % ((w, h) + ROOM_MIN_CELLS + ROOM_MAX_CELLS),
+                    "/layers/bg0/size_tiles"))
+    if "bg0" in layers:
+        c = layers["collision"]
+        if c["size_tiles"] != base["size_tiles"] or c["size_chunks"] != base["size_chunks"]:
+            out.append(("the collision layer is %dx%d cells, BG0 %dx%d: the terrain is BG0's size and the "
+                        "collision layer's grid" % tuple(c["size_tiles"] + base["size_tiles"]),
+                        "/layers/collision/size_tiles"))
+        if base["scale"] != [256, 256]:
+            out.append(("BG0 scrolls at %d/%d: it is the camera's layer (256/256)" % tuple(base["scale"]),
+                        "/layers/bg0/scale"))
+    if len(room["entities"]) > ROOM_MAX_ENTITIES:
+        out.append(("%d entities: a room has at most %d (the entity flags a room change clears)"
+                    % (len(room["entities"]), ROOM_MAX_ENTITIES), "/entities"))
+    for i, e in enumerate(room["entities"]):
+        if not (0 <= e["x"] < w * 8 and 0 <= e["y"] < h * 8):
+            out.append(("entity %d at (%d, %d) is outside the room (%dx%d pixels)" % (i, e["x"], e["y"], w * 8, h * 8),
+                        "/entities/%d" % i))
+    return out
+
+
 def check_room(room_dir):
     """`make data-check`'s checks of a room (docs/editors.md): what the build
     checks on its way (its layer pictures' palettes, the collision image's
@@ -805,6 +849,8 @@ def check_room(room_dir):
             % next(iter(users[i])), "param-raw")
     if room.get("links") is not None and "links" not in room["symbols"]:
         bad("/symbols", "the room has links, so its symbols name them (\"links\")", "symbols")
+    for msg, pointer in room_size_errors(room):
+        bad(pointer, msg, "room-size")
     if errors:
         raise D.DataError(errors)
     entity_groups(room)
@@ -1426,6 +1472,20 @@ def new_tilesets_c(levels, build_dir):
 # {"kind": K, "index": N}: a record of kind K (3: ROOM_KIND_CATEGORY,
 # actor category N; others the game's own) with no room; and a room's
 # record can set "unk_0C" (N-Tranced's extra rooms: 1).
+
+# What the engine takes of a room's size (docs/levels.md, "Room sizes"):
+# BG0's scrollable size at least the screen (LevelLayers' maxScroll is
+# BG0's size less the screen's, which would go negative), at most what an
+# entity's u16 pixel position reaches; at most 512 entities (the entity
+# flags' first 16 words, which a room change clears); the BG1-3 tile sets
+# at most 768 tiles (char block 2 up to the screen blocks at 0x0600E000),
+# the BG0 ones 8192 (the tile slot pool's slotForTile), and at most 512 BG0
+# tiles on screen at once (its VRAM slots).
+ROOM_MIN_CELLS = (30, 20)
+ROOM_MAX_CELLS = (0x10000 // 8 - 1, 0x10000 // 8 - 1)
+ROOM_MAX_ENTITIES = 512
+TILESET_LIMITS = {8: 0x2000, 4: 768}
+BG0_SLOTS = 0x200
 
 # The record kinds (ROOM_KIND_*, engine/include/constants/rooms.h); a room's
 # "kind" is one of the first three.

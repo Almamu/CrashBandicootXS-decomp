@@ -770,6 +770,9 @@ save"). `levels.json`'s `"themes"` names each theme
 
 A room is a folder `games/xs/data/levels/<level>/<slot>/` (room.json, the layer
 pictures and `collision.png`), and `levels.json`'s `"rooms"` lists it.
+The level editor's "New room…" does steps 1-3 (and step 4 if asked) in
+one save ([editors.md, "The level editor"](./editors.md#the-level-editor)),
+and its Room tab resizes a room and deletes one no level plays.
 The ROM's rooms are those its `"regions"` list; a room in no region is a
 **new room**. Everything about it is data, and a plain `make` builds it:
 
@@ -822,6 +825,40 @@ the ROM data after it; that is safe ([shifting.md](./shifting.md)).
 A room of a new theme is a room like any other; the theme is the
 level's (see "Adding a theme"). A new stage is a new actor category (see
 "Actor categories").
+
+### Room sizes
+
+What the engine takes of a room's size, which `make data-check` checks
+(`crashdata.levels.room_size_errors`, `room-size`) and the level editor
+keeps to when it makes or resizes a room:
+
+- **at least the screen**: BG0's (and the room's) scrollable size is at
+  least 30x20 cells (240x160 pixels). `LevelLayers::LoadRoom` takes the
+  camera's last position as BG0's size less the screen's, which would go
+  negative, and nothing centres a smaller room;
+- **at most 8,191 cells** each way: an entity's position is a `u16`
+  pixel;
+- **BG0 and the collision layer** are always there, with the same size
+  and grid (the terrain's bounds are BG0's, its cells the collision
+  layer's grid), and BG0 scrolls with the camera (scale 256/256);
+- **every layer's grid** is its size in chunks, rounded up
+  (`size_chunks` = `ceil(size_tiles / (16, 8))`): the streamer stops at
+  the grid, so a camera past it would show stale cells;
+- **at most 512 entities**: a room change clears the first 16 words of
+  the entity flags (`room_entities.cpp`), and an entity is inside the room;
+- a scale isn't negative. A BG1-3 layer needn't cover the camera's whole
+  range at its scale: past its grid the streamer leaves its ring as it
+  was, so the layer repeats its last 512 pixels across (256 down). 25 of
+  XS's layers do (drip, drip, drip's BG2 is 6,480 pixels wide for the
+  12,800 its scale would take); with a grid of fewer than 4 chunks that
+  way, never-decoded cells show. The editor says so when a resize makes
+  a layer fall short.
+
+The tile limits are in "Tile sets" below; the chunk ids and a layer's
+chunk offsets are `u16` (in words: a section's last chunk within 256 KB of
+its start). A packed (LZ77) asset is unpacked into the EWRAM heap when the
+room loads; the largest the ROM has is 93,284 bytes (sunken city), and the
+largest rooms are raw, used in place.
 
 ### Collision layers
 
