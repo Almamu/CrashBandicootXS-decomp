@@ -3,7 +3,9 @@
 // palette), what is shown, the tool, the undo stack, and saving it all back
 // through the backend's room save (crashdata.levels.room_edit), which checks
 // it like any save and keeps it all or none.
-import type { EntityTypeInfo, LegendEntry, Room, RoomSave, RoomTiles, RoomView } from "@crash/schema-types";
+import type { Diagnostic, EntityTypeInfo, LegendEntry, NewRoom, ResizeReport, Room, RoomEdges, RoomSave, RoomTiles, RoomView } from "@crash/schema-types";
+
+type RoomSaveDiagnostics = Diagnostic[];
 import { client } from "../api.ts";
 import { editor } from "../state.svelte.ts";
 import { History, type Edit } from "./history.ts";
@@ -56,6 +58,11 @@ export interface RoomEntry {
 export interface LevelEntry {
   index: number;
   name: string;
+  /** LEVEL_* */
+  constant: string;
+  /** whether it has a bonus, a gem-path room */
+  bonus: boolean;
+  gemPath: boolean;
   rooms: RoomEntry[];
   stages: string[];
 }
@@ -213,7 +220,7 @@ class LevelEditorState {
         });
         if (l.bonus) rooms.push(entry(l.bonus, "bonus", i, "bonus"));
         if (l.gem_path) rooms.push(entry(l.gem_path, "gem path", i, "gem_path"));
-        return { index: i, name: l.name ?? l.constant ?? String(i), rooms, stages };
+        return { index: i, name: l.name ?? l.constant ?? String(i), constant: l.constant ?? "", bonus: !!l.bonus, gemPath: !!l.gem_path, rooms, stages };
       });
       this.others = (data.rooms ?? []).filter((r) => !listed[r]).map((r) => ({ folder: r, path: base + r, label: r }));
     });
@@ -567,6 +574,65 @@ class LevelEditorState {
         at: new Date(),
       };
     });
+  }
+
+  // -- rooms: new, deleted, resized (crashdata.levels.room_ops) ------------------------
+
+  private reported(title: string, r: { saved: string[]; diagnostics: RoomSaveDiagnostics }, warnings: string[] = []): void {
+    editor.diagnostics = {
+      source: "save",
+      title: title + (warnings.length ? ` (${warnings.join("; ")})` : ""),
+      ok: true,
+      diagnostics: r.diagnostics,
+      at: new Date(),
+    };
+  }
+
+  /** Makes a room (a copy of `from`, or an empty one laid out like it), then opens it. */
+  async newRoom(body: NewRoom): Promise<boolean> {
+    if (!this.confirmDiscard()) return false;
+    const r = await editor.run(`Making ${body.folder}`, () => client.newRoom(editor.projectId, body));
+    if (!r) return false;
+    this.reported(`Made ${body.folder} (gRoom${r.report.number})`, r, r.report.warnings);
+    this.history.clear();
+    this.view = null;
+    await this.loadLevels();
+    await this.openRoom(r.path);
+    return true;
+  }
+
+  /** Deletes the open room (no level may play it). */
+  async deleteRoom(): Promise<boolean> {
+    const path = this.view?.path;
+    if (!path) return false;
+    const r = await editor.run(`Deleting ${path}`, () => client.deleteRoom(editor.projectId, path));
+    if (!r) return false;
+    this.reported(`Deleted ${path}`, r);
+    this.history.clear();
+    this.close();
+    await this.loadLevels();
+    return true;
+  }
+
+  /** What resizing the open room would do (nothing is written). */
+  async checkResize(edges: RoomEdges): Promise<ResizeReport | null> {
+    const path = this.view?.path;
+    if (!path) return null;
+    const r = await editor.run(`Checking ${path}'s new size`, () => client.resizeRoom(editor.projectId, path, edges, true));
+    return r?.report ?? null;
+  }
+
+  /** Resizes the open room (saved), then opens it again. */
+  async resize(edges: RoomEdges): Promise<ResizeReport | null> {
+    const path = this.view?.path;
+    if (!path || this.dirty) return null;
+    const r = await editor.run(`Resizing ${path}`, () => client.resizeRoom(editor.projectId, path, edges));
+    if (!r) return null;
+    this.reported(`Resized ${path} to ${r.report.size[1].join("x")} cells`, r, r.report.warnings);
+    this.history.clear();
+    this.view = null;
+    await this.openRoom(path);
+    return r.report;
   }
 
   /** Drops the edits: the room as last saved. */

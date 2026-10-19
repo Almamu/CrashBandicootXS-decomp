@@ -242,6 +242,111 @@ class Saving(LevelEditor):
                 p.write_bytes(b)
 
 
+class Rooms(LevelEditor):
+    """New, resized and deleted rooms (crashdata.levels.room_ops): each a
+    save, checked, all or nothing. The tree is put back after."""
+
+    LEVELS = "games/xs/data/levels/"
+
+    def setUp(self):
+        self.kept = {p: p.read_bytes() for p in [ROOT / self.LEVELS / "levels.json", ROOT / "cxx_symbols.txt",
+                                                 ROOT / self.LEVELS / "tileset_order.json"]}
+        self.made = [ROOT / self.LEVELS / "shipwrecked/extra", ROOT / self.LEVELS / "shipwrecked/blank"]
+
+    def tearDown(self):
+        import shutil
+        for p, b in self.kept.items():
+            p.write_bytes(b)
+        for d in self.made:
+            if d.exists():
+                shutil.rmtree(d)
+
+    def levels(self):
+        return json.loads((ROOT / self.LEVELS / "levels.json").read_text())
+
+    def test_new_resize_delete(self):
+        # a copy of jungle jam's room, shipwrecked's bonus room
+        st, r = self.call("POST", "/api/projects/xs/room/new", {
+            "from": "jungle_jam/main", "folder": "shipwrecked/extra",
+            "attach": {"level": "LEVEL_SHIPWRECKED", "as": "bonus"}})
+        self.assertEqual(st, 200, r)
+        self.assertEqual(r["report"]["number"], 41)
+        room = json.loads((ROOT / self.LEVELS / "shipwrecked/extra/room.json").read_text())
+        self.assertEqual(room["symbols"]["desc"], "gRoom41Desc")
+        self.assertEqual(room["record"]["symbol"], "gLevelRoom41")
+        lv = self.levels()
+        self.assertEqual(lv["rooms"][-1], "shipwrecked/extra")
+        self.assertEqual(next(x for x in lv["levels"] if x["constant"] == "LEVEL_SHIPWRECKED")["bonus"],
+                         "shipwrecked/extra")
+        self.assertIn("_Q34Game5Level6Room41.palette gRoom41Palette", (ROOT / "cxx_symbols.txt").read_text())
+        # the folder is taken now
+        st, r = self.call("POST", "/api/projects/xs/room/new", {"from": "jungle_jam/main", "folder": "shipwrecked/extra"})
+        self.assertEqual(st, 422, r)
+
+        # resized: 4 cells more on the left, 10 fewer on the right; first what it would do
+        path = self.LEVELS + "shipwrecked/extra"
+        before = json.loads(json.dumps(room))
+        edges = {"left": 4, "right": -10, "top": 0, "bottom": 2}
+        st, r = self.call("POST", "/api/projects/xs/room/resize", {"path": path, "edges": edges, "check": True})
+        self.assertEqual((st, r["saved"]), (200, []), r)
+        self.assertEqual(r["report"]["size"], [[502, 60], [496, 62]])
+        self.assertEqual(r["report"]["layers"]["bg1"]["shift"], [2, 0])  # its scale is 128: half the cells
+        self.assertEqual(json.loads((ROOT / path / "room.json").read_text()), before)  # nothing written
+        st, r = self.call("POST", "/api/projects/xs/room/resize", {"path": path, "edges": edges})
+        self.assertEqual(st, 200, r)
+        room = json.loads((ROOT / path / "room.json").read_text())
+        self.assertEqual(room["layers"]["bg0"]["size_tiles"], [496, 62])
+        self.assertEqual(room["layers"]["bg0"]["size_chunks"], [31, 8])
+        self.assertEqual(room["layers"]["collision"]["size_tiles"], [496, 62])
+        self.assertEqual(len(room["entities"]), len(before["entities"]) - len(r["report"]["entities"]))
+        # every entity moved 32 pixels right (none was in the cut columns at the right? then it's gone)
+        xs = sorted(e["x"] for e in room["entities"])
+        kept = sorted(e["x"] + 32 for e in before["entities"] if e["x"] + 32 < 496 * 8)
+        self.assertEqual(xs, kept)
+        from PIL import Image
+        with Image.open(ROOT / path / "bg0.png") as im:
+            self.assertEqual(im.size, (31 * 128, 8 * 64))
+            with Image.open(ROOT / self.LEVELS / "jungle_jam/main/bg0.png") as src:
+                # the source's cell (0, 0) is now cell (4, 0)
+                self.assertEqual(im.crop((32, 0, 40, 8)).tobytes(), src.crop((0, 0, 8, 8)).tobytes())
+        # too small: refused, nothing written
+        st, r = self.call("POST", "/api/projects/xs/room/resize", {"path": path, "edges": {"right": -480}})
+        self.assertEqual(st, 422, r)
+        self.assertEqual(json.loads((ROOT / path / "room.json").read_text()), room)
+
+        # played: not deleted
+        st, r = self.call("POST", "/api/projects/xs/room/delete", {"path": path})
+        self.assertEqual(st, 422, r)
+
+        # an empty room like ace of space's, played by no level, then deleted
+        st, r = self.call("POST", "/api/projects/xs/room/new", {
+            "from": "ace_of_space/main", "folder": "shipwrecked/blank", "empty": True, "size": [60, 30]})
+        self.assertEqual(st, 200, r)
+        self.assertEqual(r["report"]["number"], 42)
+        blank = json.loads((ROOT / self.LEVELS / "shipwrecked/blank/room.json").read_text())
+        self.assertEqual(blank["layers"]["bg0"]["size_tiles"], [60, 30])
+        self.assertEqual([e["type"] for e in blank["entities"]], ["START_MARKER"])
+        st, r = self.call("POST", "/api/projects/xs/room/delete", {"path": self.LEVELS + "shipwrecked/blank"})
+        self.assertEqual(st, 200, r)
+        self.assertFalse((ROOT / self.LEVELS / "shipwrecked/blank").exists())
+        self.assertNotIn("shipwrecked/blank", self.levels()["rooms"])
+        self.assertNotIn("gRoom42Palette", (ROOT / "cxx_symbols.txt").read_text())
+
+    def test_an_n_tranced_room(self):
+        # played after the island intro's room: its record goes last in "table" "records"
+        n2 = ROOT / "games/n2/data/levels"
+        self.kept[n2 / "levels.json"] = (n2 / "levels.json").read_bytes()
+        self.made.append(n2 / "island_intro/extra")
+        st, r = self.call("POST", "/api/projects/n2/room/new", {
+            "from": "island_intro/main", "folder": "island_intro/extra", "empty": True,
+            "attach": {"level": "LEVEL_ISLAND_INTRO", "as": "rooms", "index": 1}})
+        self.assertEqual(st, 200, r)
+        lv = json.loads((n2 / "levels.json").read_text())
+        self.assertEqual(lv["levels"][0]["rooms"], ["island_intro/main", "island_intro/extra"])
+        self.assertEqual(lv["table"]["records"][-1], "island_intro/extra")
+        self.assertEqual(r["report"]["number"], 36)
+
+
 class PreviewRooms(unittest.TestCase):
     """tools/preview.py's LEVEL and ROOM: a level's bonus and gem-path rooms
     by name or folder (the PC port's --room bonus|gem-path)."""
