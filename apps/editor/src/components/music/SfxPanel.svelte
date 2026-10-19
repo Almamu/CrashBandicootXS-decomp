@@ -13,7 +13,7 @@
   const e = $derived(mu.state.sfx.entries[mu.sfx] as Entry | undefined);
   const old = $derived(mu.view?.sfx[mu.sfx]);
   const uses = $derived(old && e && old.name === e.name ? old.uses : []);
-  const slot = $derived(e?.slot_id !== undefined ? mu.view?.sfxSlots.find((s) => s.slot === e.slot_id) : undefined);
+  const slot = $derived(e?.slot_id !== undefined ? mu.sfxSlotList.find((s) => s.slot === e.slot_id) : undefined);
   const path = $derived(slot ? slot.path : e?.instrument ? `sfx_samples/${e.instrument}.wav` : "");
   const sound = $derived(path ? mu.sound(path) : null);
   const newInstrument = $derived(e?.instrument ? mu.state.newInstruments[e.instrument] : undefined);
@@ -50,7 +50,7 @@
       <h2>SFX_{e.name ?? "?"} <span class="hint">id {mu.sfx} (0x{mu.sfx.toString(16)})</span></h2>
       <Waveform data={sound?.data ?? null} label="{path}'s waveform" />
       <p class="hint">
-        {#if slot}slot {slot.slot}: {slot.path}, {sound?.data.length ?? slot.length} samples, played at {slot.rate} Hz (gGaxPeriodTable[{Math.round(384 * Math.log2(slot.rate / M.PERIOD_0_HZ))}] / 2048){mu.state.samples[slot.path] ? " — replaced, not saved" : ""}{/if}
+        {#if slot}slot {slot.slot}: {slot.path}, {sound?.data.length ?? mu.sfxSamples.find((s) => s.path === slot.path)?.length ?? "?"} samples, played at {slot.rate} Hz (gGaxPeriodTable[{Math.round(384 * Math.log2(slot.rate / M.PERIOD_0_HZ))}] / 2048){mu.state.samples[slot.path] ? " — replaced, not saved" : ""}{/if}
         {#if e.instrument}its own instrument {e.instrument}: {path}{newInstrument ? `, ${newInstrument.length} samples at ${newInstrument.rate} Hz — new, not saved` : savedInstrument ? "" : " — no such instrument"}{/if}
       </p>
       <div class="row">
@@ -96,7 +96,7 @@
               mu.setSfx(mu.sfx, v.startsWith("i:") ? { instrument: v.slice(2) } : { slot_id: Number(v.slice(2)) });
             }}
           >
-            {#each mu.view?.sfxSlots ?? [] as s (s.slot)}<option value="s:{s.slot}">slot {s.slot} ({s.path})</option>{/each}
+            {#each mu.sfxSlotList as s (s.slot)}<option value="s:{s.slot}">slot {s.slot} ({s.path}){s.added ? " (new)" : ""}</option>{/each}
             {#each [...new Set([...(mu.view?.instruments.map((i) => i.name) ?? []), ...Object.keys(mu.state.newInstruments)])] as n (n)}<option value="i:{n}">instrument {n}</option>{/each}
           </select>
         </label>
@@ -122,7 +122,7 @@
             <input bind:this={fileInput} type="file" accept=".wav" onchange={replace} />
           </label>
           {#if slot}
-            <p class="hint">Every sound effect on slot {slot.slot} plays it: {mu.state.sfx.entries.filter((x) => (x as Entry).slot_id === slot.slot).map((x) => x.name).join(", ")}.</p>
+            <p class="hint">Every sound effect on slot {slot.slot} plays it: {mu.slotUsers(slot.slot).join(", ")}{mu.sfxSampleUsers(slot.sample).length > 1 ? `, and the set's instruments ${mu.sfxSampleUsers(slot.sample).join(", ")} play sample ${slot.sample}` : ""}.</p>
           {/if}
         {:else}
           <p class="hint">An instrument saved earlier: its JSON is instruments/{e.instrument}.json (the Data files tab).</p>

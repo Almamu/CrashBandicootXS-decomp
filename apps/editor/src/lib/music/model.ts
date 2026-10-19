@@ -4,7 +4,7 @@
 // build makes of them (crashdata.audio.gax's XM import), a ROM song's
 // shared patterns, and the sound effects' rules. No DOM: the tests run it
 // in node.
-import type { GaxManifestDefs, Music, MusicCellEdit, MusicInstrument, MusicPatterns, MusicSave, MusicSong, MusicSongSettings, MusicStructure, MusicUnsaved, MusicView, SfxTable } from "@crash/schema-types";
+import type { GaxManifestDefs, Music, MusicCellEdit, MusicInstrument, MusicPatterns, MusicSave, MusicSong, MusicSongSettings, MusicStructure, MusicUnsaved, MusicView, MusicXmInstrument, SfxTable } from "@crash/schema-types";
 
 export type InstrumentRecord = GaxManifestDefs.Instrument;
 
@@ -62,8 +62,22 @@ export interface EditState {
   songInstruments: Record<string, number[]>;
   /** song -> its settings (a ROM song's mix rate, volume, half-rate sound effects, echo taps; a new song's title too) */
   songSettings: Record<string, SongSettings>;
-  /** the sound-effect set: instrument number -> its edited record (gax_sfx_manifest.json's) */
+  /** the sound-effect set: instrument number -> its edited record (gax_sfx_manifest.json's; a number after the set's: a new one) */
   sfxInstruments: Record<string, InstrumentRecord>;
+  /** the sound-effect set's new samples, by their numbers (the set's next ones) */
+  newSfxSamples: Record<string, SampleEdit>;
+  /** the set's samples taken out (no instrument plays them) */
+  deleteSfxSamples: number[];
+  /** the set's instruments taken out (no sound effect plays them): emptied, the set's last ones removed */
+  deleteSfxInstruments: number[];
+  /** song -> XM instrument number (1-based) -> its own instrument's fields, edited (crashdata.audio.edit.xm_with_own_instrument) */
+  xmInstruments: Record<string, Record<string, XmInstrumentEdit>>;
+}
+
+/** A song's own XM instrument's fields as edited, and a new sound for its sample (8-bit, written as 8-bit). */
+export interface XmInstrumentEdit {
+  spec: Omit<MusicXmInstrument, "wav">;
+  wav?: SampleEdit;
 }
 
 /** A song's settings as the Music tab edits them (crashdata.audio.edit.ROM_SETTINGS, NEW_SETTINGS). */
@@ -88,6 +102,10 @@ export function initialState(v: MusicView, sfx: SfxTable, music: Music): EditSta
     songInstruments: {},
     songSettings: {},
     sfxInstruments: {},
+    newSfxSamples: {},
+    deleteSfxSamples: [],
+    deleteSfxInstruments: [],
+    xmInstruments: {},
   };
 }
 
@@ -126,8 +144,9 @@ export function saveBody(saved: EditState, now: EditState): MusicSave {
   return body;
 }
 
-/** The parts of a save (and a player request) for the songs' added instruments and settings, the pool instruments
- * taken out and the sound-effect set's instruments: those that differ from the state last saved. */
+/** The parts of a save (and a player request) for the songs' added instruments, settings and own instruments, the
+ * pool instruments taken out and the sound-effect set's instruments and samples: those that differ from the state
+ * last saved. */
 function songAndPoolParts(saved: EditState, now: EditState): MusicUnsaved {
   const body: MusicUnsaved = {};
   if (now.deleteInstruments.length) body.deleteInstruments = now.deleteInstruments;
@@ -137,7 +156,17 @@ function songAndPoolParts(saved: EditState, now: EditState): MusicUnsaved {
   if (settings.length) body.songSettings = Object.fromEntries(settings);
   const sfx = Object.entries(now.sfxInstruments).filter(([k, r]) => saved.sfxInstruments[k] !== r);
   if (sfx.length) body.sfxInstruments = Object.fromEntries(sfx);
+  if (Object.keys(now.newSfxSamples).length) body.newSfxSamples = Object.fromEntries(Object.entries(now.newSfxSamples).map(([k, s]) => [k, s.wav]));
+  if (now.deleteSfxSamples.length) body.deleteSfxSamples = now.deleteSfxSamples;
+  if (now.deleteSfxInstruments.length) body.deleteSfxInstruments = now.deleteSfxInstruments;
+  const own = Object.entries(now.xmInstruments).filter(([k, x]) => saved.xmInstruments[k] !== x && Object.keys(x).length);
+  if (own.length) body.xmInstruments = Object.fromEntries(own.map(([k, x]) => [k, Object.fromEntries(Object.entries(x).map(([n, e]) => [n, xmInstrumentBody(e)]))]));
   return body;
+}
+
+/** An own XM instrument's edit as a save or a player request sends it (MusicXmInstrument: its new sound as `wav`). */
+export function xmInstrumentBody(e: XmInstrumentEdit): MusicXmInstrument {
+  return e.wav ? { ...e.spec, wav: e.wav.wav } : { ...e.spec };
 }
 
 /** The songs' unsaved edits as the player asks the backend for them (POST music/song, music/pool): every new
@@ -155,7 +184,7 @@ export function unsavedBody(now: EditState): MusicUnsaved {
   if (samples.length) body.samples = Object.fromEntries(samples.map(([p, s]) => [p, s.wav]));
   if (Object.keys(now.newSamples).length) body.newSamples = Object.fromEntries(Object.entries(now.newSamples).map(([k, s]) => [k, s.wav]));
   if (now.deleteSamples.length) body.deleteSamples = now.deleteSamples;
-  const saved = { ...now, songSettings: {}, sfxInstruments: {} };
+  const saved = { ...now, songSettings: {}, sfxInstruments: {}, xmInstruments: {} };
   Object.assign(body, songAndPoolParts(saved, now));
   return body;
 }
@@ -670,6 +699,109 @@ export function newInstrumentRecord(v: MusicView, from: { sample: number } | { c
 /** A song's XM instruments after the edits: its own, then the pool instruments added to it (`Instrument N`). */
 export function songInstruments(p: MusicPatterns, added: number[] | undefined): { name: string; pool: number | null; added: boolean }[] {
   return [...p.instruments.map((i) => ({ ...i, added: false })), ...(added ?? []).map((n) => ({ name: `Instrument ${n}`, pool: n, added: true }))];
+}
+
+// -- the sound-effect set's instruments -------------------------------------------------------------
+
+/** The sound-effect set's instruments after the edits (crashdata.audio.edit.apply_sfx_edits), as poolInstruments
+ * lists the music pool's: the saved ones, edited, then the new ones (the set's next numbers), those taken out emptied
+ * and the empty ones at the end gone. */
+export function sfxInstruments(v: MusicView, s: EditState): PoolInstrument[] {
+  const saved = new Set(v.sfxInstruments.map((i) => i.index));
+  const out: PoolInstrument[] = v.sfxInstruments.map((i) => {
+    const deleted = s.deleteSfxInstruments.includes(i.index);
+    return { index: i.index, record: deleted ? v.instrumentTemplates.empty : (s.sfxInstruments[String(i.index)] ?? i.record), added: false, deleted };
+  });
+  for (const k of Object.keys(s.sfxInstruments)
+    .map(Number)
+    .filter((n) => !saved.has(n))
+    .sort((a, b) => a - b))
+    out.push({ index: k, record: s.sfxInstruments[String(k)]!, added: true, deleted: false });
+  while (out.length > 1 && out[out.length - 1]!.deleted) out.pop();
+  return out;
+}
+
+/** The number a new sound-effect instrument gets: after the set's saved and new ones. */
+export function nextSfxInstrument(v: MusicView, s: EditState): number {
+  return Math.max(...v.sfxInstruments.map((i) => i.index), ...Object.keys(s.sfxInstruments).map(Number)) + 1;
+}
+
+/** A new sound-effect instrument's record: blank (as the ROM's are: a fixed pitch at the set's one rate, no sample
+ * yet), from a sample of the set, or a copy of a record. */
+export function newSfxInstrumentRecord(v: MusicView, from: { sample: number } | { copy: InstrumentRecord } | null): InstrumentRecord {
+  if (from && "copy" in from) return structuredClone(from.copy);
+  const r = structuredClone(v.instrumentTemplates.sfxBlank);
+  if (from) r.sample_indices = [from.sample, 0, 0, 0] as InstrumentRecord["sample_indices"];
+  return r;
+}
+
+/** The rate a wave row's tune plays a fixed-pitch sample at (gGaxPeriodTable[(note - 2) * 32 + tune] / 2048). */
+export function fixedRate(period: number[], r: InstrumentRecord): number {
+  const i = ((r.rows[0]?.relative_note_number ?? 2) & 0xff) * 32 - 64 + (r.samples[0]?.pitch ?? 0);
+  return period[Math.max(0, Math.min(period.length - 1, i))]! / 2048;
+}
+
+// -- a song's own XM instruments -------------------------------------------------------------------
+
+/** XM's limits on an instrument's envelope (FT2's), its volumes and loops (crashdata.audio.edit). */
+export const XM_ENVELOPE_POINTS = 12;
+export const XM_C4 = 49;
+const XM_C4_RATE = 8363;
+
+/** An own XM instrument's fields without a new sound (`wav`). */
+export function xmSpec(x: MusicXmInstrument): XmInstrumentEdit["spec"] {
+  const { wav: _w, ...spec } = x;
+  void _w;
+  return spec;
+}
+
+/** Python's round: halves to even (the build's arithmetic is Python's). */
+export function roundEven(x: number): number {
+  const r = Math.round(x);
+  return Math.abs(x % 1) === 0.5 && r % 2 !== 0 ? r - 1 : r;
+}
+
+/** The wave row's tune the build makes of an XM sample's relative note and finetune (crashdata.audio.gax.xm_instrument_spec). */
+export function xmTune(relativeNote: number, finetune: number): number {
+  return roundEven(384 * Math.log2(XM_C4_RATE / PERIOD_0_HZ) + 32 * relativeNote + finetune / 4) - (XM_C4 - 2) * 32;
+}
+
+/** The relative note and finetune that play a sample at `rate` Hz on C-4 (XM's: 8363 Hz with neither). */
+export function xmTuneForRate(rate: number): { relative_note: number; finetune: number } {
+  const semis = 12 * Math.log2(rate / XM_C4_RATE);
+  let relative_note = Math.round(semis);
+  let finetune = Math.round((semis - relative_note) * 128);
+  if (finetune > 127) [relative_note, finetune] = [relative_note + 1, finetune - 128];
+  return { relative_note: Math.max(-128, Math.min(127, relative_note)), finetune: Math.max(-128, Math.min(127, finetune)) };
+}
+
+/** The vibrato speed the build makes of an XM auto-vibrato's rate (XM steps 256 phases a cycle, GAX2 64). */
+export function xmVibratoSpeed(rate: number): number {
+  return Math.max(1, Math.min(63, roundEven(rate / 4)));
+}
+
+/** Why an own XM instrument's fields can't be (null if they can): what crashdata.audio.edit.xm_with_own_instrument
+ * and the build refuse. */
+export function xmInstrumentProblem(x: Omit<MusicXmInstrument, "wav">, length: number): string | null {
+  const int = (v: number, lo: number, hi: number) => Number.isInteger(v) && v >= lo && v <= hi;
+  if (!int(x.volume, 0, 64)) return "the volume is 0-64";
+  if (!int(x.relative_note, -128, 127) || !int(x.finetune, -128, 127)) return "the relative note and finetune are -128 to 127";
+  if (x.loop !== "none" && !(int(x.loop_start, 0, length - 1) && int(x.loop_end, x.loop_start + 1, length))) return `the loop ${x.loop_start}-${x.loop_end} isn't inside the sample (0-${length})`;
+  const e = x.envelope;
+  if (e) {
+    if (e.points.length < 1 || e.points.length > XM_ENVELOPE_POINTS) return `an XM envelope has 1-${XM_ENVELOPE_POINTS} points`;
+    if (e.points[0]![0] !== 0) return "the first point is at tick 0";
+    for (let i = 1; i < e.points.length; i++) if (e.points[i]![0] <= e.points[i - 1]![0]) return `point ${i}'s tick isn't after point ${i - 1}'s`;
+    if (e.points.some(([t, v]) => !int(t, 0, 0xffff) || !int(v, 0, 64))) return "a volume is 0-64, a tick 0-65535";
+  }
+  if (!int(x.vibrato.depth, 0, 255) || !int(x.vibrato.rate, 0, 255)) return "the vibrato's depth and rate are 0-255";
+  return null;
+}
+
+/** What the build makes of an own XM instrument (crashdata.audio.gax.instrument_entry), as the panel shows it. */
+export function xmInstrumentGax(x: Omit<MusicXmInstrument, "wav">): { tune: number; volume: number; envelope: number[] | null; vibrato: { depth: number; speed: number } } {
+  const vib = x.vibrato.depth && x.vibrato.rate ? { depth: x.vibrato.depth, speed: xmVibratoSpeed(x.vibrato.rate) } : { depth: 0, speed: 0 };
+  return { tune: xmTune(x.relative_note, x.finetune), volume: x.volume * 4, envelope: x.envelope ? x.envelope.points.map(([, v]) => Math.min(255, v * 4)) : null, vibrato: vib };
 }
 
 // -- a song's settings ---------------------------------------------------------------------------

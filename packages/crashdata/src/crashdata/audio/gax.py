@@ -1082,6 +1082,26 @@ def instrument_entry(spec, sample_index, fail):
     }
 
 
+def xm_sample_data(xs, fail):
+    """An XM sample's sound as GAX2's signed 8-bit samples (a 16-bit one
+    rounded to 8). Stops on what GAX2 can't play."""
+    if xs['packing'] == 0xAD:
+        fail("its sample is ADPCM-compressed (ModPlug): save it uncompressed")
+    if xs['type'] & 0x20:
+        fail("its sample is stereo: GAX2 mixes mono, so a sample is mono")
+    # XM stores the sample as deltas
+    raw, acc = bytearray(), 0
+    if xs['type'] & 0x10:
+        for (d,) in struct.iter_unpack('<h', xs['data'][:len(xs['data']) & ~1]):
+            acc = (acc + d + 0x8000) % 0x10000 - 0x8000
+            raw += struct.pack('<h', acc)
+        return to_8bit(bytes(raw), 2, fail)
+    for d in xs['data']:
+        acc = (acc + d) & 0xFF
+        raw.append(acc)
+    return bytes(raw)
+
+
 def xm_instrument_spec(xi, sample_no, fail):
     """A new instrument from an XM instrument and one of its samples: the
     sample (8-bit), its loop, volume, relative note and finetune, the
@@ -1090,24 +1110,8 @@ def xm_instrument_spec(xi, sample_no, fail):
     if sample_no >= len(xi['samples']):
         fail(f"its key map plays sample {sample_no}, which it doesn't have")
     xs = xi['samples'][sample_no]
-    if xs['packing'] == 0xAD:
-        fail("its sample is ADPCM-compressed (ModPlug): save it uncompressed")
-    if xs['type'] & 0x20:
-        fail("its sample is stereo: GAX2 mixes mono, so a sample is mono")
-    wide = xs['type'] & 0x10
-    # XM stores the sample as deltas
-    raw, acc = bytearray(), 0
-    if wide:
-        for (d,) in struct.iter_unpack('<h', xs['data'][:len(xs['data']) & ~1]):
-            acc = (acc + d + 0x8000) % 0x10000 - 0x8000
-            raw += struct.pack('<h', acc)
-        data = to_8bit(bytes(raw), 2, fail)
-    else:
-        for d in xs['data']:
-            acc = (acc + d) & 0xFF
-            raw.append(acc)
-        data = bytes(raw)
-    unit = 2 if wide else 1
+    data = xm_sample_data(xs, fail)
+    unit = 2 if xs['type'] & 0x10 else 1
     kind = xs['type'] & 3
     if kind == 3:
         fail("its sample's loop type is 3, which isn't one (none, forward or ping-pong)")
@@ -1304,18 +1308,19 @@ def load_pool(manifest, samples_dir, sample_data=None):
     return instruments, samples
 
 
-def sfx_pool(manifest_path=None, samples_dir=None, table_path=None, manifest=None):
+def sfx_pool(manifest_path=None, samples_dir=None, table_path=None, manifest=None, sample_data=None):
     """The sound-effect set's pool, with the new instruments sound effects
     name (games/xs/sound/sfx_table.json's entries with an "instrument",
     games/xs/sound/instruments/<name>.json, docs/audio.md "Adding a sound
     effect"), and {name: its instrument number}, which tools/sfx_table.py
     writes as the entry's slot_id. manifest: the set's manifest, when it
-    isn't the file's (an editor's unsaved edits)."""
+    isn't the file's, and sample_data {index: bytes} in place of a
+    sample's WAV (an editor's unsaved edits)."""
     manifest_path = manifest_path or SFX_MANIFEST
     table_path = table_path or SFX_TABLE
     if manifest is None:
         manifest = schemas.load(manifest_path)
-    instruments, samples = load_pool(manifest, samples_dir or SFX_SAMPLES_DIR)
+    instruments, samples = load_pool(manifest, samples_dir or SFX_SAMPLES_DIR, sample_data)
     pool = Pool(manifest, instruments, samples, 'the sound-effect set')
     rel = os.path.relpath(table_path, ROOT)
     slots = {}
@@ -1831,6 +1836,8 @@ def new_song(key, xm_path, xm, pool, rom=None, given=None):
         song.channel_handlers.append(SoundHandler(*HANDLER_FUNCS['channel'], type_flags=0x48))
     song.pattern_group_order = list(range(len(groups)))
     song.channel_order = list(range(num_channels))
+    # the pool instrument each XM instrument is (None: no cell plays it), for an editor to play one
+    song.instrument_indices = used
     return song
 
 

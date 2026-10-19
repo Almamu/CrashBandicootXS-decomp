@@ -417,7 +417,8 @@ not a fixed 0x63: the code compares with `SFX_NONE`, and `gSfxTable` is
 can be added at the end of `games/xs/sound/sfx_table.json`'s `entries`:
 `{"slot_id": 40, "pitch_offset": 0, "volume": 256, "name": "BEEP",
 "comment": "..."}`, `slot_id` one of the sound-effect set's instruments
-(1-87), `pitch_offset` the priority and `volume` the 8.8 volume. It is
+(1-87, and any `gax_sfx_manifest.json` records after them: see "Editing
+the pool's instruments and samples"), `pitch_offset` the priority and `volume` the 8.8 volume. It is
 `SFX_BEEP`, the next ID (0x63 for the first), and `SFX_NONE` moves one
 up. `PlaySfx` call sites are code, so a new sound effect is for data
 that names one (a cutscene slide's); the ROM's IDs stay as they are.
@@ -426,8 +427,9 @@ A sound effect can also have its own sample: instead of `slot_id`, the
 entry names a new instrument, `"instrument": "beep"`, which is
 `games/xs/sound/instruments/beep.json` and its WAV (see "New instruments" below,
 e.g. `{"sample": "sfx_samples/beep.wav"}`). `tools/gax_audio.py --sfx`
-appends it to the sound-effect set after the ROM's 87 instruments (88 for
-the first; a sample already in the set is not stored again), and
+appends it to the sound-effect set after the manifest's instruments (88
+for the first with the ROM's 87; a sample already in the set is not
+stored again), and
 `tools/sfx_table.py` writes that number as the entry's `slot_id`. Several
 entries can name the same instrument; it is added once. A sound-effect
 instrument has a fixed pitch, as the ROM's do: its `rate` (by default the
@@ -435,7 +437,8 @@ WAV's) is the rate it plays at, 523-523,382 Hz (gGaxPeriodTable's ends).
 The voices of a song with `half_rate_fx` (the level songs) mix it at half
 the mix rate, as they do the ROM's sound effects. An entry with both
 `slot_id` and `instrument`, or neither, a `slot_id` that isn't one of the
-set's 1-87, or an instrument with no JSON stops the build with a message.
+set's (1-87 in the ROM's), or an instrument with no JSON stops the build
+with a message.
 
 Tested in scratch with plain `make`: a 100th entry `TEST_BEEP` (instrument
 40) and the first slide of the intro cutscene playing it instead of the
@@ -718,7 +721,25 @@ sample), so the numbers after it, which the XMs name, stay.
 
 The sound-effect set's instruments are edited the same way, as their
 records in `gax_sfx_manifest.json` (a sound effect's `slot_id` N plays
-instrument N), checked against the set's samples.
+instrument N), checked against the set's samples. New ones are records
+after the set's (88 for the first): blank as the ROM's sound effects are
+(`crashdata.audio.pool.blank_sfx_instrument`: one wave row at a fixed
+pitch, `pitch` 1511, the set's 8002.6 Hz), a copy of another, or one
+playing a sample of the set, which a `slot_id` then names; new samples
+are `sfx_samples/NN.wav` and a `samples` entry of the manifest, the
+set's next number (88 for the first). Being the manifest's, they come
+before the sound effects' `instruments/<name>.json` ones, which then
+number from after them. One no `slot_id` plays (an instrument), or no
+instrument plays (a sample), can be taken out as the music pool's are.
+With the ROM's records and samples the set is byte for byte the ROM's.
+
+A new song's own XM instruments (see "From the XM") are edited in its
+XM: the music editor writes the fields the build reads (the sample's
+volume, relative note, finetune, loop and sound, the volume envelope,
+the auto-vibrato's depth and rate) and nothing else, so an instrument
+saved unchanged keeps its bytes. A volume envelope it switches on or
+changes gets a fadeout of 0, and a vibrato it sets a sine with no sweep,
+since the build refuses the others.
 
 ## A song's settings
 

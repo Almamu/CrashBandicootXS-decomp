@@ -384,7 +384,7 @@ export interface MusicSongInfo {
   file: string;
   uses: MusicSongUse[];
   /** the XM in brief (absent with `error`) */
-  xm?: { name: string; channels: number; patterns: number; order: number; speed: number; bpm: number; instruments: string[] };
+  xm?: { name: string; channels: number; patterns: number; order: number; speed: number; bpm: number; instruments: string[]; /** its own instruments' numbers (1-based) */ own: number[] };
   error?: string;
   mixRate?: number;
   volume?: number;
@@ -470,8 +470,12 @@ export interface MusicView {
   poolInstruments: { index: number; record: GaxManifestDefs.Instrument; songs: string[] }[];
   /** the sound-effect set's instruments: their gax_sfx_manifest.json records (slot N plays instrument N) */
   sfxInstruments: { index: number; record: GaxManifestDefs.Instrument }[];
-  /** a new pool instrument, blank (crashdata.audio.pool.blank_instrument), and what one taken out becomes (the empty one) */
-  instrumentTemplates: { blank: GaxManifestDefs.Instrument; empty: GaxManifestDefs.Instrument };
+  /** the sound-effect set's samples (sfx_samples/NN.wav) and the instruments that play each */
+  sfxSamples: { index: number; path: string; length: number; rate: number; minLength: number; instruments: number[] }[];
+  /** a new pool instrument, blank (crashdata.audio.pool.blank_instrument), a new sound-effect instrument (blank_sfx_instrument: at
+   * the set's one rate, sfxRate Hz) and what one taken out becomes (the empty one) */
+  instrumentTemplates: { blank: GaxManifestDefs.Instrument; sfxBlank: GaxManifestDefs.Instrument; empty: GaxManifestDefs.Instrument };
+  sfxRate: number;
   /** a new song's settings when its songs/<key>.json doesn't say (crashdata.audio.gax.NEW_SONG_DEFAULTS) */
   songDefaults: MusicSongSettings & { num_fx_channels: number };
   mixRates: number[];
@@ -542,6 +546,9 @@ export interface MusicPool {
   sfx: MusicPoolData & { volume: number; voiceTypes: number };
   /** a new sound effect's instrument number, by instruments/<name>.json's name */
   sfxSlots: Record<string, number>;
+  /** song -> the pool instrument each of its XM instruments is (a song built from its XM; null: no cell plays it, the build
+   * doesn't add it) */
+  xmPool: Record<string, (number | null)[]>;
 }
 
 /** GET/POST /api/projects/ID/music/song: a song as GAX2_init sees it (GaxSongData, its channels' data). */
@@ -592,6 +599,45 @@ export interface MusicUnsaved extends MusicPoolEdits {
   songInstruments?: Record<string, number[]>;
   /** song -> its settings (a ROM song's in the manifest, a new song's in songs/<key>.json) */
   songSettings?: Record<string, MusicSongSettings>;
+  /** song -> its own XM instrument N (1-based) -> its fields (crashdata.audio.edit.xm_with_own_instrument) */
+  xmInstruments?: Record<string, Record<string, MusicXmInstrument>>;
+}
+
+/** A song's own XM instrument (not `Instrument N`, not instruments/<name>.json's): what the build reads of it
+ * (crashdata.audio.gax.xm_instrument_spec), as the editor edits it in the XM. */
+export interface MusicXmInstrument {
+  /** the XM sample of the instrument the other fields' sample ones are */
+  sample: number;
+  /** 0-64 */
+  volume: number;
+  /** semitones */
+  relative_note: number;
+  /** 128ths of a semitone */
+  finetune: number;
+  loop: "none" | "forward" | "pingpong";
+  /** in samples, the end exclusive */
+  loop_start: number;
+  loop_end: number;
+  /** null: off (full volume, cut at the key off) */
+  envelope: { points: [number, number][]; sustain: number | null; loop_start: number | null; loop_end: number | null } | null;
+  /** the auto-vibrato (a sine with no sweep: GAX2's) */
+  vibrato: { depth: number; rate: number };
+  /** base64 8-bit mono WAV: a new sound for its sample (an edit's) */
+  wav?: string;
+}
+
+/** A song's own XM instrument as the pattern view reads it (crashdata.audio.edit.own_instruments). */
+export interface MusicOwnInstrument {
+  spec: MusicXmInstrument;
+  /** the instrument's XM samples */
+  samples: number;
+  /** its sample's bits (a 16-bit one is read as 8) */
+  bits: number;
+  length: number;
+  /** base64: its sample as the build reads it, signed 8-bit */
+  data: string;
+  /** the XM samples its key map plays on the notes the song plays (more than one: the build refuses it) */
+  plays: number[];
 }
 
 /** The music pool's edits (a save's, a player request's): instruments' records, new samples, samples taken out. */
@@ -607,8 +653,14 @@ export interface MusicPoolEdits {
   deleteSamples?: number[];
   /** instruments no song's XM names, taken out (emptied; the pool's last ones removed) */
   deleteInstruments?: number[];
-  /** the sound-effect set: instrument number -> its gax_sfx_manifest.json record */
+  /** the sound-effect set: instrument number -> its gax_sfx_manifest.json record (a number after the set's: a new instrument) */
   sfxInstruments?: Record<string, GaxManifestDefs.Instrument>;
+  /** NN (the set's next numbers) -> base64 8-bit mono WAV: new samples, sfx_samples/NN.wav */
+  newSfxSamples?: Record<string, string>;
+  /** the set's samples no instrument plays, taken out */
+  deleteSfxSamples?: number[];
+  /** the set's instruments no sound effect plays, taken out (emptied; the set's last ones removed) */
+  deleteSfxInstruments?: number[];
 }
 
 /** GET /api/projects/ID/music/patterns: a song's XM for the pattern view. */
@@ -627,8 +679,8 @@ export interface MusicPatterns {
   restart: number;
   speed: number;
   bpm: number;
-  /** the XM's instruments: their names and the pool instrument an `Instrument N` is */
-  instruments: { name: string; pool: number | null }[];
+  /** the XM's instruments: their names, the pool instrument an `Instrument N` is, and a song's own one as the build reads it */
+  instruments: { name: string; pool: number | null; own?: MusicOwnInstrument }[];
   /** order position p plays XM pattern playOrder[p] */
   playOrder: number[];
   loopOrder: number;
@@ -663,6 +715,7 @@ export interface MusicSave extends MusicPoolEdits {
   patterns?: Record<string, MusicCellEdit[]>;
   songInstruments?: Record<string, number[]>;
   songSettings?: Record<string, MusicSongSettings>;
+  xmInstruments?: Record<string, Record<string, MusicXmInstrument>>;
   /** samples/NN.wav or sfx_samples/NN.wav -> base64 8-bit mono WAV */
   samples?: Record<string, string>;
   /** new sound-effect instruments: instruments/<name>.json and sfx_samples/<name>.wav */

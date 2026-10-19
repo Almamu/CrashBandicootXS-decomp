@@ -199,6 +199,18 @@ def blank_instrument(sample=0):
     return _record(0, sample, G.tune_for_rate(G.XM_C4_RATE, False))
 
 
+# the tune every ROM sound effect plays its sample at, at a fixed pitch: gGaxPeriodTable[1511], about 8002.6 Hz
+SFX_TUNE = 1511
+
+
+def blank_sfx_instrument(sample=0):
+    """A new sound-effect instrument as the ROM's are: one wave row playing `sample` (0: none yet) at the set's one
+    rate (SFX_TUNE, a fixed pitch), no loop, a one-step sequence starting it, a flat envelope, no vibrato."""
+    r = _record(0, sample, SFX_TUNE)
+    r["rows"][0]["dont_use_note_pitch"] = True
+    return r
+
+
 def empty_instrument():
     """The empty instrument, as the pool's instrument 0 is (`byte_00`): a note on it plays nothing. An instrument
     taken out of the pool that isn't its last becomes one, so the numbers after it stay."""
