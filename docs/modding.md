@@ -91,9 +91,9 @@ every file against its JSON Schema, then the checks the build makes
 directly instead, edit the tree itself, following the docs above, and
 run `make`; `make compare` then fails, as it should. The editor
 (`make editor`, [editors.md](./editors.md)) edits a mod's tree
-(`build/mods/<name>`) the same way: new, resized and deleted rooms, a
-room's kind and blend; applying the mod again makes the tree
-anew, so what is kept goes into `mod.py`.
+(`build/mods/<name>`) the same way: new, resized and deleted rooms, drawn
+tiles, a room's kind and blend; applying the mod again makes the
+tree anew, so what is kept goes into `mod.py`.
 
 ## What a mod can change
 

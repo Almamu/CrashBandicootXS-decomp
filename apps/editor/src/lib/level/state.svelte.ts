@@ -10,6 +10,11 @@ import { client } from "../api.ts";
 import { editor } from "../state.svelte.ts";
 import { History, type Edit } from "./history.ts";
 import {
+  addTile,
+  newBlocks,
+  pasteCells,
+  replaceTile,
+  tileUses,
   applyBlocks,
   applyValues,
   base64,
@@ -38,10 +43,17 @@ export type Tool = "select" | "add" | "link" | "tile" | "collision";
 export interface TileSet {
   name: string;
   bpp: 4 | 8;
+  /** the tiles, the new ones drawn here (not saved yet) included */
   count: number;
   tiles: Uint8Array;
   banks: number[];
   index: Map<string, TileBrush>;
+  /** each tile's cells in every room that names the set, as last saved */
+  uses: number[];
+  /** the most tiles the engine holds of the set */
+  limit: number;
+  /** the tiles of the set as the build made it; those after are new ones drawn here */
+  built: number;
 }
 
 /** A room of the level table, for the navigation. */
@@ -298,7 +310,17 @@ class LevelEditorState {
       const t: RoomTiles = await client.roomTiles(editor.projectId, path, layer);
       if (this.view?.path !== path) return null;
       const tiles = fromBase64(t.tiles);
-      const set: TileSet = { name: t.tileset, bpp: t.bpp, count: t.count, tiles, banks: t.banks, index: tileIndex(tiles, t.count, t.bpp) };
+      const set: TileSet = {
+        name: t.tileset,
+        bpp: t.bpp,
+        count: t.count,
+        tiles,
+        banks: t.banks,
+        index: tileIndex(tiles, t.count, t.bpp),
+        uses: t.uses,
+        limit: t.limit,
+        built: t.count,
+      };
       this.tileSets = { ...this.tileSets, [layer]: set };
       return set;
     } catch (e) {
@@ -434,11 +456,11 @@ class LevelEditorState {
   }
 
   /** Records a stroke's tile changes as one edit. */
-  commitTiles(layerName: BgName, changes: CellChange<Uint8Array>[]): void {
+  commitTiles(layerName: BgName, changes: CellChange<Uint8Array>[], label = `Paint ${layerName}`): void {
     const layer = this.layers[layerName];
     if (!layer || !changes.length) return;
     this.record({
-      label: `Paint ${layerName}`,
+      label,
       undo: () => {
         // a saved stroke undone is a change again: the cells go in the next save
         applyBlocks(layer, changes, true);
@@ -478,6 +500,76 @@ class LevelEditorState {
         this.damaged("collision", changes);
       },
     });
+  }
+
+  // -- drawing tiles ------------------------------------------------------------
+
+  /** The paint layer's tile set, when it has loaded. */
+  paintSet(): TileSet | null {
+    const set = this.tileSets[this.paintLayer];
+    return set && typeof set !== "string" ? set : null;
+  }
+
+  /**
+   * A tile drawn in the tile editor (64 pixels; 4bpp: 0-15) added to the
+   * paint layer's set as a new tile, and made the brush: it becomes the
+   * build's once a cell draws it and the room is saved. A block the set
+   * already has (flipped too) is that tile. Refused past the engine's limit.
+   */
+  addTile(pixels: Uint8Array): boolean {
+    const set = this.paintSet();
+    if (!set) return false;
+    const r = addTile(set.tiles, set.count, set.index, pixels, set.bpp);
+    if (r.added && r.count > set.limit) {
+      editor.error = `${set.name} would have ${r.count} tiles: the engine holds ${set.limit} (docs/levels.md, "Tile sets")`;
+      return false;
+    }
+    if (r.added) {
+      const next: TileSet = { ...set, tiles: r.tiles, count: r.count, banks: [...set.banks, this.brush.bank] };
+      this.tileSets = { ...this.tileSets, [this.paintLayer]: next };
+    }
+    this.brush = { ...r.brush, bank: set.bpp === 4 ? this.brush.bank : 0 };
+    return true;
+  }
+
+  /** Redraws every cell of the paint layer that draws `tile` with `pixels` (in each cell's flips and bank): one undo step. */
+  replaceTile(tile: number, pixels: Uint8Array, label = `Redraw tile ${tile}`): number {
+    const set = this.paintSet();
+    const layer = this.layers[this.paintLayer];
+    if (!set || !layer) return 0;
+    const changes = replaceTile(layer, set.index, set.bpp, tile, pixels);
+    for (const c of changes) this.touched[this.paintLayer]!.add(c.index);
+    this.damaged(this.paintLayer, changes);
+    this.commitTiles(this.paintLayer, changes, label);
+    return changes.length;
+  }
+
+  /** How many cells of the paint layer draw `tile`. */
+  tileUses(tile: number): number {
+    const set = this.paintSet();
+    const layer = this.layers[this.paintLayer];
+    return set && layer ? tileUses(layer, set.index, set.bpp, tile) : 0;
+  }
+
+  /** Imported cells (room/import's) written into the paint layer at a cell: one undo step. */
+  pasteCells(at: Point, cols: number, rows: number, data: Uint8Array): number {
+    const layer = this.layers[this.paintLayer];
+    if (!layer) return 0;
+    const changes = pasteCells(layer, at, cols, rows, data);
+    for (const c of changes) this.touched[this.paintLayer]!.add(c.index);
+    this.damaged(this.paintLayer, changes);
+    this.commitTiles(this.paintLayer, changes, `Import ${cols}x${rows} cells into ${this.paintLayer}`);
+    return changes.length;
+  }
+
+  /** The new tiles the paint layer's changed cells add to its set (as the build will count them). */
+  pendingTiles(): number {
+    const set = this.paintSet();
+    const layer = this.layers[this.paintLayer];
+    if (!set || !layer) return 0;
+    void this.pixels;
+    const built = new Map([...set.index].filter(([, b]) => b.tile < set.built));
+    return newBlocks(layer, built, set.bpp, this.touched[this.paintLayer] ?? []);
   }
 
   /** The eyedropper: the brush from a paint layer cell, or the collision value. */

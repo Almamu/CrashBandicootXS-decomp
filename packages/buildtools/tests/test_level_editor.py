@@ -347,6 +347,59 @@ class Rooms(LevelEditor):
         self.assertEqual(r["report"]["number"], 36)
 
 
+class Tiles(LevelEditor):
+    """Drawing tiles: a picture imported as cells, the tile sets' limits on a save."""
+
+    def test_import(self):
+        from PIL import Image
+        # two cells of jungle jam's BG1 as true colour, one of them flipped: the set's tiles, nothing new
+        with Image.open(ROOT / ROOM / "bg1.png") as im:
+            rgb = im.convert("RGBA").crop((64, 64, 80, 72))
+        a, b = rgb.crop((0, 0, 8, 8)), rgb.crop((8, 0, 16, 8)).transpose(Image.FLIP_LEFT_RIGHT)
+        pic = Image.new("RGBA", (24, 8), (0, 0, 0, 0))
+        pic.paste(a, (0, 0))
+        pic.paste(b, (8, 0))
+        buf = io.BytesIO()
+        pic.save(buf, format="PNG")
+        st, r = self.call("POST", "/api/projects/xs/room/import", {
+            "path": ROOM, "layer": "bg1", "png": base64.b64encode(buf.getvalue()).decode()})
+        self.assertEqual(st, 200, r)
+        self.assertEqual((r["cols"], r["rows"]), (3, 1))
+        s = r["stats"]
+        self.assertEqual((s["cells"], s["new"], s["blank"], s["limit"]), (3, 0, 1, 768))
+        self.assertEqual(s["tiles"] + s["flipped"], 2)
+        cells = base64.b64decode(r["cells"])
+        with Image.open(ROOT / ROOM / "bg1.png") as im:
+            self.assertEqual(cells[:64], im.crop((64, 64, 72, 72)).tobytes())
+        # a colour no entry has: the nearest, in one bank per cell
+        pic = Image.new("RGB", (8, 8), (250, 10, 240))
+        buf = io.BytesIO()
+        pic.save(buf, format="PNG")
+        st, r = self.call("POST", "/api/projects/xs/room/import", {
+            "path": ROOM, "layer": "bg1", "png": base64.b64encode(buf.getvalue()).decode(), "banks": [2]})
+        self.assertEqual(st, 200, r)
+        self.assertTrue(all(p >> 4 == 2 and p & 15 for p in base64.b64decode(r["cells"])))
+        self.assertEqual(r["stats"]["new"], 1)
+
+    def test_too_many_tiles_on_a_screen(self):
+        # 600 cells of new tiles in one screen of BG0: more than the tile slot pool's 512
+        import random
+        rnd = random.Random(1)
+        cells = [[cx, cy, base64.b64encode(bytes(rnd.randrange(1, 256) for _ in range(64))).decode()]
+                 for cy in range(20) for cx in range(30)]
+        files = {p: p.read_bytes() for p in (ROOT / ROOM).glob("*")}
+        try:
+            st, r = self.call("POST", "/api/projects/xs/room/save", {"path": ROOM, "layers": {"bg0": cells}})
+            self.assertEqual(st, 422, r)
+            self.assertEqual({d["code"] for d in r["diagnostics"]}, {"tileset"}, r)
+            self.assertIn("tile slot pool", r["diagnostics"][0]["message"])
+            for p, b in files.items():
+                self.assertEqual(p.read_bytes(), b, p)
+        finally:
+            for p, b in files.items():
+                p.write_bytes(b)
+
+
 class PreviewRooms(unittest.TestCase):
     """tools/preview.py's LEVEL and ROOM: a level's bonus and gem-path rooms
     by name or folder (the PC port's --room bonus|gem-path)."""

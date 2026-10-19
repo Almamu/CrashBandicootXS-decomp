@@ -26,8 +26,8 @@ API (all JSON; docs/editors.md has each one's fields):
     GET  /api/projects/ID/preview.png      a headless preview's picture (?shot=N: a cutscene's, frame N's)
 
 and the level editor's rooms (room, room/layer, room/tiles, room/save,
-room/new, room/delete, room/resize, sprite), the cutscene editor's cutscenes (cutscenes,
-cutscenes/picture, cutscenes/import, cutscenes/save) and the music
+room/new, room/delete, room/resize, room/import, sprite), the cutscene
+editor's cutscenes (cutscenes, cutscenes/picture, cutscenes/import, cutscenes/save) and the music
 editor's songs and sound effects (music, music/pool, music/song,
 music/patterns, music/import, music/save): docs/editors.md.
 
@@ -335,9 +335,10 @@ class Server:
                 if item[2] is not None:  # a file deleted has nothing staged
                     item[2].unlink(missing_ok=True)
 
-    def _commit(self, project, staged, text=False):
+    def _commit(self, project, staged, text=False, check=None):
         """Put the staged files in place and run the model's checks (and the
-        text's, with `text`): an error that wasn't there before puts every
+        text's, with `text`; then `check()`, which gives back errors or
+        raises an HttpError): an error that wasn't there before puts every
         file back. Under project.lock."""
         plan = [x for x in staged if x is not None]
         if not plan:
@@ -359,6 +360,12 @@ class Server:
             raise
         seen = {_key(d) for d in before}
         new = [d for d in after if d["severity"] == D.ERROR and _key(d) not in seen]
+        if not new and check is not None:
+            try:
+                new = check()
+            except BaseException:
+                self._restore(plan)
+                raise
         if new:
             self._restore(plan)
             raise HttpError(422, "the model's checks reject it", new)
@@ -714,11 +721,11 @@ class Server:
                 cache = (fp, {})
                 self.tile_cache[(project.id, info["tileset"])] = cache
             if (key, lname) not in cache[1]:
-                bpp, tiles, banks, cells = room_edit.tileset(info["tileset"], key, lname)
+                bpp, tiles, banks, cells, uses, limit = room_edit.tileset(info["tileset"], key, lname)
                 cache[1][(key, lname)] = {
                     "tileset": info["tileset"], "bpp": bpp, "count": len(tiles) // 64,
                     "tiles": base64.b64encode(tiles).decode("ascii"), "banks": banks,
-                    "cells": base64.b64encode(cells).decode("ascii")}
+                    "cells": base64.b64encode(cells).decode("ascii"), "uses": uses, "limit": limit}
             return cache[1][(key, lname)]
 
     def sprite(self, project, bank, frame, palette=None):
@@ -785,8 +792,43 @@ class Server:
             except BaseException:
                 self._unstage(staged)
                 raise
-            return self._commit(project, staged)
+            sets = {room["layers"][n]["tileset"] for n in layers if n in room["layers"]}
+            return self._commit(project, staged, check=(lambda: self.tileset_check(project, d, sets)) if sets else None)
 
+    def tileset_check(self, project, room_dir, sets):
+        """After a room's painted cells are in place: the tile sets they name
+        as the build will make them (room_edit.tileset_errors), as
+        diagnostics."""
+        with self.levels(project):
+            errors = room_edit.tileset_errors(sets)
+        rel = _rel(room_dir / "room.json", project)
+        return [{"file": rel, "pointer": "/layers", "line": None, "col": None, "severity": D.ERROR,
+                 "code": "tileset", "message": e} for e in errors]
+
+    def import_tiles(self, project, body):
+        """POST room/import {"path", "layer", "png": base64, "palette": the
+        room's 256 colours (as edited), "banks": [BG1-3 banks to use]}: the
+        picture as the layer's cells (room_edit.import_tiles): {cols, rows,
+        cells: base64 of cols * rows * 64 palette indices, stats}."""
+        d, key = self.room_dir(project, body.get("path"))
+        lname = body.get("layer")
+        if lname not in room_edit.BG_LAYERS:
+            raise HttpError(400, "import into a BG layer (bg0-bg3)")
+        png = body.get("png")
+        if not isinstance(png, str):
+            raise HttpError(400, "give the picture as {\"png\": base64}")
+        try:
+            data = base64.b64decode(png, validate=True)
+        except ValueError:
+            raise HttpError(400, "the picture isn't base64")
+        tiles = self.room_tiles(project, body.get("path"), lname)
+        with self.levels(project):
+            room = D.read_json(d / "room.json")
+            palette = body.get("palette") or list(L.room_palette(d, room))
+            cols, rows, cells, stats = room_edit.import_tiles(data, palette, tiles["bpp"],
+                                                              base64.b64decode(tiles["tiles"]), body.get("banks"))
+        stats.update(setCount=tiles["count"], limit=tiles["limit"])
+        return {"cols": cols, "rows": rows, "cells": base64.b64encode(cells).decode("ascii"), "stats": stats}
 
     # -- the level editor: new, deleted and resized rooms ---------------------
 
@@ -1095,6 +1137,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                               compress=True)
         if (method, what) == ("POST", "room/save"):
             return self._send(200, app.save_room(project, self._body()))
+        if (method, what) == ("POST", "room/import"):
+            return self._send(200, app.import_tiles(project, self._body()))
         if (method, what) == ("POST", "room/new"):
             return self._send(200, app.new_room(project, self._body()))
         if (method, what) == ("POST", "room/delete"):

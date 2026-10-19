@@ -534,8 +534,9 @@ tile at the end of the set. Mind that:
   too, by a multiple of 16;
 - reusing a block that is already a tile, even flipped, costs nothing; a
   new tile makes the set bigger, which moves the ROM's later data (the
-  tile limits are 16,384 tiles for BG0, 1,024 for BG1-3), and an early
-  room's new tile renumbers the later rooms' tiles;
+  tile limits are 8,192 tiles for BG0, 768 for BG1-3, and 512 different
+  BG0 tiles on one screen: "Tile sets"), and an early room's new tile
+  renumbers the later rooms' tiles;
 - don't let the editor reduce, sort or merge the palette (several
   entries of a room palette have the same colour): the indices are
   what is read, not the colours. A true-colour image is rejected.
@@ -590,6 +591,24 @@ declares it. A set named by BG0 layers is 8bpp, one named by BG1-3 layers
 That gives back the ROM's 11 sets byte for byte (21,297 tiles; no tile
 of them is unused, and none is another's flip), and the cells of every
 layer.
+
+**Limits.** A cell names 16,384 BG0 tiles (14 bits) or 1,024 BG1-3 ones
+(10), but the engine holds fewer, and `levels.py tileset` stops past
+them:
+
+- a BG0 set at most **8,192** tiles: the tile slot pool maps tile ids
+  through `slotForTile`, 0x2000 entries (engine/include/game/level/bg_layer.hpp);
+  the largest is gJungleBg0Tiles, 6,638;
+- a BG1-3 set at most **768** tiles: BG1-3 unpack their set into char
+  block 2 (`0x06008000`), up to the screen blocks at `0x0600E000`; the
+  largest are gTempleBgTiles and gEgyptBgTiles (N-Tranced's), 761, and
+  gVolcanoBgTiles, 766. A room's BG1-3 name one set (they share the char
+  block; data-check, `room-size`);
+- at most **512** different BG0 tiles on one screen: the tile slot pool's
+  VRAM slots (char blocks 0-1, `AcquireTileSlot` doesn't check), for the
+  up to 31x21 cells a screen shows. `levels.py tileset` checks every
+  camera position of every BG0 layer of the set; the most the ROM's
+  rooms show is 506 (down the hole, frostbite cavern part 1).
 
 The order the ROM's sets were made in doesn't follow `levels.json` for
 8 of the 11 sets, so `tileset_order.json` gives those rooms, by folder,
