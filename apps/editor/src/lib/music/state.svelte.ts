@@ -4,7 +4,7 @@
 // what is selected and played, and saving it all back through the
 // backend's music save, which checks it like any save (and builds the
 // music and the sound effects) and keeps it all or none.
-import { ApiError, type Music, type MusicOwnInstrument, type MusicPatterns, type MusicPool, type MusicSong, type MusicUnsaved, type MusicView, type SfxTable } from "@crash/schema-types";
+import { ApiError, type Instrument, type Music, type MusicJsonInstrument, type MusicOwnInstrument, type MusicPatterns, type MusicPool, type MusicSong, type MusicUnsaved, type MusicView, type SfxTable } from "@crash/schema-types";
 import { client } from "../api.ts";
 import { editor } from "../state.svelte.ts";
 import { Snapshots } from "../cutscene/history.ts";
@@ -15,7 +15,7 @@ import * as M from "./model.ts";
 export type Kind = "song" | "sfx" | "sample" | "instrument";
 
 function emptyState(): M.EditState {
-  return { sfx: { entries: [] } as unknown as SfxTable, music: { screen_music: [] }, themes: {}, comments: {}, cells: {}, samples: {}, newInstruments: {}, newSongs: [], removeSongs: [], structures: {}, instruments: {}, newSamples: {}, deleteSamples: [], deleteInstruments: [], songInstruments: {}, songSettings: {}, sfxInstruments: {}, newSfxSamples: {}, deleteSfxSamples: [], deleteSfxInstruments: [], xmInstruments: {} };
+  return { sfx: { entries: [] } as unknown as SfxTable, music: { screen_music: [] }, themes: {}, comments: {}, cells: {}, samples: {}, newInstruments: {}, newSongs: [], removeSongs: [], structures: {}, instruments: {}, newSamples: {}, deleteSamples: [], deleteInstruments: [], songInstruments: {}, songSettings: {}, sfxInstruments: {}, newSfxSamples: {}, deleteSfxSamples: [], deleteSfxInstruments: [], xmInstruments: {}, jsonInstruments: {} };
 }
 
 /** The NO_NOTE sentinel of a channel's note (GaxChannelState.note 0x8AD0). */
@@ -36,11 +36,14 @@ class MusicEditorState {
   song = $state("");
   sfx = $state(0);
   sample = $state("");
-  /** the instrument selected: the music pool's, the sound-effect set's, or a song's own XM instrument (xmSong's
-   * instrument N, 1-based) */
+  /** the instrument selected: the music pool's, the sound-effect set's, a song's own XM instrument (xmSong's
+   * instrument N, 1-based), or instruments/<jsonName>.json's */
   instrument = $state(1);
-  instrumentPool = $state<"music" | "sfx" | "xm">("music");
+  instrumentPool = $state<"music" | "sfx" | "xm" | "json">("music");
   xmSong = $state("");
+  /** the sample of the own instrument selected that its panel shows */
+  ownSample = $state(0);
+  jsonName = $state("");
   /** the songs' XMs, by key, as saved: their patterns and decoded cells */
   patterns = $state.raw<Record<string, { p: MusicPatterns; cells: Uint8Array[] }>>({});
   /** the order position the pattern view shows, and the cell selected */
@@ -281,7 +284,8 @@ class MusicEditorState {
   private clamp(): void {
     if (this.sfx >= this.state.sfx.entries.length) this.sfx = Math.max(0, this.state.sfx.entries.length - 1);
     if (!this.songKeys.includes(this.song)) this.song = this.songKeys[0] ?? "";
-    if (this.instrumentPool === "xm" && !this.songKeys.includes(this.xmSong)) [this.instrumentPool, this.instrument] = ["music", 1];
+    if (this.instrumentPool === "xm" && (!this.songKeys.includes(this.xmSong) || (this.patterns[this.xmSong] && !this.own(this.xmSong, this.instrument)))) [this.instrumentPool, this.instrument] = ["music", 1];
+    if (this.instrumentPool === "json" && !this.json(this.jsonName)) [this.instrumentPool, this.instrument] = ["music", 1];
     // a structural edit (or its undo) can take away the order position or the cell shown
     const v = this.songView;
     if (v) {
@@ -304,10 +308,10 @@ class MusicEditorState {
     );
   }
 
-  /** The selected song's XM instruments now: its own, then the pool instruments added to it. */
+  /** The selected song's XM instruments now: its own, then those added to it (the pool's, and its own new ones). */
   xmInstruments(key = this.song): { name: string; pool: number | null; added: boolean }[] {
     const p = this.patterns[key]?.p;
-    return p ? M.songInstruments(p, this.state.songInstruments[key]) : [];
+    return p ? M.songInstruments(p, this.state.songInstruments[key], this.state.xmInstruments[key]) : [];
   }
 
   /** A cell playing pool instrument `n`: the XM instrument that is `Instrument n`, added to the song's XM if it has
@@ -515,7 +519,9 @@ class MusicEditorState {
   /** The music pool as the build would build it with the unsaved edits: the backend builds it when they change it
    * (an instrument's record, a sample added or taken out, a new song's or a structure's instruments). */
   private async builtPool(unsaved: MusicUnsaved = M.unsavedBody(this.state)): Promise<MusicPool | undefined> {
-    const parts = [unsaved.newSongs, unsaved.structures, unsaved.instruments, unsaved.newSamples, unsaved.deleteSamples, unsaved.deleteInstruments, unsaved.sfxInstruments, unsaved.songSettings, unsaved.xmInstruments, unsaved.newSfxSamples, unsaved.deleteSfxSamples, unsaved.deleteSfxInstruments];
+    // the cells of a song with instruments of its own: which of them its cells play is which the build adds
+    const own = Object.entries(unsaved.patterns ?? {}).filter(([k]) => this.state.xmInstruments[k] || this.patterns[k]?.p.instruments.some((i) => i.own));
+    const parts = [unsaved.newSongs, unsaved.structures, unsaved.instruments, unsaved.newSamples, unsaved.deleteSamples, unsaved.deleteInstruments, unsaved.sfxInstruments, unsaved.songSettings, unsaved.xmInstruments, unsaved.newSfxSamples, unsaved.deleteSfxSamples, unsaved.deleteSfxInstruments, unsaved.jsonInstruments, own.length ? own : undefined];
     if (!parts.some(Boolean)) return this.pool!;
     const pk = JSON.stringify([...parts, unsaved.samples]);
     const hit = this.poolCache.get(pk) ?? (await editor.run("Building the music pool with the edits", () => client.musicPool(editor.projectId, unsaved)));
@@ -536,8 +542,8 @@ class MusicEditorState {
   }
 
   /** Instrument n's record now (of the music pool or the sound-effect set): its edit, or the manifest's. */
-  record(n: number, pool: "music" | "sfx" | "xm" = "music"): M.InstrumentRecord | null {
-    if (pool === "xm") return null;
+  record(n: number, pool: "music" | "sfx" | "xm" | "json" = "music"): M.InstrumentRecord | null {
+    if (pool === "xm" || pool === "json") return null;
     return (pool === "sfx" ? this.sfxList : this.poolList).find((i) => i.index === n)?.record ?? null;
   }
 
@@ -734,33 +740,63 @@ class MusicEditorState {
 
   // -- a song's own XM instruments --------------------------------------------------------
 
+  /** The JSON instruments' names now (instruments/<name>.json: the saved ones and the new ones). */
+  get jsonNames(): Set<string> {
+    return new Set([...(this.view?.instruments.map((i) => i.name) ?? []), ...Object.keys(this.state.jsonInstruments)]);
+  }
+
   /** The songs' own XM instruments now (not `Instrument N`, not instruments/<name>.json's: made by the build from the
-   * XM's sample and envelopes): the saved songs', the new songs' read so far. */
-  get ownList(): { song: string; n: number; name: string }[] {
-    const out: { song: string; n: number; name: string }[] = [];
+   * XM's samples and envelopes): the saved songs', the new songs' read so far, and the new ones. */
+  get ownList(): { song: string; n: number; name: string; added: boolean; edited: boolean }[] {
+    const out: { song: string; n: number; name: string; added: boolean; edited: boolean }[] = [];
+    const json = this.jsonNames;
     for (const s of this.songs) {
       const p = this.patterns[s.key]?.p;
+      const edits = this.state.xmInstruments[s.key] ?? {};
       const own = p ? p.instruments.flatMap((i, k) => (i.own ? [k + 1] : [])) : (s.info?.xm?.own ?? []);
-      for (const n of own) out.push({ song: s.key, n, name: p?.instruments[n - 1]?.name ?? s.info?.xm?.instruments[n - 1] ?? "" });
+      const added = Object.entries(edits).flatMap(([n, e]) => (e.added ? [Number(n)] : []));
+      for (const n of [...own, ...added.sort((a, b) => a - b)]) {
+        const e = edits[String(n)];
+        const name = e?.spec.name ?? p?.instruments[n - 1]?.name ?? s.info?.xm?.instruments[n - 1] ?? "";
+        // one named after a JSON instrument, with no sample, is that one (the song plays it)
+        if (json.has(name) && !(e?.spec.samples.length ?? p?.instruments[n - 1]?.own?.spec.samples.length)) continue;
+        out.push({ song: s.key, n, name, added: !!e?.added, edited: !!e });
+      }
     }
     return out;
   }
 
-  /** Song `song`'s own instrument n: as its XM has it (the pattern view's reading), and its fields and sound now. */
-  own(song: string, n: number): { saved: MusicOwnInstrument; spec: M.XmInstrumentEdit["spec"]; sound: Int8Array; edited: boolean } | null {
-    const saved = this.patterns[song]?.p.instruments[n - 1]?.own;
-    if (!saved) return null;
+  /** Song `song`'s own instrument n: as its XM has it (the pattern view's reading; none for a new one), and its fields,
+   * its samples' sounds (or the problem the build has with one), the notes the song plays on it now and the samples
+   * its key map plays on them. */
+  own(song: string, n: number): { saved: MusicOwnInstrument | null; spec: M.XmSpec; sounds: (Int8Array | null)[]; problems: (string | null)[]; notes: number[]; plays: number[]; edited: boolean; added: boolean } | null {
+    const saved = this.patterns[song]?.p.instruments[n - 1]?.own ?? null;
     const e = this.state.xmInstruments[song]?.[String(n)];
-    const sound = e?.wav ? M.parseWav8(M.fromBase64(e.wav.wav)).data : new Int8Array(M.fromBase64(saved.data).buffer);
-    return { saved, spec: e?.spec ?? M.xmSpec(saved.spec), sound, edited: !!e };
+    if (!saved && !e?.added) return null;
+    const spec = e?.spec ?? M.xmSpec(saved!.spec);
+    const sounds = spec.samples.map((_, i) => {
+      const edit = e?.sounds?.[String(i)];
+      if (edit) return M.parseWav8(M.fromBase64(edit.wav)).data;
+      const s = saved?.sounds[i];
+      return s && !s.problem ? new Int8Array(M.fromBase64(s.data).buffer) : null;
+    });
+    const problems = spec.samples.map((_, i) => (e?.sounds?.[String(i)] ? null : (saved?.sounds[i]?.problem ?? null)));
+    const v = this.viewOf(song);
+    const notes = v ? [...(M.playedNotes(v.p, v.cells).get(n) ?? [])].sort((a, b) => a - b) : (saved?.notes ?? []);
+    return { saved, spec, sounds, problems, notes, plays: M.keymapPlays(spec, notes), edited: !!e, added: !!e?.added };
   }
 
+  /** Song `song`'s own instrument n shown, with the sample the build makes it from. */
   selectOwn(song: string, n: number): void {
     this.kind = "instrument";
     this.instrumentPool = "xm";
     this.xmSong = song;
     this.instrument = n;
-    void editor.run(`Reading ${song}`, () => this.loadPatterns(song));
+    this.ownSample = this.own(song, n)?.plays[0] ?? 0;
+    void editor.run(`Reading ${song}`, async () => {
+      await this.loadPatterns(song);
+      if (this.xmSong === song && this.instrument === n) this.ownSample = this.own(song, n)?.plays[0] ?? 0;
+    });
   }
 
   /** An edit of song `song`'s own instrument n's fields (one step of the undo stack). */
@@ -787,6 +823,75 @@ class MusicEditorState {
     });
   }
 
+  /** Why song `song` can't have a new own instrument (null if it can): a ROM song built with its recorded scaffold
+   * plays only the pool's (crashdata.audio.gax.rom_song), and an XM has at most 128. */
+  cannotAddOwn(song: string): string | null {
+    const p = this.patterns[song]?.p;
+    if (!p) return `${song} isn't read yet`;
+    if (p.scaffold && !this.state.structures[song]) return `${song} is built with the ROM's scaffold, which plays only the pool's instruments: change its structure first (it is then built from its XM)`;
+    const most = this.view?.limits.xmInstruments ?? 128;
+    if (this.xmInstruments(song).length >= most) return `an XM has at most ${most} instruments`;
+    return null;
+  }
+
+  /** A new instrument at the end of song `song`'s XM: blank (a name, no sound yet), a copy of another song's own
+   * instrument (its fields and its samples' sounds as the build reads them), one from a WAV, or one named after a
+   * JSON instrument (the song then plays that one). Selects it, unless it is a JSON's. */
+  async newOwn(song: string, from: { blank: string } | { copy: { song: string; n: number } } | { wav: M.SampleEdit; name: string } | { json: string }): Promise<void> {
+    if (!this.patterns[song]) await editor.run(`Reading ${song}`, () => this.loadPatterns(song));
+    const why = this.cannotAddOwn(song);
+    if (why) {
+      editor.error = why;
+      return;
+    }
+    let edit: M.XmInstrumentEdit;
+    let label: string;
+    if ("blank" in from) [edit, label] = [{ spec: M.newXmSpec(from.blank, null), added: true }, "blank"];
+    else if ("json" in from) [edit, label] = [{ spec: M.newXmSpec(from.json, null), added: true }, `instruments/${from.json}.json's`];
+    else if ("wav" in from) [edit, label] = [{ spec: M.newXmSpec(from.name, from.wav.rate), sounds: { "0": from.wav }, added: true }, "from a WAV"];
+    else {
+      const o = this.own(from.copy.song, from.copy.n);
+      if (!o) return;
+      const bad = o.problems.findIndex((p) => p);
+      if (bad >= 0) {
+        editor.error = `sample ${bad}: ${o.problems[bad]}`;
+        return;
+      }
+      const sounds = Object.fromEntries(o.sounds.map((d, i) => [String(i), { wav: M.toBase64(M.wavFile(d!, 8363)), length: d!.length, rate: 8363 }]));
+      const spec = { ...structuredClone(o.spec), name: `${o.spec.name} copy`.slice(0, M.XM_NAME) };
+      [edit, label] = [{ spec, sounds, added: true }, `a copy of ${from.copy.song}'s ${from.copy.n}`];
+    }
+    const n = this.xmInstruments(song).length + 1;
+    if (this.apply(`${song}'s new instrument ${n} (${label})`, (s) => ({ ...s, xmInstruments: { ...s.xmInstruments, [song]: { ...(s.xmInstruments[song] ?? {}), [String(n)]: edit } } })) && !("json" in from))
+      this.selectOwn(song, n);
+  }
+
+  /** Why song `song`'s instrument n can't be taken out (null if it can): only a new one, the last of the song's list,
+   * that no cell plays. */
+  cannotDeleteOwn(song: string, n: number): string | null {
+    if (!this.state.xmInstruments[song]?.[String(n)]?.added) return "only a new instrument is taken out here (the XM's are a tracker's to take out)";
+    if (n !== this.xmInstruments(song).length) return "take the instruments after it out first";
+    const v = this.viewOf(song);
+    if (v && v.cells.some((c) => c.some((b, i) => i % M.CELL === 1 && b === n))) return `a cell of ${song} plays it`;
+    return null;
+  }
+
+  deleteOwn(song: string, n: number): void {
+    const why = this.cannotDeleteOwn(song, n);
+    if (why) {
+      editor.error = why;
+      return;
+    }
+    this.apply(`Take ${song}'s new instrument ${n} out`, (s) => {
+      const mine = { ...(s.xmInstruments[song] ?? {}) };
+      delete mine[String(n)];
+      const xmInstruments = { ...s.xmInstruments, [song]: mine };
+      if (!Object.keys(mine).length) delete xmInstruments[song];
+      return { ...s, xmInstruments };
+    });
+    if (this.instrumentPool === "xm" && this.xmSong === song && this.instrument === n) [this.instrumentPool, this.instrument] = ["music", 1];
+  }
+
   /** Song `song`'s own instrument n played as a song plays it: the pool instrument the build makes of it. */
   async playOwn(song: string, n: number, note: number, hold: number): Promise<void> {
     const pool = await this.builtPool();
@@ -797,6 +902,88 @@ class MusicEditorState {
       return;
     }
     await this.playInstrument(idx, note, hold);
+  }
+
+  // -- instruments/<name>.json ------------------------------------------------------------
+
+  /** The JSON instruments now: the saved ones, then the new ones. */
+  get jsonList(): { name: string; added: boolean; edited: boolean }[] {
+    const saved = (this.view?.instruments ?? []).map((i) => ({ name: i.name, added: false, edited: !!this.state.jsonInstruments[i.name] }));
+    const added = Object.entries(this.state.jsonInstruments).flatMap(([name, e]) => (e.added ? [{ name, added: true, edited: true }] : []));
+    return [...saved, ...added];
+  }
+
+  /** JSON instrument `name` now: its value, its sound (as the build reads it) or the problem with it, the songs whose
+   * XMs name it (an unsaved new instrument of that name too) and the sound effects that name it. */
+  json(name: string): { saved: MusicJsonInstrument | null; json: Instrument; sound: { data: Int8Array; rate: number } | null; problem: string | null; songs: string[]; sfx: string[]; edited: boolean; added: boolean } | null {
+    const saved = this.view?.instruments.find((i) => i.name === name) ?? null;
+    const e = this.state.jsonInstruments[name];
+    if (!saved && !e) return null;
+    let sound: { data: Int8Array; rate: number } | null = null;
+    let problem: string | null = null;
+    if (e?.wav) sound = M.parseWav8(M.fromBase64(e.wav.wav));
+    else if (saved && "data" in saved.sound) sound = { data: new Int8Array(M.fromBase64(saved.sound.data).buffer), rate: saved.sound.rate };
+    else problem = saved && "problem" in saved.sound ? saved.sound.problem : "no sound yet";
+    const added = Object.entries(this.state.xmInstruments).flatMap(([song, edits]) => (Object.values(edits).some((x) => x.added && x.spec.name === name) ? [song] : []));
+    const songs = [...(saved?.songs ?? []), ...added.filter((k) => !saved?.songs.includes(k))];
+    const sfx = this.state.sfx.entries.filter((x) => (x as { instrument?: string }).instrument === name).map((x) => `SFX_${x.name ?? "?"}`);
+    return { saved, json: e?.json ?? saved!.data, sound, problem, songs: songs.filter((k) => this.songKeys.includes(k)), sfx, edited: !!e, added: !!e?.added };
+  }
+
+  selectJson(name: string): void {
+    this.kind = "instrument";
+    this.instrumentPool = "json";
+    this.jsonName = name;
+  }
+
+  /** An edit of JSON instrument `name` (one step of the undo stack). */
+  setJson(name: string, label: string, f: (j: M.JsonInstrumentEdit) => M.JsonInstrumentEdit, key: string | null = null): void {
+    const j = this.json(name);
+    if (!j) return;
+    this.apply(`instruments/${name}.json: ${label}`, (s) => ({ ...s, jsonInstruments: { ...s.jsonInstruments, [name]: f(s.jsonInstruments[name] ?? { json: j.json }) } }), key ? `json:${name}:${key}` : null);
+  }
+
+  revertJson(name: string): void {
+    this.apply(`instruments/${name}.json as saved`, (s) => {
+      const jsonInstruments = { ...s.jsonInstruments };
+      delete jsonInstruments[name];
+      return { ...s, jsonInstruments };
+    });
+  }
+
+  /** Why `name` can't be a new JSON instrument's (null if it can). */
+  cannotNameJson(name: string): string | null {
+    if (!M.KEY.test(name)) return "a name is lower case letters, digits and _";
+    if (this.jsonNames.has(name) || name in this.state.newInstruments) return `there is an instrument ${name} already`;
+    return null;
+  }
+
+  /** A new JSON instrument with a WAV (samples/<name>.wav, C-4 playing it at the WAV's rate). */
+  newJson(name: string, wav: M.SampleEdit): void {
+    const why = this.cannotNameJson(name);
+    if (why) {
+      editor.error = why;
+      return;
+    }
+    const json: Instrument = { comment: "an instrument (the music editor's)", sample: `samples/${name}.wav` };
+    if (this.apply(`New instrument instruments/${name}.json`, (s) => ({ ...s, jsonInstruments: { ...s.jsonInstruments, [name]: { json, wav, added: true } } }))) this.selectJson(name);
+  }
+
+  /** JSON instrument `name` played: as a song plays it if a song's XM names it (the pool instrument the build makes of
+   * it), else as a sound effect plays it. */
+  async playJson(name: string, note: number, hold: number): Promise<void> {
+    const j = this.json(name);
+    if (!j) return;
+    const pool = await this.builtPool();
+    if (!pool) return;
+    for (const song of j.songs) {
+      if (!this.patterns[song]) await this.loadPatterns(song);
+      const n = this.xmInstruments(song).findIndex((i) => i.name === name) + 1;
+      const idx = n ? pool.xmPool[song]?.[n - 1] : null;
+      if (idx !== null && idx !== undefined) return this.playInstrument(idx, note, hold);
+    }
+    if (j.sfx.length) return this.playSfxEntry({ instrument: name, pitch_offset: 0, volume: 256 } as unknown as M.SfxEntry, "instrument");
+    editor.error = `no cell of a song and no sound effect plays instruments/${name}.json: the build doesn't add it to a pool`;
   }
 
   /** A WAV as the music pool's next sample (samples/NN.wav, NN after the pool's); returns its number. */

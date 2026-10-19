@@ -4,7 +4,7 @@
 // build makes of them (crashdata.audio.gax's XM import), a ROM song's
 // shared patterns, and the sound effects' rules. No DOM: the tests run it
 // in node.
-import type { GaxManifestDefs, Music, MusicCellEdit, MusicInstrument, MusicPatterns, MusicSave, MusicSong, MusicSongSettings, MusicStructure, MusicUnsaved, MusicView, MusicXmInstrument, SfxTable } from "@crash/schema-types";
+import type { GaxManifestDefs, Instrument, Music, MusicCellEdit, MusicInstrument, MusicJsonEdit, MusicPatterns, MusicSave, MusicSong, MusicSongSettings, MusicStructure, MusicUnsaved, MusicView, MusicXmInstrument, MusicXmSample, SfxTable } from "@crash/schema-types";
 
 export type InstrumentRecord = GaxManifestDefs.Instrument;
 
@@ -70,14 +70,32 @@ export interface EditState {
   deleteSfxSamples: number[];
   /** the set's instruments taken out (no sound effect plays them): emptied, the set's last ones removed */
   deleteSfxInstruments: number[];
-  /** song -> XM instrument number (1-based) -> its own instrument's fields, edited (crashdata.audio.edit.xm_with_own_instrument) */
+  /** song -> XM instrument number (1-based) -> its own instrument's fields, edited (crashdata.audio.edit.xm_with_own_instrument;
+   * one `added`, after the XM's instruments: a new one) */
   xmInstruments: Record<string, Record<string, XmInstrumentEdit>>;
+  /** instruments/<name>.json -> its value and its WAV's new sound, edited (one `added`: a new one) */
+  jsonInstruments: Record<string, JsonInstrumentEdit>;
 }
 
-/** A song's own XM instrument's fields as edited, and a new sound for its sample (8-bit, written as 8-bit). */
+/** An XM sample's fields without a new sound. */
+export type XmSample = Omit<MusicXmSample, "wav">;
+
+/** A song's own XM instrument's fields (its samples' without their sounds). */
+export type XmSpec = Omit<MusicXmInstrument, "samples"> & { samples: XmSample[] };
+
+/** A song's own XM instrument's fields as edited, new sounds for its samples (8-bit, written as 8-bit; by sample
+ * number: one after its samples is a new sample), and whether it is a new instrument. */
 export interface XmInstrumentEdit {
-  spec: Omit<MusicXmInstrument, "wav">;
+  spec: XmSpec;
+  sounds?: Record<string, SampleEdit>;
+  added?: boolean;
+}
+
+/** An instruments/<name>.json instrument as edited: its value, a new sound for its WAV, and whether it is new. */
+export interface JsonInstrumentEdit {
+  json: Instrument;
   wav?: SampleEdit;
+  added?: boolean;
 }
 
 /** A song's settings as the Music tab edits them (crashdata.audio.edit.ROM_SETTINGS, NEW_SETTINGS). */
@@ -106,6 +124,7 @@ export function initialState(v: MusicView, sfx: SfxTable, music: Music): EditSta
     deleteSfxSamples: [],
     deleteSfxInstruments: [],
     xmInstruments: {},
+    jsonInstruments: {},
   };
 }
 
@@ -161,12 +180,20 @@ function songAndPoolParts(saved: EditState, now: EditState): MusicUnsaved {
   if (now.deleteSfxInstruments.length) body.deleteSfxInstruments = now.deleteSfxInstruments;
   const own = Object.entries(now.xmInstruments).filter(([k, x]) => saved.xmInstruments[k] !== x && Object.keys(x).length);
   if (own.length) body.xmInstruments = Object.fromEntries(own.map(([k, x]) => [k, Object.fromEntries(Object.entries(x).map(([n, e]) => [n, xmInstrumentBody(e)]))]));
+  const json = Object.entries(now.jsonInstruments).filter(([k, j]) => saved.jsonInstruments[k] !== j);
+  if (json.length) body.jsonInstruments = Object.fromEntries(json.map(([k, j]) => [k, jsonInstrumentBody(j)]));
   return body;
 }
 
-/** An own XM instrument's edit as a save or a player request sends it (MusicXmInstrument: its new sound as `wav`). */
+/** An own XM instrument's edit as a save or a player request sends it (MusicXmInstrument: its samples' new sounds as
+ * their `wav`). */
 export function xmInstrumentBody(e: XmInstrumentEdit): MusicXmInstrument {
-  return e.wav ? { ...e.spec, wav: e.wav.wav } : { ...e.spec };
+  return { ...e.spec, samples: e.spec.samples.map((x, i) => (e.sounds?.[String(i)] ? { ...x, wav: e.sounds[String(i)]!.wav } : { ...x })) };
+}
+
+/** A JSON instrument's edit as a save or a player request sends it. */
+export function jsonInstrumentBody(e: JsonInstrumentEdit): MusicJsonEdit {
+  return e.wav ? { json: e.json, wav: e.wav.wav } : { json: e.json };
 }
 
 /** The songs' unsaved edits as the player asks the backend for them (POST music/song, music/pool): every new
@@ -184,7 +211,7 @@ export function unsavedBody(now: EditState): MusicUnsaved {
   if (samples.length) body.samples = Object.fromEntries(samples.map(([p, s]) => [p, s.wav]));
   if (Object.keys(now.newSamples).length) body.newSamples = Object.fromEntries(Object.entries(now.newSamples).map(([k, s]) => [k, s.wav]));
   if (now.deleteSamples.length) body.deleteSamples = now.deleteSamples;
-  const saved = { ...now, songSettings: {}, sfxInstruments: {}, xmInstruments: {} };
+  const saved = { ...now, songSettings: {}, sfxInstruments: {}, xmInstruments: {}, jsonInstruments: {} };
   Object.assign(body, songAndPoolParts(saved, now));
   return body;
 }
@@ -697,8 +724,21 @@ export function newInstrumentRecord(v: MusicView, from: { sample: number } | { c
 }
 
 /** A song's XM instruments after the edits: its own, then the pool instruments added to it (`Instrument N`). */
-export function songInstruments(p: MusicPatterns, added: number[] | undefined): { name: string; pool: number | null; added: boolean }[] {
-  return [...p.instruments.map((i) => ({ ...i, added: false })), ...(added ?? []).map((n) => ({ name: `Instrument ${n}`, pool: n, added: true }))];
+export function songInstruments(p: MusicPatterns, added: number[] | undefined, own?: Record<string, XmInstrumentEdit>): { name: string; pool: number | null; added: boolean }[] {
+  // the new ones after the XM's: its own new ones at their numbers, the pool's in the others, in their order
+  // (crashdata.audio.edit.xm_with_instruments)
+  const out = p.instruments.map((i, k) => ({ name: own?.[String(k + 1)]?.spec.name ?? i.name, pool: i.pool, added: false })); // an own one renamed
+  const fresh = new Map(Object.entries(own ?? {}).flatMap(([n, e]) => (e.added ? [[Number(n), e.spec.name] as const] : [])));
+  const pool = [...(added ?? [])];
+  for (let n = out.length + 1, end = out.length + pool.length + fresh.size; n <= end; n++) {
+    const name = fresh.get(n);
+    if (name !== undefined) out.push({ name, pool: null, added: true });
+    else {
+      const k = pool.shift()!;
+      out.push({ name: `Instrument ${k}`, pool: k, added: true });
+    }
+  }
+  return out;
 }
 
 // -- the sound-effect set's instruments -------------------------------------------------------------
@@ -748,11 +788,61 @@ export const XM_ENVELOPE_POINTS = 12;
 export const XM_C4 = 49;
 const XM_C4_RATE = 8363;
 
-/** An own XM instrument's fields without a new sound (`wav`). */
-export function xmSpec(x: MusicXmInstrument): XmInstrumentEdit["spec"] {
-  const { wav: _w, ...spec } = x;
-  void _w;
-  return spec;
+export const XM_KEYS = 96;
+export const XM_NAME = 22;
+export const XM_SAMPLES = 16;
+/** a new XM sample's fields: FT2's (full volume, C-4 at 8363 Hz, no loop) */
+export const XM_NEW_SAMPLE: XmSample = { volume: 64, relative_note: 0, finetune: 0, loop: "none", loop_start: 0, loop_end: 0 };
+
+/** An own XM instrument's fields without its samples' new sounds (`wav`). */
+export function xmSpec(x: MusicXmInstrument): XmSpec {
+  return { ...x, samples: x.samples.map(({ wav: _w, ...s }) => (void _w, s)) };
+}
+
+/** {XM instrument: the notes its cells play} over the order list, a note with no instrument the channel's last one's
+ * (crashdata.audio.edit.played_notes). */
+export function playedNotes(p: MusicPatterns, cells: Uint8Array[]): Map<number, Set<number>> {
+  const out = new Map<number, Set<number>>();
+  for (const pi of p.playOrder) {
+    const c = cells[pi];
+    if (!c) continue;
+    const current = new Array<number>(p.channels).fill(0);
+    for (let r = 0; r < (p.rows[pi] ?? 0); r++)
+      for (let ch = 0; ch < p.channels; ch++) {
+        const k = (r * p.channels + ch) * CELL;
+        if (c[k + 1]) current[ch] = c[k + 1]!;
+        const note = c[k]!;
+        if (note >= 1 && note <= 96 && current[ch]) {
+          const set = out.get(current[ch]!) ?? new Set<number>();
+          set.add(note);
+          out.set(current[ch]!, set);
+        }
+      }
+  }
+  return out;
+}
+
+/** The samples an XM instrument's key map plays on `notes` (C-4's if none; none with no sample): one is the sample
+ * the build makes its GAX2 instrument from, more than one it refuses (crashdata.audio.gax.new_song_instruments). */
+export function keymapPlays(spec: XmSpec, notes: number[]): number[] {
+  if (!spec.samples.length) return [];
+  const plays = [...new Set(notes.map((k) => spec.keymap[k - 1] ?? 0))].sort((a, b) => a - b);
+  return plays.length ? plays : [spec.keymap[XM_C4 - 1] ?? 0];
+}
+
+/** A name an XM instrument can have, made of `s` (a file's name): printable ASCII, at most 22 characters, not a pool
+ * instrument's. */
+export function xmName(s: string): string {
+  const name = [...s].map((c) => (c >= " " && c <= "~" ? c : "_")).join("").slice(0, XM_NAME);
+  return /^Instrument \d+$/.test(name) ? `${name} copy`.slice(0, XM_NAME) : name;
+}
+
+/** Why an own XM instrument's name can't be (null if it can): crashdata.audio.edit.xm_with_own_instrument's checks. */
+export function xmNameProblem(name: string, samples: number, jsonNames: Iterable<string>): string | null {
+  if (name.length > XM_NAME || ![...name].every((c) => c >= " " && c <= "~")) return `a name is at most ${XM_NAME} ASCII characters`;
+  if (/^Instrument \d+$/.test(name)) return `"${name}" names the pool's instrument: a cell plays one from the pool's list`;
+  if (samples && [...jsonNames].includes(name)) return `"${name}" is instruments/${name}.json's: an instrument of that name plays it, not its own samples`;
+  return null;
 }
 
 /** Python's round: halves to even (the build's arithmetic is Python's). */
@@ -780,13 +870,24 @@ export function xmVibratoSpeed(rate: number): number {
   return Math.max(1, Math.min(63, roundEven(rate / 4)));
 }
 
-/** Why an own XM instrument's fields can't be (null if they can): what crashdata.audio.edit.xm_with_own_instrument
- * and the build refuse. */
-export function xmInstrumentProblem(x: Omit<MusicXmInstrument, "wav">, length: number): string | null {
+/** Why an XM sample's fields can't be (null if they can), `length` samples long. */
+export function xmSampleProblem(x: XmSample, length: number): string | null {
   const int = (v: number, lo: number, hi: number) => Number.isInteger(v) && v >= lo && v <= hi;
   if (!int(x.volume, 0, 64)) return "the volume is 0-64";
   if (!int(x.relative_note, -128, 127) || !int(x.finetune, -128, 127)) return "the relative note and finetune are -128 to 127";
   if (x.loop !== "none" && !(int(x.loop_start, 0, length - 1) && int(x.loop_end, x.loop_start + 1, length))) return `the loop ${x.loop_start}-${x.loop_end} isn't inside the sample (0-${length})`;
+  return null;
+}
+
+/** Why an own XM instrument's fields can't be (null if it can): what crashdata.audio.edit.xm_with_own_instrument
+ * and the build refuse. lengths: its samples' lengths. */
+export function xmInstrumentProblem(x: XmSpec, lengths: number[]): string | null {
+  const int = (v: number, lo: number, hi: number) => Number.isInteger(v) && v >= lo && v <= hi;
+  for (const [i, smp] of x.samples.entries()) {
+    const why = xmSampleProblem(smp, lengths[i] ?? 0);
+    if (why) return x.samples.length > 1 ? `sample ${i}: ${why}` : why;
+  }
+  if (x.samples.length && (x.keymap.length !== XM_KEYS || x.keymap.some((k) => !int(k, 0, x.samples.length - 1)))) return `the key map plays samples 0-${x.samples.length - 1}`;
   const e = x.envelope;
   if (e) {
     if (e.points.length < 1 || e.points.length > XM_ENVELOPE_POINTS) return `an XM envelope has 1-${XM_ENVELOPE_POINTS} points`;
@@ -798,10 +899,53 @@ export function xmInstrumentProblem(x: Omit<MusicXmInstrument, "wav">, length: n
   return null;
 }
 
-/** What the build makes of an own XM instrument (crashdata.audio.gax.instrument_entry), as the panel shows it. */
-export function xmInstrumentGax(x: Omit<MusicXmInstrument, "wav">): { tune: number; volume: number; envelope: number[] | null; vibrato: { depth: number; speed: number } } {
+/** What the build makes of an own XM instrument with its sample k (the one its key map plays on the song's notes:
+ * crashdata.audio.gax.instrument_entry), as the panel shows it. */
+export function xmInstrumentGax(x: XmSpec, k = 0): { tune: number; volume: number; envelope: number[] | null; vibrato: { depth: number; speed: number } } {
   const vib = x.vibrato.depth && x.vibrato.rate ? { depth: x.vibrato.depth, speed: xmVibratoSpeed(x.vibrato.rate) } : { depth: 0, speed: 0 };
-  return { tune: xmTune(x.relative_note, x.finetune), volume: x.volume * 4, envelope: x.envelope ? x.envelope.points.map(([, v]) => Math.min(255, v * 4)) : null, vibrato: vib };
+  const smp = x.samples[k] ?? XM_NEW_SAMPLE;
+  return { tune: xmTune(smp.relative_note, smp.finetune), volume: smp.volume * 4, envelope: x.envelope ? x.envelope.points.map(([, v]) => Math.min(255, v * 4)) : null, vibrato: vib };
+}
+
+/** A new own XM instrument's fields: blank (a name, no sample yet), or from a sound at `rate` Hz (C-4 plays it there). */
+export function newXmSpec(name: string, rate: number | null): XmSpec {
+  const samples = rate === null ? [] : [{ ...XM_NEW_SAMPLE, ...xmTuneForRate(rate) }];
+  return { name: name.slice(0, XM_NAME), keymap: new Array<number>(XM_KEYS).fill(0), envelope: null, vibrato: { depth: 0, rate: 0 }, samples };
+}
+
+// -- instruments/<name>.json ------------------------------------------------------------------------
+
+/** GAX2's limits on a JSON instrument's envelope (crashdata.audio.gax.MAX_ENVELOPE_POINTS) and its vibrato. */
+export const JSON_ENVELOPE_POINTS = 255;
+
+/** Why a JSON instrument can't be (null if it can), its WAV `length` samples long: crashdata.audio.gax.json_instrument_spec's checks. */
+export function jsonInstrumentProblem(j: Instrument, length: number): string | null {
+  const int = (v: unknown, lo: number, hi: number) => Number.isInteger(v) && (v as number) >= lo && (v as number) <= hi;
+  if (j.rate !== undefined && !(typeof j.rate === "number" && j.rate > 0)) return "the rate is a number of Hz";
+  if (j.volume !== undefined && !int(j.volume, 0, 64)) return "the volume is 0-64";
+  const loop = j.loop ?? "none";
+  if (loop !== "none") {
+    const ls = j.loop_start ?? 0;
+    const le = j.loop_end ?? length;
+    if (!(int(ls, 0, length - 1) && int(le, ls + 1, length))) return `the loop ${ls}-${le} isn't inside the sample (0-${length})`;
+  }
+  const v = j.vibrato ?? {};
+  if (!int(v.delay ?? 0, 0, 255) || !int(v.depth ?? 0, 0, 255) || !int(v.speed ?? 0, 0, 63)) return "the vibrato's delay and depth are 0-255, its speed 0-63";
+  const e = j.envelope;
+  if (e) {
+    if (e.points.length < 1 || e.points.length > JSON_ENVELOPE_POINTS) return `an envelope has 1-${JSON_ENVELOPE_POINTS} points`;
+    if (e.points[0]![0] !== 0) return "the first point is at tick 0";
+    for (let i = 1; i < e.points.length; i++) if (e.points[i]![0] <= e.points[i - 1]![0]) return `point ${i}'s tick isn't after point ${i - 1}'s`;
+    if (e.points.some(([t, y]) => !int(t, 0, 0xffff) || !int(y, 0, 64))) return "a volume is 0-64, a tick 0-65535";
+    for (const f of ["sustain", "loop_start", "loop_end"] as const) if (e[f] !== undefined && !int(e[f], 0, e.points.length - 1)) return `the ${f.replace("_", " ")} is one of the points`;
+  }
+  return null;
+}
+
+/** The wave row's tune the build makes of a JSON instrument's rate for a song (C-4 plays it at `rate` Hz:
+ * crashdata.audio.gax.tune_for_rate). */
+export function rateTune(rate: number): number {
+  return roundEven(384 * Math.log2(rate / PERIOD_0_HZ)) - (XM_C4 - 2) * 32;
 }
 
 // -- a song's settings ---------------------------------------------------------------------------

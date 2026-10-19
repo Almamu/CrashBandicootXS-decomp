@@ -734,12 +734,36 @@ instrument plays (a sample), can be taken out as the music pool's are.
 With the ROM's records and samples the set is byte for byte the ROM's.
 
 A new song's own XM instruments (see "From the XM") are edited in its
-XM: the music editor writes the fields the build reads (the sample's
-volume, relative note, finetune, loop and sound, the volume envelope,
-the auto-vibrato's depth and rate) and nothing else, so an instrument
-saved unchanged keeps its bytes. A volume envelope it switches on or
-changes gets a fadeout of 0, and a vibrato it sets a sine with no sweep,
-since the build refuses the others.
+XM: the music editor writes the fields the build reads (each sample's
+volume, relative note, finetune, loop and sound, the key map, the volume
+envelope, the auto-vibrato's depth and rate) and the instrument's name,
+and nothing else, so an instrument saved unchanged keeps its bytes. A
+volume envelope it switches on or changes gets a fadeout of 0, and a
+vibrato it sets a sine with no sweep, since the build refuses the
+others. It adds samples to one (a sound from a WAV, 8-bit, its key map
+then choosing the notes that play it) and instruments to a song, after
+its XM's (with the `Instrument N` it adds for the pool's, in their
+order): an empty one (a name, which a sample then fills: its header
+grows to have its key map and envelopes), a copy or one from a WAV. A
+ROM song kept on its recorded scaffold plays only the pool's instruments
+(`rom_song` reads each XM instrument as `Instrument N`), so it gets none.
+
+The key map is how an XM instrument plays several samples: each of the
+96 notes plays one. GAX2 can't: an instrument's four wave rows are
+chosen by its sequence's steps (`GaxInstrumentSeqEntry`), the same for
+every note, so the build makes an own instrument from the one sample
+its key map plays on the notes the song plays it at, and refuses one
+that plays two there (see "From the XM"). Its other samples stay in the
+XM, unread.
+
+The `instruments/<name>.json` instruments ("From a WAV" below) are
+edited as their files: the editor writes the JSON as edited (checked
+as `json_instrument_spec` reads it, at a fixed pitch too when a sound
+effect names it) and a new sound for its WAV, unless the WAV is a
+pool's numbered sample or another JSON instrument's; a new one is
+`instruments/<name>.json` with `samples/<name>.wav`. A song plays one
+with an XM instrument of its name and no sample, which the editor adds
+to it.
 
 ## A song's settings
 

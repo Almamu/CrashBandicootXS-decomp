@@ -581,7 +581,7 @@ class Server:
         music_edit.unsaved_songs)."""
         keys = ("newSongs", "songInstruments", "xmInstruments", "structures", "patterns", "songSettings",
                 "instruments", "samples", "newSamples", "deleteSamples", "deleteInstruments", "sfxInstruments",
-                "newSfxSamples", "deleteSfxSamples", "deleteSfxInstruments")
+                "newSfxSamples", "deleteSfxSamples", "deleteSfxInstruments", "jsonInstruments")
         return {k: body[k] for k in keys if k in body} if body else {}
 
     def music_pool(self, project, body=None):

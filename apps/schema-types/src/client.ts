@@ -1,7 +1,7 @@
 // A typed client of the editors' backend, tools/editor_server.py (#1167,
 // docs/editors.md "The editor's backend"). The browser editor calls it on
 // its own origin; the desktop app gives it the backend's URL and token.
-import type { Cutscenes, GaxManifestDefs, Music, Room, SchemaFiles, SchemaName, SfxTable } from "./generated/index.ts";
+import type { Cutscenes, GaxManifestDefs, Instrument, Music, Room, SchemaFiles, SchemaName, SfxTable } from "./generated/index.ts";
 
 /** One problem with the data (crashdata.common.diagnostics.Diagnostic). */
 export interface Diagnostic {
@@ -474,8 +474,8 @@ export interface MusicView {
   sfxNoneComment: string;
   sfxSlots: MusicSfxSlot[];
   samples: MusicSample[];
-  /** the new instruments, instruments/<name>.json */
-  instruments: { name: string; file: string; data: Record<string, unknown> }[];
+  /** the new instruments, instruments/<name>.json: their sound as the build reads it and the songs whose XMs name them */
+  instruments: MusicJsonInstrument[];
   /** the music pool's instruments: their gax_manifest.json records, and the songs whose XMs name them (`Instrument N`) */
   poolInstruments: { index: number; record: GaxManifestDefs.Instrument; songs: string[] }[];
   /** the sound-effect set's instruments: their gax_sfx_manifest.json records (slot N plays instrument N) */
@@ -609,15 +609,15 @@ export interface MusicUnsaved extends MusicPoolEdits {
   songInstruments?: Record<string, number[]>;
   /** song -> its settings (a ROM song's in the manifest, a new song's in songs/<key>.json) */
   songSettings?: Record<string, MusicSongSettings>;
-  /** song -> its own XM instrument N (1-based) -> its fields (crashdata.audio.edit.xm_with_own_instrument) */
+  /** song -> its own XM instrument N (1-based) -> its fields (crashdata.audio.edit.xm_with_own_instrument; an N after
+   * its XM's instruments: a new one, numbered with songInstruments' in their order) */
   xmInstruments?: Record<string, Record<string, MusicXmInstrument>>;
+  /** instruments/<name>.json's value and a new sound for its WAV, or a new one (crashdata.audio.edit.apply_json_instruments) */
+  jsonInstruments?: Record<string, MusicJsonEdit>;
 }
 
-/** A song's own XM instrument (not `Instrument N`, not instruments/<name>.json's): what the build reads of it
- * (crashdata.audio.gax.xm_instrument_spec), as the editor edits it in the XM. */
-export interface MusicXmInstrument {
-  /** the XM sample of the instrument the other fields' sample ones are */
-  sample: number;
+/** An XM sample's fields the build reads (crashdata.audio.edit.own_sample). */
+export interface MusicXmSample {
   /** 0-64 */
   volume: number;
   /** semitones */
@@ -628,26 +628,51 @@ export interface MusicXmInstrument {
   /** in samples, the end exclusive */
   loop_start: number;
   loop_end: number;
+  /** base64 8-bit mono WAV: a new sound for it (an edit's; a sample after the instrument's is a new one, with it) */
+  wav?: string;
+}
+
+/** A song's own XM instrument (not `Instrument N`, not instruments/<name>.json's): what the build reads of it
+ * (crashdata.audio.gax.xm_instrument_spec) and its name, as the editor edits it in the XM. */
+export interface MusicXmInstrument {
+  /** at most 22 ASCII characters */
+  name: string;
+  /** the sample each of the 96 notes (C-0 to B-7) plays: the build makes the one the song's notes play its sample */
+  keymap: number[];
   /** null: off (full volume, cut at the key off) */
   envelope: { points: [number, number][]; sustain: number | null; loop_start: number | null; loop_end: number | null } | null;
   /** the auto-vibrato (a sine with no sweep: GAX2's) */
   vibrato: { depth: number; rate: number };
-  /** base64 8-bit mono WAV: a new sound for its sample (an edit's) */
-  wav?: string;
+  samples: MusicXmSample[];
 }
 
 /** A song's own XM instrument as the pattern view reads it (crashdata.audio.edit.own_instruments). */
 export interface MusicOwnInstrument {
   spec: MusicXmInstrument;
-  /** the instrument's XM samples */
-  samples: number;
-  /** its sample's bits (a 16-bit one is read as 8) */
-  bits: number;
-  length: number;
-  /** base64: its sample as the build reads it, signed 8-bit */
-  data: string;
-  /** the XM samples its key map plays on the notes the song plays (more than one: the build refuses it) */
+  /** each sample's sound: its bits (a 16-bit one is read as 8), length and data (base64, as the build reads it, signed
+   * 8-bit), or the problem the build has with it */
+  sounds: { bits: number; length: number; data: string; problem?: string }[];
+  /** the notes the song's cells play on it */
+  notes: number[];
+  /** the XM samples its key map plays on those notes (more than one: the build refuses it) */
   plays: number[];
+}
+
+/** An instruments/<name>.json instrument as the Music tab lists it (crashdata.audio.edit.json_instruments). */
+export interface MusicJsonInstrument {
+  name: string;
+  file: string;
+  data: Instrument;
+  /** its WAV as the build reads it (signed 8-bit, base64), or the problem with it */
+  sound: { path: string; length: number; rate: number; data: string } | { problem: string };
+  /** the songs whose XMs name it */
+  songs: string[];
+}
+
+/** An instruments/<name>.json edit: its value, and a new sound for the WAV its "sample" names (base64 8-bit mono). */
+export interface MusicJsonEdit {
+  json: Instrument;
+  wav?: string;
 }
 
 /** The music pool's edits (a save's, a player request's): instruments' records, new samples, samples taken out. */
@@ -726,6 +751,7 @@ export interface MusicSave extends MusicPoolEdits {
   songInstruments?: Record<string, number[]>;
   songSettings?: Record<string, MusicSongSettings>;
   xmInstruments?: Record<string, Record<string, MusicXmInstrument>>;
+  jsonInstruments?: Record<string, MusicJsonEdit>;
   /** samples/NN.wav or sfx_samples/NN.wav -> base64 8-bit mono WAV */
   samples?: Record<string, string>;
   /** new sound-effect instruments: instruments/<name>.json and sfx_samples/<name>.wav */
