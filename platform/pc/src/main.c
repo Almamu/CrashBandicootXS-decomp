@@ -65,11 +65,12 @@ static void Usage(const char *argv0)
         "  --frames N            stop after N game frames (KeyInput::Update calls)\n"
         "  --vblanks N           stop after N VBlanks\n"
         "  --keys FILE           scripted input: lines `FRAME KEYS` (input.c)\n"
-        "  --checkpoint-every N  hash palette RAM, VRAM and OAM every N frames (60; 0: never)\n"
+        "  --checkpoint-every N  hash palette RAM, VRAM and OAM every N frames (60 headless,\n"
+        "                        0 in the window; 0: never)\n"
         "  --dump DIR            write each checkpoint's palette RAM, VRAM and OAM to DIR\n"
         "  --screens DIR         write each checkpoint's picture to DIR/FRAME.png\n"
         "  --ppu-stats           count the lines that use each PPU feature, print at the end\n"
-        "  --quiet               don't print the checkpoints\n",
+        "  --quiet               don't print the checkpoints or the sound's hash (the window's default)\n",
         argv0);
     exit(2);
 }
@@ -88,6 +89,7 @@ static u32 Number(const char *argv0, const char *text)
 int main(int argc, char **argv)
 {
     int i;
+    int checkpointsAsked = 0;
 
     for (i = 1; i < argc; i++) {
         const char *arg = argv[i];
@@ -114,6 +116,7 @@ int main(int argc, char **argv)
             gHostOptions.vblanks = Number(argv[0], value);
         } else if (strcmp(arg, "--checkpoint-every") == 0) {
             gHostOptions.checkpointEvery = Number(argv[0], value);
+            checkpointsAsked = 1;
         } else if (strcmp(arg, "--keys") == 0) {
             gHostOptions.keys = value;
         } else if (strcmp(arg, "--dump") == 0) {
@@ -156,6 +159,12 @@ int main(int argc, char **argv)
         gHostOptions.headless = 1;
     }
     if (!gHostOptions.headless) {
+        /* Played in the window, the tests' output (the checkpoints, the
+         * audio's hash at the end) is only noise: asked for, it's kept. */
+        if (!checkpointsAsked) {
+            gHostOptions.checkpointEvery = 0;
+            gHostOptions.quiet = 1;
+        }
         HostFrontendInit();
     }
 

@@ -180,6 +180,9 @@ void HostAudioEnd(void)
         HostSha1Init(&sHash);
     }
     HostSha1Final(&sHash, digest);
+    if (gHostOptions.quiet) {
+        return;
+    }
     printf("audio %u ", sBlocks);
     for (i = 0; i < 8; i++) {
         printf("%02x", digest[i]);
