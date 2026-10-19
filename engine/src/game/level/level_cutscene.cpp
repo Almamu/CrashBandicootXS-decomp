@@ -107,13 +107,15 @@ inline void *operator new(size_t, void *p)
  * display setup (a CutscenePlayer member would be constructed where the
  * aggregate is declared), and reached through a cast at each use: through
  * a pointer variable or an accessor, gcc keeps its address in a register
- * too. */
+ * too. The storage is aligned as a pointer is, as the player is (its
+ * `font`, `slides` and `pages`): a word on the GBA, 8 bytes on a 64-bit
+ * host. */
 struct CutsceneLocals {
     struct aabb box;
     u16 fill;
     union {
         u8 bytes[sizeof(CutscenePlayer)];
-        s32 align;
+        void *align;
     } pager;
 };
 

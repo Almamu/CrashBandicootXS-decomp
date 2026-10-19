@@ -165,3 +165,49 @@ jobs:
       run: |
         python3 platform/pc/tools/layout_check.py --link build/pc/crashbandicootxs/host_link.ld \
           --iwram games/xs/sym_iwram.txt --ewram games/xs/sym_ewram.txt build/pc/crashbandicootxs_pc
+
+  # The PC port under UBSan and ASan (docs/platforms.md, "Sanitizers"):
+  # boot.keys and bonus.keys played headless, the pictures still mGBA's,
+  # and any report fails the run (the executable exits with an error). UBSan
+  # doesn't check object sizes here: PlayCutscene reads Display::dispcnt
+  # (a halfword) as a word, as the ROM does.
+  sanitizers:
+    runs-on: ubuntu-24.04
+    name: Host build (platform/pc, ${{ matrix.sanitize }})
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitize: [ undefined, address ]
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Install dependencies
+      run: sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 update && sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 install -y --no-install-recommends build-essential libpng-dev zlib1g-dev python3-pil gettext pkg-config
+
+    # The runners' kernel randomizes mmap with 32 bits, which can put a
+    # mapping where ASan's shadow memory goes (and fail at startup); 28
+    # bits avoids it.
+    - name: Build for the host
+      run: |
+        sudo sysctl vm.mmap_rnd_bits=28
+        if [ "${{ matrix.sanitize }}" = undefined ]; then
+          make -j"$(nproc)" PLATFORM=pc HOST_SDL=0 SANITIZE=undefined SANITIZE_FLAGS='-fno-sanitize=object-size -fno-sanitize-recover=all'
+        else
+          make -j"$(nproc)" PLATFORM=pc HOST_SDL=0 SANITIZE=address
+        fi
+
+    - name: Boot and play a bonus round
+      env:
+        UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1:log_path=${{ github.workspace }}/sanitizer
+        ASAN_OPTIONS: detect_leaks=0:log_path=${{ github.workspace }}/sanitizer
+      run: |
+        python3 tools/boottest.py host build/pc/crashbandicootxs_pc --keys platform/pc/tests/boot.keys \
+          --frames 6000 --timeout 1200 --out host_boot.json
+        python3 tools/boottest.py compare platform/pc/tests/boot_mgba.json host_boot.json
+        python3 tools/boottest.py host build/pc/crashbandicootxs_pc --keys platform/pc/tests/bonus.keys \
+          --frames 5000 --every 10 --timeout 1200 --out host_bonus_screens.json
+        python3 tools/boottest.py compare platform/pc/tests/bonus_mgba_screens.json host_bonus_screens.json
+
+    - name: Show the reports
+      if: failure()
+      run: cat sanitizer.* || true
