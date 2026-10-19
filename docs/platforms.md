@@ -297,6 +297,7 @@ platform/pc/tests/gem_path.keys    Ace of Space's gem path (--level 11 --room ge
                                    whole hover ride to the exit, then on foot
 platform/pc/tests/polar_mask.keys  Frostbite Cavern's polar stage (--level 3 --room 1): Aku Aku's
                                    mask lost on the polar bear
+platform/pc/tests/dingodile.keys   the Dingodile fight (--level 20) won, and on to the next level
 platform/pc/tests/*_mgba_screens.json
                                    the hashes of mGBA's pictures for the key files (boottest.py
                                    `screens`), what CI compares the PPU's with
@@ -453,6 +454,7 @@ same key file, each frame's picture compared (`--every 1`):
 | bonus.keys (a new game, Jungle Jam into its bonus round and out) | 5000 | 4997 |
 | gem_path.keys, `--level 11 --room gem-path` (Ace of Space's hover ride to its exit, then on foot) | 2900 | 2900 |
 | polar_mask.keys, `--level 3 --room 1` (Frostbite Cavern's polar stage, a mask lost) | 1100 | 1099 |
+| dingodile.keys, `--level 20` (the fight won, the power, the cutscene, the next level) | 15500 | 15500 |
 
 The pictures that differ are of the CPU's time, not the PPU's: the host's
 game takes no time, the GBA's does. Frame 512 is the first after the
@@ -936,14 +938,20 @@ and maps unchanged):
     `anims` and `frames`, the animation's `seq` and the frame), and in
     GetAttackBox and GetBodyBox (the frame's `pieces`): the camera lead
     has no bank. The ride plays the same on mGBA as on the host.
-- The polar stages' Aku Aku (a wrong picture; tests/polar_mask.keys):
-  losing its last mask, PolarAkuAku::Refresh loads the palette at
-  gPolarAkuAkuPalette1 + (0 - 1) * 0x20, in the ROM the last 32 bytes of
-  the four 12-byte boxes before it (polar_palettes_boxes.cpp). The host's
-  g++ aligned each box to 16 bytes, so its colours were other bytes', for
-  the 39 frames of the animation; polar_palettes_boxes.o is built with
-  `-malign-data=abi` (platform.mk), which lays the file out as the ROM
-  does. Not a change to the shared code: the flag is the platform's.
+- Data read past its definition into the next, as the ROM lays it out
+  (each a picture that wasn't mGBA's): the host's g++ aligns a global
+  array of 16 bytes or more to 16 (the x86-64 ABI) and a 12-byte struct
+  to 16, where agbcc packs them at 4, so the bytes read were others.
+  These globals are `aligned(4)` now, as the cutscene pictures' bitmaps
+  are (the same on the GBA, where they are 4-aligned anyway):
+  - the polar stages' Aku Aku (tests/polar_mask.keys): losing its last
+    mask, PolarAkuAku::Refresh loads the palette at gPolarAkuAkuPalette1
+    + (0 - 1) * 0x20, the last 32 bytes of the four 12-byte boxes before
+    it (polar_palettes_boxes.cpp); 39 frames of its animation;
+  - Dingodile (tests/dingodile.keys): his last move, motion entry 3,
+    names records 7 and 6 of gDingodileMotionRecords' 4, which
+    DingodileCtrl::StartMotion reads past the table: the stalactite's
+    records after it (boss_motion_tables.cpp); 36 frames of his defeat.
 - The sanitizers (UBSan, "Sanitizers" above):
   - PlayCutscene's storage for its CutscenePlayer (level_cutscene.cpp) is
     aligned as a `void *`, not an `s32` (the same on the GBA).

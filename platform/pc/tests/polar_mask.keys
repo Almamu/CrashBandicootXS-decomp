@@ -7,8 +7,8 @@
 # palette 0x20 bytes before gPolarAkuAkuPalette1, the four 12-byte boxes
 # before it in the ROM, for the 39 frames of its animation. The host laid
 # those boxes out 16 bytes apart, and those frames' colours were other
-# than mGBA's until polar_palettes_boxes.o was built with
-# -malign-data=abi (platform.mk). tools/boottest.py `screens` (the same
+# than mGBA's until polar_palettes_boxes.cpp aligned them (and the
+# palette) to 4 bytes. tools/boottest.py `screens` (the same
 # --level and --room) played it on mGBA for
 # tests/polar_mask_mgba_screens.json, every 3rd frame: all the same
 # (frame 512, the first after the level's load, differs, see

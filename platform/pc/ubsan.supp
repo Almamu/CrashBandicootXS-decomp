@@ -18,3 +18,12 @@ object-size:Game::Level::LevelState::PlayCutscene
 # their object-size reports are dropped.
 object-size:Game::Vehicles::Jetpack::Airship::ConvertTiles
 object-size:Game::Bosses::Hovercraft::ConvertTiles
+
+# Dingodile's last move (motion entry 3, dingodile_motion_entries.cpp)
+# names records 7 and 6 of gDingodileMotionRecords' 4, which
+# DingodileCtrl::StartMotion (dingodile_create.cpp) reads past its end:
+# gDingodileStalactiteFallMotion's last two, back to back as in the ROM
+# (boss_motion_tables.cpp). Its bounds and object-size reports are
+# dropped.
+bounds:Game::Bosses::DingodileCtrl::StartMotion
+object-size:Game::Bosses::DingodileCtrl::StartMotion
