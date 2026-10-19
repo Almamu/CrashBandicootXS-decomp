@@ -322,6 +322,8 @@ class LevelEditorState {
         built: t.count,
       };
       this.tileSets = { ...this.tileSets, [layer]: set };
+      // a brush from another room's set, or a new tile that wasn't kept: the blank tile
+      if (layer === this.paintLayer && this.brush.tile >= set.count) this.brush = { tile: 0, hflip: false, vflip: false, bank: 0 };
       return set;
     } catch (e) {
       this.tileSets = { ...this.tileSets, [layer]: e instanceof Error ? e.message : String(e) };
