@@ -477,6 +477,24 @@ class LevelEditorState {
     });
   }
 
+  /**
+   * Adds a cell value to the collision legend (collision_legend.json, every
+   * room's): saved at once, checked like any save, and made the collision
+   * tool's value. The room's own changes stay unsaved.
+   */
+  async addLegendValue(value: number, colour: string, name?: string): Promise<boolean> {
+    const view = this.view;
+    if (!view) return false;
+    const r = await editor.run(`Adding 0x${value.toString(16).toUpperCase().padStart(4, "0")} to the collision legend`, () =>
+      client.addLegendValue(editor.projectId, { value, colour, ...(name ? { name } : {}) }),
+    );
+    if (!r) return false;
+    if (this.view === view) this.view = { ...view, legend: r.legend };
+    this.collisionValue = value;
+    this.reported(`Saved ${r.saved.join(", ")}`, r);
+    return true;
+  }
+
   paintCollision(at: Point[]): CellChange<number>[] {
     const c = this.collision;
     if (!c) return [];

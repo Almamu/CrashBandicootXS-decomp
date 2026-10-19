@@ -400,14 +400,84 @@ class Tiles(LevelEditor):
                 p.write_bytes(b)
 
 
+class Legend(LevelEditor):
+    """A cell value added to the collision legend (room/legend), painted and
+    read back as the build reads the collision images."""
+
+    LEGEND = "games/xs/data/levels/collision_legend.json"
+
+    def test_names(self):
+        from crashdata.levels import collision
+
+        # describe() spells every name of XS's legend as it is
+        for e in json.loads((ROOT / self.LEGEND).read_text())["cells"]:
+            self.assertEqual(collision.describe(int(e["value"], 16)), e["name"])
+        entries = [(0x2B, (200, 200, 200), "solid 0x2B"), (0xAB, (255, 179, 0), "solid 0xAB")]
+        self.assertEqual(collision.new_entry_errors(0x0632, (1, 2, 3), entries), [])
+        self.assertEqual(collision.new_entry_errors(0x01AB, (1, 2, 3), entries), [])  # a type the legend has
+        for value, colour in [(0x2B, (1, 2, 3)), (0x0632, (200, 200, 200)), (0x0033, (1, 2, 3)),
+                              (0x10000, (1, 2, 3)), (-1, (1, 2, 3)), ("0x2B", (1, 2, 3)), (True, (1, 2, 3))]:
+            self.assertTrue(collision.new_entry_errors(value, colour, entries), (value, colour))
+
+    def test_add_paint_and_read_back(self):
+        from crashdata import levels as L
+        from crashdata.common.game import Game
+
+        files = {p: p.read_bytes() for p in [ROOT / self.LEGEND, ROOT / ROOM / "collision.png"]}
+        try:
+            # a hazard wall open from below: solid 0x2E, flags 0x1, open up
+            st, r = self.call("POST", "/api/projects/xs/room/legend", {"value": 0x812E, "colour": "#12a456"})
+            self.assertEqual(st, 200, r)
+            self.assertEqual(r["saved"], [self.LEGEND])
+            self.assertEqual(r["legend"][-1], {"value": 0x812E, "colour": "#12A456",
+                                               "name": "solid 0x2E, flags 0x1, TERRAIN_FLAG_OPEN_UP"})
+            # one line more, the file's layout kept
+            self.assertEqual((ROOT / self.LEGEND).read_text(), files[ROOT / self.LEGEND].decode().replace(
+                '"}\n  ]', '"},\n    {"value": "812E", "colour": "12A456", '
+                '"name": "solid 0x2E, flags 0x1, TERRAIN_FLAG_OPEN_UP"}\n  ]'))
+            _, v = self.call("GET", "/api/projects/xs/room?path=" + ROOM)
+            self.assertEqual(v["legend"], r["legend"])
+            # taken now, its colour too; a type past gTerrainTypes that no value has; not a colour
+            for body in ({"value": 0x812E, "colour": "#000001"}, {"value": 0x0132, "colour": "#12A456"},
+                         {"value": 0x0040, "colour": "#000001"}, {"value": 0x0132, "colour": "red"}, {}):
+                st, e = self.call("POST", "/api/projects/xs/room/legend", body)
+                self.assertEqual(st, 422, (body, e))
+            self.assertEqual(len(json.loads((ROOT / self.LEGEND).read_text())["cells"]), len(r["legend"]))
+            # painted and saved, then read as the build reads the image
+            st, r = self.call("POST", "/api/projects/xs/room/save", {"path": ROOM, "collision": [[3, 4, 0x812E]]})
+            self.assertEqual((st, r.get("saved")), (200, [ROOM + "/collision.png"]), r)
+            L.use_game(Game("xs", ROOT))
+            layer = L.read_json(ROOT / ROOM / "room.json")["layers"]["collision"]
+            cells = L.load_map(ROOT / ROOM, "collision", layer)
+            self.assertEqual(cells[4 * layer["size_chunks"][0] * L.CHUNK_W + 3], 0x812E)
+        finally:
+            for p, b in files.items():
+                p.write_bytes(b)
+
+    def test_n_tranced(self):
+        n2 = ROOT / "games/n2/data/levels/collision_legend.json"
+        files = {p: p.read_bytes() for p in [n2, ROOT / self.LEGEND]}
+        try:
+            st, r = self.call("POST", "/api/projects/n2/room/legend", {"value": 0x0A05, "colour": "#0A0B0C",
+                                                                       "name": "  a slope that pushes right "})
+            self.assertEqual(st, 200, r)
+            self.assertEqual(r["saved"], ["games/n2/data/levels/collision_legend.json"])
+            self.assertEqual(r["legend"][-1]["name"], "a slope that pushes right")
+            self.assertEqual((ROOT / self.LEGEND).read_bytes(), files[ROOT / self.LEGEND])  # XS's isn't touched
+        finally:
+            for p, b in files.items():
+                p.write_bytes(b)
+
+
 EXTRA = "games/xs/data/levels/jungle_jam/extra"
 
 
 def scratch_edits(call):
     """The edit test's edits, through the API (`call(method, path, body)`):
     a new room (a copy of jungle jam's, played before it), resized, its blend
-    changed, a new tile drawn into BG0 and a picture imported into BG1.
-    Returns the answers, for checking."""
+    changed, a new tile drawn into BG0, a picture imported into BG1 and a
+    collision value added to the legend and painted. Returns the answers,
+    for checking."""
     from PIL import Image
 
     out = {}
@@ -440,17 +510,21 @@ def scratch_edits(call):
     bx, by = cx // 2 + 4, max(0, cy // 2 - 8)
     bg1 = [[bx + i % imp["cols"], by + i // imp["cols"], base64.b64encode(cells[i * 64:(i + 1) * 64]).decode()]
            for i in range(imp["cols"] * imp["rows"])]
+    # a value no room has: solid 0x2E that pushes right (flags 0xA), under the new tiles
+    st, out["legend"] = call("POST", "/api/projects/xs/room/legend", {"value": 0x0A2E, "colour": "#7FFF00"})
+    assert st == 200, out["legend"]
+    collision = [[cx + k, cy - 5, 0x0A2E] for k in range(-4, 12)]
     st, out["save"] = call("POST", "/api/projects/xs/room/save", {
-        "path": EXTRA, "room": room, "layers": {"bg0": bg0, "bg1": bg1}})
+        "path": EXTRA, "room": room, "layers": {"bg0": bg0, "bg1": bg1}, "collision": collision})
     assert st == 200, out["save"]
-    out["cells"] = {"bg0": bg0, "bg1": bg1}
+    out["cells"] = {"bg0": bg0, "bg1": bg1, "collision": collision}
     return out
 
 
 class Scratch(unittest.TestCase):
     """The edit test in a scratch copy of the tree (crashdata.mods.copy_tree):
-    a new room, resized, a new tile and an imported picture, a blend;
-    data-check passes, and with CRASH_EDITOR_TEST_BUILD=1 the ROM builds."""
+    a new room, resized, a new tile and an imported picture, a blend, a new
+    collision value; data-check passes, and with CRASH_EDITOR_TEST_BUILD=1 the ROM builds."""
 
     @classmethod
     def setUpClass(cls):
@@ -478,13 +552,17 @@ class Scratch(unittest.TestCase):
 
     token = None
     call = LevelEditor.call
+    get_bytes = LevelEditor.get_bytes
+    layer = LevelEditor.layer
 
     def test_an_edit(self):
         import os
         import subprocess
 
         out = scratch_edits(self.call)
-        self.assertEqual(sorted(out["save"]["saved"]), [EXTRA + "/bg0.png", EXTRA + "/bg1.png", EXTRA + "/room.json"])
+        self.assertEqual(sorted(out["save"]["saved"]), [EXTRA + "/bg0.png", EXTRA + "/bg1.png", EXTRA + "/collision.png",
+                                                        EXTRA + "/room.json"])
+        self.assertEqual(out["legend"]["saved"], ["games/xs/data/levels/collision_legend.json"])
         self.assertGreaterEqual(out["import"]["stats"]["new"], 1)
         st, v = self.call("GET", "/api/projects/xs/room?path=" + EXTRA)
         self.assertEqual(v["room"]["record"]["blend"], {"effect": 1, "eva": 8, "evb": 12})
@@ -493,6 +571,10 @@ class Scratch(unittest.TestCase):
         st, t = self.call("GET", "/api/projects/xs/room/tiles?path=%s&layer=bg0" % EXTRA)
         self.assertEqual(st, 200, t)
         self.assertGreater(t["count"], 6638)
+        # the new value's cells, as the build reads them
+        cw, _, cells = self.layer("xs", EXTRA, "collision")
+        for cx, cy, value in out["cells"]["collision"]:
+            self.assertEqual(struct.unpack_from("<H", cells, 2 * (cy * cw + cx))[0], value)
         st, rep = self.call("GET", "/api/projects/xs/check?text=0")
         self.assertTrue(rep["ok"], rep["diagnostics"])
         if os.environ.get("CRASH_EDITOR_TEST_BUILD") == "1":

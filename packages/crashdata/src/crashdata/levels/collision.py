@@ -38,6 +38,56 @@ LEGEND_JSON = Path(ROOT).resolve() / "games/xs/data/levels/collision_legend.json
 # A cell's size in pixels, each way: one 8x8 tile, as in the BG layers.
 CELL_PX = 8
 
+# What a cell value is (docs/flags/terrain.md, engine/include/game/level/level.h):
+# its terrain type in bits 0-7, a flag nibble in 8-11, the open bits in 12-15.
+# The lookups (TileCache, engine/src/game/level/tile_cache.cpp) read type
+# 1-0x23's heights and 0x24 and above's solid rows from gTerrainTypes, which
+# has TERRAIN_TYPES of them (engine/src/game/level/data/terrain_types.cpp):
+# a type past them reads its rows from the bytes after the table.
+TERRAIN_TYPES = 51
+TERRAIN_LAST_HEIGHTS = 0x23
+OPEN_BITS = ((1, "TERRAIN_FLAG_OPEN_RIGHT"), (2, "TERRAIN_FLAG_OPEN_LEFT"), (4, "TERRAIN_FLAG_OPEN_DOWN"),
+             (8, "TERRAIN_FLAG_OPEN_UP"))
+# Most entries the legend has: an image's palette, less the index read_image
+# keeps for a colour that isn't in it.
+MAX_ENTRIES = 255
+
+
+def describe(value):
+    """A cell value's name as the legend spells them: its type
+    (TERRAIN_TYPE_NONE, "heights 0xNN", "solid 0xNN"), its flag nibble, its
+    open bits."""
+    t, flags, hi = value & 0xFF, value >> 8 & 0xF, value >> 12
+    parts = ["TERRAIN_TYPE_NONE" if t == 0 else ("heights 0x%02X" if t <= TERRAIN_LAST_HEIGHTS else "solid 0x%02X") % t]
+    if flags:
+        parts.append("flags 0x%X" % flags)
+    if hi:
+        parts.append("|".join(n for b, n in OPEN_BITS if hi & b))
+    return ", ".join(parts)
+
+
+def new_entry_errors(value, colour, entries):
+    """Why the legend (`entries`, legend()'s) can't take a new value with a
+    colour ((r, g, b)): [] when it can. A value is 0-0xFFFF, new, in a colour
+    of its own; its terrain type one gTerrainTypes has, or one of the
+    legend's values already has (the ROM's rooms use a few past the table)."""
+    out = []
+    if not isinstance(value, int) or isinstance(value, bool) or not 0 <= value <= 0xFFFF:
+        return ["a cell value is 0-0xFFFF (16 bits: terrain type, flag nibble, open bits)"]
+    if len(entries) >= MAX_ENTRIES:
+        out.append("the legend has %d values, the most a collision image's palette holds" % MAX_ENTRIES)
+    for v, c, n in entries:
+        if v == value:
+            out.append("0x%04X is in the legend already (%s)" % (value, n))
+        if c == tuple(colour):
+            out.append("#%02X%02X%02X is 0x%04X's colour (%s): each value has its own" % (c + (v, n)))
+    t = value & 0xFF
+    if t >= TERRAIN_TYPES and t not in {v & 0xFF for v, _, _ in entries}:
+        out.append("terrain type 0x%02X: gTerrainTypes has types 0-0x%02X (engine/src/game/level/data/terrain_types.cpp); "
+                   "a type past them reads its rows from the bytes after the table, so only those the legend's values "
+                   "already have are taken" % (t, TERRAIN_TYPES - 1))
+    return out
+
 
 def legend():
     """The legend's entries as (value, (r, g, b), name), in palette order."""
@@ -49,8 +99,8 @@ def legend():
     colours = [c for _, c, _ in out]
     if len(set(values)) != len(values) or len(set(colours)) != len(colours):
         sys.exit("collision_bmp: %s: a value or a colour is listed twice" % LEGEND_JSON)
-    if len(out) > 255:
-        sys.exit("collision_bmp: %s: more than 255 entries" % LEGEND_JSON)
+    if len(out) > MAX_ENTRIES:
+        sys.exit("collision_bmp: %s: more than %d entries" % (LEGEND_JSON, MAX_ENTRIES))
     return out
 
 

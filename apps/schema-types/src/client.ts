@@ -843,6 +843,11 @@ export class EditorClient {
     return this.request("POST", this.project(id, "room/save"), body);
   }
 
+  /** Adds a cell value to the collision legend (`name`: its bits spelled out by default); saved, checked. */
+  addLegendValue(id: string, body: { value: number; colour: string; name?: string }): Promise<SaveResult & { legend: LegendEntry[] }> {
+    return this.request("POST", this.project(id, "room/legend"), body);
+  }
+
   /** A picture (PNG, base64) as a BG layer's cells in the room's palette (`banks`: BG1-3's to use). */
   importTiles(id: string, body: { path: string; layer: string; png: string; palette?: number[]; banks?: number[] }): Promise<TileImport> {
     return this.request("POST", this.project(id, "room/import"), body);

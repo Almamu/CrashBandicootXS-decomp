@@ -15,6 +15,30 @@ cell per 8x8 tile. The names are in engine/include/game/level/level.h, next to
 Bits 8-11 are the flag nibble the lookups hand back in `flagsOut`
 (LevelLayers::ProbeX/ProbeY store it in `kind` while `probeFlag` is set).
 
+`gTerrainTypes` has 51 types (0-0x32); a type past them reads its
+`modeValue` and height rows from the bytes after the table. The ROM's
+rooms have a few (0x81-0x87, 0xAB), so the level editor takes a new cell
+value only of a type the table has or one the legend's values already
+have.
+
+## The flag nibble (bits 8-11)
+
+Player::CheckPlayerContact (engine/src/game/crash/player_collide.cpp)
+acts on the nibble of the cells the player's probes scan (`kind`, the
+last nonzero one), and on the nibble of the cell under the frame's anchor
+point (GetTerrainFlags):
+
+| Nibble | XS's player |
+|---|---|
+| 1 | kills, mask or not: the mask level goes to `MASK_LEVEL_NONE` and the player is made vulnerable, then `EVENT_HIT` |
+| 5 | slippery (`StoreSlippery`) |
+| 6 | a bar to hang from, at the anchor (`EVENT_HANG_GRAB`; off it, `EVENT_HANG_RELEASE`) |
+| 7 | pushes left (`StorePushLeft`) |
+| 0xA | pushes right (`StorePushRight`) |
+| 2-4, 8, 9, 0xB-0xF | nothing |
+
+N-Tranced's player (still asm) isn't read yet.
+
 ## The collision mode, `TERRAIN_MODE_*`
 
 GetSolidTerrainHeights' and GetSolidTerrainModeValue's `mode`, and

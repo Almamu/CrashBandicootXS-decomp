@@ -15,6 +15,7 @@ game does and edits them; this module is what the backend
   tile picker;
 - sprite_png(...): a sprite bank's frame as a PNG with index 0
   transparent, in one of its palettes;
+- legend_with(value, colour): collision_legend.json with a new cell value;
 - patch_layer / patch_collision / with_palette: a layer picture with some
   8x8 cells replaced, the collision image with some cells set, a picture
   with another palette. Each gives back the file's own bytes when nothing
@@ -467,6 +468,35 @@ def patch_layer(path, info, lname, cells, palette=None):
     return buf.getvalue()
 
 
+def legend_with(value, colour, name=None):
+    """collision_legend.json's value with a new cell value added at its end
+    (collision.new_entry_errors says what it takes): `colour` "#RRGGBB" or
+    "RRGGBB", `name` collision.describe's by default. Its colour is the next
+    entry of the collision images' palettes; the pictures already written
+    keep theirs (an image is read by colour)."""
+    if not isinstance(colour, str) or len(colour.lstrip("#")) != 6:
+        raise EditError("a colour is \"#RRGGBB\"")
+    try:
+        c = int(colour.lstrip("#"), 16)
+    except ValueError:
+        raise EditError("a colour is \"#RRGGBB\"")
+    rgb = (c >> 16, c >> 8 & 0xFF, c & 0xFF)
+    if name is None or (isinstance(name, str) and not name.strip()):
+        name = collision_bmp.describe(value) if isinstance(value, int) else ""
+    if not isinstance(name, str):
+        raise EditError("a value's name is text")
+    try:
+        entries = collision_bmp.legend()
+    except SystemExit as e:
+        raise EditError(str(e))
+    errors = collision_bmp.new_entry_errors(value, rgb, entries)
+    if errors:
+        raise EditError("; ".join(errors))
+    doc = L.read_json(collision_bmp.LEGEND_JSON)
+    doc["cells"].append({"value": "%04X" % value, "colour": "%06X" % c, "name": name.strip()})
+    return doc
+
+
 def patch_collision(path, info, cells):
     """The collision image with `cells` ([cx, cy, value]) set: its bytes
     (collision.write_image's), or the file's own if nothing changes."""
@@ -495,5 +525,5 @@ def patch_collision(path, info, cells):
 
 
 __all__ = ["EditError", "SPRITES", "collision_cells", "entity_sprites", "import_tiles", "layer_info", "layer_pixels",
-           "legend", "patch_collision", "patch_layer", "room_view", "sprite_banks", "sprite_png", "tileset",
-           "tileset_errors", "with_palette"]
+           "legend", "legend_with", "patch_collision", "patch_layer", "room_view", "sprite_banks",
+           "sprite_png", "tileset", "tileset_errors", "with_palette"]
