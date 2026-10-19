@@ -524,10 +524,6 @@
         }
       },
       "required": [
-        "num_channels",
-        "num_rows_per_pattern",
-        "num_patterns_per_channel",
-        "loop_point",
         "volume",
         "ushort_0a",
         "sample_rate",
@@ -537,7 +533,8 @@
         "title",
         "artist"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "a ROM song: its settings and, while it keeps it, the scaffold the ROM recorded (its structure, pattern sharing and layout); a song without it is built from its XM"
     }
   }
 }

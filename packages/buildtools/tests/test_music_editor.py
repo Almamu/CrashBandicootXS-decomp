@@ -73,6 +73,17 @@ def changed_groups(root, key):
     return {g for g, b in packed.items() if hashlib.sha1(b).hexdigest() != rom[g]}
 
 
+def structure(p):
+    """A song's structure (a save's "structures") from its patterns as the API gives them."""
+    return {"channels": p["channels"], "order": p["order"], "restart": p["restart"], "speed": p["speed"],
+            "patterns": [{"rows": r, "cells": c} for r, c in zip(p["rows"], p["cells"])]}
+
+
+def cells_of(rows):
+    """[[cell]] rows of [note, instrument, volume, effect, parameter] cells as a structure's base64."""
+    return b64(b"".join(bytes(c) for row in rows for c in row))
+
+
 def snapshot(root):
     return {p: p.read_bytes() for d in TRACKED for p in ([root / d] if (root / d).is_file() else (root / d).rglob("*"))
             if p.is_file()}
@@ -220,6 +231,22 @@ class Reading(Music):
                                capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout)
 
+    def test_every_structure_saved_unchanged_is_not_written(self):
+        """Every song's structure (its patterns, rows, channels, order list,
+        restart, speed) through the API and back, unchanged: nothing is
+        written, and no ROM song loses its scaffold."""
+        v = self.view()
+        before = snapshot(ROOT)
+        body = {"structures": {}}
+        for s in v["songs"]:
+            p = self.patterns(s["key"])
+            body["structures"][s["key"]] = structure(p)
+        st, r = self.call("POST", "/api/projects/xs/music/save", body)
+        self.assertEqual((st, r.get("saved")), (200, []), r)
+        for p, b in before.items():
+            self.assertEqual(p.read_bytes(), b, p)
+        del v
+
     def test_refused(self):
         """What the checks refuse, with where; nothing is written."""
         v = self.view()
@@ -261,6 +288,10 @@ class Reading(Music):
             ({"patterns": {"jungle": [{"pattern": 99, "row": 0, "channel": 0, "cell": [0, 0, 0, 0, 0]}]}}, None),
             ({"patterns": {"jungle": [{"pattern": 0, "row": 0, "channel": 0, "cell": [49, 99, 0, 0, 0]}]}}, None),
             ({"newInstruments": [{"name": "Bad", "wav": b64(short)}]}, None),
+            ({"structures": {"jungle": {"channels": 0, "patterns": [], "order": [], "restart": 0, "speed": 6}}}, None),
+            ({"structures": {"nothing": {}}}, None),
+            ({"structures": {"jungle": structure(self.patterns("jungle"))},
+              "patterns": {"jungle": [{"pattern": 0, "row": 0, "channel": 0, "cell": [0, 0, 0, 0, 0]}]}}, None),
         ]:
             st, r = self.call("POST", "/api/projects/xs/music/save", body)
             self.assertEqual(st, 422, (list(body), r))
@@ -353,12 +384,12 @@ class Scratch(unittest.TestCase):
     view = Music.view
     patterns = Music.patterns
 
-    def song(self, key, edits=None):
-        if edits is None:
+    def song(self, key, edits=None, unsaved=None):
+        if edits is None and unsaved is None:
             st, raw = self.get_bytes("/api/projects/xs/music/song?key=%s" % key)
             self.assertEqual(st, 200, raw[:300])
             return json.loads(raw)
-        st, r = self.call("POST", "/api/projects/xs/music/song", {"key": key, "edits": edits})
+        st, r = self.call("POST", "/api/projects/xs/music/song", dict(unsaved or {}, key=key, edits=edits))
         self.assertEqual(st, 200, r)
         return r
 
@@ -392,9 +423,39 @@ class Scratch(unittest.TestCase):
         before = self.song("jungle")
         preview = self.song("jungle", edits)
         self.assertNotEqual(preview["patterns"], before["patterns"])
+        # drums' structure (a ROM song): a new 8-row pattern after its first order position, with GAX2's
+        # alternating speeds (7xy) and its own slide down by FF (volume column 01), and the song at speed 5;
+        # main_menu_japan a channel more
+        drums = structure(self.patterns("drums"))
+        ch = drums["channels"]
+        rows = [[[0, 0, 0, 0, 0] for _ in range(ch)] for _ in range(8)]
+        rows[0][0] = [49, 1, 0, 7, 0x42]
+        rows[4][0] = [0, 0, 1, 11, 0xFF]
+        drums["patterns"].append({"rows": 8, "cells": cells_of(rows)})
+        drums["order"].insert(1, len(drums["patterns"]) - 1)
+        drums["restart"] += 1
+        drums["speed"] = 5
+        japan = structure(self.patterns("main_menu_japan"))
+        n = japan["channels"]
+        japan["patterns"] = [{"rows": p["rows"], "cells": b64(b"".join(
+            base64.b64decode(p["cells"])[r * n * 5:(r + 1) * n * 5] + bytes(5) for r in range(p["rows"])))}
+            for p in japan["patterns"]]
+        japan["channels"] = n + 1
+        structures = {"drums": drums, "main_menu_japan": japan}
+        drums_before = self.song("drums")
+        drums_preview = self.song("drums", unsaved={"structures": structures})
+        self.assertEqual((drums_preview["orderCount"], drums_before["orderCount"]), (11, 10))
+        self.assertEqual(self.song("main_menu_japan", unsaved={"structures": structures})["channelCount"], n + 1)
+        # a new song, played before it is saved
+        new_song = [{"key": "test_song", "xm": b64((sound / "songs" / "drums.xm").read_bytes()),
+                     "comment": "the music editor's test"}]
+        test_preview = self.song("test_song", unsaved={"newSongs": new_song})
+        self.assertEqual(test_preview["orderCount"], 10)
+        st, pool = self.call("POST", "/api/projects/xs/music/pool", {"newSongs": new_song})
+        self.assertEqual(st, 200, pool)
         body = {"sfxTable": table, "music": music, "themes": {"THEME_SNOW": "jungle"},
                 "patterns": {"jungle": edits}, "songComments": {"jungle": "the jungle theme's, edited"},
-                "samples": {"sfx_samples/09.wav": imp2["wav"]},
+                "samples": {"sfx_samples/09.wav": imp2["wav"]}, "structures": structures, "newSongs": new_song,
                 "newInstruments": [{"name": "test_beep", "wav": imp["wav"]}]}
         st, r = self.call("POST", "/api/projects/xs/music/save", body)
         self.assertEqual(st, 200, r)
@@ -402,9 +463,20 @@ class Scratch(unittest.TestCase):
         self.assertEqual(sorted(r["saved"]), sorted([
             "games/xs/data/levels/levels.json", SOUND + "/gax_manifest.json", SOUND + "/instruments/test_beep.json",
             SOUND + "/music.json", SOUND + "/sfx_samples/09.wav", SOUND + "/sfx_samples/test_beep.wav",
-            SOUND + "/sfx_table.json", SOUND + "/songs/jungle.xm"]))
+            SOUND + "/sfx_table.json", SOUND + "/songs/jungle.xm", SOUND + "/songs/drums.xm",
+            SOUND + "/songs/main_menu_japan.xm", SOUND + "/songs/test_song.xm"]))
         # read back: the player plays the saved edit, the shared positions too
         self.assertEqual(self.song("jungle")["patterns"], preview["patterns"])
+        # the structures as they played before the save, the ROM songs without their scaffold
+        self.assertEqual(self.song("drums"), drums_preview)
+        self.assertEqual(self.song("test_song"), test_preview)
+        m1 = json.loads((sound / "gax_manifest.json").read_text())
+        self.assertEqual([k for k in ("drums", "main_menu_japan", "jungle") if "pattern_groups" in m1["songs"][k]],
+                         ["jungle"])
+        self.assertEqual(m1["songs"]["drums"]["sample_rate"], json.loads(
+            (ROOT / SOUND / "gax_manifest.json").read_text())["songs"]["drums"]["sample_rate"])
+        self.assertEqual(self.patterns("drums")["playOrder"], drums["order"])
+        self.assertEqual(changed_groups(self.tree, "arctic"), set())
         p2 = self.patterns("jungle")
         for pi in shared:
             self.assertEqual(base64.b64decode(p2["cells"][pi])[0], cells[0] + 12 - p["transposes"][0][0]

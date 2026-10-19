@@ -5,16 +5,36 @@
   // position shown as rows of cells (note, instrument, volume column,
   // effect), the row playing marked. A cell is selected with the mouse or
   // the arrow keys, and edited on the right; Delete clears it.
+  //
+  // The structure (StructureBar): the order list's positions, the
+  // patterns, their rows, the channels and the speed. A ROM song's first
+  // structural edit builds it from its XM from then on (its shared
+  // patterns each their own).
   import { music as mu } from "../../lib/music/state.svelte.ts";
   import * as M from "../../lib/music/model.ts";
+  import StructureBar from "./StructureBar.svelte";
 
-  const x = $derived(mu.patterns[mu.song]);
-  const p = $derived(x?.p);
-  const cells = $derived(mu.cells);
+  const sv = $derived(mu.songView);
+  const p = $derived(sv?.p);
+  const cells = $derived(sv?.cells ?? null);
   const xmPattern = $derived(p ? (p.playOrder[mu.order] ?? 0) : 0);
   const rows = $derived(p ? (p.rows[xmPattern] ?? 0) : 0);
   const playingRow = $derived(mu.playing === "song" && mu.position && mu.position.order === mu.order ? mu.position.row : -1);
-  const edited = $derived(new Set(Object.keys(mu.state.cells[mu.song] ?? {})));
+  // the cells edited: the cell edits made, or (a structure changed) the cells that aren't the saved pattern's
+  const edited = $derived.by(() => {
+    if (!sv?.structure) return new Set(Object.keys(mu.state.cells[mu.song] ?? {}));
+    const saved = mu.patterns[mu.song];
+    const out: string[] = [];
+    const now = sv.cells[xmPattern];
+    const was = saved && saved.p.channels === sv.p.channels ? saved.cells[xmPattern] : undefined;
+    if (!now) return new Set(out);
+    for (let k = 0; k < now.length; k += M.CELL) {
+      if (was && k + M.CELL <= was.length && now.subarray(k, k + M.CELL).every((v, i) => v === was[k + i])) continue;
+      if (!was && now.subarray(k, k + M.CELL).every((v) => v === 0)) continue;
+      out.push(M.cellKey(xmPattern, Math.floor(k / M.CELL / sv.p.channels), (k / M.CELL) % sv.p.channels));
+    }
+    return new Set(out);
+  });
 
   function sharedWith(ch: number): string {
     if (!p?.groups) return "";
@@ -48,13 +68,10 @@
 
 {#if !p || !cells}
   <div class="nothing">
-    {#if mu.state.newSongs.some((n) => n.key === mu.song)}
-      <p>{mu.song} is a new song: save it, and the build makes it (or says why it can't); then it plays here.</p>
-    {:else}
-      <p>Reading {mu.song}…</p>
-    {/if}
+    <p>Reading {mu.song}…</p>
   </div>
 {:else}
+  <StructureBar pattern={xmPattern} />
   <div class="orders" aria-label="the order list">
     {#each p.playOrder as xp, pos (pos)}
       <button

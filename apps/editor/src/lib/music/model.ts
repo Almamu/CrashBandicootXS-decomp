@@ -4,7 +4,7 @@
 // build makes of them (crashdata.audio.gax's XM import), a ROM song's
 // shared patterns, and the sound effects' rules. No DOM: the tests run it
 // in node.
-import type { Music, MusicCellEdit, MusicInstrument, MusicPatterns, MusicSave, MusicView, SfxTable } from "@crash/schema-types";
+import type { Music, MusicCellEdit, MusicInstrument, MusicPatterns, MusicSave, MusicStructure, MusicUnsaved, MusicView, SfxTable } from "@crash/schema-types";
 
 export type Cell = [number, number, number, number, number];
 export const CELL = 5;
@@ -46,6 +46,8 @@ export interface EditState {
   newInstruments: Record<string, NewInstrument>;
   newSongs: NewSong[];
   removeSongs: string[];
+  /** song -> its new structure (its cells with it: the song has no cell edits then) */
+  structures: Record<string, Structure>;
 }
 
 export function initialState(v: MusicView, sfx: SfxTable, music: Music): EditState {
@@ -59,6 +61,7 @@ export function initialState(v: MusicView, sfx: SfxTable, music: Music): EditSta
     newInstruments: {},
     newSongs: [],
     removeSongs: [],
+    structures: {},
   };
 }
 
@@ -87,6 +90,20 @@ export function saveBody(saved: EditState, now: EditState): MusicSave {
   if (ni.length) body.newInstruments = ni.map(([name, n]) => ({ name, wav: n.wav, rate: n.rate, ...(n.volume !== undefined ? { volume: n.volume } : {}), ...(n.comment ? { comment: n.comment } : {}) }));
   if (now.newSongs.length) body.newSongs = now.newSongs.map((s) => ({ key: s.key, xm: s.xm, comment: now.comments[s.key] ?? s.comment }));
   if (now.removeSongs.length) body.removeSongs = now.removeSongs;
+  const structures = Object.entries(now.structures).filter(([k, st]) => saved.structures[k] !== st);
+  if (structures.length) body.structures = Object.fromEntries(structures.map(([k, st]) => [k, structureBody(st)]));
+  return body;
+}
+
+/** The songs' unsaved edits as the player asks the backend for them (POST music/song, music/pool): every new
+ * song, structure and cell edit, so the songs (and the new instruments they add to the pool) are as the build
+ * would build them. */
+export function unsavedBody(now: EditState): MusicUnsaved {
+  const body: MusicUnsaved = {};
+  if (now.newSongs.length) body.newSongs = now.newSongs.map((s) => ({ key: s.key, xm: s.xm }));
+  if (Object.keys(now.structures).length) body.structures = Object.fromEntries(Object.entries(now.structures).map(([k, st]) => [k, structureBody(st)]));
+  const patterns = saveBody({ ...now, cells: {} }, now).patterns;
+  if (patterns) body.patterns = patterns;
   return body;
 }
 
@@ -243,6 +260,240 @@ export function editedCells(p: MusicPatterns, base: Uint8Array[], edits: Record<
     }
   }
   return out;
+}
+
+// -- a song's structure ------------------------------------------------------------------
+
+/** An XM pattern: its rows and cells (rows * channels * 5 bytes). */
+export interface Pattern {
+  rows: number;
+  cells: Uint8Array;
+}
+
+/** An XM's structure (crashdata.audio.edit.structure): what a structural edit changes. Immutable:
+ * every edit makes a new one, sharing the patterns it doesn't change. */
+export interface Structure {
+  channels: number;
+  patterns: Pattern[];
+  /** the XM patterns the order positions play */
+  order: number[];
+  /** the order position the song loops back to */
+  restart: number;
+  /** the speed the song starts at (the module's; the build puts an Fxx with it on the first row, unless that row sets one) */
+  speed: number;
+}
+
+// FT2's limits (crashdata.audio.edit.MAX_*)
+export const MAX_CHANNELS = 32;
+export const MAX_PATTERNS = 256;
+export const MAX_ROWS = 256;
+export const MAX_ORDER = 256;
+export const MAX_SPEED = 31;
+
+/** A song's structure as its XM is, with the cell edits made (a ROM song's shared patterns are copied out:
+ * from here on each XM pattern is its own). */
+export function structureOf(p: MusicPatterns, cells: Uint8Array[]): Structure {
+  return {
+    channels: p.channels,
+    patterns: p.rows.map((rows, i) => ({ rows, cells: cells[i]! })),
+    order: [...p.order],
+    restart: p.restart,
+    speed: p.speed,
+  };
+}
+
+export function structureBody(s: Structure): MusicStructure {
+  return { channels: s.channels, patterns: s.patterns.map((p) => ({ rows: p.rows, cells: toBase64(p.cells) })), order: [...s.order], restart: s.restart, speed: s.speed };
+}
+
+const sameBytes = (a: Uint8Array, b: Uint8Array) => a === b || (a.length === b.length && a.every((v, i) => v === b[i]));
+
+export function sameStructure(a: Structure, b: Structure): boolean {
+  return (
+    a.channels === b.channels &&
+    a.restart === b.restart &&
+    a.speed === b.speed &&
+    same(a.order, b.order) &&
+    a.patterns.length === b.patterns.length &&
+    a.patterns.every((p, i) => p.rows === b.patterns[i]!.rows && sameBytes(p.cells, b.patterns[i]!.cells))
+  );
+}
+
+/** The pattern view's form of a structure: what MusicPatterns says of a song built from its XM. */
+export function structureView(base: MusicPatterns, s: Structure): MusicPatterns {
+  const { groups: _g, transposes: _t, ...rest } = base;
+  void _g;
+  void _t;
+  return { ...rest, scaffold: false, channels: s.channels, rows: s.patterns.map((p) => p.rows), cells: [], order: s.order, restart: s.restart, speed: s.speed, playOrder: s.order, loopOrder: s.restart };
+}
+
+export function emptyPattern(rows: number, channels: number): Pattern {
+  return { rows, cells: new Uint8Array(rows * channels * CELL) };
+}
+
+function check(ok: boolean, why: string): void {
+  if (!ok) throw new Error(why);
+}
+
+function withPattern(s: Structure, i: number, p: Pattern): Structure {
+  const patterns = [...s.patterns];
+  patterns[i] = p;
+  return { ...s, patterns };
+}
+
+/** A new empty pattern at the end, of `rows` rows. */
+export function addPattern(s: Structure, rows: number): Structure {
+  check(s.patterns.length < MAX_PATTERNS, `an XM has at most ${MAX_PATTERNS} patterns`);
+  return { ...s, patterns: [...s.patterns, emptyPattern(rows, s.channels)] };
+}
+
+/** A copy of pattern i at the end. */
+export function duplicatePattern(s: Structure, i: number): Structure {
+  check(s.patterns.length < MAX_PATTERNS, `an XM has at most ${MAX_PATTERNS} patterns`);
+  const p = s.patterns[i]!;
+  return { ...s, patterns: [...s.patterns, { rows: p.rows, cells: new Uint8Array(p.cells) }] };
+}
+
+export function clearPattern(s: Structure, i: number): Structure {
+  const p = s.patterns[i]!;
+  return withPattern(s, i, emptyPattern(p.rows, s.channels));
+}
+
+/** Pattern i taken out: the order positions that play it go too, and the later patterns' numbers move down. */
+export function deletePattern(s: Structure, i: number): Structure {
+  check(s.patterns.length > 1, "an XM has at least one pattern");
+  const keep = s.order.map((p, pos) => [p, pos] as const).filter(([p]) => p !== i);
+  check(keep.length > 0, `every order position plays pattern ${i}: the order list can't be empty`);
+  // the loop point: the first position kept from the one it marked on
+  const at = keep.findIndex(([, pos]) => pos >= s.restart);
+  return {
+    ...s,
+    patterns: s.patterns.filter((_, k) => k !== i),
+    order: keep.map(([p]) => (p > i ? p - 1 : p)),
+    restart: at >= 0 ? at : keep.length - 1,
+  };
+}
+
+/** Pattern i with n rows: rows cut from its end, or empty rows added there. */
+export function setRows(s: Structure, i: number, n: number): Structure {
+  check(Number.isInteger(n) && n >= 1 && n <= MAX_ROWS, `a pattern has 1-${MAX_ROWS} rows`);
+  const p = s.patterns[i]!;
+  const cells = new Uint8Array(n * s.channels * CELL);
+  cells.set(p.cells.subarray(0, Math.min(p.cells.length, cells.length)));
+  return withPattern(s, i, { rows: n, cells });
+}
+
+/** An empty row inserted at `at` in pattern i (the rows after it move down; the pattern grows by one). */
+export function insertRow(s: Structure, i: number, at: number): Structure {
+  const p = s.patterns[i]!;
+  check(p.rows < MAX_ROWS, `a pattern has at most ${MAX_ROWS} rows`);
+  const w = s.channels * CELL;
+  const cells = new Uint8Array((p.rows + 1) * w);
+  cells.set(p.cells.subarray(0, at * w));
+  cells.set(p.cells.subarray(at * w), (at + 1) * w);
+  return withPattern(s, i, { rows: p.rows + 1, cells });
+}
+
+/** Row `at` of pattern i taken out (the rows after it move up). */
+export function deleteRow(s: Structure, i: number, at: number): Structure {
+  const p = s.patterns[i]!;
+  check(p.rows > 1, "a pattern has at least one row");
+  const w = s.channels * CELL;
+  const cells = new Uint8Array((p.rows - 1) * w);
+  cells.set(p.cells.subarray(0, at * w));
+  cells.set(p.cells.subarray((at + 1) * w), at * w);
+  return withPattern(s, i, { rows: p.rows - 1, cells });
+}
+
+/** An order position playing `pattern` inserted at `pos`. */
+export function insertOrder(s: Structure, pos: number, pattern: number): Structure {
+  check(s.order.length < MAX_ORDER, `an order list has at most ${MAX_ORDER} positions`);
+  const order = [...s.order];
+  order.splice(pos, 0, pattern);
+  return { ...s, order, restart: pos <= s.restart ? s.restart + 1 : s.restart };
+}
+
+export function removeOrder(s: Structure, pos: number): Structure {
+  check(s.order.length > 1, "the order list can't be empty");
+  const order = s.order.filter((_, k) => k !== pos);
+  return { ...s, order, restart: Math.min(order.length - 1, s.restart > pos ? s.restart - 1 : s.restart) };
+}
+
+/** Order position `pos` moved to `to` (the loop point stays on the position it marks). */
+export function moveOrder(s: Structure, pos: number, to: number): Structure {
+  if (to < 0 || to >= s.order.length || to === pos) return s;
+  const idx = s.order.map((_, k) => k);
+  idx.splice(to, 0, idx.splice(pos, 1)[0]!);
+  return { ...s, order: idx.map((k) => s.order[k]!), restart: idx.indexOf(s.restart) };
+}
+
+export function setOrder(s: Structure, pos: number, pattern: number): Structure {
+  check(pattern >= 0 && pattern < s.patterns.length, `there is no pattern ${pattern}`);
+  const order = [...s.order];
+  order[pos] = pattern;
+  return { ...s, order };
+}
+
+export function setRestart(s: Structure, pos: number): Structure {
+  check(pos >= 0 && pos < s.order.length, `there is no order position ${pos}`);
+  return { ...s, restart: pos };
+}
+
+export function setSpeed(s: Structure, speed: number): Structure {
+  check(Number.isInteger(speed) && speed >= 1 && speed <= MAX_SPEED, `a speed is 1-${MAX_SPEED}`);
+  return { ...s, speed };
+}
+
+/** An empty channel inserted at `at` (the end by default) in every pattern. */
+export function addChannel(s: Structure, at = s.channels): Structure {
+  check(s.channels < MAX_CHANNELS, `an XM has at most ${MAX_CHANNELS} channels`);
+  const n = s.channels + 1;
+  const patterns = s.patterns.map((p) => {
+    const cells = new Uint8Array(p.rows * n * CELL);
+    for (let r = 0; r < p.rows; r++) {
+      const src = p.cells.subarray(r * s.channels * CELL, (r + 1) * s.channels * CELL);
+      cells.set(src.subarray(0, at * CELL), r * n * CELL);
+      cells.set(src.subarray(at * CELL), (r * n + at + 1) * CELL);
+    }
+    return { rows: p.rows, cells };
+  });
+  return { ...s, channels: n, patterns };
+}
+
+/** Channel `ch` taken out of every pattern. */
+export function removeChannel(s: Structure, ch: number): Structure {
+  check(s.channels > 1, "an XM has at least one channel");
+  const n = s.channels - 1;
+  const patterns = s.patterns.map((p) => {
+    const cells = new Uint8Array(p.rows * n * CELL);
+    for (let r = 0; r < p.rows; r++) {
+      const src = p.cells.subarray(r * s.channels * CELL, (r + 1) * s.channels * CELL);
+      cells.set(src.subarray(0, ch * CELL), r * n * CELL);
+      cells.set(src.subarray((ch + 1) * CELL), (r * n + ch) * CELL);
+    }
+    return { rows: p.rows, cells };
+  });
+  return { ...s, channels: n, patterns };
+}
+
+export function setCellIn(s: Structure, pattern: number, row: number, channel: number, cell: Cell): Structure {
+  const p = s.patterns[pattern]!;
+  const cells = new Uint8Array(p.cells);
+  cells.set(cell, (row * s.channels + channel) * CELL);
+  return withPattern(s, pattern, { rows: p.rows, cells });
+}
+
+/** The speed the first row sets (its Fxx or 7xy), which the module's speed doesn't override; null if none. */
+export function firstRowSpeed(s: Structure): number | null {
+  const p = s.patterns[s.order[0]!];
+  if (!p) return null;
+  for (let c = 0; c < s.channels; c++) {
+    const k = c * CELL;
+    const [cmd, param] = gaxEffect(p.cells[k + 3]!, p.cells[k + 4]!, p.cells[k + 2]!);
+    if (cmd === 15) return param;
+    if (cmd === 7) return param >> 4;
+  }
+  return null;
 }
 
 // -- the sound effects ------------------------------------------------------------------

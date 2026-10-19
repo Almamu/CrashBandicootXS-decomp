@@ -560,8 +560,9 @@ byte. A song that isn't in `songs` has no ROM history, and
 1. **Write the XM**, `games/xs/sound/songs/<key>.xm`. The key is the song's name
    (`SONG_<KEY>`), so lower case and `_`.
    - Its instruments, by name:
-     - `Instrument N` plays the pool's instrument N (1-51, the
-       manifest's `instruments`), as in the ROM's songs. Its XM samples
+     - `Instrument N` plays the pool's instrument N (0-51, the
+       manifest's `instruments`; 0 is the empty one), as in the ROM's
+       songs. Its XM samples
        and envelopes aren't read; the ROM songs' XMs carry each pool
        instrument with its sample, so copy them from one of those to hear
        the song in a tracker.
@@ -659,6 +660,33 @@ captured output (the 8-bit buffer each `GAX_play` mixed, at 15769 Hz) is
 not silent, and the two order positions that play XM pattern 1 (1 and 3)
 give the same samples (correlation 1.000), while positions 1 and 2 don't
 (0.348).
+
+## A ROM song without its scaffold
+
+A ROM song's manifest entry (`songs`) records its scaffold: its
+structure (`num_channels`, `num_rows_per_pattern`,
+`num_patterns_per_channel`, `loop_point`, `num_items`), which of its
+order positions and channels share one stored pattern
+(`pattern_groups`, with `channel_transposes`) and in what order the
+patterns and channels are laid out (`pattern_group_order`,
+`channel_order`). With it the song rebuilds byte for byte, and its XM
+must fit it: XM pattern p plays at order position p (an order list
+`0`..`n-1`, the XM's restart position the loop point), every pattern the
+scaffold's length, the scaffold's channels, speed 6 (the first rows set
+the songs' own); `tools/gax_audio.py` stops on one that doesn't, and
+says which.
+
+Without those fields (the music editor takes them out when it changes a
+song's structure, docs/editors.md) the song is built from its XM like a
+new song (see "Adding a song": one order position per entry of the order
+list, the loop point its restart position, identical patterns stored once,
+no transposes, a pattern break on shorter patterns, an `Fxx` for another
+speed), with the manifest's settings (`title`, `artist`, `title_bytes`,
+`volume`, `ushort_0a`, `sample_rate`, `num_fx_channels`, `half_rate_fx`,
+`mixer_data_bytes`) and its place in the music block (`song_order`). Its
+id stays, and it stays one of the ROM's songs (it can't leave the song
+table). Every ROM song builds this way too (a test builds them all); the
+music block is then no longer the ROM's.
 
 ## New instruments
 

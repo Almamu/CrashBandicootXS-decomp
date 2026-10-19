@@ -154,14 +154,16 @@ export interface Instrument {
   } | null;
 }
 /**
+ * a ROM song: its settings and, while it keeps it, the scaffold the ROM recorded (its structure, pattern sharing and layout); a song without it is built from its XM
+ *
  * This interface was referenced by `undefined`'s JSON-Schema definition
  * via the `patternProperty` "^[a-z0-9_]+$".
  */
 export interface Song {
-  num_channels: number;
-  num_rows_per_pattern: number;
-  num_patterns_per_channel: number;
-  loop_point: number;
+  num_channels?: number;
+  num_rows_per_pattern?: number;
+  num_patterns_per_channel?: number;
+  loop_point?: number;
   volume: number;
   ushort_0a: number;
   sample_rate: number;

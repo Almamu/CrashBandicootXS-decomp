@@ -22,7 +22,7 @@
     if (mu.view && mu.song) void mu.measure(mu.song);
   });
 
-  const len = $derived(mu.songLength[mu.song]);
+  const len = $derived(mu.songLength[mu.lengthKey(mu.song)]);
   let exportSeconds = $state(60);
 
   async function exportWav() {
@@ -86,17 +86,18 @@
       <div class="toolbar">
         {#if mu.kind === "song"}
           {@const info = mu.songInfo}
+          {@const sv = mu.songView}
           <strong>{mu.song}</strong>
           <span class="hint">
-            {#if info?.xm}{info.xm.channels} channels, {info.mixRate} Hz{/if}
+            {#if sv}{sv.p.channels} channels{/if}{#if info}, {info.mixRate} Hz{/if}{#if mu.state.structures[mu.song]} · structure changed{/if}
             {#if len}· loops to order {len.order} after {M.frameTime(len.loop)}{/if}
           </span>
           <span class="sep"></span>
           {#if mu.playing === "song"}
             <button class="primary" onclick={() => mu.stop()} title="stop (space)">■ Stop</button>
           {:else}
-            <button class="primary" disabled={!info} onclick={() => mu.playSong(0)} title="play the song from its start, as GAX2 mixes it (space)">▶ Play</button>
-            <button disabled={!info} onclick={() => mu.playSong(mu.order)} title="play from the order position shown">▶ From {mu.order}</button>
+            <button class="primary" disabled={!sv} onclick={() => mu.playSong(0)} title="play the song from its start, as GAX2 mixes it (space)">▶ Play</button>
+            <button disabled={!sv} onclick={() => mu.playSong(mu.order)} title="play from the order position shown">▶ From {mu.order}</button>
           {/if}
           <label class="hint" title="GAX_set_music_volume: every channel's volume (AudioContext's duck volume; 255 is full)">
             volume <input type="range" min="0" max="255" value={mu.musicVolume} onchange={(e) => mu.setMusicVolume(Number(e.currentTarget.value))} />
@@ -108,7 +109,7 @@
           <span class="spacer"></span>
           <label class="hint" title="the song as the PC port's --wav writes it: 8-bit mono at its mix rate">
             <input type="number" min="1" max="600" bind:value={exportSeconds} style="width: 4rem" /> s
-            <button disabled={!info} onclick={exportWav}>Save as WAV</button>
+            <button disabled={!sv} onclick={exportWav}>Save as WAV</button>
           </label>
         {:else}
           <strong>{mu.kind === "sfx" ? "Sound effects" : "Samples"}</strong>

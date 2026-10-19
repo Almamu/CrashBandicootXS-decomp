@@ -601,8 +601,13 @@ sample replaced by an imported WAV and a new sound effect with its own
 sample, both before saving, against the PC port of the saved tree: every
 sample the same. CI keeps it so: `apps/editor/test/gax_reference.json`
 has the SHA-1s of every song's first 1200 frames and three sound-effect
-sequences as the PC port mixes them, which the player's test checks and
-host.yml renders again with the PC port (`tools/gax_render.py check`).
+sequences as the PC port mixes them, and of songs the editor changed
+(`tools/gax_render.py`'s `edited_body`: a ROM song restructured with
+alternating speeds and GAX2's own slides, cell edits of shared ROM
+patterns, a channel added), saved by the backend in a copy of the tree
+whose PC port renders them; the player's test plays the same edits
+unsaved, as the editor does, and host.yml renders them again with the PC
+port (`tools/gax_render.py check`).
 
 **Songs.** The left column's first tab is the song table, in song id
 order (`SONG_<KEY>`), each with what plays it: a level theme, a screen,
@@ -637,7 +642,34 @@ channel's pattern once for every order position (and channel) that plays
 the same notes: the panel says which, and an edit is made in all of
 them, as the save writes it (with their transposes). The edited song
 plays as the build will build it (`POST music/song` with the edits): an
-edit is heard before it is saved. A new song needs saving (the build makes it) before it plays.
+edit is heard before it is saved.
+
+**Structure.** Above the order list, the song's structure, each change a
+step of the undo stack: the order position shown (the pattern it plays,
+a new position after it, taken out, moved earlier or later, "loop here"
+for the position the song loops back to), the pattern it plays (its rows,
+a row inserted or taken out at the cell selected, a new empty pattern or
+a copy played after the position, cleared, taken out with the positions
+that play it), a channel added or the selected cell's taken out, and the
+speed the song starts at (GAX2 starts every song at 6, so the build puts
+an `Fxx` with another one on the first row, unless the first row sets
+one: the bar says when it does). The XM's rules are the build's: one
+pattern length a song (the longest; a shorter pattern ends with the
+pattern break the build adds), the BPM unused (one tick a frame), and the
+work RAM StartSong gives GAX2 limits the channels at a mix rate (a save
+the build refuses is refused with its reason). A ROM song is built with
+its recorded scaffold, its patterns shared between order positions and
+channels with transposes, which gives back the ROM's bytes; its first
+structural change makes it a song built from its XM (each order
+position's pattern its own, the sharing found again by content; the
+save takes the scaffold out of the manifest), and the bar says so. A
+changed song plays as the build will build it, before it is saved.
+
+A new song ("Import an XM as a new song…") opens and plays before it is
+saved: the backend reads its XM and builds it, with the new instruments
+it brings, as the build will (`POST music/patterns`, `music/song` and
+`music/pool` with the unsaved new songs), and its cells and structure
+are edited like any song's.
 
 **Where songs play.** The right column also has every screen's song
 (music.json: the title, the level select, the credits, the bonus rooms,
@@ -679,17 +711,13 @@ Every change is a step of the undo stack (Ctrl+Z, Ctrl+Shift+Z or
 Ctrl+Y); Ctrl+S saves, space plays and stops. The page's address keeps
 the song (`#mode=music&song=jungle`).
 
-**Not yet / not here:** the XM's structure (adding or removing patterns,
-rows or channels, the order list, the speed): a ROM song's is the
-manifest's recorded scaffold (its pattern sharing, transposes and order
-count), which the build keeps to give back the ROM's bytes, and a new
-song's is its XM's, written in a tracker; a new song's settings
-(`songs/<key>.json`); the instruments themselves (a ROM instrument's
+**Not yet / not here:** a new song's settings (`songs/<key>.json`) and
+a ROM song's (its mix rate, volume and echo taps: the "Data files" tab
+edits the manifest); the instruments themselves (a ROM instrument's
 envelope, sequence, loop and tune are records of the manifest, edited in
 the "Data files" tab; a new song's own XM instruments come from its XM);
 a new sample added to the music pool (a sample is replaced; a new song
-brings its own in its XM or as `instruments/<name>.json`); playing an
-unsaved new song; the game's timing around the sound (fades, ducks,
+brings its own in its XM or as `instruments/<name>.json`); the game's timing around the sound (fades, ducks,
 sound effects as the gameplay triggers them: the player plays a song or
 one sound effect, with the music volume asked for); GAX2's jingle player
 and low-pass filter, which the game doesn't use; N-Tranced's sound,
@@ -729,10 +757,12 @@ dependency), listens on **127.0.0.1 only**, and serves:
 | `GET /api/projects/ID/music` | the music editor's view (`crashdata.audio.edit.view`): `{songs, screens, themes, sfx, sfxNoneComment, sfxSlots, samples, instruments, mixRates, limits, files}` (the song table, each song's XM in brief and what plays it: the level themes, the screens, the cutscene slides; the screens' and themes' songs; the sound-effect table with where each name is used, code and cutscenes; the sound-effect set's instruments and the rate each plays its sample at; the music pool's samples, what plays them and the shortest sample their loops take; the new instruments); 404 for a game whose sound isn't data (N-Tranced) |
 | `GET /api/projects/ID/music/pool` | what the music editor's player needs besides a song (`player_pool`): GAX2's tables (`lib/gax/data/gax_tables.c`: gGaxPeriodTable, gGaxVibratoTable, the mix rates), the music pool's and the sound-effect set's instruments as `struct GaxChannelInstrument` (the new songs' and sound effects' new instruments too) and their samples, `{tables, music, sfx, sfxSlots}`; gzipped when asked |
 | `GET /api/projects/ID/music/song?key=K` | a song as `tools/gax_audio.py` builds it (`player_song`), as GAX2_init sees it: its `GaxSongData` fields, the mixer's echo taps (`dsp`), the packed pattern streams (`patterns`, base64) and each channel's order list (`orders`: `[offset in patterns, transpose]`) |
-| `POST /api/projects/ID/music/song` `{key, edits}` | the same, built with unsaved cell edits of its XM (`edits` as the save's `patterns`) |
-| `GET /api/projects/ID/music/patterns?key=K` | a song's XM for the pattern view: `{rows, cells, channels, order, playOrder, loopOrder, instruments, groups?, transposes?}` (each pattern's cells, 5 bytes a cell, base64; for a ROM song, which order positions share a stored pattern) |
+| `POST /api/projects/ID/music/song` `{key, edits?, newSongs?, structures?, patterns?}` | the same, built with unsaved edits (`unsaved_songs`): cell edits of its XM (`edits`), and the songs' unsaved new songs, structures and cell edits as the save's; a new song's key plays an unsaved new song |
+| `POST /api/projects/ID/music/pool` `{newSongs?, structures?, patterns?}` | the player's pool with those edits: an unsaved new song's new instruments in it, numbered as the build will number them |
+| `GET /api/projects/ID/music/patterns?key=K` | a song's XM for the pattern view: `{rows, cells, channels, order, restart, speed, playOrder, loopOrder, instruments, scaffold, groups?, transposes?}` (each pattern's cells, 5 bytes a cell, base64; for a ROM song that keeps its scaffold, which order positions share a stored pattern) |
+| `POST /api/projects/ID/music/patterns` `{key, xm}` | the same of an unsaved new song's XM (base64) |
 | `POST /api/projects/ID/music/import` `{wav, rate?}` | a WAV (base64: PCM 8 to 32-bit or 32-bit float, any channels) made into a GAX2 sample, mixed to mono, resampled to `rate` (linearly) and rounded to 8 bits: `{wav, length, rate, source, peak, clipped, how}` |
-| `POST /api/projects/ID/music/save` `{sfxTable?, music?, themes?, songComments?, newSongs?, removeSongs?, patterns?, samples?, newInstruments?}` | saves the music editor's edits, all or none (below) |
+| `POST /api/projects/ID/music/save` `{sfxTable?, music?, themes?, songComments?, newSongs?, removeSongs?, structures?, patterns?, samples?, newInstruments?}` | saves the music editor's edits, all or none (below) |
 
 A path is from the project's tree's root (`games/xs/data/levels/levels.json`),
 and must be in the project's `games/<game>/`, with no `..`; a file the
@@ -809,9 +839,12 @@ themes' `"song"`), `songComments` `{song: comment}` (the song table's),
 `songs/<key>.xm` and added at the song table's end: `SONG_<KEY>` is the
 next id, [audio.md, "Adding a song"](./audio.md#adding-a-song)),
 `removeSongs` (a new song taken out of the song table; its XM stays, and
-no table entry builds it), `patterns` `{song: [{pattern, row, channel,
-cell: [note, instrument, volume, effect, parameter]}]}` (cell edits of
-the song's XM), `samples` `{"samples/NN.wav" or "sfx_samples/NN.wav":
+no table entry builds it), `structures` `{song: {channels, patterns:
+[{rows, cells}], order, restart, speed}}` (the song's XM with new
+patterns, rows, channels, order list, loop point or speed: a ROM song's
+scaffold then leaves the manifest, below; a new song's of this save too),
+`patterns` `{song: [{pattern, row, channel, cell: [note, instrument,
+volume, effect, parameter]}]}` (cell edits of the song's XM), `samples` `{"samples/NN.wav" or "sfx_samples/NN.wav":
 base64 WAV}` (new sounds for the tree's samples, 8-bit mono as
 `music/import` gives them) and `newInstruments` `[{name, wav, rate?,
 volume?, comment?}]` (`instruments/<name>.json` with its WAV,
@@ -837,6 +870,18 @@ their transposes): an edit of one cell is made in each of them (the note
 moved by their transposes), as the ROM would share it; the build packs it from
 its cells, as it packs every pattern ([audio.md, "The XM's
 cells"](./audio.md#the-xms-cells)).
+A structure is written in the XM's header (its order list, restart
+position, channels, pattern count, speed) and patterns; a pattern whose
+rows and cells are the old one's of its number keeps its bytes, the
+instruments theirs. A ROM song whose structure changes loses its
+scaffold: its `channel_transposes`, `pattern_groups`,
+`pattern_group_order`, `channel_order`, `num_items` and the four
+structure fields (`num_channels`, `num_rows_per_pattern`,
+`num_patterns_per_channel`, `loop_point`) leave the manifest, and it is
+built from its XM like a new song ([audio.md, "A ROM song without its
+scaffold"](./audio.md#a-rom-song-without-its-scaffold)), with the
+manifest's settings (mix rate, volume, echo taps, title bytes) and its
+place in the music block.
 After the files are in place the model's checks build the music and the
 sound effects (`music-build`, `sfx-build`: a XM the encoder refuses, a
 WAV, an instrument), and every file goes back on a new error. A value
