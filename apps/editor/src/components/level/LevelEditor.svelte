@@ -9,13 +9,14 @@
   import EntityPanel from "./EntityPanel.svelte";
   import LevelNav from "./LevelNav.svelte";
   import PalettePanel from "./PalettePanel.svelte";
+  import RoomPanel from "./RoomPanel.svelte";
   import RoomCanvas from "./RoomCanvas.svelte";
   import TilePanel from "./TilePanel.svelte";
 
   let canvas = $state<RoomCanvas>();
   let cam = $state({ x: 0, y: 0 });
   let hover = $state<{ world: { x: number; y: number }; cell: { x: number; y: number } | null } | null>(null);
-  let panel = $state<"entity" | "tiles" | "collision" | "palette">("entity");
+  let panel = $state<"entity" | "tiles" | "collision" | "palette" | "room">("entity");
   let play = $state<{ running: boolean; text: string; ok: boolean; image?: string | null } | null>(null);
 
   const TOOLS: { id: Tool; label: string; key: string; title: string }[] = [
@@ -144,6 +145,9 @@
         <label title="240x160 screens"><input type="checkbox" bind:checked={level.show.screens} /> screens</label>
         <label title="the game's camera at the view's centre"><input type="checkbox" bind:checked={level.show.camera} /> camera</label>
         <label title="scroll each BG layer by its parallax factor for the camera, as the game does"><input type="checkbox" bind:checked={level.parallax} /> parallax</label>
+        {#if (level.room?.record?.blend?.effect ?? 0) % 4 === 1}
+          <label title="the room's alpha blend: BG3 over BG0-2 (the Room tab)"><input type="checkbox" bind:checked={level.show.blend} /> blend</label>
+        {/if}
       </div>
       <div class="canvas">
         <RoomCanvas bind:this={canvas} onhover={(h) => (hover = h)} oncamera={(c) => { if (c.x !== cam.x || c.y !== cam.y) cam = c; }} />
@@ -169,12 +173,14 @@
         <button class:on={panel === "tiles"} onclick={() => setTool("tile")}>Tiles</button>
         <button class:on={panel === "collision"} onclick={() => setTool("collision")}>Collision</button>
         <button class:on={panel === "palette"} onclick={() => (panel = "palette")}>Palette</button>
+        <button class:on={panel === "room"} onclick={() => (panel = "room")} title="the room's record: its kind and blend">Room</button>
       </div>
       <div class="panel">
         {#if panel === "entity"}<EntityPanel oncentre={(x, y) => canvas?.centreOn(x, y)} />
         {:else if panel === "tiles"}<TilePanel />
         {:else if panel === "collision"}<CollisionPanel />
-        {:else}<PalettePanel />{/if}
+        {:else if panel === "palette"}<PalettePanel />
+        {:else}<RoomPanel />{/if}
       </div>
     {/if}
   </aside>

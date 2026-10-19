@@ -46,8 +46,17 @@ export interface Room {
      * SetupRoomBlend's colour effect
      */
     blend?: {
+      /**
+       * BLDCNT's effect: 0 none, 1 alpha blending (BG3 over BG0-2), 2 brighten, 3 darken
+       */
       effect?: number;
+      /**
+       * BLDALPHA's EVA: BG3's weight in 16ths (the PPU stops at 16)
+       */
       eva?: number;
+      /**
+       * BLDALPHA's EVB: the weight of BG0-2 and the sprites under BG3, in 16ths
+       */
       evb?: number;
     };
     /**

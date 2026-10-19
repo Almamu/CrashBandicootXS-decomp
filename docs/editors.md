@@ -406,6 +406,22 @@ is drawn with them at once. Saved, the palette goes into every layer
 picture of the room, as the build requires (docs/levels.md, "The room
 palette").
 
+**Room.** The Room tab edits the room's record in the level table
+(room.json's `"record"`, [levels.md, "The level
+table"](./levels.md#the-level-table)): its **kind** (`ON_FOOT`,
+`UNDERWATER`, `HOVER`: the player's controller; the tab warns when the
+room's start marker isn't the kind's) and its **blend**, the colour effect
+`SetupRoomBlend` writes: BLDCNT's effect (0 none, 1 alpha blending, 2
+brighten, 3 darken) with BG3 the first target and BG0-2 and the sprites
+the second, and BLDALPHA's weights EVA and EVB (0-31, the PPU stops at
+16). The view draws the alpha blend as the PPU does ("blend" in the layer
+bar): where BG3 is the front layer and BG0-2 the next one under it, each
+channel is `(BG3 * EVA + under * EVB) / 16`, at most full; over the
+backdrop alone BG3 isn't blended (the backdrop isn't a second target).
+Brighten and darken go by BLDY, which the room doesn't set (the fades
+do), so they are drawn unchanged. The schema and the build take an
+effect of 0-3 and weights of 0-31, the bits SetupRoomBlend keeps.
+
 **Saving** sends one request with what changed since the room was opened
 or last saved: room.json's value, the painted cells of each layer, the
 collision cells, the palette (`POST .../room/save`, "The editor's
@@ -424,8 +440,7 @@ A bonus or gem-path room starts as the level's (`ROOM=bonus` or
 **Not yet:** making a new room (a copy of a room's folder with its own
 symbols, listed in levels.json: [levels.md, "Adding a
 room"](./levels.md#adding-a-room); the backend writes only files that
-exist), resizing a room, the room record's `kind` and `blend` (in the
-"Data files" tab's form of room.json), drawing new tiles, adding a
+exist), resizing a room, drawing new tiles, adding a
 collision value to the legend, and naming N-Tranced's records (their
 views aren't known yet: they are edited as words).
 

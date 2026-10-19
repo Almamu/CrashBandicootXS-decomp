@@ -1430,6 +1430,11 @@ def new_tilesets_c(levels, build_dir):
 # The record kinds (ROOM_KIND_*, engine/include/constants/rooms.h); a room's
 # "kind" is one of the first three.
 ROOM_KINDS = ["ON_FOOT", "UNDERWATER", "HOVER", "CATEGORY"]
+# A room's "blend" (struct level_room_blend), as SetupRoomBlend stores it into
+# BLDCNT/BLDALPHA's bitfields (struct blend_bits): the effect's two bits, the
+# weights' five.
+BLEND_EFFECT_MAX = 3
+BLEND_WEIGHT_MAX = 31
 # gLevelTable (struct level_info, 0x24 bytes) and the ROM's room table.
 LEVEL_TABLE = 0x0816C86C
 LEVEL_INFO_SIZE = 0x24
@@ -1524,8 +1529,11 @@ class LevelTable:
             sys.exit("%s/%s/room.json: \"record\" \"kind\" is one of %s" % (LEVELS_DIR, r, ", ".join(ROOM_KINDS[:3])))
         b = rec.get("blend", {})
         blend = [b.get(k, 0) for k in ("effect", "eva", "evb")]
-        if not (0 <= blend[0] <= 0xFFFF and 0 <= blend[1] <= 0xFF and 0 <= blend[2] <= 0xFF):
-            sys.exit("%s/%s/room.json: \"blend\" is a u16 \"effect\" and u8 \"eva\", \"evb\"" % (LEVELS_DIR, r))
+        if not (0 <= blend[0] <= BLEND_EFFECT_MAX and 0 <= blend[1] <= BLEND_WEIGHT_MAX
+                and 0 <= blend[2] <= BLEND_WEIGHT_MAX):
+            sys.exit("%s/%s/room.json: \"blend\" is an \"effect\" of 0-%d (BLDCNT's two bits) and \"eva\", \"evb\" of "
+                     "0-%d (BLDALPHA's five bits each): SetupRoomBlend keeps only those bits"
+                     % (LEVELS_DIR, r, BLEND_EFFECT_MAX, BLEND_WEIGHT_MAX))
         return ["extern const struct level_room %s = {" % rec["symbol"],
                 "    %s, &%s, ROOM_KIND_%s, %d, { { %d, %d, %d } }" % (member(self.records[r], "palette"), sym["desc"],
                                                                       rec["kind"], rec.get("unk_0C", 0), *blend),

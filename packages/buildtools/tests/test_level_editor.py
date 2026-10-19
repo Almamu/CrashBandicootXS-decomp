@@ -223,6 +223,12 @@ class Saving(LevelEditor):
             st, r = self.call("POST", "/api/projects/xs/room/save", {"path": ROOM, "room": room,
                                                                       "collision": [[0, 0, 0x2B]]})
             self.assertEqual(st, 422, r)
+            # a blend SetupRoomBlend can't store (BLDCNT's effect is two bits, BLDALPHA's weights five)
+            for blend in ({"effect": 4, "eva": 4, "evb": 16}, {"effect": 1, "eva": 32, "evb": 16}):
+                room = json.loads(json.dumps(v["room"]))
+                room["record"]["blend"] = blend
+                st, r = self.call("POST", "/api/projects/xs/room/save", {"path": ROOM, "room": room})
+                self.assertEqual(st, 422, (blend, r))
             for p, b in files.items():
                 self.assertEqual(p.read_bytes(), b, p)
             self.assertEqual(sorted(p.name for p in (ROOT / ROOM).glob(".*.tmp")), [])
