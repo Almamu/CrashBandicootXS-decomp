@@ -75,17 +75,36 @@ HOST_CXXFLAGS += $(HOST_SANITIZE_FLAGS)
 HOST_CFLAGS += $(HOST_SANITIZE_FLAGS)
 endif
 
-# ASan puts a redzone after each global, but two data files are read
+# ASan puts a redzone after each global, but some data files are read
 # across their definitions, back to back as in the ROM (and as
 # -fno-toplevel-reorder keeps them): a cutscene picture's bitmap right
-# after its palette (+0x200, slideshow.cpp), and the sprite tile pool, 56
-# arrays read from bank 0's (tileBase + a frame's offset). With redzones
-# those reads are overflows, and the data isn't where it is read. Their
+# after its palette (+0x200, slideshow.cpp), a boss picture's frames
+# after its palette (+0x204 on, Airship::ConvertTiles and the
+# hovercraft's), the sprite tile pool, 56 arrays read from bank 0's
+# (tileBase + a frame's offset), the three empty sprite frames' box,
+# read past their header (in the ROM the next frame's header; on the
+# host padding, which src/sprite_boxes.c checks), and the polar boxes
+# read as Aku Aku's palette (below). With redzones those
+# reads are overflows, and the data isn't where it is read. Their
 # globals aren't instrumented (--param asan-globals=0: no redzones, so
 # nothing between them); every other global is.
 ifneq ($(findstring address,$(SANITIZE)),)
-$(C_BUILDDIR)/game/ui/data/cutscene_pictures.o $(C_BUILDDIR)/engine/gfx/data/sprite_tiles.o: HOST_CXXFLAGS += --param asan-globals=0
+$(C_BUILDDIR)/game/ui/data/cutscene_pictures.o $(C_BUILDDIR)/game/bosses/data/boss_pictures.o \
+	$(C_BUILDDIR)/engine/gfx/data/sprite_tiles.o $(C_BUILDDIR)/engine/gfx/data/sprite_banks_00_09.o \
+	$(C_BUILDDIR)/engine/gfx/data/sprite_banks_39_55.o \
+	$(C_BUILDDIR)/game/vehicles/polar/data/polar_palettes_boxes.o: HOST_CXXFLAGS += --param asan-globals=0
 endif
+
+# The polar stages' Aku Aku, losing its last mask, loads the palette 0x20
+# bytes before gPolarAkuAkuPalette1 (PolarAkuAku::Refresh's `(level - 1)
+# * 0x20` with level 0): in the ROM the last 32 bytes of the four 12-byte
+# boxes before it (polar_palettes_boxes.cpp), back to back. The host's
+# g++ aligns each 12-byte box to 16 bytes, so the palette read was other
+# bytes, and its colours other than mGBA's, for the 39 frames the
+# animation lasts. With -malign-data=abi (each global at its type's own
+# alignment, 2 bytes here) the file is laid out as in the ROM.
+HOST_ALIGN_DATA_ABI := $(shell $(HOST_CXX) -malign-data=abi -x c++ -E /dev/null >/dev/null 2>&1 && echo -malign-data=abi)
+$(C_BUILDDIR)/game/vehicles/polar/data/polar_palettes_boxes.o: HOST_CXXFLAGS += $(HOST_ALIGN_DATA_ABI)
 
 # entity.o is the one key-method object where g++ 2.9 (`#pragma
 # implementation`) emitted out-of-line copies of its class's inline

@@ -126,6 +126,9 @@ int HostWritePng(const char *path, const u32 *xrgb, u32 width, u32 height);
 /* The scripted input (input.c): reads the key file. */
 void HostInputInit(void);
 
+/* The empty sprite frames' reads past their header are 0 wide (sprite_boxes.c). */
+void HostCheckEmptyFrames(void);
+
 /* The game frame: how many times the game has read REG_KEYINPUT. */
 u32 HostFrame(void);
 

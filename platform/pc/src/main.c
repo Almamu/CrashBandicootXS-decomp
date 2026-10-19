@@ -162,6 +162,7 @@ int main(int argc, char **argv)
         HostGaxTrace(gHostOptions.gaxTrace);
     }
     HostInputInit();
+    HostCheckEmptyFrames();
     if (!HostFrontendAvailable()) {
         if (!gHostOptions.headless) {
             fprintf(stderr,

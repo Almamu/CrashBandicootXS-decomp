@@ -295,8 +295,10 @@ platform/pc/tests/link.keys        the save menu's "load link game", with no cab
 platform/pc/tests/bonus.keys       a new game into Jungle Jam's bonus round and out again
 platform/pc/tests/gem_path.keys    Ace of Space's gem path (--level 11 --room gem-path): its
                                    whole hover ride to the exit, then on foot
+platform/pc/tests/polar_mask.keys  Frostbite Cavern's polar stage (--level 3 --room 1): Aku Aku's
+                                   mask lost on the polar bear
 platform/pc/tests/*_mgba_screens.json
-                                   the hashes of mGBA's pictures for the five (boottest.py
+                                   the hashes of mGBA's pictures for the key files (boottest.py
                                    `screens`), what CI compares the PPU's with
 platform/pc/tests/screens/         some of mGBA's pictures of the boot, as PNGs
 platform/pc/tests/boot_gax.trace   mGBA's trace of GAX2 in the boot (boottest.py
@@ -450,6 +452,7 @@ same key file, each frame's picture compared (`--every 1`):
 | link.keys (the save menu's "load link game" with no cable, aborted) | 1000 | 1000 |
 | bonus.keys (a new game, Jungle Jam into its bonus round and out) | 5000 | 4997 |
 | gem_path.keys, `--level 11 --room gem-path` (Ace of Space's hover ride to its exit, then on foot) | 2900 | 2900 |
+| polar_mask.keys, `--level 3 --room 1` (Frostbite Cavern's polar stage, a mask lost) | 1100 | 1099 |
 
 The pictures that differ are of the CPU's time, not the PPU's: the host's
 game takes no time, the GBA's does. Frame 512 is the first after the
@@ -750,17 +753,23 @@ UBSAN_OPTIONS=print_stacktrace=1:suppressions=platform/pc/ubsan.supp build/pc/cr
 `-fsanitize-recover=address` with `ASAN_OPTIONS=halt_on_error=0` to see
 every report of a run, not only the first).
 
-ASan puts a redzone after each global, and two data files are read
+ASan puts a redzone after each global, and three data files are read
 across their definitions, laid out back to back as in the ROM: a
 cutscene picture's bitmap is read right after its palette (+0x200 from
-it, slideshow.cpp; cutscene_pictures.cpp), and the sprite tile pool is
+it, slideshow.cpp; cutscene_pictures.cpp), a boss picture's frames are
+found by walking their sizes from its palette + 0x204 (N. Gin's airship,
+Airship::ConvertTiles, and his hovercraft; boss_pictures.cpp), and the
+sprite tile pool is
 one range read from bank 0's tiles (`tileBase` + a frame's offset), cut
 into 56 arrays, one a bank (sprite_tiles.cpp). With redzones, the reads
 past a palette or a bank's end are reported as overflows, and every
 bitmap and every bank after the first is somewhere else than where it is
-read (the pictures differ from mGBA's). So those two files are built
-with `--param asan-globals=0` (no redzones between their globals, and
-no overflow of them caught); every other global is checked. Neither the
+read (the pictures differ from mGBA's; the airship's frame sizes were
+read from the redzone, and the jetpack stages crashed on their first
+frame). So those three files are built
+with `--param asan-globals=0`, and so are the two sprite_banks files
+that hold the empty frames, see below: no redzones between their globals, and
+no overflow of them caught. Every other global is checked. Neither the
 linker-placed globals nor the work RAMs need it: the placed globals are
 addresses inside gHostIwram and gHostEwram (memory.S, not instrumented),
 which ASan sees as one object each. CI (host.yml, `sanitizers`) builds
@@ -789,8 +798,44 @@ the previews, the cutscene and the sound), both clean since:
   check (an unrecoverable one, `-fno-sanitize-recover`, reports and
   aborts without looking), so the job builds UBSan's checks recoverable
   and ends the run at the first report with `halt_on_error=1`.
-- ASan: nothing beyond the two data files above (leaks aren't checked,
-  `detect_leaks=0`: the game's heaps are its own).
+- ASan: nothing beyond the data files above (leaks aren't checked,
+  `detect_leaks=0`: the game's heaps are its own). boss_pictures.cpp was
+  found by playing the jetpack stages (Rocket Racket, Blimp Bonanza,
+  No-Fly Zone) under ASan: Airship::ConvertTiles read the airship's
+  first frame size 4 bytes into the redzone after its palette, and the
+  sizes it walked on from there crashed it.
+- ASan, the Neo Cortex fight: Sprite::GetBodyBox read 8 bytes past
+  Crash's frame 440. It is one of three empty frames (no pieces: Crash's
+  440, the checkpoint text's 5, the icons' 36), each only a 12-byte
+  header whose `pieces` is the next frame's, so its first piece byte
+  says the frame has a box after the header (layout type 2), and
+  GetBodyBox and GetAttackBox read one. In the ROM that is the next
+  frame's header, two ROM addresses, whose halves make a box over 2048
+  pixels below the sprite and less than 0 wide (each address's low half
+  is 0x8000 or more): it touches nothing, so a shot passes through Crash
+  while he shows the frame (CortexShotCtrl::Update). On the host the
+  header is 24 bytes and the read lands in the padding before the next
+  frame (aligned to 32 bytes): a box 0 wide, which touches nothing either
+  (AabbOverlaps wants both boxes wider than 0, and a 0-wide body box
+  falls back to the attack box, which for type 2 is the empty box). The
+  two sprite_banks objects that hold the empty frames are built without
+  redzones too, and since the host's result rests on that padding,
+  platform/pc/src/sprite_boxes.c checks it at startup
+  (HostCheckEmptyFrames): every empty frame an animation shows must read
+  boxes 0 wide or less and no anchor, or the executable stops with an
+  error, before a wider box could touch what the ROM's doesn't.
+- ASan, found and left: TileCache::CellAt (bg_layer.hpp) reads a room's
+  collision chunk grid with no bound past its right or bottom edge (the
+  terrain lookups only test x < 0 and y < 0), so a player probing below
+  the last row (falling into a pit: Just Hangin's bonus room, Snow
+  Crash's second part) reads past the grid. In the ROM that is the next
+  data, the room's palette, as chunk ids, which DecodeChunk then decodes
+  from wherever they point; on the host the first row past is the
+  padding before the palette (chunk 0, no terrain) and farther rows the
+  palette at other offsets. Neither can be made the ROM's on the host
+  (the decode reads past the chunk data), and in the one run found
+  (Just Hangin's bonus room, 1400 frames) every picture is mGBA's: the
+  player is falling to his death either way.
 
 **Seams** (gba/defines.h, each nothing on the GBA). Three for the
 original's own bugs:
@@ -891,6 +936,14 @@ and maps unchanged):
     `anims` and `frames`, the animation's `seq` and the frame), and in
     GetAttackBox and GetBodyBox (the frame's `pieces`): the camera lead
     has no bank. The ride plays the same on mGBA as on the host.
+- The polar stages' Aku Aku (a wrong picture; tests/polar_mask.keys):
+  losing its last mask, PolarAkuAku::Refresh loads the palette at
+  gPolarAkuAkuPalette1 + (0 - 1) * 0x20, in the ROM the last 32 bytes of
+  the four 12-byte boxes before it (polar_palettes_boxes.cpp). The host's
+  g++ aligned each box to 16 bytes, so its colours were other bytes', for
+  the 39 frames of the animation; polar_palettes_boxes.o is built with
+  `-malign-data=abi` (platform.mk), which lays the file out as the ROM
+  does. Not a change to the shared code: the flag is the platform's.
 - The sanitizers (UBSan, "Sanitizers" above):
   - PlayCutscene's storage for its CutscenePlayer (level_cutscene.cpp) is
     aligned as a `void *`, not an `s32` (the same on the GBA).
