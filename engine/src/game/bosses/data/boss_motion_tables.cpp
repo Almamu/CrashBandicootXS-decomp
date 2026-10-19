@@ -84,11 +84,17 @@ const struct speed_ramp gDingodileMotionRecords[4] = {
  * UpdateDingodileProjectile (dingodile.cpp) starts: the rocket's rise
  * (state 0, until it reaches the top and drops the stalactite) and the
  * stalactite's fall (state 5). Only the first three words of the second
- * table are read. */
-const struct speed_ramp gDingodileRocketRiseMotion = {
+ * table are read there; gDingodileMotionEntries' entry 3 (his last move,
+ * dingodile_motion_entries.cpp) names records 7 and 6 of
+ * gDingodileMotionRecords' 4, which DingodileCtrl::StartMotion reads
+ * past its end: the second table's last two records, back to back as in
+ * the ROM. aligned(4), the ARM's alignment, so that a compiler that
+ * aligns an array further (the pc platform's x86-64 g++, to 16) leaves
+ * no gap. */
+const struct speed_ramp gDingodileRocketRiseMotion __attribute__((aligned(4))) = {
     0, DINGODILE_ROCKET_RISE_ACCEL, -INT_TO_Q8(4),
 };
-const struct speed_ramp gDingodileStalactiteFallMotion[3] = {
+const struct speed_ramp gDingodileStalactiteFallMotion[3] __attribute__((aligned(4))) = {
     { 0, DINGODILE_STALACTITE_FALL_ACCEL, Q8(2.875) },
     { -INT_TO_Q8(4), Q8(0.25), INT_TO_Q8(4) },
     { -DINGODILE_STALACTITE_UNK_START, DINGODILE_STALACTITE_UNK_STEP, 0 },

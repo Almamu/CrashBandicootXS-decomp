@@ -75,16 +75,27 @@ HOST_CXXFLAGS += $(HOST_SANITIZE_FLAGS)
 HOST_CFLAGS += $(HOST_SANITIZE_FLAGS)
 endif
 
-# ASan puts a redzone after each global, but two data files are read
+# ASan puts a redzone after each global, but some data files are read
 # across their definitions, back to back as in the ROM (and as
 # -fno-toplevel-reorder keeps them): a cutscene picture's bitmap right
-# after its palette (+0x200, slideshow.cpp), and the sprite tile pool, 56
-# arrays read from bank 0's (tileBase + a frame's offset). With redzones
-# those reads are overflows, and the data isn't where it is read. Their
+# after its palette (+0x200, slideshow.cpp), a boss picture's frames
+# after its palette (+0x204 on, Airship::ConvertTiles and the
+# hovercraft's), the sprite tile pool, 56 arrays read from bank 0's
+# (tileBase + a frame's offset), the three empty sprite frames' box,
+# read past their header (in the ROM the next frame's header; on the
+# host padding, which src/sprite_boxes.c checks), the polar boxes read
+# as Aku Aku's palette (polar_palettes_boxes.cpp) and Dingodile's motion
+# records read past their table (boss_motion_tables.cpp), both aligned(4)
+# there for the host's g++. With redzones those
+# reads are overflows, and the data isn't where it is read. Their
 # globals aren't instrumented (--param asan-globals=0: no redzones, so
 # nothing between them); every other global is.
 ifneq ($(findstring address,$(SANITIZE)),)
-$(C_BUILDDIR)/game/ui/data/cutscene_pictures.o $(C_BUILDDIR)/engine/gfx/data/sprite_tiles.o: HOST_CXXFLAGS += --param asan-globals=0
+$(C_BUILDDIR)/game/ui/data/cutscene_pictures.o $(C_BUILDDIR)/game/bosses/data/boss_pictures.o \
+	$(C_BUILDDIR)/engine/gfx/data/sprite_tiles.o $(C_BUILDDIR)/engine/gfx/data/sprite_banks_00_09.o \
+	$(C_BUILDDIR)/engine/gfx/data/sprite_banks_39_55.o \
+	$(C_BUILDDIR)/game/vehicles/polar/data/polar_palettes_boxes.o \
+	$(C_BUILDDIR)/game/bosses/data/boss_motion_tables.o: HOST_CXXFLAGS += --param asan-globals=0
 endif
 
 # entity.o is the one key-method object where g++ 2.9 (`#pragma

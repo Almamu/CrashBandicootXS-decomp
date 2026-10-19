@@ -27,17 +27,23 @@ const u16 gPolarPlayerShockBlinkPalette[16] = {
 
 /* Boxes (struct anim_box): the one UpdatePolarNitroCrate (polar_crate.cpp) copies
  * into a part's +0x38 box, and the three UpdatePolarElectricFence (polar_objects.cpp)
- * picks from. */
-const struct anim_box gPolarNitroCrateBox = { -15, -15, -2, 30, 30, 5 };
-const struct anim_box gPolarElectricFenceLeftPostBox = { -24, -25, 0, 10, 40, 1 };
-const struct anim_box gPolarElectricFenceRightPostBox = { 14, -25, 0, 10, 40, 1 };
-const struct anim_box gPolarElectricFenceWireBox = { -14, -25, 0, 28, 40, 1 };
+ * picks from. aligned(4), the ARM's alignment of a struct: a compiler that
+ * aligns them further (the pc platform's x86-64 g++, a 12-byte struct to
+ * 16) would leave gaps between them and the palettes, which are read
+ * across (below). */
+const struct anim_box gPolarNitroCrateBox __attribute__((aligned(4))) = { -15, -15, -2, 30, 30, 5 };
+const struct anim_box gPolarElectricFenceLeftPostBox __attribute__((aligned(4))) = { -24, -25, 0, 10, 40, 1 };
+const struct anim_box gPolarElectricFenceRightPostBox __attribute__((aligned(4))) = { 14, -25, 0, 10, 40, 1 };
+const struct anim_box gPolarElectricFenceWireBox __attribute__((aligned(4))) = { -14, -25, 0, 28, 40, 1 };
 
 /* 16-colour palettes polar_objects.cpp queues for OBJ palette 14:
  * RefreshPolarAkuAku takes gPolarAkuAkuPalette1 + (tier - 1) * 0x20, so the
  * higher tiers read the palettes after it; UpdatePolarAkuAku blinks
- * between gPolarAkuAkuPalette3 and gPolarAkuAkuPalette2. */
-const u16 gPolarAkuAkuPalette1[16] = {
+ * between gPolarAkuAkuPalette3 and gPolarAkuAkuPalette2. With no mask
+ * left (tier 0, Aku Aku losing the last one) it reads the 32 bytes before
+ * gPolarAkuAkuPalette1, the boxes above, back to back as in the ROM:
+ * aligned(4), so that no compiler leaves a gap there. */
+const u16 gPolarAkuAkuPalette1[16] __attribute__((aligned(4))) = {
     0x35AC, 0x2192, 0x14EF, 0x04F6, 0x1179, 0x023F, 0x03FF, 0x03E9,
     0x1248, 0x42FA, 0x5D87, 0x7E60, 0x4414, 0x401F, 0x001C, 0x0000,
 };

@@ -89,6 +89,29 @@ jobs:
           --level 11 --room gem-path --frames 2900 --every 1 --timeout 300 --out host_gem_path_screens.json
         python3 tools/boottest.py compare platform/pc/tests/gem_path_mgba_screens.json host_gem_path_screens.json
 
+    # Frostbite Cavern's polar stage (tests/polar_mask.keys, --level 3
+    # --room 1): the polar bear is hit with Aku Aku's one mask, and Aku Aku
+    # loads its palette from the boxes before gPolarAkuAkuPalette1 (as the
+    # ROM does), which the host laid out otherwise until they were
+    # aligned(4); every 3rd frame's picture is mGBA's
+    # (tests/polar_mask_mgba_screens.json).
+    - name: Lose a mask on the polar bear
+      run: |
+        python3 tools/boottest.py host build/pc/crashbandicootxs_pc --keys platform/pc/tests/polar_mask.keys \
+          --level 3 --room 1 --frames 1100 --every 3 --timeout 300 --out host_polar_mask_screens.json
+        python3 tools/boottest.py compare platform/pc/tests/polar_mask_mgba_screens.json host_polar_mask_screens.json
+
+    # The Dingodile fight won (tests/dingodile.keys, --level 20), the
+    # Super Body Slam screen, the cutscene, the level select and the next
+    # level: his last move reads his motion records past their table, as
+    # the ROM lays them out (boss_motion_tables.cpp, aligned(4)); every
+    # 5th frame's picture is mGBA's (tests/dingodile_mgba_screens.json).
+    - name: Beat Dingodile
+      run: |
+        python3 tools/boottest.py host build/pc/crashbandicootxs_pc --keys platform/pc/tests/dingodile.keys \
+          --level 20 --frames 15500 --every 5 --timeout 300 --out host_dingodile_screens.json
+        python3 tools/boottest.py compare platform/pc/tests/dingodile_mgba_screens.json host_dingodile_screens.json
+
     # The editors' preview (#1167, docs/editors.md "Preview"): a level's
     # room started from the level select, headless, its first picture
     # written (a polar stage, by folder and room index; a bonus room by its
@@ -212,6 +235,25 @@ jobs:
         python3 tools/boottest.py host build/pc/crashbandicootxs_pc --keys platform/pc/tests/bonus.keys \
           --frames 5000 --every 10 --timeout 1200 --out host_bonus_screens.json
         python3 tools/boottest.py compare platform/pc/tests/bonus_mgba_screens.json host_bonus_screens.json
+
+    # A jetpack stage (Rocket Racket: N. Gin's airship, whose frames
+    # Airship::ConvertTiles walks from its palette, boss_pictures.cpp),
+    # the polar stage's lost mask (the palette read from the boxes before
+    # it) and the Dingodile fight won (his motion records read past their
+    # table): each reads across its data's definitions, as the ROM does.
+    - name: Play a jetpack stage, a polar stage and the Dingodile fight
+      env:
+        UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1:suppressions=${{ github.workspace }}/platform/pc/ubsan.supp:log_path=${{ github.workspace }}/sanitizer
+        ASAN_OPTIONS: detect_leaks=0:log_path=${{ github.workspace }}/sanitizer
+      run: |
+        python3 tools/boottest.py host build/pc/crashbandicootxs_pc --keys platform/pc/tests/boot.keys \
+          --level 6 --frames 960 --every 60 --timeout 1200 --out host_jetpack.json
+        python3 tools/boottest.py host build/pc/crashbandicootxs_pc --keys platform/pc/tests/polar_mask.keys \
+          --level 3 --room 1 --frames 1100 --every 3 --timeout 1200 --out host_polar_mask_screens.json
+        python3 tools/boottest.py compare platform/pc/tests/polar_mask_mgba_screens.json host_polar_mask_screens.json
+        python3 tools/boottest.py host build/pc/crashbandicootxs_pc --keys platform/pc/tests/dingodile.keys \
+          --level 20 --frames 15500 --every 5 --timeout 1200 --out host_dingodile_screens.json
+        python3 tools/boottest.py compare platform/pc/tests/dingodile_mgba_screens.json host_dingodile_screens.json
 
     - name: Show the reports
       if: failure()
