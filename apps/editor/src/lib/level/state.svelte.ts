@@ -3,7 +3,7 @@
 // palette), what is shown, the tool, the undo stack, and saving it all back
 // through the backend's room save (crashdata.levels.room_edit), which checks
 // it like any save and keeps it all or none.
-import type { Diagnostic, EntityTypeInfo, LegendEntry, NewRoom, ResizeReport, Room, RoomEdges, RoomSave, RoomTiles, RoomView } from "@crash/schema-types";
+import type { Diagnostic, EntityTypeInfo, LegendEntry, NewRoom, ResizeReport, Room, RoomEdges, RoomSave, RoomTiles, RoomView, TileRedraw } from "@crash/schema-types";
 
 type RoomSaveDiagnostics = Diagnostic[];
 import { client } from "../api.ts";
@@ -18,6 +18,7 @@ import {
   applyBlocks,
   applyValues,
   base64,
+  CELL_PIXELS,
   brushOfBlock,
   changedCells,
   fromBase64,
@@ -562,6 +563,31 @@ class LevelEditorState {
     this.damaged(this.paintLayer, changes);
     this.commitTiles(this.paintLayer, changes, label);
     return changes.length;
+  }
+
+  /**
+   * Redraws `tile` of the paint layer's set in every room that names it
+   * (room/redraw: the saved pictures, each cell in its flips and bank), saved
+   * at once, all or nothing; then opens the room again. The room's changes
+   * are saved first, and the tile is one the build made (not a new one drawn
+   * here). `pixels` of zeros clears it everywhere.
+   */
+  async redrawEverywhere(tile: number, pixels: Uint8Array): Promise<TileRedraw | null> {
+    const set = this.paintSet();
+    const path = this.view?.path;
+    if (!set || !path || this.dirty || tile <= 0 || tile >= set.built) return null;
+    const was = set.tiles.slice(tile * CELL_PIXELS, (tile + 1) * CELL_PIXELS);
+    const layer = this.paintLayer;
+    const r = await editor.run(`Redrawing tile ${tile} of ${set.name} in every room`, () =>
+      client.redrawTile(editor.projectId, { path, layer, tile, pixels: base64(pixels), was: base64(was) }),
+    );
+    if (!r) return null;
+    this.reported(`Redrew tile ${tile} of ${set.name}: ${r.report.cells} cells in ${Object.keys(r.report.layers).length} layers`, r);
+    this.history.clear();
+    this.view = null;
+    await this.openRoom(path);
+    this.paintLayer = layer;
+    return r.report;
   }
 
   /** How many cells of the paint layer draw `tile`. */

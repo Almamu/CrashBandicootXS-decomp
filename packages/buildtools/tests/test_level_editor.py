@@ -381,6 +381,73 @@ class Tiles(LevelEditor):
         self.assertTrue(all(p >> 4 == 2 and p & 15 for p in base64.b64decode(r["cells"])))
         self.assertEqual(r["stats"]["new"], 1)
 
+    def test_redraw_in_every_room(self):
+        """A tile of jungle jam's BG1 set that other layers draw too, redrawn
+        in all of them (room/redraw): every cell that drew it draws the new
+        pixels, in its own flips and bank, saved together; a stale or blank
+        tile is refused and nothing is written."""
+        pictures = {p: p.read_bytes() for p in (ROOT / "games/xs/data/levels").glob("*/*/bg*.png")}
+        try:
+            st, t = self.call("GET", "/api/projects/xs/room/tiles?path=%s&layer=bg1" % ROOM)
+            self.assertEqual(st, 200, t)
+            here = struct.unpack("<%dH" % (len(base64.b64decode(t["cells"])) // 2), base64.b64decode(t["cells"]))
+            count = {}
+            for v in here:
+                count[v & 0x3FF] = count.get(v & 0x3FF, 0) + 1
+            # a tile drawn here (flipped too) and in ruined's room
+            st, o = self.call("GET", "/api/projects/xs/room/tiles?path=games/xs/data/levels/ruined/main&layer=bg1")
+            self.assertEqual((st, o["tileset"]), (200, t["tileset"]), o)
+            there = {v & 0x3FF for v in struct.unpack("<%dH" % (len(base64.b64decode(o["cells"])) // 2),
+                                                      base64.b64decode(o["cells"]))}
+            flipped = {v & 0x3FF for v in here if v & 0xC00}
+            shared = sorted(k for k in {v & 0x3FF for v in here} & there if k)
+            # one flipped here and drawn in another layer of the set too, else one ruined's room draws
+            tile = next((k for k in sorted(flipped) if t["uses"][k] > count[k]), shared[0])
+            tiles = base64.b64decode(t["tiles"])
+            was = tiles[tile * 64:(tile + 1) * 64]
+            # a block no tile of the set is, unlike itself under every flip
+            new = bytes((x * 3 + y) % 7 + 1 for y in range(8) for x in range(8))
+            body = {"path": ROOM, "layer": "bg1", "tile": tile, "pixels": base64.b64encode(new).decode(),
+                    "was": base64.b64encode(was).decode()}
+            for bad, status in [({"tile": 0}, 422), ({"tile": t["count"]}, 422), ({"was": base64.b64encode(bytes(64)).decode()}, 422),
+                                ({"pixels": base64.b64encode(bytes([16] * 64)).decode()}, 422), ({"layer": "collision"}, 400),
+                                ({"pixels": 7}, 400)]:
+                st, r = self.call("POST", "/api/projects/xs/room/redraw", dict(body, **bad))
+                self.assertEqual(st, status, (bad, r))
+            for p, b in pictures.items():
+                self.assertEqual(p.read_bytes(), b, p)
+            st, r = self.call("POST", "/api/projects/xs/room/redraw", body)
+            self.assertEqual(st, 200, r)
+            rep = r["report"]
+            self.assertEqual((rep["tileset"], rep["cells"]), ("gJungleBgTiles", t["uses"][tile]))
+            self.assertEqual(rep["layers"]["jungle_jam/main/bg1"], count[tile])
+            self.assertGreater(len(rep["layers"]), 1)
+            self.assertEqual(sorted(r["saved"]), sorted("games/xs/data/levels/" + k + ".png" for k in rep["layers"]))
+            self.assertFalse([d for d in r["diagnostics"] if d["severity"] == "error"])
+            # the set now: the old tile is gone (no cell draws it), the new one draws every cell it did
+            st, t2 = self.call("GET", "/api/projects/xs/room/tiles?path=%s&layer=bg1" % ROOM)
+            tiles2 = base64.b64decode(t2["tiles"])
+            k = next(i for i in range(t2["count"]) if tiles2[i * 64:(i + 1) * 64] == new)
+            self.assertEqual(t2["uses"][k], t["uses"][tile])
+            self.assertEqual(t2["count"], t["count"])
+            here2 = struct.unpack("<%dH" % len(here), base64.b64decode(t2["cells"]))
+            self.assertEqual([i for i, v in enumerate(here) if v & 0x3FF == tile],
+                             [i for i, v in enumerate(here2) if v & 0x3FF == k])
+            for v, v2 in zip(here, here2):
+                if v & 0x3FF == tile:
+                    self.assertEqual(v & 0xFC00, v2 & 0xFC00)  # its flips and bank
+            # untouched pictures aren't written; redrawn back, the pictures are the tree's
+            body.update(tile=k, pixels=body["was"], was=base64.b64encode(new).decode())
+            st, r = self.call("POST", "/api/projects/xs/room/redraw", body)
+            self.assertEqual(st, 200, r)
+            from PIL import Image
+            for p, b in pictures.items():
+                a, o = Image.open(p), Image.open(io.BytesIO(b))
+                self.assertEqual((a.tobytes(), a.getpalette()), (o.tobytes(), o.getpalette()), p)
+        finally:
+            for p, b in pictures.items():
+                p.write_bytes(b)
+
     def test_too_many_tiles_on_a_screen(self):
         # 600 cells of new tiles in one screen of BG0: more than the tile slot pool's 512
         import random

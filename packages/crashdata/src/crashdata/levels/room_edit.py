@@ -15,6 +15,8 @@ game does and edits them; this module is what the backend
   tile picker;
 - sprite_png(...): a sprite bank's frame as a PNG with index 0
   transparent, in one of its palettes;
+- redraw_tile(symbol, tile, pixels): a tile of a set redrawn in every room
+  that names it, as the pictures that change;
 - legend_with(value, colour): collision_legend.json with a new cell value;
 - patch_layer / patch_collision / with_palette: a layer picture with some
   8x8 cells replaced, the collision image with some cells set, a picture
@@ -230,6 +232,63 @@ def tileset(symbol, room_key, lname):
         for v in layer_cells:
             uses[v & mask] += 1
     return bpp, data, banks, struct.pack("<%dH" % len(cells), *cells), uses, L.MAX_TILES[bpp]
+
+
+def redraw_tile(symbol, tile, pixels, was=None):
+    """Tile `tile` of a BG tile set redrawn in every room that names it
+    (docs/editors.md, "Drawing tiles"): each cell of their layers that draws
+    it, under any flip and in any bank, drawn with `pixels` (64 bytes; 4bpp:
+    0-15) in that cell's flips and bank. `was`, the tile's 64 pixels as the
+    caller saw them, must still be it. ([(picture path, its bytes)] of the
+    pictures that change, {"room/layer": cells redrawn})."""
+    levels = L.read_json(L.LEVELS_JSON)
+    users = L.tileset_users(levels)
+    if symbol not in users:
+        raise EditError("no room's layer names the tile set %s" % symbol)
+    try:
+        tiles, _, maps = L.generate_tileset(symbol, levels, users)
+    except SystemExit as e:
+        raise EditError(str(e))
+    bpp = users[symbol]["bpp"]
+    if not isinstance(tile, int) or isinstance(tile, bool) or not 0 < tile < len(tiles):
+        raise EditError("%s has tiles 1-%d to redraw (tile 0 is the blank tile every set starts with)"
+                        % (symbol, len(tiles) - 1))
+    pixels = bytes(pixels)
+    if len(pixels) != 64 or (bpp == 4 and max(pixels) > 15):
+        raise EditError("a tile is 64 pixels%s" % (" of 0-15 (a BG1-3 tile's, without its bank)" if bpp == 4 else ""))
+    old = b"".join(r.to_bytes(8, "little") for r in tiles[tile])
+    if was is not None and bytes(was) != old:
+        raise EditError("tile %d of %s isn't the tile the editor shows any more: open the room again" % (tile, symbol))
+    shift = 14 if bpp == 8 else 10
+    mask = (1 << shift) - 1
+    drawn = []
+    for f in range(4):  # FLIPS' order: none, h, v, both
+        rows = [pixels[y * CELL:(y + 1) * CELL] for y in range(CELL)]
+        if f & 1:
+            rows = [r[::-1] for r in rows]
+        if f & 2:
+            rows = rows[::-1]
+        drawn.append(b"".join(rows))
+    out, report = [], {}
+    for (room, lname), cells in maps.items():
+        hits = []
+        layer = L.read_json(L.LEVELS_DIR / room / "room.json")["layers"][lname]
+        W = layer["size_chunks"][0] * L.CHUNK_W
+        for i, v in enumerate(cells):
+            if v & mask != tile:
+                continue
+            add = (v >> 12) * 16 if bpp == 4 else 0
+            hits.append([i % W, i // W, bytes(p + add for p in drawn[v >> shift & 3])])
+        if not hits:
+            continue
+        room_dir = L.LEVELS_DIR / room
+        info = layer_info(L.read_json(room_dir / "room.json"))[lname]
+        path = room_dir / layer["map"]
+        data = patch_layer(path, info, lname, hits)
+        report["%s/%s" % (room, lname)] = len(hits)
+        if data != path.read_bytes():
+            out.append((path, data))
+    return out, report
 
 
 def tileset_errors(symbols):
@@ -525,5 +584,5 @@ def patch_collision(path, info, cells):
 
 
 __all__ = ["EditError", "SPRITES", "collision_cells", "entity_sprites", "import_tiles", "layer_info", "layer_pixels",
-           "legend", "legend_with", "patch_collision", "patch_layer", "room_view", "sprite_banks",
+           "legend", "legend_with", "patch_collision", "patch_layer", "redraw_tile", "room_view", "sprite_banks",
            "sprite_png", "tileset", "tileset_errors", "with_palette"]
