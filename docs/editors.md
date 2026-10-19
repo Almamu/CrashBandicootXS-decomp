@@ -910,8 +910,9 @@ samples (a GAX2 instrument has one sample: the panel edits the one the
 song's notes play; split one in a tracker), its name, a new one in a
 song (an XM's own instruments come with it: a cell plays any of the
 pool's instead), and the `instruments/<name>.json` ones (a data file:
-the Data files tab); a panning envelope and the XM's BPM, which GAX2 doesn't have (it mixes mono and steps a tick a
-frame: the panels say so); the game's timing around the sound (fades,
+the Data files tab); a panning envelope and the XM's BPM, which GAX2
+doesn't have (it mixes mono and steps a tick a frame: the panels say
+so); the game's timing around the sound (fades,
 ducks, sound effects as the gameplay triggers them: the player plays a
 song or one sound effect, with the music volume asked for); GAX2's
 jingle player and low-pass filter, which the game doesn't use;
