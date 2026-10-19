@@ -1,0 +1,11 @@
+# UBSan's suppressions for the pc platform (docs/platforms.md,
+# "Sanitizers"): UBSAN_OPTIONS=suppressions=platform/pc/ubsan.supp.
+# A line `CHECK:PATTERN` drops CHECK's reports in the functions (or source
+# files) PATTERN names; nothing else is dropped.
+#
+# PlayCutscene (engine/src/game/level/level_cutscene.cpp) hands
+# SetSlideshowDispcnt `*(u32 *)dispcnt`: 4 bytes of the 2-byte
+# Display::dispcnt, as the ROM reads it (an `ldr`). Only the low halfword
+# is used (gSlideshowDispcnt's, written to REG_DISPCNT), so the read is
+# left as the ROM has it, and only its object-size report is dropped.
+object-size:Game::Level::LevelState::PlayCutscene
