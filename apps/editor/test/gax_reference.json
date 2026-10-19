@@ -34,7 +34,7 @@
   "about": "Songs the music editor changed (tools/gax_render.py edited_body: structures, cells, instruments), saved by its backend in a copy of the tree and rendered by that copy's PC port: their first frames. music.test.ts plays the same edits unsaved, as the editor does before they are saved.",
   "songs": {
    "drums": "aad18bbdb6fecc949409cf1ab7897015cc388892",
-   "jungle": "d9aa46374b2c280632c11ca1b446c3f74895c8fd",
+   "jungle": "41e690ae71053a58f53d4940a1bbc009c27dc8d1",
    "main_menu_japan": "39906b148f3f7ac9750eb17b910fea59ca8abff5"
   }
  }

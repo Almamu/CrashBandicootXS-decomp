@@ -4,7 +4,7 @@
 // what is selected and played, and saving it all back through the
 // backend's music save, which checks it like any save (and builds the
 // music and the sound effects) and keeps it all or none.
-import { ApiError, type Music, type MusicPatterns, type MusicPool, type MusicSong, type MusicView, type SfxTable } from "@crash/schema-types";
+import { ApiError, type Music, type MusicPatterns, type MusicPool, type MusicSong, type MusicUnsaved, type MusicView, type SfxTable } from "@crash/schema-types";
 import { client } from "../api.ts";
 import { editor } from "../state.svelte.ts";
 import { Snapshots } from "../cutscene/history.ts";
@@ -12,10 +12,10 @@ import { Output, playSample, type Position } from "./audio.ts";
 import { GaxPlayer, decodePool, type GaxPool } from "./gax.ts";
 import * as M from "./model.ts";
 
-export type Kind = "song" | "sfx" | "sample";
+export type Kind = "song" | "sfx" | "sample" | "instrument";
 
 function emptyState(): M.EditState {
-  return { sfx: { entries: [] } as unknown as SfxTable, music: { screen_music: [] }, themes: {}, comments: {}, cells: {}, samples: {}, newInstruments: {}, newSongs: [], removeSongs: [], structures: {} };
+  return { sfx: { entries: [] } as unknown as SfxTable, music: { screen_music: [] }, themes: {}, comments: {}, cells: {}, samples: {}, newInstruments: {}, newSongs: [], removeSongs: [], structures: {}, instruments: {}, newSamples: {}, deleteSamples: [] };
 }
 
 /** The NO_NOTE sentinel of a channel's note (GaxChannelState.note 0x8AD0). */
@@ -36,6 +36,8 @@ class MusicEditorState {
   song = $state("");
   sfx = $state(0);
   sample = $state("");
+  /** the music pool's instrument selected */
+  instrument = $state(1);
   /** the songs' XMs, by key, as saved: their patterns and decoded cells */
   patterns = $state.raw<Record<string, { p: MusicPatterns; cells: Uint8Array[] }>>({});
   /** the order position the pattern view shows, and the cell selected */
@@ -44,7 +46,7 @@ class MusicEditorState {
   follow = $state(true);
 
   // playing
-  playing = $state<"song" | "sfx" | "sample" | null>(null);
+  playing = $state<"song" | "sfx" | "sample" | "instrument" | null>(null);
   position = $state<Position | null>(null);
   musicVolume = $state(255);
   /** the song a sound effect plays over (its mix rate, its voices' half rate) and whether its music is heard */
@@ -435,16 +437,96 @@ class MusicEditorState {
       if (!song) return undefined;
       this.songCache.set(ck, song);
     }
-    let pool = this.pool!;
-    // the pool only changes with the songs' instruments: a new song, or a structure (its cells name them)
-    if (unsaved.newSongs || unsaved.structures) {
-      const pk = JSON.stringify({ n: unsaved.newSongs, s: unsaved.structures });
-      const hit = this.poolCache.get(pk) ?? (await editor.run("Building the music pool with the edits", () => client.musicPool(editor.projectId, unsaved)));
-      if (!hit) return undefined;
-      this.poolCache.set(pk, hit);
-      pool = hit;
+    const pool = await this.builtPool(unsaved);
+    return pool ? { song, pool } : undefined;
+  }
+
+  /** The music pool as the build would build it with the unsaved edits: the backend builds it when they change it
+   * (an instrument's record, a sample added or taken out, a new song's or a structure's instruments). */
+  private async builtPool(unsaved: MusicUnsaved = M.unsavedBody(this.state)): Promise<MusicPool | undefined> {
+    if (!(unsaved.newSongs || unsaved.structures || unsaved.instruments || unsaved.newSamples || unsaved.deleteSamples)) return this.pool!;
+    const pk = JSON.stringify({ n: unsaved.newSongs, s: unsaved.structures, i: unsaved.instruments, a: unsaved.newSamples, d: unsaved.deleteSamples, m: unsaved.samples });
+    const hit = this.poolCache.get(pk) ?? (await editor.run("Building the music pool with the edits", () => client.musicPool(editor.projectId, unsaved)));
+    if (hit) this.poolCache.set(pk, hit);
+    return hit;
+  }
+
+  // -- the music pool's instruments ------------------------------------------------------
+
+  /** Instrument n's record now: its edit, or the manifest's. */
+  record(n: number): M.InstrumentRecord | null {
+    return this.state.instruments[String(n)] ?? this.view?.poolInstruments.find((i) => i.index === n)?.record ?? null;
+  }
+
+  setRecord(n: number, label: string, f: (r: M.InstrumentRecord) => M.InstrumentRecord, key: string | null = null): void {
+    const base = this.record(n);
+    if (!base) return;
+    this.apply(`Instrument ${n}: ${label}`, (s) => {
+      const next = f(s.instruments[String(n)] ?? base);
+      return { ...s, instruments: { ...s.instruments, [String(n)]: next } };
+    }, key ? `instrument:${n}:${key}` : null);
+  }
+
+  revertRecord(n: number): void {
+    this.apply(`Instrument ${n} as saved`, (s) => {
+      const instruments = { ...s.instruments };
+      delete instruments[String(n)];
+      return { ...s, instruments };
+    });
+  }
+
+  /** The music pool's samples now: the saved ones less those taken out, then the new ones; {index, length, path}. */
+  get poolSamples(): { index: number; path: string; length: number; added: boolean }[] {
+    const out = (this.view?.samples ?? []).filter((s) => !this.state.deleteSamples.includes(s.index)).map((s) => ({ index: s.index, path: s.path, length: this.state.samples[s.path]?.length ?? s.length, added: false }));
+    for (const [k, s] of Object.entries(this.state.newSamples)) out.push({ index: Number(k), path: `samples/${k.padStart(2, "0")}.wav`, length: s.length, added: true });
+    return out;
+  }
+
+  /** The instruments whose wave rows name sample idx, now. */
+  sampleUsers(idx: number): number[] {
+    return (this.view?.poolInstruments ?? []).filter((i) => this.record(i.index)!.sample_indices.includes(idx)).map((i) => i.index);
+  }
+
+  /** A WAV as the music pool's next sample (samples/NN.wav, NN after the pool's); returns its number. */
+  addPoolSample(s: M.SampleEdit): number {
+    const have = [...(this.view?.samples ?? []).map((x) => x.index), ...Object.keys(this.state.newSamples).map(Number)];
+    const n = Math.max(0, ...have) + 1;
+    if (this.apply(`New sample ${n}`, (st) => ({ ...st, newSamples: { ...st.newSamples, [String(n)]: s } }))) {
+      this.kind = "sample";
+      this.sample = `samples/${String(n).padStart(2, "0")}.wav`;
     }
-    return { song, pool };
+    return n;
+  }
+
+  /** Sample idx taken out of the music pool (no instrument may play it). */
+  deletePoolSample(idx: number): void {
+    const who = this.sampleUsers(idx);
+    if (who.length) {
+      editor.error = `instruments ${who.join(", ")} play sample ${idx}`;
+      return;
+    }
+    this.apply(`Delete sample ${idx}`, (st) => {
+      if (st.newSamples[String(idx)]) {
+        const newSamples = { ...st.newSamples };
+        delete newSamples[String(idx)];
+        return { ...st, newSamples };
+      }
+      return { ...st, deleteSamples: [...st.deleteSamples, idx] };
+    });
+    this.sample = "";
+  }
+
+  /** Instrument n played as a song plays it: `note` (XM's) on a channel, a key off after `hold` rows (speed 6). */
+  async playInstrument(n: number, note: number, hold: number): Promise<void> {
+    if (!this.pool) return;
+    const pool = await this.builtPool();
+    if (!pool) return;
+    const rows = Math.max(hold + 24, 32);
+    const { music, sfx } = this.pools(pool);
+    const p = new GaxPlayer(pool.tables, music, sfx, M.instrumentSong(n, note, hold, rows));
+    p.setMusicVolume(-1, this.musicVolume);
+    this.output.start(p, { frames: rows * 6 });
+    this.playing = "instrument";
   }
 
   /** A player of the song, run on to order position `from` (GAX2 has no seek: the frames before it are mixed and dropped). */
@@ -505,7 +587,8 @@ class MusicEditorState {
 
   /** A sample's sound now: its unsaved replacement (or a new instrument's), or the file's. */
   sound(path: string): { data: Int8Array; rate: number } | null {
-    const edit = this.state.samples[path] ?? this.state.newInstruments[path.replace(/^sfx_samples\/(.*)\.wav$/, "$1")];
+    const added = /^samples\/(\d+)\.wav$/.exec(path);
+    const edit = this.state.samples[path] ?? this.state.newInstruments[path.replace(/^sfx_samples\/(.*)\.wav$/, "$1")] ?? (added ? this.state.newSamples[String(Number(added[1]))] : undefined);
     if (edit) return M.parseWav8(M.fromBase64(edit.wav));
     return this.wavs[path] ?? null;
   }

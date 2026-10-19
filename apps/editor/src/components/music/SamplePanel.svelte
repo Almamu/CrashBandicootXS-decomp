@@ -8,6 +8,7 @@
   let { part }: { part: "sound" | "record" } = $props();
 
   const pool = $derived(mu.view?.samples.find((s) => s.path === mu.sample));
+  const added = $derived(mu.poolSamples.find((s) => s.path === mu.sample && s.added));
   const slot = $derived(mu.view?.sfxSlots.find((s) => s.path === mu.sample));
   const sound = $derived(mu.sample ? mu.sound(mu.sample) : null);
   const minLength = $derived(pool?.minLength ?? slot?.minLength ?? 1);
@@ -45,11 +46,14 @@
 {:else}
   <div class="panel">
     <section>
-      {#if pool}
-        <h3>Sample {pool.index} of the music pool</h3>
+      {#if pool || added}
+        {@const idx = pool?.index ?? added!.index}
+        {@const who = mu.sampleUsers(idx)}
+        <h3>Sample {idx} of the music pool{added ? " (new, not saved)" : ""}</h3>
         <p class="hint">
-          Played by instruments {pool.instruments.join(", ") || "none"} in {pool.songs.join(", ") || "no song"}. Its WAV's rate is cosmetic (the build doesn't read it): an instrument plays it at the note's pitch, with its own tune.
+          Played by instruments {who.join(", ") || "none"}{pool ? ` in ${pool.songs.join(", ") || "no song"}` : ""}. Its WAV's rate is cosmetic (the build doesn't read it): an instrument plays it at the note's pitch, with its own tune (the Instruments tab gives a wave row its sample).
         </p>
+        <button disabled={who.length > 0} title={who.length ? `instruments ${who.join(", ")} play it` : "take it out of the music pool (samples/NN.wav and the manifest's entry)"} onclick={() => mu.deletePoolSample(idx)}>Delete this sample</button>
       {:else if slot}
         <h3>Sound-effect slot {slot.slot}</h3>
         <p class="hint">
@@ -58,6 +62,7 @@
       {/if}
       <p class="hint">Its instruments' starts and loops reach sample {minLength}: a new sound must be at least that long.</p>
     </section>
+    {#if !added}
     <section>
       <h3>A new sound for it</h3>
       <label class="row" title="the WAV is resampled to this rate: a sound effect's slot plays at its rate, so the sound keeps its pitch">
@@ -74,6 +79,7 @@
         <button onclick={() => mu.apply(`Put ${mu.sample} back`, (st) => { const samples = { ...st.samples }; delete samples[mu.sample]; return { ...st, samples }; })}>Put the saved one back</button>
       {/if}
     </section>
+    {/if}
   </div>
 {/if}
 

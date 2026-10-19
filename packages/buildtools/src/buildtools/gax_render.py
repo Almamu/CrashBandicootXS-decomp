@@ -119,7 +119,11 @@ def edited_body(root):
     - jungle's cells: its first row's alternating speeds 6 and 4 (`764`;
       the ROM's 9 and 6), made in the order positions sharing the
       pattern, and a slide down by 0x40 (volume column 01, `B40`);
-    - main_menu_japan a channel more, with a note on it."""
+    - main_menu_japan a channel more, with a note on it;
+    - the music pool, heard in jungle: instrument 43 (its drum) with a new
+      volume envelope and tuned 2 semitones up; a new sample (a buzz,
+      looped forward) for instrument 28, with a vibrato; the sample 28
+      played before, which no other instrument plays, taken out."""
     from crashdata.audio import edit as E
 
     songs = os.path.join(root, "games", "xs", "sound", "songs")
@@ -144,10 +148,29 @@ def edited_body(root):
         rows[0] = rows[0][:n * E.CELL] + bytes([61, 1, 0, 0, 0])
         p["cells"] = E._b64(b"".join(rows))
     japan["channels"] = n + 1
+    # the music pool: instrument 43 (jungle's drum) with a new envelope and tuned 2 semitones up; a new
+    # sample, a buzz looped forward, for instrument 28 (one of jungle's), with a vibrato; sample 18, which
+    # only instrument 28 played, taken out
+    with open(os.path.join(root, "games", "xs", "sound", "gax_manifest.json")) as f:
+        manifest = json.load(f)
+    drum = json.loads(json.dumps(manifest["instruments"]["43"]))
+    drum["envelope"] = {"sustain": None, "loop_start": None, "loop_end": None,
+                        "points": [{"x": 0, "y": 142}, {"x": 4, "y": 220}, {"x": 30, "y": 0}]}
+    drum["samples"][0]["pitch"] += 64
+    nxt = max(int(k) for k in manifest["samples"]) + 1
+    buzz = bytes((128 + (i % 40) * 4 - 80 + (30 if i % 80 < 40 else -30)) & 0xFF for i in range(2000))
+    lead = json.loads(json.dumps(manifest["instruments"]["28"]))
+    gone = lead["sample_indices"][0]
+    lead["sample_indices"][0] = nxt
+    lead["samples"][0].update(byte_02=0, is_bidirectional=False, start_position=0, loop_start=200, loop_end=1800)
+    lead["vibrato_depth"], lead["vibrato_speed"] = 30, 10
     return {
         "structures": {"drums": st, "main_menu_japan": japan},
         "patterns": {"jungle": [{"pattern": 0, "row": 0, "channel": 0, "cell": [14, 1, 0, 7, 0x64]},
                                 {"pattern": 2, "row": 6, "channel": 1, "cell": [0, 0, 1, 11, 0x40]}]},
+        "instruments": {"43": drum, "28": lead},
+        "newSamples": {str(nxt): E._b64(E.wav_bytes([b - 256 if b > 127 else b for b in buzz], 16000))},
+        "deleteSamples": [gone],
     }
 
 

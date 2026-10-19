@@ -13,6 +13,7 @@
   import SongPanel from "./SongPanel.svelte";
   import SfxPanel from "./SfxPanel.svelte";
   import SamplePanel from "./SamplePanel.svelte";
+  import InstrumentPanel from "./InstrumentPanel.svelte";
 
   $effect(() => {
     void mu.syncProject(editor.projectId, !!editor.project?.ready);
@@ -54,6 +55,7 @@
       e.preventDefault();
       if (mu.playing) mu.stop();
       else if (mu.kind === "sfx") void mu.playSfx();
+      else if (mu.kind === "instrument") void mu.playInstrument(mu.instrument, 49, 16);
       else void mu.playSong();
     }
   }
@@ -112,7 +114,7 @@
             <button disabled={!sv} onclick={exportWav}>Save as WAV</button>
           </label>
         {:else}
-          <strong>{mu.kind === "sfx" ? "Sound effects" : "Samples"}</strong>
+          <strong>{mu.kind === "sfx" ? "Sound effects" : mu.kind === "instrument" ? "Instruments" : "Samples"}</strong>
           <span class="spacer"></span>
         {/if}
         <button disabled={!mu.canUndo || !!editor.busy} title="undo {mu.undoLabel} (ctrl+z)" onclick={() => mu.undo()}>Undo</button>
@@ -126,7 +128,7 @@
         {:else if mu.kind === "sfx"}
           <SfxPanel part="sound" />
         {:else}
-          <SamplePanel part="sound" />
+          {#if mu.kind === "instrument"}<InstrumentPanel part="sound" />{:else}<SamplePanel part="sound" />{/if}
         {/if}
       </div>
     </section>
@@ -136,7 +138,7 @@
       {:else if mu.kind === "sfx"}
         <SfxPanel part="record" />
       {:else}
-        <SamplePanel part="record" />
+        {#if mu.kind === "instrument"}<InstrumentPanel part="record" />{:else}<SamplePanel part="record" />{/if}
       {/if}
     </aside>
   </div>

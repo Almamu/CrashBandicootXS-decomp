@@ -699,13 +699,42 @@ own sample from a WAV (`instruments/<name>.json` and
 plays before it is saved as the build will make it; the last entry can
 be deleted when nothing names it.
 
-**Samples.** The third tab lists the music pool's samples (with the
-instruments and songs that play each) and the sound-effect set's, each
-drawn and played; a new sound for one comes from a WAV (any PCM or
-32-bit float, mixed to mono, resampled to the rate asked for, 8 bits:
-`music/import`), at least as long as its instruments' starts and loops
-reach (the save refuses a shorter one). A music sample's WAV rate is
-cosmetic: an instrument plays it at the note's pitch with its own tune.
+**Instruments.** The third tab lists the music pool's instruments
+(`gax_manifest.json`'s records, `struct GaxChannelInstrument`; a song's
+XM plays instrument N as `Instrument N`, and an instrument is shared: an
+edit is heard in every song that plays it). The middle draws the
+selected one's volume envelope, edited there (a point dragged, one added
+with a click, one taken out with a double click; the sustain point and
+the loop marked), its first wave row's sample with its loop, and plays a
+note on it as a song plays it ("▶ Play the note": a one-channel song
+with the note and a key off after the rows asked for, through the
+editor's GAX2, with the pool the backend builds with the unsaved edits).
+The right has its record: the vibrato (delay, depth, speed); each of its
+four wave rows' sample (the pool's, the new ones too), tune (as a
+relative note and a finetune in 32nds: GAX2's tune is 1/32 semitones),
+start, and loop (none, forward or ping-pong, its start and length; a
+sweep's window, length, step and rate where the ROM has one); its
+sequence (a step every N ticks: each step's note, fixed pitch, wave row
+and two effects); and the envelope's points (tick, volume 0-255), sustain
+and loop. The backend checks a record (crashdata.audio.pool: the fields
+in range, a wave row the edit changes inside its sample, the envelope's
+ticks increasing from 0) and works out the envelope's slopes
+(`GaxEnvelopePoint.slope`, Q8 a tick, as the ROM's; a point the edit
+doesn't move keeps its recorded one). GAX2 mixes mono, so an instrument
+has no panning envelope (the record's second envelope, `unknown12`, is
+one the engine never reads), and the bytes it never reads aren't edited.
+
+**Samples.** The fourth tab lists the music pool's samples (with the
+instruments and songs that play each, and those no instrument plays) and
+the sound-effect set's, each drawn and played; a new sound for one comes
+from a WAV (any PCM or 32-bit float, mixed to mono, resampled to the
+rate asked for, 8 bits: `music/import`), at least as long as its
+instruments' starts and loops reach (the save refuses a shorter one).
+"New sample from a WAV…" adds one to the music pool (`samples/NN.wav`,
+the pool's next number, and the manifest's `samples` entry), which a wave
+row of an instrument then plays; a sample no instrument plays can be
+deleted (its WAV and its entry). A music sample's WAV rate is cosmetic:
+an instrument plays it at the note's pitch with its own tune.
 
 Every change is a step of the undo stack (Ctrl+Z, Ctrl+Shift+Z or
 Ctrl+Y); Ctrl+S saves, space plays and stops. The page's address keeps
@@ -713,11 +742,12 @@ the song (`#mode=music&song=jungle`).
 
 **Not yet / not here:** a new song's settings (`songs/<key>.json`) and
 a ROM song's (its mix rate, volume and echo taps: the "Data files" tab
-edits the manifest); the instruments themselves (a ROM instrument's
-envelope, sequence, loop and tune are records of the manifest, edited in
-the "Data files" tab; a new song's own XM instruments come from its XM);
-a new sample added to the music pool (a sample is replaced; a new song
-brings its own in its XM or as `instruments/<name>.json`); the game's timing around the sound (fades, ducks,
+edits the manifest); a new instrument in the music pool's records (a
+new song brings its own, in its XM or as `instruments/<name>.json`, and
+an XM names a pool instrument as `Instrument N`, which the editor's cell
+panel only offers from the XM's instruments); a new song's own XM
+instruments (they come from its XM); a sound-effect instrument's record
+(`gax_sfx_manifest.json`, the "Data files" tab); the game's timing around the sound (fades, ducks,
 sound effects as the gameplay triggers them: the player plays a song or
 one sound effect, with the music volume asked for); GAX2's jingle player
 and low-pass filter, which the game doesn't use; N-Tranced's sound,
@@ -758,11 +788,11 @@ dependency), listens on **127.0.0.1 only**, and serves:
 | `GET /api/projects/ID/music/pool` | what the music editor's player needs besides a song (`player_pool`): GAX2's tables (`lib/gax/data/gax_tables.c`: gGaxPeriodTable, gGaxVibratoTable, the mix rates), the music pool's and the sound-effect set's instruments as `struct GaxChannelInstrument` (the new songs' and sound effects' new instruments too) and their samples, `{tables, music, sfx, sfxSlots}`; gzipped when asked |
 | `GET /api/projects/ID/music/song?key=K` | a song as `tools/gax_audio.py` builds it (`player_song`), as GAX2_init sees it: its `GaxSongData` fields, the mixer's echo taps (`dsp`), the packed pattern streams (`patterns`, base64) and each channel's order list (`orders`: `[offset in patterns, transpose]`) |
 | `POST /api/projects/ID/music/song` `{key, edits?, newSongs?, structures?, patterns?}` | the same, built with unsaved edits (`unsaved_songs`): cell edits of its XM (`edits`), and the songs' unsaved new songs, structures and cell edits as the save's; a new song's key plays an unsaved new song |
-| `POST /api/projects/ID/music/pool` `{newSongs?, structures?, patterns?}` | the player's pool with those edits: an unsaved new song's new instruments in it, numbered as the build will number them |
+| `POST /api/projects/ID/music/pool` `{newSongs?, structures?, patterns?, instruments?, samples?, newSamples?, deleteSamples?}` | the player's pool with those edits: the instruments' edited records, the new samples (and those taken out), an unsaved new song's new instruments, numbered as the build will number them |
 | `GET /api/projects/ID/music/patterns?key=K` | a song's XM for the pattern view: `{rows, cells, channels, order, restart, speed, playOrder, loopOrder, instruments, scaffold, groups?, transposes?}` (each pattern's cells, 5 bytes a cell, base64; for a ROM song that keeps its scaffold, which order positions share a stored pattern) |
 | `POST /api/projects/ID/music/patterns` `{key, xm}` | the same of an unsaved new song's XM (base64) |
 | `POST /api/projects/ID/music/import` `{wav, rate?}` | a WAV (base64: PCM 8 to 32-bit or 32-bit float, any channels) made into a GAX2 sample, mixed to mono, resampled to `rate` (linearly) and rounded to 8 bits: `{wav, length, rate, source, peak, clipped, how}` |
-| `POST /api/projects/ID/music/save` `{sfxTable?, music?, themes?, songComments?, newSongs?, removeSongs?, structures?, patterns?, samples?, newInstruments?}` | saves the music editor's edits, all or none (below) |
+| `POST /api/projects/ID/music/save` `{sfxTable?, music?, themes?, songComments?, newSongs?, removeSongs?, structures?, patterns?, samples?, newInstruments?, instruments?, newSamples?, deleteSamples?}` | saves the music editor's edits, all or none (below) |
 
 A path is from the project's tree's root (`games/xs/data/levels/levels.json`),
 and must be in the project's `games/<game>/`, with no `..`; a file the
@@ -850,7 +880,14 @@ base64 WAV}` (new sounds for the tree's samples, 8-bit mono as
 volume?, comment?}]` (`instruments/<name>.json` with its WAV,
 `sfx_samples/<name>.wav`, for a new sound effect: an entry's
 `"instrument"`, [audio.md, "Adding a sound
-effect"](./audio.md#adding-a-sound-effect)). Before anything is written,
+effect"](./audio.md#adding-a-sound-effect)), `instruments` `{N: record}`
+(the music pool's instrument N, its `gax_manifest.json` record with its
+envelope, vibrato, wave rows or sequence edited), `newSamples` `{NN:
+base64 WAV}` (new music pool samples, `samples/NN.wav` and the
+manifest's `samples` entry, numbered after the pool's) and
+`deleteSamples` `[NN]` (music pool samples no instrument plays, their
+WAV and entry taken out: put back like any file if the save is
+refused). Before anything is written,
 the editor's own checks: the sound effects' names (one entry a name, and
 every `SFX_<NAME>` the code or a cutscene names kept), slots (the set's
 1-87) and instruments, the volumes; the screens' and themes' songs (in
