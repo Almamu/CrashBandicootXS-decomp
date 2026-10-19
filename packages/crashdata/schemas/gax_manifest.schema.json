@@ -495,17 +495,6 @@
             }
           }
         },
-        "pattern_group_bytes": {
-          "type": "object",
-          "patternProperties": {
-            "^[0-9]+$": {
-              "type": "string",
-              "pattern": "^[A-Za-z0-9+/]*={0,2}$",
-              "description": "base64"
-            }
-          },
-          "additionalProperties": false
-        },
         "title": {
           "type": "string"
         },

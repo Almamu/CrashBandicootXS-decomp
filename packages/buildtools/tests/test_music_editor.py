@@ -10,6 +10,7 @@ scratch folder); an edit runs in a scratch copy of the tree
 """
 import base64
 import gzip
+import hashlib
 import io
 import json
 import math
@@ -56,6 +57,20 @@ def wav(samples, rate, width=1, channels=1):
 
 def b64(data):
     return base64.b64encode(data).decode()
+
+
+def changed_groups(root, key):
+    """The pattern groups of ROM song `key` whose bytes, as the tree at
+    root builds them, aren't the ROM's (packages/crashdata/tests/rom_patterns.json)."""
+    from crashdata.audio import edit as ME, gax as G
+    from crashdata.common.game import Game
+
+    rom = json.loads((ROOT / "packages/crashdata/tests/rom_patterns.json").read_text())[key]
+    with ME.bound(Game("xs", root)):
+        manifest = G.schemas.load(root / SOUND / "gax_manifest.json")
+        _, keys, songs = G.load_songs(manifest, str(root / SOUND / "songs"), str(root / SOUND / "samples"))
+    packed = G.pack_groups(songs[keys.index(key)])
+    return {g for g, b in packed.items() if hashlib.sha1(b).hexdigest() != rom[g]}
 
 
 def snapshot(root):
@@ -400,11 +415,8 @@ class Scratch(unittest.TestCase):
         self.assertEqual(v2["sfx"][-1]["constant"], "SFX_TEST_BEEP")
         st, raw = self.get_bytes("/api/projects/xs/music/pool")
         self.assertEqual(json.loads(raw)["sfxSlots"], {"test_beep": 88})
-        # only the edited group lost its recorded bytes
-        m0 = json.loads((ROOT / SOUND / "gax_manifest.json").read_text())
-        m1 = json.loads((sound / "gax_manifest.json").read_text())
-        g0 = m0["songs"]["jungle"]["pattern_group_bytes"]
-        self.assertEqual(set(g0) - set(m1["songs"]["jungle"]["pattern_group_bytes"]), {str(p["groups"][0][0])})
+        # only the edited pattern's bytes are new: the others are the ROM's
+        self.assertEqual(changed_groups(self.tree, "jungle"), {p["groups"][0][0]})
         st, rep = self.call("GET", "/api/projects/xs/check?text=0")
         self.assertEqual(st, 200)
         self.assertTrue(rep["ok"], rep["diagnostics"])

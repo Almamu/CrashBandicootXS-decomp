@@ -14,7 +14,6 @@
   const cell = $derived(p && mu.cells && mu.cell ? M.cellAt(mu.cells, p.channels, xmPattern, mu.cell.row, mu.cell.channel) : null);
   const notes = $derived(cell ? M.cellNotes(cell) : null);
   const shared = $derived(p && mu.cell ? M.sharedCells(p, mu.order, mu.cell.channel).filter(([pj, cj]) => pj !== mu.order || cj !== mu.cell!.channel) : []);
-  const recorded = $derived(p?.groups && mu.cell ? (p.recorded ?? []).includes(p.groups[mu.cell.channel]![mu.order]!) : false);
   const uses = $derived(mu.usesOf(mu.song));
   const canRemove = $derived(!!entry && !info?.rom && uses.length === 0);
 
@@ -73,7 +72,7 @@
             {#each p.instruments as ins, i (i)}<option value={i + 1}>{String(i + 1).padStart(2, "0")} {ins.name}</option>{/each}
           </select>
         </label>
-        <label>Volume <input value={cell[2] ? cell[2].toString(16).toUpperCase() : ""} placeholder=".." spellcheck="false" oninput={(e) => set(2, hex(e.currentTarget.value), "vol")} title="the volume column, hex: 10-50 set, 80-8F fine slide down, 90-9F up" /></label>
+        <label>Volume <input value={cell[2] ? cell[2].toString(16).toUpperCase() : ""} placeholder=".." spellcheck="false" oninput={(e) => set(2, hex(e.currentTarget.value), "vol")} title="the volume column, hex: 10-50 set, 80-8F slide down, 90-9F up; 01 makes the effect column GAX2's own command and parameter" /></label>
         <label>
           Effect
           <select value={cell[3]} onchange={(e) => set(3, Number(e.currentTarget.value), "")}>
@@ -92,9 +91,6 @@
         <p class="note">
           The ROM stores this channel's pattern once for order positions {shared.map(([pj, cj, dt]) => `${pj}${cj !== mu.cell!.channel ? ` (channel ${cj + 1})` : ""}${dt ? ` (transposed ${dt > 0 ? "+" : ""}${dt})` : ""}`).join(", ")}: an edit here is made there too.
         </p>
-      {/if}
-      {#if recorded}
-        <p class="hint">This pattern plays the ROM's own bytes while its notes and instruments are the ROM's. An edit makes the build pack it from the XM, effects and volumes too (what the XM can't say, GAX2's alternating speeds or finer volume slides, is the XM's there): the player plays it as the build will.</p>
       {/if}
     </section>
   {:else if p}

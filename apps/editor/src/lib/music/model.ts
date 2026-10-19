@@ -129,12 +129,19 @@ export function cellText(c: ArrayLike<number>): { note: string; ins: string; vol
   };
 }
 
+/** The volume column's byte that makes the effect column GAX2's own command and parameter (gax.GAX_RAW_VOLUME). */
+export const RAW_VOLUME = 0x01;
+
 /** What the build makes of a cell's effect and volume column: GAX2's one
  * effect of the row (crashdata.audio.gax._xm_effect_to_gax), [cmd, param]. */
 export function gaxEffect(effect: number, param: number, volume: number): [number, number] {
-  if (effect === 1 || effect === 2 || effect === 3) return [effect, param];
-  if (effect === 12) return [12, Math.min(255, param * 4)];
-  if (effect === 13 || effect === 14) return [effect, param];
+  if (volume === RAW_VOLUME) return [effect, param];
+  if ([1, 2, 3, 7, 13, 14].includes(effect)) return [effect, param];
+  if (effect === 10 && param) {
+    if (!(param & 0x0f)) return [10, param >> 4];
+    if (!(param & 0xf0)) return [11, param];
+  }
+  if (effect === 12) return [12, param <= 0x40 ? Math.min(255, param * 4) : param];
   if (effect === 15 && param < 0x20) return [15, param];
   if (volume) {
     if (volume >= 0x90 && volume <= 0x9f) return [10, (volume - 0x90) << 4];
@@ -148,6 +155,7 @@ const GAX_EFFECTS: Record<number, string> = {
   1: "pitch slide up",
   2: "pitch slide down",
   3: "portamento to the note",
+  7: "alternating speeds",
   10: "volume slide up",
   11: "volume slide down",
   12: "set the volume",
@@ -161,18 +169,24 @@ export function cellNotes(c: ArrayLike<number>): { plays: string; dropped: strin
   const [note, , vol, eff, param] = [c[0]!, c[1]!, c[2]!, c[3]!, c[4]!];
   const [cmd, p] = gaxEffect(eff, param, vol);
   const dropped: string[] = [];
-  if (eff || param) {
-    const kept = [1, 2, 3, 12, 13, 14].includes(eff) || (eff === 15 && param < 0x20);
-    if (!kept) dropped.push(eff === 15 ? `F${hex2(param)}: a BPM (0x20 or more); GAX2 steps a tick a frame` : `effect ${EFFECTS[eff]}${hex2(param)}: GAX2 has no such effect`);
+  const raw = vol === RAW_VOLUME;
+  if ((eff || param) && !raw && gaxEffect(eff, param, 0)[0] === 0) {
+    dropped.push(
+      eff === 15
+        ? `F${hex2(param)}: a BPM (0x20 or more); GAX2 steps a tick a frame`
+        : eff === 10
+          ? `A${hex2(param)}: a volume slide is up (x0) or down (0y), not both`
+          : `effect ${EFFECTS[eff]}${hex2(param)}: GAX2 has no such effect`,
+    );
   }
-  if (vol) {
+  if (vol && !raw) {
     if (gaxEffect(eff, param, 0)[0] !== 0) dropped.push(`the volume column ${hex2(vol)}: a GAX2 row has one effect, the effect column's`);
-    else if (gaxEffect(0, 0, vol)[0] === 0) dropped.push(`the volume column ${hex2(vol)}: not one GAX2 has (10-50, 80-9F)`);
+    else if (gaxEffect(0, 0, vol)[0] === 0) dropped.push(`the volume column ${hex2(vol)}: not one GAX2 has (01 GAX2's own effect, 10-50, 80-9F)`);
   }
   const parts: string[] = [];
   if (note === KEY_OFF) parts.push("key off");
   else if (note >= 1 && note <= 96) parts.push(noteName(note));
-  if (cmd) parts.push(`${GAX_EFFECTS[cmd] ?? `effect ${cmd}`} ${hex2(p)}`);
+  if (cmd) parts.push(`${raw ? "GAX2's own " : ""}${GAX_EFFECTS[cmd] ?? `effect ${cmd}`} ${hex2(p)}${cmd === 7 ? ` (${p >> 4} ticks, then ${p & 15})` : ""}`);
   return { plays: parts.join(", ") || "nothing", dropped };
 }
 

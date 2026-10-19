@@ -407,16 +407,11 @@ def expand_edits(manifest, key, edits, instruments, current=None):
     return out
 
 
-def _column(cells, channels, rows, ch):
-    return b"".join(bytes(cells[(r * channels + ch) * CELL:(r * channels + ch + 1) * CELL]) for r in range(rows))
-
-
 def edited_song(files, manifest, key, edits):
-    """A song's XM bytes and the manifest after cell edits. An edited ROM
-    pattern loses its recorded bytes (pattern_group_bytes, which the build
-    keeps while the notes and instruments are the ROM's), so the build
-    packs it from the XM, effects and volumes too. Returns (XM bytes, the
-    manifest, the XM patterns that changed)."""
+    """A song's XM bytes after cell edits; the build packs an edited
+    pattern from its cells as it packs every other (the XM says all a
+    pattern's bytes hold, crashdata.audio.gax._xm_effect_to_gax). Returns
+    (XM bytes, the manifest, the XM patterns that changed)."""
     path = files.songs / ("%s.xm" % key)
     buf = path.read_bytes()
     instruments = struct.unpack_from("<H", buf, 72)[0]
@@ -432,20 +427,6 @@ def edited_song(files, manifest, key, edits):
         return bytes(cache[pi][k:k + CELL])
 
     new, changed = xm_with_cells(buf, expand_edits(manifest, key, edits, instruments, current), "songs/%s.xm" % key)
-    sm = manifest["songs"].get(key)
-    if changed and sm is not None and sm.get("pattern_group_bytes"):
-        old_l, new_l = XmLayout(buf), XmLayout(new)
-        drop = set()
-        for pi in changed:
-            a, b = unpack_cells(buf, old_l, pi), unpack_cells(new, new_l, pi)
-            rows = old_l.patterns[pi][2]
-            for ch in range(sm["num_channels"]):
-                if _column(a, old_l.channels, rows, ch) != _column(b, old_l.channels, rows, ch):
-                    drop.add(str(sm["pattern_groups"][ch][pi]))
-        kept = {g: v for g, v in sm["pattern_group_bytes"].items() if g not in drop}
-        if len(kept) != len(sm["pattern_group_bytes"]):
-            manifest = json.loads(json.dumps(manifest))
-            manifest["songs"][key]["pattern_group_bytes"] = kept
     return new, manifest, changed
 
 
@@ -475,7 +456,6 @@ def patterns(game, key):
     if sm is not None:
         out["groups"] = sm["pattern_groups"]
         out["transposes"] = sm["channel_transposes"]
-        out["recorded"] = sorted(int(g) for g in sm.get("pattern_group_bytes", {}))
         out["playOrder"] = list(range(sm["num_patterns_per_channel"]))
         out["loopOrder"] = sm["loop_point"]
     else:
