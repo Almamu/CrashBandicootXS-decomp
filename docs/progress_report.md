@@ -580,13 +580,13 @@ objdiff reports as decomp.dev did. bytematch.dev takes the report through
 its GitHub App only; decompilati.onl takes it two ways:
 
 - **The artifacts.** "Upload progress report artifact" uploads `report.json`
-  as `xs_europe_report` on every run. Each site's GitHub App, installed on
+  as `europe_report` (version `europe`, the one the sites' history is
+  in) on every run. Each site's GitHub App, installed on
   the repository, imports the artifacts of each successful push run on
   `main`, with the run's commit. The run has a second one when it has
   N-Tranced's ROM: `ntranced_europe_report`, N-Tranced's progress in the
-  same objdiff format (docs/n_tranced.md, "Progress"). The game is the
-  name's first word, so each site's project can take its own game's
-  artifact; see "Which project takes which artifact" below.
+  same objdiff format (docs/n_tranced.md, "Progress"), so each site's
+  project can take its own game's artifact; see "Which project takes which artifact" below.
 - **decompilati.onl's upload API.** On pushes to `main`, "Send progress to
   decompilati.onl" sends the same report, gzip-compressed, to
   `POST /api/v1/progress` with the commit and `version=europe`, using the
@@ -610,17 +610,17 @@ Both Apps take decomp.dev's convention, an artifact named
 it imports:
 
 - **decompilati.onl**: the version is the name without `_report`
-  (`xs_europe`, `ntranced_europe`), and a project's "GitHub App artifacts"
+  (`europe`, `ntranced_europe`), and a project's "GitHub App artifacts"
   setting (its edit page) is every `*_report` artifact (`*`, the default),
-  none, or a list of names. XS's project should list `xs_europe_report`
-  and N-Tranced's `ntranced_europe_report`: with `*` each imports both,
-  the other game's numbers as a version of its own.
+  none, or a list of names. XS's project should list `europe_report` and
+  N-Tranced's `ntranced_europe_report`: with `*` each imports both, the
+  other game's numbers as a version of its own.
 - **bytematch.dev**: a project's "artifact pattern" (its manage page) is a
   regular expression whose `version` group names the version, by default
-  `^(?<version>.+)_report$`. XS's project keeps the default, so its
-  version is `xs_europe` (the old `europe` version's history was uploaded
-  into it); `^xs_(?<version>.+)_report$` would take XS's artifact only.
+  `^(?<version>.+)_report$`, which names XS's version `europe`; with it,
+  XS's project would also take `ntranced_europe_report` as a version
+  `ntranced_europe`, so `^(?<version>europe)_report$` takes XS's only.
 
-decompilati.onl's upload API above sends `version=europe`, so a version
-its App names `xs_europe` is a second version beside it; its edit page can
-merge one version into the other.
+decompilati.onl's upload API above sends the same `version=europe` as
+its App. (For a while after #1216 XS's artifact was `xs_europe_report`,
+so the sites may have an `xs_europe` version from then.)
