@@ -646,10 +646,10 @@ ntranced_report.json ntranced_report.json` reads it back as a check.
 
 `build.yml` builds it on every run that has N-Tranced's ROM, after the
 N-Tranced checks, and uploads it as the `ntranced_europe_report` artifact,
-next to XS's `xs_europe_report`. XS's used to be `europe_report`, the only
-`*_report` artifact, so an N-Tranced project importing the App's artifacts
-showed XS's numbers in place of its own (it did after #1123: 2,062
-functions, 100%). Now N-Tranced's project can take
+next to XS's `europe_report`. When XS's was the only `*_report` artifact,
+an N-Tranced project importing the App's artifacts showed XS's numbers in
+place of its own (it did after #1123: 2,062 functions, 100%). Now
+N-Tranced's project can take
 `ntranced_europe_report` only: on decompilati.onl, its "GitHub App
 artifacts" setting should list that name, not `*` (docs/progress_report.md,
 "Which project takes which artifact"). The App names its version `ntranced_europe`, and the webhook

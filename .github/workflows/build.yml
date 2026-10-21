@@ -166,7 +166,7 @@ jobs:
     # N-Tranced's progress as an objdiff report (games/n2/progress.py
     # --objdiff, docs/n_tranced.md "Progress"): the ntranced_europe_report
     # artifact, which the progress sites' GitHub Apps import like XS's
-    # xs_europe_report below. XS's ELF is there, so the functions get XS's
+    # europe_report below. XS's ELF is there, so the functions get XS's
     # categories.
     - name: Generate N-Tranced's progress report
       if: env.HAS_N2_ROM == 'true'
@@ -228,12 +228,12 @@ jobs:
       run: ./objdiff-cli report generate -o report.json
 
     # The report for the progress sites (docs/progress_report.md, "Progress
-    # sites"): the xs_europe_report artifact, which decompilati.onl's and
+    # sites"): the europe_report artifact (version `europe`), which decompilati.onl's and
     # bytematch.dev's GitHub Apps import from a successful run on main.
     - name: Upload progress report artifact
       uses: actions/upload-artifact@v7
       with:
-        name: xs_europe_report
+        name: europe_report
         path: report.json
 
     # And on main, the same report through decompilati.onl's upload API:
