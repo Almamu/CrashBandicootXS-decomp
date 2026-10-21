@@ -592,11 +592,12 @@ code loads (`0x086D80EC`, not identified yet).
 ## Progress
 
 N-Tranced has its own project on [decompilati.onl](https://decompilati.onl).
-It has no objdiff report yet, so
-[`games/n2/progress.py`](../games/n2/progress.py) reads its progress from
-the build and prints the document decompilati.onl's webhook takes
-([docs](https://decompilati.onl/docs)), with the same measures as XS's
-report:
+objdiff can't diff it yet (it has no target objects, only the
+disassembly), so [`games/n2/progress.py`](../games/n2/progress.py) reads
+its progress from the build, with the same measures as XS's report, and
+prints it either as the document decompilati.onl's webhook takes
+([docs](https://decompilati.onl/docs)) or, with `--objdiff`, as an
+objdiff report:
 
 - **code**, in bytes: the code, `0x08000000` to the start of the
   incbin'd data. **Matching** is the shared sources' (`games/n2/objects.txt`,
@@ -621,10 +622,35 @@ the repository secret `DECOMPILATION2_PROGRESS_TOKEN`. Without the secret
 the step does nothing, and a failed upload doesn't fail the build. To see
 what would be sent: `make && make GAME=n2 && games/n2/progress.py`.
 
+### The objdiff report
 
-decompilati.onl's GitHub App imports each `<version>_report` artifact of a
-successful run on `main` into the project linked to the repository. Here
-that's XS's objdiff report (`europe_report`, 100%), so if the N-Tranced
-project imports it too, it shows XS's numbers in place of its own (it did
-after #1123: 2,062 functions, 100%). N-Tranced's project must take its
-progress from this webhook only, not from the App.
+`games/n2/progress.py --objdiff` prints the same numbers in objdiff's
+Report JSON (`objdiff-core/protos/report.proto`, as `objdiff-cli report
+generate` writes it), so the progress sites' GitHub Apps can import it
+like XS's report. Its categories are the areas above (XS's ids, plus
+`unidentified`, `data_sources` and `rom_data`), and its units are:
+
+- each shared source, named after its `objects.txt` source: its
+  functions, all matched, the unit complete (a source whose functions
+  have more than one category is a unit per category, with the category
+  in its name);
+- the disassembly of each category, `asm/<category>`: its functions,
+  none matched;
+- each data object, matched and complete;
+- `baserom_n2.gba`: the incbin'd rest of the data.
+
+Matched is complete here: matched code is linked from its source, so
+`complete_code` is `matched_code`, and nothing matches in part
+(`fuzzy_match_percent` is the matched code's). `objdiff-cli report changes
+ntranced_report.json ntranced_report.json` reads it back as a check.
+
+`build.yml` builds it on every run that has N-Tranced's ROM, after the
+N-Tranced checks, and uploads it as the `ntranced_europe_report` artifact,
+next to XS's `xs_europe_report`. XS's used to be `europe_report`, the only
+`*_report` artifact, so an N-Tranced project importing the App's artifacts
+showed XS's numbers in place of its own (it did after #1123: 2,062
+functions, 100%). Now N-Tranced's project can take
+`ntranced_europe_report` only: on decompilati.onl, its "GitHub App
+artifacts" setting should list that name, not `*` (docs/progress_report.md,
+"Which project takes which artifact"). The App names its version `ntranced_europe`, and the webhook
+above `europe`.
