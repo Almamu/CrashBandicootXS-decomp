@@ -578,11 +578,14 @@ and [bytematch.dev](https://bytematch.dev/Almamu/CrashBandicootXS-decomp)
 ([docs](https://bytematch.dev/docs)), decomp.dev's successor. Both read
 objdiff reports as decomp.dev did, and CI sends them the report two ways:
 
-- **The artifact.** "Upload progress report artifact" uploads `report.json`
-  as `europe_report` on every run. Each site's GitHub App, installed on the
-  repository, imports the artifact of each successful push run on `main`,
-  with the run's commit; the version is the artifact name's prefix,
-  `europe`.
+- **The artifacts.** "Upload progress report artifact" uploads `report.json`
+  as `xs_europe_report` on every run. Each site's GitHub App, installed on
+  the repository, imports the artifacts of each successful push run on
+  `main`, with the run's commit. The run has a second one when it has
+  N-Tranced's ROM: `ntranced_europe_report`, N-Tranced's progress in the
+  same objdiff format (docs/n_tranced.md, "Progress"). The game is the
+  name's first word, so each site's project can take its own game's
+  artifact; see "Which project takes which artifact" below.
 - **The upload APIs.** On pushes to `main`, the same report, gzip-compressed,
   goes to each site's upload API with the commit and `version=europe`:
   - "Send progress to decompilati.onl": `POST /api/v1/progress`, with the
@@ -601,3 +604,24 @@ beyond that as non-matching and objdiff's matched data as data, and makes
 an area of each progress category (see "Categorizing the still-raw majority
 of the ROM" above), with its units inside; bytematch.dev shows the
 categories, the units and their functions.
+
+### Which project takes which artifact
+
+Both Apps take decomp.dev's convention, an artifact named
+`<version>_report` per version, and each project chooses the artifacts
+it imports:
+
+- **decompilati.onl**: the version is the name without `_report`
+  (`xs_europe`, `ntranced_europe`), and a project's "GitHub App artifacts"
+  setting (its edit page) is every `*_report` artifact (`*`, the default),
+  none, or a list of names. XS's project should list `xs_europe_report`
+  and N-Tranced's `ntranced_europe_report`: with `*` each imports both,
+  the other game's numbers as a version of its own.
+- **bytematch.dev**: a project's "artifact pattern" (its manage page) is a
+  regular expression whose `version` group names the version, by default
+  `^(?<version>.+)_report$`. `^xs_(?<version>.+)_report$` takes XS's
+  artifact only, as version `europe`.
+
+The upload APIs above send `version=europe`, so a version the App names
+`xs_europe` is a second version beside it; decompilati.onl's edit page
+can merge one version into the other.
