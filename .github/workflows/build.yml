@@ -236,10 +236,11 @@ jobs:
         name: xs_europe_report
         path: report.json
 
-    # And on main, the same report through each site's upload API: gzip'd
-    # objdiff JSON, with the commit in the query string. Each key is a
-    # repository secret; without it the step does nothing. A site being
-    # down doesn't fail the build.
+    # And on main, the same report through decompilati.onl's upload API:
+    # gzip'd objdiff JSON, with the commit in the query string. The key is a
+    # repository secret; without it the step does nothing. The site being
+    # down doesn't fail the build. bytematch.dev takes the artifact only,
+    # through its GitHub App.
     - name: Compress the progress report
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: gzip -kf report.json
@@ -256,28 +257,6 @@ jobs:
         fi
         curl --fail-with-body -sS -X POST https://decompilati.onl/api/v1/progress \
           --url-query "commit=$GITHUB_SHA" --url-query "version=europe" \
-          -H "Authorization: Bearer $TOKEN" \
-          -H "Content-Type: application/json" \
-          -H "Content-Encoding: gzip" \
-          --data-binary @report.json.gz
-
-    - name: Send progress to bytematch.dev
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      continue-on-error: true
-      env:
-        TOKEN: ${{ secrets.BYTEMATCH_TOKEN }}
-        COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
-        COMMIT_TIMESTAMP: ${{ github.event.head_commit.timestamp }}
-      run: |
-        if [ -z "$TOKEN" ]; then
-          echo "No BYTEMATCH_TOKEN secret, not sending"
-          exit 0
-        fi
-        curl --fail-with-body -sS -X POST \
-          "https://bytematch.dev/api/v1/projects/$GITHUB_REPOSITORY/reports" \
-          --url-query "version=europe" --url-query "commit=$GITHUB_SHA" \
-          --url-query "commit_message=$COMMIT_MESSAGE" \
-          --url-query "commit_timestamp=$COMMIT_TIMESTAMP" \
           -H "Authorization: Bearer $TOKEN" \
           -H "Content-Type: application/json" \
           -H "Content-Encoding: gzip" \

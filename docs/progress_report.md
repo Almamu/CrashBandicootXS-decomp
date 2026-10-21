@@ -576,7 +576,8 @@ Two sites track the project from this report:
 [decompilati.onl](https://decompilati.onl) ([docs](https://decompilati.onl/docs))
 and [bytematch.dev](https://bytematch.dev/Almamu/CrashBandicootXS-decomp)
 ([docs](https://bytematch.dev/docs)), decomp.dev's successor. Both read
-objdiff reports as decomp.dev did, and CI sends them the report two ways:
+objdiff reports as decomp.dev did. bytematch.dev takes the report through
+its GitHub App only; decompilati.onl takes it two ways:
 
 - **The artifacts.** "Upload progress report artifact" uploads `report.json`
   as `xs_europe_report` on every run. Each site's GitHub App, installed on
@@ -586,16 +587,13 @@ objdiff reports as decomp.dev did, and CI sends them the report two ways:
   same objdiff format (docs/n_tranced.md, "Progress"). The game is the
   name's first word, so each site's project can take its own game's
   artifact; see "Which project takes which artifact" below.
-- **The upload APIs.** On pushes to `main`, the same report, gzip-compressed,
-  goes to each site's upload API with the commit and `version=europe`:
-  - "Send progress to decompilati.onl": `POST /api/v1/progress`, with the
-    repository secret `DECOMPILATION_PROGRESS_TOKEN` as the bearer token;
-  - "Send progress to bytematch.dev":
-    `POST /api/v1/projects/Almamu/CrashBandicootXS-decomp/reports`, with the
-    commit's message and time too, and the secret `BYTEMATCH_TOKEN` (an
-    upload token from the project's manage page).
+- **decompilati.onl's upload API.** On pushes to `main`, "Send progress to
+  decompilati.onl" sends the same report, gzip-compressed, to
+  `POST /api/v1/progress` with the commit and `version=europe`, using the
+  repository secret `DECOMPILATION_PROGRESS_TOKEN` as the bearer token.
+  (bytematch.dev's upload API isn't used: its App imports the artifact.)
 
-  Without its secret a step does nothing, and a failed upload doesn't fail
+  Without the secret the step does nothing, and a failed upload doesn't fail
   the build (`continue-on-error`); its log shows the site's reply.
 
 A report the site already has, by either way, is accepted and not stored
@@ -619,9 +617,10 @@ it imports:
   the other game's numbers as a version of its own.
 - **bytematch.dev**: a project's "artifact pattern" (its manage page) is a
   regular expression whose `version` group names the version, by default
-  `^(?<version>.+)_report$`. `^xs_(?<version>.+)_report$` takes XS's
-  artifact only, as version `europe`.
+  `^(?<version>.+)_report$` (XS's artifact is version `xs_europe`);
+  `^xs_(?<version>.+)_report$` takes XS's artifact only, as version
+  `europe`.
 
-The upload APIs above send `version=europe`, so a version the App names
-`xs_europe` is a second version beside it; decompilati.onl's edit page
-can merge one version into the other.
+decompilati.onl's upload API above sends `version=europe`, so a version
+its App names `xs_europe` is a second version beside it; its edit page can
+merge one version into the other.
