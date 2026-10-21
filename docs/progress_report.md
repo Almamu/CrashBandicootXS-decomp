@@ -617,9 +617,9 @@ it imports:
   the other game's numbers as a version of its own.
 - **bytematch.dev**: a project's "artifact pattern" (its manage page) is a
   regular expression whose `version` group names the version, by default
-  `^(?<version>.+)_report$` (XS's artifact is version `xs_europe`);
-  `^xs_(?<version>.+)_report$` takes XS's artifact only, as version
-  `europe`.
+  `^(?<version>.+)_report$`. XS's project keeps the default, so its
+  version is `xs_europe` (the old `europe` version's history was uploaded
+  into it); `^xs_(?<version>.+)_report$` would take XS's artifact only.
 
 decompilati.onl's upload API above sends `version=europe`, so a version
 its App names `xs_europe` is a second version beside it; its edit page can
